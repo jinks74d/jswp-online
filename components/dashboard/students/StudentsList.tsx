@@ -1,7 +1,7 @@
 // components/dashboard/students/StudentsList.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Users,
   Plus,
@@ -15,7 +15,9 @@ import {
   GraduationCap,
   BookOpen,
   FileText,
+  ChevronDown,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase";
 import Link from "next/link";
 import { UserRole } from "@/lib/supabase";
 
@@ -50,6 +52,61 @@ export default function StudentsList({
 }: StudentsListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [schoolFilter, setSchoolFilter] = useState<string>("all");
+  const [showAddDropdown, setShowAddDropdown] = useState(false);
+  const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [addingStudent, setAddingStudent] = useState(false);
+
+  const supabase = createClient();
+
+  // Fetch available students for the dropdown
+  useEffect(() => {
+    if (currentUserRole === "teacher" && currentUserSchool?.id) {
+      fetchAvailableStudents();
+    }
+  }, [currentUserRole, currentUserSchool?.id]);
+
+  const fetchAvailableStudents = async () => {
+    if (!currentUserSchool?.id) return;
+
+    try {
+      // Get all students in the school who are not already in the current list
+      const currentStudentIds = students.map(s => s.id);
+      
+      let query = supabase
+        .from("user_profiles")
+        .select("id, first_name, last_name, email, created_at")
+        .eq("role", "student")
+        .eq("school_id", currentUserSchool.id);
+
+      if (currentStudentIds.length > 0) {
+        query = query.not("id", "in", `(${currentStudentIds.join(",")})`);
+      }
+
+      const { data: availableStudentsData, error } = await query;
+
+      if (error) {
+        console.error("Error fetching available students:", error);
+      } else {
+        setAvailableStudents(availableStudentsData || []);
+      }
+    } catch (error) {
+      console.error("Error fetching available students:", error);
+    }
+  };
+
+  const handleAddStudent = async () => {
+    if (!selectedStudentId || addingStudent) return;
+    
+    setAddingStudent(true);
+    // TODO: Implement student assignment logic
+    console.log("Adding student:", selectedStudentId);
+    
+    // Reset selection and close dropdown
+    setSelectedStudentId("");
+    setShowAddDropdown(false);
+    setAddingStudent(false);
+  };
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -108,13 +165,42 @@ export default function StudentsList({
           <p className="text-gray-600 mt-1">{getPageDescription()}</p>
         </div>
         {canAddStudents && (
-          <Link
-            href="/dashboard/users/invite"
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            Add Student
-          </Link>
+          <>
+            {currentUserRole === "teacher" ? (
+              <div className="relative">
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedStudentId}
+                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  >
+                    <option value="">Select a student...</option>
+                    {availableStudents.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.first_name} {student.last_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAddStudent}
+                    disabled={!selectedStudentId || addingStudent}
+                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {addingStudent ? "Adding..." : "Add"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/dashboard/users/invite"
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                Add Student
+              </Link>
+            )}
+          </>
         )}
       </div>
 

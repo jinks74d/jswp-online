@@ -20,7 +20,7 @@ interface Teacher {
   first_name: string | null;
   last_name: string | null;
   email: string;
-  schools?: { id: string; name: string } | null;
+  schools?: { id: string; name: string }[] | { id: string; name: string } | null;
 }
 
 interface Assignment {
@@ -119,7 +119,7 @@ export default function StudentTeacherAssignments({
       const { data, error } = await query.order("first_name");
 
       if (error) throw error;
-      setAvailableTeachers(data || []);
+      setAvailableTeachers((data || []) as Teacher[]);
     } catch (error) {
       console.error("Error fetching teachers:", error);
     } finally {

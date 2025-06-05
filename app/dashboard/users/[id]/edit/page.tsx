@@ -5,10 +5,11 @@ import { redirect, notFound } from "next/navigation";
 import EditUserForm from "@/components/dashboard/users/EditUserForm";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditUserPage({ params }: PageProps) {
+  const resolvedParams = await params;
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
 
@@ -50,7 +51,7 @@ export default async function EditUserPage({ params }: PageProps) {
       schools:school_id(id, name)
     `
     )
-    .eq("id", params.id)
+    .eq("id", resolvedParams.id)
     .eq("district_id", profile.district_id) // Ensure user belongs to same district
     .single();
 
@@ -70,7 +71,7 @@ export default async function EditUserPage({ params }: PageProps) {
   }
 
   // Fetch available schools for district admins
-  let schools = [];
+  let schools: any[] = [];
   if (profile.role === "district_admin") {
     const { data: schoolsData } = await supabase
       .from("schools")

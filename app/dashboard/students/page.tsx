@@ -68,7 +68,7 @@ export default async function StudentsPage() {
   }
 
   // Fetch schools for filtering (district admins only)
-  let schools = [];
+  let schools: any[] = [];
   if (profile.role === "district_admin") {
     const { data: schoolsData } = await supabase
       .from("schools")

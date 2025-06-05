@@ -5,10 +5,11 @@ import { redirect, notFound } from "next/navigation";
 import SchoolUsersManagement from "@/components/dashboard/schools/SchoolUsersManagement";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function SchoolUsersPage({ params }: PageProps) {
+  const resolvedParams = await params;
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
 
@@ -50,7 +51,7 @@ export default async function SchoolUsersPage({ params }: PageProps) {
       districts:district_id(id, name)
     `
     )
-    .eq("id", params.id)
+    .eq("id", resolvedParams.id)
     .eq("district_id", profile.district_id) // Ensure school belongs to user's district
     .single();
 
@@ -67,7 +68,7 @@ export default async function SchoolUsersPage({ params }: PageProps) {
   const { data: users } = await supabase
     .from("user_profiles")
     .select("*")
-    .eq("school_id", params.id)
+    .eq("school_id", resolvedParams.id)
     .order("created_at", { ascending: false });
 
   // Fetch all district users (not assigned to any school) for potential assignment

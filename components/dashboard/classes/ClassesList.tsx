@@ -20,6 +20,7 @@ interface ClassPeriod {
   period: string;
   school_id: string;
   created_at: string;
+  studentCount?: number;
   classes: {
     id: string;
     name: string;
@@ -59,7 +60,7 @@ export default function ClassesList({ classPeriods, profile }: ClassesListProps)
     return matchesSearch && matchesSubject;
   });
 
-  const canManageClasses = ["school_admin", "district_admin"].includes(profile.role);
+  const canManageClasses = ["school_admin", "district_admin", "teacher"].includes(profile.role);
 
   // Group class periods by subject for better organization
   const groupedBySubject = filteredClassPeriods.reduce((acc, classPeriod) => {
@@ -242,7 +243,7 @@ export default function ClassesList({ classPeriods, profile }: ClassesListProps)
                         </div>
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4" />
-                          <span>0 students enrolled</span>
+                          <span>{classPeriod.studentCount || 0} students enrolled</span>
                         </div>
                       </div>
 

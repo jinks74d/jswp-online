@@ -35,8 +35,8 @@ export default async function CreateClassPage() {
     redirect("/");
   }
 
-  // Only school admins and district admins can create classes
-  if (!["school_admin", "district_admin"].includes(profile.role)) {
+  // Only school admins, district admins, and teachers can create classes
+  if (!["school_admin", "district_admin", "teacher"].includes(profile.role)) {
     redirect("/dashboard");
   }
 

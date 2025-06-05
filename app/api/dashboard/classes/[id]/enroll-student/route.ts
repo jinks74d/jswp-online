@@ -5,10 +5,11 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params;
   try {
-    console.log("Student enrollment API called for class:", params.id);
+    console.log("Student enrollment API called for class:", resolvedParams.id);
 
     // Verify the user has permission
     const cookieStore = await cookies();
@@ -58,7 +59,7 @@ export async function POST(
     const { data: classPeriod, error: classPeriodError } = await supabase
       .from("class_periods")
       .select("id, school_id")
-      .eq("id", params.id)
+      .eq("id", resolvedParams.id)
       .single();
 
     if (classPeriodError || !classPeriod) {
@@ -96,7 +97,7 @@ export async function POST(
     const { data: existingEnrollment, error: existingError } = await supabase
       .from("class_student_enrollments")
       .select("id")
-      .eq("class_period_id", params.id)
+      .eq("class_period_id", resolvedParams.id)
       .eq("student_id", studentId)
       .single();
 
@@ -111,7 +112,7 @@ export async function POST(
     const { data: enrollment, error: createError } = await supabase
       .from("class_student_enrollments")
       .insert({
-        class_period_id: params.id,
+        class_period_id: resolvedParams.id,
         student_id: studentId,
         enrolled_by: user.id,
         school_id: classPeriod.school_id,
@@ -156,10 +157,11 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params;
   try {
-    console.log("Student unenrollment API called for class:", params.id);
+    console.log("Student unenrollment API called for class:", resolvedParams.id);
 
     // Verify the user has permission
     const cookieStore = await cookies();
@@ -209,7 +211,7 @@ export async function DELETE(
     const { error: deleteError } = await supabase
       .from("class_student_enrollments")
       .delete()
-      .eq("class_period_id", params.id)
+      .eq("class_period_id", resolvedParams.id)
       .eq("student_id", studentId);
 
     if (deleteError) {

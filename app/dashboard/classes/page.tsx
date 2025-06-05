@@ -35,22 +35,73 @@ export default async function ClassesPage() {
     redirect("/");
   }
 
-  // Get class periods for the school
-  const { data: classPeriods, error: classPeriodsError } = await supabase
-    .from("class_periods")
-    .select(`
-      *,
-      classes:class_id(
-        id,
-        name,
-        subjects:subject_id(
-          id,
-          name
+  // Get class periods based on user role
+  let classPeriods;
+  let classPeriodsError;
+
+  if (profile.role === "teacher") {
+    // For teachers, only show classes they're assigned to
+    const { data, error } = await supabase
+      .from("class_teacher_assignments")
+      .select(`
+        *,
+        class_period:class_period_id(
+          *,
+          classes:class_id(
+            id,
+            name,
+            subjects:subject_id(
+              id,
+              name
+            )
+          )
         )
-      )
-    `)
-    .eq("school_id", profile.school_id)
-    .order("period");
+      `)
+      .eq("teacher_id", user.id)
+      .order("created_at");
+
+    classPeriods = data?.map(assignment => assignment.class_period) || [];
+    classPeriodsError = error;
+  } else {
+    // For admins, show all classes in the school
+    const { data, error } = await supabase
+      .from("class_periods")
+      .select(`
+        *,
+        classes:class_id(
+          id,
+          name,
+          subjects:subject_id(
+            id,
+            name
+          )
+        )
+      `)
+      .eq("school_id", profile.school_id)
+      .order("period");
+
+    classPeriods = data;
+    classPeriodsError = error;
+  }
+
+  // Get student enrollment counts for each class period
+  if (classPeriods && classPeriods.length > 0) {
+    const classPeriodsWithCounts = await Promise.all(
+      classPeriods.map(async (classPeriod) => {
+        const { count } = await supabase
+          .from("class_student_enrollments")
+          .select("*", { count: "exact", head: true })
+          .eq("class_period_id", classPeriod.id);
+
+        return {
+          ...classPeriod,
+          studentCount: count || 0,
+        };
+      })
+    );
+
+    classPeriods = classPeriodsWithCounts;
+  }
 
   return (
     <div className="space-y-6">

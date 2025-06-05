@@ -206,10 +206,12 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
       {/* Logo and District Info */}
       <div className="flex flex-col h-20 justify-center px-6 border-b border-gray-200">
         <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-lg font-bold text-gray-900">EduPlatform</span>
+          <img 
+            src="/favicon.ico" 
+            alt="JSWP Online" 
+            className="w-8 h-8"
+          />
+          <span className="text-lg font-bold text-gray-900">JSWP Online</span>
         </div>
         <p className="text-xs text-gray-600 truncate">
           {profile.districts?.name || "District Dashboard"}

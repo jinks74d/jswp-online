@@ -45,6 +45,9 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
   const [loading, setLoading] = useState(true);
 
   const [assignedStudents, setAssignedStudents] = useState<any[]>([]);
+  const [availableStudents, setAvailableStudents] = useState<any[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [addingStudent, setAddingStudent] = useState(false);
 
   const supabase = createClient();
 
@@ -55,30 +58,117 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
 
   const fetchAssignedStudents = async () => {
     try {
+      // First get class periods where this teacher is assigned
+      const { data: teacherClassPeriods } = await supabase
+        .from("class_teacher_assignments")
+        .select("class_period_id")
+        .eq("teacher_id", profile.id);
+
+      if (!teacherClassPeriods || teacherClassPeriods.length === 0) {
+        setAssignedStudents([]);
+        return;
+      }
+
+      const classPeriodIds = teacherClassPeriods.map(tc => tc.class_period_id);
+
+      // Get students enrolled in those classes
       const { data: studentsData } = await supabase
-        .from("teacher_student_assignments")
-        .select(
-          `
+        .from("class_student_enrollments")
+        .select(`
           *,
           student:student_id(
             id,
             first_name,
             last_name,
-            email,
-            schools:school_id(name)
+            email
+          ),
+          class_period:class_period_id(
+            id,
+            period,
+            classes:class_id(
+              id,
+              name,
+              subjects:subject_id(
+                id,
+                name
+              )
+            )
           )
-        `
-        )
-        .eq("teacher_id", profile.id)
-        .eq("status", "active")
-        .order("assigned_date", { ascending: false })
-        .limit(10);
+        `)
+        .in("class_period_id", classPeriodIds)
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-      setAssignedStudents(studentsData || []);
+      // Group students by class and sort
+      const groupedStudents = (studentsData || []).reduce((acc: any, enrollment: any) => {
+        const className = `${enrollment.class_period.classes.name} - Period ${enrollment.class_period.period}`;
+        if (!acc[className]) {
+          acc[className] = [];
+        }
+        acc[className].push({
+          ...enrollment,
+          className,
+          subject: enrollment.class_period.classes.subjects.name,
+        });
+        return acc;
+      }, {});
+
+      // Flatten and sort by class name
+      const sortedStudents = Object.keys(groupedStudents)
+        .sort()
+        .flatMap(className => groupedStudents[className])
+        .slice(0, 10); // Limit to 10 for dashboard display
+
+      setAssignedStudents(sortedStudents);
     } catch (error) {
       console.error("Error fetching assigned students:", error);
     }
   };
+
+  const fetchAvailableStudents = async () => {
+    try {
+      // Get all students in the school who are not already enrolled in teacher's classes
+      const enrolledStudentIds = assignedStudents.map(s => s.student.id);
+      
+      let query = supabase
+        .from("user_profiles")
+        .select("id, first_name, last_name, email")
+        .eq("role", "student")
+        .eq("school_id", profile.school_id);
+
+      if (enrolledStudentIds.length > 0) {
+        query = query.not("id", "in", `(${enrolledStudentIds.join(",")})`);
+      }
+
+      const { data: students, error } = await query;
+
+      if (error) {
+        console.error("Error fetching available students:", error);
+      } else {
+        setAvailableStudents(students || []);
+      }
+    } catch (error) {
+      console.error("Error fetching available students:", error);
+    }
+  };
+
+  const handleAddStudent = async () => {
+    if (!selectedStudentId) return;
+    
+    setAddingStudent(true);
+    // TODO: Implement student assignment logic
+    console.log("Adding student:", selectedStudentId);
+    
+    // Reset selection
+    setSelectedStudentId("");
+    setAddingStudent(false);
+  };
+
+  useEffect(() => {
+    if (assignedStudents.length > 0) {
+      fetchAvailableStudents();
+    }
+  }, [assignedStudents]);
 
   const fetchTeacherStats = async () => {
     try {
@@ -88,6 +178,26 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         .select("*", { count: "exact", head: true })
         .eq("teacher_id", profile.id)
         .eq("status", "active");
+
+      // Get classes assigned to this teacher
+      const { data: teacherClasses, count: classesCount } = await supabase
+        .from("class_teacher_assignments")
+        .select(`
+          *,
+          class_period:class_period_id(
+            id,
+            period,
+            classes(
+              id,
+              name,
+              subjects(
+                id,
+                name
+              )
+            )
+          )
+        `, { count: "exact" })
+        .eq("teacher_id", profile.id);
 
       // Get recent assignments to this teacher's students
       const { data: recentAssignmentsData } = await supabase
@@ -103,13 +213,12 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         .order("assigned_date", { ascending: false })
         .limit(5);
 
-      // For now, show preview data for classes and assignments until those systems are built
-      const classesCount = 3; // Preview data
+      // For now, show preview data for assignments until assignment system is built
       const assignmentsCount = 5; // Preview data
       const pendingCount = 7; // Preview data
 
       setStats({
-        totalClasses: classesCount,
+        totalClasses: classesCount || 0,
         totalStudents: assignedStudentsCount || 0, // Use real student count
         totalAssignments: assignmentsCount,
         pendingGrading: pendingCount,
@@ -236,18 +345,18 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         </div>
         <div className="flex items-center gap-3">
           <Link
-            href="/dashboard/assignments/create"
+            href="/dashboard/classes"
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <Plus className="w-5 h-5" />
-            Create Assignment
+            <BookOpen className="w-5 h-5" />
+            My Classes
           </Link>
           <Link
-            href="/dashboard/classes/create"
+            href="/dashboard/assignments"
             className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
           >
-            <BookOpen className="w-5 h-5" />
-            Create Class
+            <FileText className="w-5 h-5" />
+            Assignments
           </Link>
         </div>
       </div>
@@ -311,13 +420,28 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
                 <p className="text-gray-600 mb-4">
                   Students will appear here when they're assigned to you
                 </p>
-                <Link
-                  href="/dashboard/students"
-                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Users className="w-4 h-4" />
-                  View Students
-                </Link>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedStudentId}
+                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  >
+                    <option value="">Select a student...</option>
+                    {availableStudents.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.first_name} {student.last_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAddStudent}
+                    disabled={!selectedStudentId || addingStudent}
+                    className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {addingStudent ? "Adding..." : "Add"}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -347,13 +471,13 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
                               {assignment.subject}
                             </span>
                           )}
-                          <span>• {assignment.student.schools?.name}</span>
+                          <span>• {assignment.className}</span>
                         </div>
                       </div>
                     </div>
                     <div className="text-xs text-gray-500">
-                      Assigned{" "}
-                      {new Date(assignment.assigned_date).toLocaleDateString()}
+                      Enrolled{" "}
+                      {new Date(assignment.created_at).toLocaleDateString()}
                     </div>
                   </div>
                 ))}
@@ -705,6 +829,7 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

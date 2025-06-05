@@ -17,12 +17,13 @@ const supabaseAdmin = createClient(
 );
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function PUT(request: NextRequest, { params }: RouteContext) {
+  const resolvedParams = await params;
   try {
-    console.log("User update API called for user:", params.id);
+    console.log("User update API called for user:", resolvedParams.id);
 
     // Verify the user has permission
     const cookieStore = await cookies();
@@ -68,7 +69,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     const { data: userToEdit, error: userToEditError } = await supabase
       .from("user_profiles")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", resolvedParams.id)
       .eq("district_id", profile.district_id) // Ensure user belongs to same district
       .single();
 
@@ -181,7 +182,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         role: role,
         school_id: schoolId || null,
       })
-      .eq("id", params.id);
+      .eq("id", resolvedParams.id);
 
     console.log("Profile update result:", { error: profileUpdateError });
 
@@ -198,7 +199,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     if (email.trim() !== userToEdit.email) {
       console.log("Updating auth user email...");
       const { error: emailUpdateError } =
-        await supabaseAdmin.auth.admin.updateUserById(params.id, {
+        await supabaseAdmin.auth.admin.updateUserById(resolvedParams.id, {
           email: email.trim(),
         });
 
@@ -212,7 +213,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     if (newPassword) {
       console.log("Updating user password...");
       const { error: passwordUpdateError } =
-        await supabaseAdmin.auth.admin.updateUserById(params.id, {
+        await supabaseAdmin.auth.admin.updateUserById(resolvedParams.id, {
           password: newPassword,
         });
 
@@ -234,7 +235,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({
       success: true,
       user: {
-        id: params.id,
+        id: resolvedParams.id,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),

@@ -5,12 +5,13 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import ClassDetail from "@/components/dashboard/classes/ClassDetail";
 
 interface ClassDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ClassDetailPage({ params }: ClassDetailPageProps) {
+  const resolvedParams = await params;
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
 
@@ -56,7 +57,7 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
         )
       )
     `)
-    .eq("id", params.id)
+    .eq("id", resolvedParams.id)
     .eq("school_id", profile.school_id)
     .single();
 

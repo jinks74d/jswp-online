@@ -5,10 +5,11 @@ import { redirect, notFound } from "next/navigation";
 import SchoolDetails from "@/components/dashboard/schools/SchoolDetails";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function SchoolDetailsPage({ params }: PageProps) {
+  const resolvedParams = await params;
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
 
@@ -50,7 +51,7 @@ export default async function SchoolDetailsPage({ params }: PageProps) {
       districts:district_id(id, name)
     `
     )
-    .eq("id", params.id)
+    .eq("id", resolvedParams.id)
     .eq("district_id", profile.district_id) // Ensure school belongs to user's district
     .single();
 
@@ -62,7 +63,7 @@ export default async function SchoolDetailsPage({ params }: PageProps) {
   const { data: users } = await supabase
     .from("user_profiles")
     .select("*")
-    .eq("school_id", params.id)
+    .eq("school_id", resolvedParams.id)
     .order("created_at", { ascending: false });
 
   // Fetch recent assignments for this school
@@ -74,7 +75,7 @@ export default async function SchoolDetailsPage({ params }: PageProps) {
       teacher:teacher_id(first_name, last_name)
     `
     )
-    .eq("school_id", params.id)
+    .eq("school_id", resolvedParams.id)
     .order("created_at", { ascending: false })
     .limit(5);
 

@@ -415,10 +415,97 @@ After creating the database schema:
 3. Click "View Details" on any class to access the teacher assignment feature
 4. Click "Assign Teachers" to test the modal functionality
 
+### 5. assignments
+```sql
+CREATE TABLE assignments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  due_date DATE,
+  teacher_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  district_id UUID NOT NULL REFERENCES districts(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### assignments table RLS
+```sql
+-- Enable RLS
+ALTER TABLE assignments ENABLE ROW LEVEL SECURITY;
+
+-- Policy for teachers to manage their own assignments
+CREATE POLICY "Teachers can manage their own assignments" ON assignments
+  FOR ALL USING (teacher_id = auth.uid());
+
+-- Policy for school admins and district admins to view assignments in their district
+CREATE POLICY "Admins can view assignments in their district" ON assignments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles 
+      WHERE user_profiles.id = auth.uid() 
+      AND user_profiles.district_id = assignments.district_id 
+      AND user_profiles.role IN ('school_admin', 'district_admin')
+    )
+  );
+```
+
+### assignments table indexes
+```sql
+-- Assignments indexes
+CREATE INDEX idx_assignments_teacher_id ON assignments(teacher_id);
+CREATE INDEX idx_assignments_district_id ON assignments(district_id);
+CREATE INDEX idx_assignments_due_date ON assignments(due_date);
+CREATE INDEX idx_assignments_created_at ON assignments(created_at);
+```
+
 ## Troubleshooting
 - **Error: "relation does not exist"** - You need to create the database tables first
 - **Error: "permission denied"** - Check that RLS policies are properly set up
 - **No teachers showing** - Ensure you have teacher users in your school
 - **Assignment fails** - Check that the user has school_admin or district_admin role
+- **Assignment save hanging** - Ensure the assignments table exists and has proper RLS policies
 
 The frontend code is complete and ready to use once the database schema is in place.
+
+## Assignment System Setup
+
+### IMPORTANT: Assignments Table Required
+The assignment creation functionality requires the assignments table to be created. Execute this SQL in your Supabase SQL editor:
+
+```sql
+-- Create assignments table
+CREATE TABLE assignments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  due_date DATE,
+  teacher_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  district_id UUID NOT NULL REFERENCES districts(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE assignments ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies
+CREATE POLICY "Teachers can manage their own assignments" ON assignments
+  FOR ALL USING (teacher_id = auth.uid());
+
+CREATE POLICY "Admins can view assignments in their district" ON assignments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles 
+      WHERE user_profiles.id = auth.uid() 
+      AND user_profiles.district_id = assignments.district_id 
+      AND user_profiles.role IN ('school_admin', 'district_admin')
+    )
+  );
+
+-- Create indexes
+CREATE INDEX idx_assignments_teacher_id ON assignments(teacher_id);
+CREATE INDEX idx_assignments_district_id ON assignments(district_id);
+CREATE INDEX idx_assignments_due_date ON assignments(due_date);
+CREATE INDEX idx_assignments_created_at ON assignments(created_at);
+```

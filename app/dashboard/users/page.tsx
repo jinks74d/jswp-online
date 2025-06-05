@@ -61,7 +61,7 @@ export default async function UsersPage() {
   }
 
   // Fetch schools for the district (for district admins)
-  let schools = [];
+  let schools: any[] = [];
   if (profile.role === "district_admin") {
     const { data: schoolsData } = await supabase
       .from("schools")
