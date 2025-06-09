@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Edit, Trash2, Calendar, User, Building, FileText } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Calendar, User, Building, FileText, Play, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserRole, createClient } from "@/lib/supabase";
@@ -108,24 +108,44 @@ export default function AssignmentDetail({
         
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          {canEdit && (
-            <Link
-              href={`/dashboard/assignments/${assignment.id}/edit`}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Edit className="w-4 h-4" />
-              Edit
-            </Link>
-          )}
-          {canDelete && (
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-              {deleting ? "Deleting..." : "Delete"}
-            </button>
+          {currentUserRole === "student" ? (
+            // Student view - Start/Continue assignment
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/dashboard/assignments/${assignment.id}/start`}
+                className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                <Play className="w-5 h-5" />
+                Start Assignment
+              </Link>
+              <button className="flex items-center gap-2 bg-gray-600 text-white px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                <RotateCcw className="w-4 h-4" />
+                Reset Progress
+              </button>
+            </div>
+          ) : (
+            // Teacher/Admin view - Edit/Delete
+            <>
+              {canEdit && (
+                <Link
+                  href={`/dashboard/assignments/${assignment.id}/edit`}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Link>
+              )}
+              {canDelete && (
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {deleting ? "Deleting..." : "Delete"}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -181,6 +201,15 @@ export default function AssignmentDetail({
                   </label>
                   <p className="text-gray-900">{formatDate(assignment.due_date)}</p>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Writing Prompt
+                  </label>
+                  <p className="text-gray-900">
+                    {(assignment as any).prompt || "No prompt provided"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -225,58 +254,106 @@ export default function AssignmentDetail({
         </div>
 
         {/* Assignment Statistics */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment Statistics</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <User className="w-4 h-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-blue-600">Total Students</p>
-                  <p className="text-xl font-bold text-blue-900">0</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-green-600">Submissions</p>
-                  <p className="text-xl font-bold text-green-900">0</p>
+        {currentUserRole !== "student" && (
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment Statistics</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-600">Total Students</p>
+                    <p className="text-xl font-bold text-blue-900">0</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-orange-50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-4 h-4 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-orange-600">Pending</p>
-                  <p className="text-xl font-bold text-orange-900">0</p>
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-600">Submissions</p>
+                    <p className="text-xl font-bold text-green-900">0</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-purple-50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Building className="w-4 h-4 text-purple-600" />
+              <div className="bg-orange-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-orange-600">Pending</p>
+                    <p className="text-xl font-bold text-orange-900">0</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-purple-600">Graded</p>
-                  <p className="text-xl font-bold text-purple-900">0</p>
+              </div>
+
+              <div className="bg-purple-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Building className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-purple-600">Graded</p>
+                    <p className="text-xl font-bold text-purple-900">0</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Student Progress Section */}
+        {currentUserRole === "student" && (
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Progress</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Play className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-600">Status</p>
+                    <p className="text-xl font-bold text-blue-900">Not Started</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-600">Progress</p>
+                    <p className="text-xl font-bold text-green-900">0%</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-orange-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-orange-600">Time Remaining</p>
+                    <p className="text-xl font-bold text-orange-900">
+                      {Math.ceil((new Date(assignment.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Future Features Notice */}

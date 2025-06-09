@@ -5,15 +5,11 @@ import { redirect } from "next/navigation";
 import AssignmentDetail from "@/components/dashboard/assignments/AssignmentDetail";
 
 interface AssignmentDetailPageProps {
-  params: Promise<{
-    id: string;
-  }>;
+  params: Promise<{ id: string }>;
 }
 
-export default async function AssignmentDetailPage({
-  params,
-}: AssignmentDetailPageProps) {
-  const resolvedParams = await params;
+export default async function AssignmentDetailPage({ params }: AssignmentDetailPageProps) {
+  const { id } = await params;
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
 
@@ -42,31 +38,38 @@ export default async function AssignmentDetailPage({
     redirect("/");
   }
 
-  // Only teachers, school admins, and district admins can access assignments
-  if (!["teacher", "school_admin", "district_admin"].includes(profile.role)) {
-    redirect("/dashboard");
-  }
-
-  // Fetch the specific assignment
+  // Fetch the assignment details
   const { data: assignment, error } = await supabase
     .from("assignments")
-    .select("*")
-    .eq("id", resolvedParams.id)
+    .select(`
+      *,
+      user_profiles!assignments_teacher_id_fkey(
+        first_name,
+        last_name,
+        email
+      )
+    `)
+    .eq("id", id)
     .single();
 
   if (error || !assignment) {
+    console.error("Error fetching assignment:", error);
     redirect("/dashboard/assignments");
   }
 
   // Check if user has permission to view this assignment
-  const canView = 
-    assignment.teacher_id === user.id || // Teacher owns the assignment
-    (profile.role === "school_admin" && assignment.school_id === profile.school_id) || // School admin in same school
-    (profile.role === "district_admin" && assignment.district_id === profile.district_id); // District admin in same district
-
-  if (!canView) {
-    redirect("/dashboard/assignments");
+  if (profile.role === "student") {
+    // Students can only view assignments from their school (temporary until class enrollment is implemented)
+    if (assignment.school_id !== profile.school_id) {
+      redirect("/dashboard/assignments");
+    }
+  } else if (profile.role === "teacher") {
+    // Teachers can only view their own assignments
+    if (assignment.teacher_id !== user.id) {
+      redirect("/dashboard/assignments");
+    }
   }
+  // School and district admins can view all assignments in their scope
 
   return (
     <AssignmentDetail

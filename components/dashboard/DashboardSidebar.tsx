@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { UserProfile, UserRole } from "@/lib/supabase";
 
 interface DashboardSidebarProps {
@@ -153,10 +153,10 @@ const getNavigationItems = (role: UserRole, pathname: string) => {
           current: pathname.startsWith("/dashboard/classes"),
         },
         {
-          name: "Profile",
-          href: "/dashboard/profile",
-          icon: Settings,
-          current: pathname.startsWith("/dashboard/profile"),
+          name: "My Grades",
+          href: "/dashboard/grades",
+          icon: GraduationCap,
+          current: pathname.startsWith("/dashboard/grades"),
         },
       ];
 
@@ -185,13 +185,14 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
-  const supabase = createClient();
+  const { signOut } = useAuth();
 
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
-      await supabase.auth.signOut();
-      router.push("/");
+      await signOut();
+      // Force a hard redirect to ensure session is cleared
+      window.location.href = "/";
     } catch (error) {
       console.error("Error signing out:", error);
       setSigningOut(false);

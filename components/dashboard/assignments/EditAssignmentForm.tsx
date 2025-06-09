@@ -54,9 +54,9 @@ export default function EditAssignmentForm({
   const [formData, setFormData] = useState({
     assignmentName: assignment.title,
     description: assignment.description,
-    course: "", // We'll need to determine this from the assignment
+    course: (assignment as any).class_period_id || "", // Get from assignment
     dueDate: assignment.due_date,
-    prompt: "", // This field might not exist in the current assignment
+    prompt: (assignment as any).prompt || "", // Get from assignment
   });
 
   const [saving, setSaving] = useState(false);
@@ -79,10 +79,19 @@ export default function EditAssignmentForm({
         title: formData.assignmentName,
         description: formData.description,
         due_date: formData.dueDate,
+        prompt: formData.prompt,
+        class_period_id: formData.course || null,
         // Don't update teacher_id, district_id, or school_id as these shouldn't change
       };
 
       console.log("Updating assignment:", assignmentData);
+      console.log("Form data being saved:", {
+        title: formData.assignmentName,
+        description: formData.description,
+        due_date: formData.dueDate,
+        prompt: formData.prompt,
+        course: formData.course
+      });
 
       // Update the assignment in the database
       const { data, error } = await supabase

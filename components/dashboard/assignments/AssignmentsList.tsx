@@ -370,7 +370,7 @@ export default function AssignmentsList({
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment)}`}>
                             {getStatusText(assignment)}
                           </span>
-                          {canCreateAssignments && (
+                          {canCreateAssignments ? (
                             <div className="flex items-center gap-1">
                               <Link
                                 href={`/dashboard/assignments/${assignment.id}`}
@@ -394,6 +394,16 @@ export default function AssignmentsList({
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
+                            </div>
+                          ) : (
+                            // Student view - Open Assignment button
+                            <div className="flex items-center gap-2">
+                              <Link
+                                href={`/dashboard/assignments/${assignment.id}`}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                              >
+                                Open Assignment
+                              </Link>
                             </div>
                           )}
                         </div>

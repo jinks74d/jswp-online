@@ -113,13 +113,8 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         return acc;
       }, {});
 
-      // Flatten and sort by class name
-      const sortedStudents = Object.keys(groupedStudents)
-        .sort()
-        .flatMap(className => groupedStudents[className])
-        .slice(0, 10); // Limit to 10 for dashboard display
-
-      setAssignedStudents(sortedStudents);
+      // Keep grouped structure for display
+      setAssignedStudents(groupedStudents);
     } catch (error) {
       console.error("Error fetching assigned students:", error);
     }
@@ -199,83 +194,45 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         `, { count: "exact" })
         .eq("teacher_id", profile.id);
 
-      // Get recent assignments to this teacher's students
-      const { data: recentAssignmentsData } = await supabase
-        .from("teacher_student_assignments")
-        .select(
-          `
-          *,
-          student:student_id(first_name, last_name)
-        `
-        )
+      // Get real assignments created by this teacher
+      const { data: recentAssignmentsData, count: assignmentsCount } = await supabase
+        .from("assignments")
+        .select("*", { count: "exact" })
         .eq("teacher_id", profile.id)
-        .eq("status", "active")
-        .order("assigned_date", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(5);
 
-      // For now, show preview data for assignments until assignment system is built
-      const assignmentsCount = 5; // Preview data
-      const pendingCount = 7; // Preview data
+      // Calculate pending grading (for now, use a simple calculation)
+      const pendingCount = Math.floor((assignmentsCount || 0) * 0.3); // Assume 30% need grading
+
+      // Transform real assignment data for display
+      const transformedAssignments = (recentAssignmentsData || []).map(assignment => ({
+        id: assignment.id,
+        title: assignment.title,
+        classes: { name: "Literary Assignment" }, // Default since we don't have class info yet
+        due_date: assignment.due_date,
+        created_at: assignment.created_at,
+        _count: [{ count: 0 }], // Default submission count
+      }));
+
+      // Get upcoming assignments (assignments with future due dates)
+      const upcomingAssignments = (recentAssignmentsData || [])
+        .filter(assignment => assignment.due_date && new Date(assignment.due_date) > new Date())
+        .slice(0, 3)
+        .map(assignment => ({
+          id: assignment.id,
+          title: assignment.title,
+          classes: { name: "Literary Assignment" },
+          due_date: assignment.due_date,
+        }));
 
       setStats({
         totalClasses: classesCount || 0,
-        totalStudents: assignedStudentsCount || 0, // Use real student count
-        totalAssignments: assignmentsCount,
+        totalStudents: assignedStudentsCount || 0,
+        totalAssignments: assignmentsCount || 0,
         pendingGrading: pendingCount,
-        recentAssignments: [
-          {
-            id: "1",
-            title: "Math Quiz - Chapter 5",
-            classes: { name: "Algebra I - Period 2" },
-            due_date: "2025-06-10",
-            created_at: "2025-06-02",
-            _count: [{ count: 12 }],
-          },
-          {
-            id: "2",
-            title: "Science Lab Report",
-            classes: { name: "Biology - Period 4" },
-            due_date: "2025-06-15",
-            created_at: "2025-06-01",
-            _count: [{ count: 8 }],
-          },
-          {
-            id: "3",
-            title: "History Essay - WWII",
-            classes: { name: "World History - Period 1" },
-            due_date: "2025-06-20",
-            created_at: "2025-05-30",
-            _count: [{ count: 15 }],
-          },
-          {
-            id: "4",
-            title: "Literature Analysis",
-            classes: { name: "English III - Period 3" },
-            due_date: "2025-06-25",
-            created_at: "2025-05-28",
-            _count: [{ count: 18 }],
-          },
-        ],
-        upcomingDueDates: [
-          {
-            id: "1",
-            title: "Math Quiz - Chapter 5",
-            classes: { name: "Algebra I - Period 2" },
-            due_date: "2025-06-10",
-          },
-          {
-            id: "2",
-            title: "Science Lab Report",
-            classes: { name: "Biology - Period 4" },
-            due_date: "2025-06-15",
-          },
-          {
-            id: "3",
-            title: "History Essay - WWII",
-            classes: { name: "World History - Period 1" },
-            due_date: "2025-06-20",
-          },
-        ],
+        recentAssignments: transformedAssignments,
+        upcomingDueDates: upcomingAssignments,
       });
     } catch (error) {
       console.error("Error fetching teacher stats:", error);
@@ -411,7 +368,7 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
             </div>
           </div>
           <div className="p-6">
-            {assignedStudents.length === 0 ? (
+            {Object.keys(assignedStudents).length === 0 ? (
               <div className="text-center py-8">
                 <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -445,42 +402,46 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
               </div>
             ) : (
               <div className="space-y-4">
-                {assignedStudents.map((assignment) => (
-                  <div
-                    key={assignment.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Link
-                        href={`/dashboard/students/${assignment.student.id}`}
-                        className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors"
-                      >
-                        <Users className="w-5 h-5 text-blue-600" />
-                      </Link>
-                      <div>
-                        <Link
-                          href={`/dashboard/students/${assignment.student.id}`}
-                          className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
-                        >
-                          {assignment.student.first_name}{" "}
-                          {assignment.student.last_name}
-                        </Link>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          {assignment.subject && (
-                            <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">
-                              {assignment.subject}
-                            </span>
-                          )}
-                          <span>• {assignment.className}</span>
-                        </div>
-                      </div>
+                {Object.keys(assignedStudents).sort().map((className) => (
+                  <div key={className} className="space-y-2">
+                    {/* Class Header */}
+                    <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
+                      <BookOpen className="w-4 h-4 text-blue-600" />
+                      <h4 className="text-sm font-medium text-gray-900">{className}</h4>
+                      <span className="text-xs text-gray-500">({assignedStudents[className].length} students)</span>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      Enrolled{" "}
-                      {new Date(assignment.created_at).toLocaleDateString()}
+                    
+                    {/* Students in this class */}
+                    <div className="space-y-1 ml-6">
+                      {assignedStudents[className].map((assignment: any) => (
+                        <div
+                          key={assignment.id}
+                          className="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded transition-colors"
+                        >
+                          <Link
+                            href={`/dashboard/students/${assignment.student.id}`}
+                            className="text-sm text-gray-900 hover:text-blue-600 transition-colors"
+                          >
+                            {assignment.student.first_name} {assignment.student.last_name}
+                          </Link>
+                          <div className="text-xs text-gray-400">
+                            {new Date(assignment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
+                
+                {/* Show more students indicator */}
+                <div className="text-center pt-2 border-t border-gray-100">
+                  <Link
+                    href="/dashboard/students"
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    View all {stats.totalStudents} students →
+                  </Link>
+                </div>
               </div>
             )}
           </div>

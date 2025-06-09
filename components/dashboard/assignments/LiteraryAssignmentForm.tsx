@@ -61,7 +61,7 @@ export default function LiteraryAssignmentForm({
     try {
       const supabase = createClient();
 
-      // Create the assignment object (using only existing table columns)
+      // Create the assignment object (including class_period_id if course is selected)
       const assignmentData = {
         title: formData.assignmentName,
         description: formData.description,
@@ -69,6 +69,8 @@ export default function LiteraryAssignmentForm({
         teacher_id: userId,
         district_id: districtId,
         school_id: currentUserSchool?.id, // Add required school_id
+        class_period_id: formData.course || null, // Add class_period_id from course selection
+        prompt: formData.prompt, // Add the writing prompt
       };
 
       console.log("Saving assignment:", assignmentData);
