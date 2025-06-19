@@ -1,4 +1,3 @@
-// components/dashboard/assignments/GatheringCdsForm.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -6,21 +5,6 @@ import { ArrowLeft, Clock, User, HelpCircle, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserProfile } from "@/lib/supabase";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import SortableCDItem from './SortableCDItem';
 
 interface Assignment {
   id: string;
@@ -49,7 +33,15 @@ interface Assignment {
   } | null;
 }
 
-interface GatheringCdsFormProps {
+interface CommentaryData {
+  chunk1Words: string[];
+  chunk2Words: string[];
+  selectedCD1: string;
+  selectedCD2: string;
+  selectedChunks: number;
+}
+
+interface CommentaryGenerationFormProps {
   assignment: Assignment;
   studentProfile: UserProfile & {
     districts?: { id: string; name: string };
@@ -57,56 +49,25 @@ interface GatheringCdsFormProps {
   };
 }
 
-export default function GatheringCdsForm({
+export default function CommentaryGenerationForm({
   assignment,
   studentProfile,
-}: GatheringCdsFormProps) {
+}: CommentaryGenerationFormProps) {
   const router = useRouter();
-  const [chunk1CDs, setChunk1CDs] = useState<string[]>([]);
-  const [chunk2CDs, setChunk2CDs] = useState<string[]>([]);
-  const [selectedChunk1CD, setSelectedChunk1CD] = useState<number | null>(null);
-  const [selectedChunk2CD, setSelectedChunk2CD] = useState<number | null>(null);
-  const [currentChunk1Input, setCurrentChunk1Input] = useState("");
-  const [currentChunk2Input, setCurrentChunk2Input] = useState("");
-  const [selectedChunks, setSelectedChunks] = useState(1); // Default to 1, will be loaded from previous step
+  const [commentaryData, setCommentaryData] = useState<CommentaryData>({
+    chunk1Words: ["", "", "", "", ""],
+    chunk2Words: ["", "", "", "", ""],
+    selectedCD1: "",
+    selectedCD2: "",
+    selectedChunks: 1
+  });
   const [saving, setSaving] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
-  // Drag and drop sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const addChunk1CD = () => {
-    if (currentChunk1Input.trim()) {
-      setChunk1CDs([...chunk1CDs, currentChunk1Input.trim()]);
-      setCurrentChunk1Input("");
-    }
-  };
-
-  const addChunk2CD = () => {
-    if (currentChunk2Input.trim()) {
-      setChunk2CDs([...chunk2CDs, currentChunk2Input.trim()]);
-      setCurrentChunk2Input("");
-    }
-  };
-
-  const selectChunk1CD = (index: number) => {
-    setSelectedChunk1CD(selectedChunk1CD === index ? null : index);
-  };
-
-  const selectChunk2CD = (index: number) => {
-    setSelectedChunk2CD(selectedChunk2CD === index ? null : index);
-  };
-
   // Auto-save functionality with debouncing
   const debouncedAutoSave = useCallback(
-    async (data: any) => {
+    async (data: CommentaryData) => {
       setAutoSaveStatus('saving');
       try {
         // First get existing data to preserve previous steps
@@ -125,9 +86,9 @@ export default function GatheringCdsForm({
         // Merge with existing data to preserve previous steps
         const mergedData = {
           ...existingStepData,
-          ...data,  // Step 1 data
-          status: "gathering_cds",
-          working_on: "step_1"
+          step2: data,
+          status: "generating_commentary",
+          working_on: "step_2"
         };
 
         const response = await fetch('/api/student-progress', {
@@ -155,64 +116,14 @@ export default function GatheringCdsForm({
   // Auto-save when data changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (chunk1CDs.length > 0 || chunk2CDs.length > 0) {
-        debouncedAutoSave({
-          chunk1CDs,
-          chunk2CDs,
-          selectedChunk1CD,
-          selectedChunk2CD,
-          selectedChunks
-        });
+      if (commentaryData.chunk1Words.some(word => word.trim()) || 
+          commentaryData.chunk2Words.some(word => word.trim())) {
+        debouncedAutoSave(commentaryData);
       }
-    }, 1000); // Auto-save after 1 second of inactivity
+    }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [chunk1CDs, chunk2CDs, selectedChunk1CD, selectedChunk2CD, selectedChunks, debouncedAutoSave]);
-
-  // Drag and drop handlers
-  const handleDragEnd = (event: any, chunkNumber: 1 | 2) => {
-    const { active, over } = event;
-
-    if (active.id !== over.id) {
-      if (chunkNumber === 1) {
-        setChunk1CDs((items) => {
-          const oldIndex = items.findIndex((_, index) => `chunk1-${index}` === active.id);
-          const newIndex = items.findIndex((_, index) => `chunk1-${index}` === over.id);
-          
-          const newItems = arrayMove(items, oldIndex, newIndex);
-          
-          // Update selected index if needed
-          if (selectedChunk1CD === oldIndex) {
-            setSelectedChunk1CD(newIndex);
-          } else if (selectedChunk1CD !== null && selectedChunk1CD > oldIndex && selectedChunk1CD <= newIndex) {
-            setSelectedChunk1CD(selectedChunk1CD - 1);
-          } else if (selectedChunk1CD !== null && selectedChunk1CD < oldIndex && selectedChunk1CD >= newIndex) {
-            setSelectedChunk1CD(selectedChunk1CD + 1);
-          }
-          
-          return newItems;
-        });
-      } else {
-        setChunk2CDs((items) => {
-          const oldIndex = items.findIndex((_, index) => `chunk2-${index}` === active.id);
-          const newIndex = items.findIndex((_, index) => `chunk2-${index}` === over.id);
-          
-          const newItems = arrayMove(items, oldIndex, newIndex);
-          
-          // Update selected index if needed
-          if (selectedChunk2CD === oldIndex) {
-            setSelectedChunk2CD(newIndex);
-          } else if (selectedChunk2CD !== null && selectedChunk2CD > oldIndex && selectedChunk2CD <= newIndex) {
-            setSelectedChunk2CD(selectedChunk2CD - 1);
-          } else if (selectedChunk2CD !== null && selectedChunk2CD < oldIndex && selectedChunk2CD >= newIndex) {
-            setSelectedChunk2CD(selectedChunk2CD + 1);
-          }
-          
-          return newItems;
-        });
-      }
-    }
-  };
+  }, [commentaryData, debouncedAutoSave]);
 
   // Load previous step data on component mount
   useEffect(() => {
@@ -222,22 +133,37 @@ export default function GatheringCdsForm({
         const result = await response.json();
         
         if (response.ok && result.data) {
-          // Load selectedChunks from previous step
-          if (result.data.selected_chunks) {
-            setSelectedChunks(result.data.selected_chunks);
-          }
-          
-          // Load any existing CD data if returning to this step
+          // Load CDs from Step 1
           if (result.data.concrete_details) {
             try {
-              const cdData = JSON.parse(result.data.concrete_details);
-              if (cdData.chunk1CDs) setChunk1CDs(cdData.chunk1CDs);
-              if (cdData.chunk2CDs) setChunk2CDs(cdData.chunk2CDs);
-              if (cdData.selectedChunk1CD !== undefined) setSelectedChunk1CD(cdData.selectedChunk1CD);
-              if (cdData.selectedChunk2CD !== undefined) setSelectedChunk2CD(cdData.selectedChunk2CD);
-              if (cdData.selectedChunks) setSelectedChunks(cdData.selectedChunks);
+              const stepData = JSON.parse(result.data.concrete_details);
+              
+              // Load Step 1 data (selected CDs)
+              if (stepData.chunk1CDs && stepData.selectedChunk1CD !== null) {
+                setCommentaryData(prev => ({
+                  ...prev,
+                  selectedCD1: stepData.chunk1CDs[stepData.selectedChunk1CD] || "",
+                  selectedChunks: stepData.selectedChunks || 1
+                }));
+              }
+              
+              if (stepData.chunk2CDs && stepData.selectedChunk2CD !== null && stepData.selectedChunks === 2) {
+                setCommentaryData(prev => ({
+                  ...prev,
+                  selectedCD2: stepData.chunk2CDs[stepData.selectedChunk2CD] || ""
+                }));
+              }
+
+              // Load Step 2 data if returning to this step
+              if (stepData.step2) {
+                setCommentaryData(prev => ({
+                  ...prev,
+                  chunk1Words: stepData.step2.chunk1Words || ["", "", "", "", ""],
+                  chunk2Words: stepData.step2.chunk2Words || ["", "", "", "", ""]
+                }));
+              }
             } catch (error) {
-              console.log("No existing CD data to load");
+              console.log("No existing step data to load");
             }
           }
         }
@@ -248,6 +174,21 @@ export default function GatheringCdsForm({
 
     loadPreviousData();
   }, [assignment.id, studentProfile.id]);
+
+  const updateWord = (chunkNumber: 1 | 2, index: number, value: string) => {
+    setCommentaryData(prev => {
+      const wordsKey = `chunk${chunkNumber}Words` as 'chunk1Words' | 'chunk2Words';
+      const currentWords = prev[wordsKey];
+      const updatedWords = currentWords.map((word: string, i: number) => 
+        i === index ? value : word
+      );
+      
+      return {
+        ...prev,
+        [wordsKey]: updatedWords
+      };
+    });
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -268,13 +209,9 @@ export default function GatheringCdsForm({
       // Merge with existing data to preserve previous steps
       const mergedData = {
         ...existingStepData,
-        chunk1CDs,
-        chunk2CDs,
-        selectedChunk1CD,
-        selectedChunk2CD,
-        selectedChunks,
-        status: "gathering_cds",
-        working_on: "step_1"
+        step2: commentaryData,
+        status: "generating_commentary",
+        working_on: "step_2"
       };
 
       const progressData = {
@@ -284,9 +221,6 @@ export default function GatheringCdsForm({
         status: "in_progress",
       };
 
-      console.log("Saving CDs and selections:", progressData);
-
-      // Call the API to save to database
       const response = await fetch('/api/student-progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -299,32 +233,13 @@ export default function GatheringCdsForm({
         throw new Error(result.error || 'Failed to save progress');
       }
 
-      alert(`✅ CDs saved successfully!`);
+      alert(`✅ Commentary words saved successfully!`);
       
     } catch (error) {
-      console.error("Error saving CDs:", error);
+      console.error("Error saving commentary:", error);
       alert(`❌ Error saving: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    try {
-      // Save and submit the assignment
-      await handleSave();
-      
-      // TODO: Mark assignment as submitted
-      console.log("Submitting assignment with concrete details");
-      
-      alert("Assignment submitted successfully!");
-      router.push(`/dashboard/assignments/${assignment.id}`);
-    } catch (error) {
-      console.error("Error submitting assignment:", error);
-      alert("Error submitting assignment. Please try again.");
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -406,18 +321,9 @@ export default function GatheringCdsForm({
             </div>
           </div>
         </div>
-
-        {assignment.description && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-2">
-              Assignment Instructions
-            </h3>
-            <p className="text-gray-700">{assignment.description}</p>
-          </div>
-        )}
       </div>
 
-      {/* Main Form - GATHERING CDS */}
+      {/* Main Form - GENERATING COMMENTARY */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-4xl mx-auto">
         {/* Literary Header with Icon and Help */}
         <div className="flex items-center gap-4 mb-8">
@@ -427,7 +333,7 @@ export default function GatheringCdsForm({
             className="w-12 h-12 rounded-full object-cover"
           />
           <h2 className="text-2xl font-bold text-gray-900">
-            GATHERING CDS
+            GENERATING COMMENTARY
           </h2>
           <button
             onClick={() => setShowTipModal(true)}
@@ -458,132 +364,76 @@ export default function GatheringCdsForm({
 
         {/* Form Content */}
         <div className="space-y-8">
-          {/* Writing Prompt - Read Only for Reference */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Writing Prompt
-            </label>
-            <div className="w-full px-4 py-3 border border-[#23366e] rounded-lg bg-[#23366e] text-white">
-              {assignment.prompt || "No prompt provided"}
-            </div>
+          {/* Display selected CD from Step 1 */}
+          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+            <h3 className="text-red-800 font-medium mb-2">Your Selected CD (Chunk 1):</h3>
+            <p className="text-red-700">{commentaryData.selectedCD1 || "No CD selected from previous step"}</p>
           </div>
 
-          {/* Instructions */}
+          {/* Word input for Chunk 1 */}
           <div>
-            <p className="text-sm font-medium text-gray-700">
-              Think of two or more possible concrete details (CDS). That would fit the prompt and write them below.
-            </p>
-          </div>
-
-          {/* CDs for Chunk 1 */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 uppercase">
-              CDs for Chunk 1
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Brainstorm 5 single words that describe how this action makes the character feel:
             </h3>
-            
-            {/* Input for new CD */}
-            <div className="flex gap-3 mb-4">
-              <input
-                type="text"
-                value={currentChunk1Input}
-                onChange={(e) => setCurrentChunk1Input(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addChunk1CD()}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-[#13161f]"
-                placeholder="Enter a concrete detail for chunk 1..."
-              />
-              <button
-                onClick={addChunk1CD}
-                className="px-6 py-3 bg-[#23366e] text-white rounded-lg hover:bg-[#1a2a5a] transition-colors font-medium"
-              >
-                Add CD
-              </button>
-            </div>
-
-            {/* Display added CDs with drag-and-drop */}
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={(event) => handleDragEnd(event, 1)}
-            >
-              <SortableContext
-                items={chunk1CDs.map((_, index) => `chunk1-${index}`)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="space-y-2">
-                  {chunk1CDs.map((cd, index) => (
-                    <SortableCDItem
-                      key={`chunk1-${index}`}
-                      id={`chunk1-${index}`}
-                      cd={cd}
-                      index={index}
-                      isSelected={selectedChunk1CD === index}
-                      onSelect={() => selectChunk1CD(index)}
-                    />
-                  ))}
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map(num => (
+                <div key={num} className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-[#b3172c] text-white rounded-full flex items-center justify-center text-sm font-medium">
+                    {num}
+                  </div>
+                  <input
+                    type="text"
+                    value={commentaryData.chunk1Words[num - 1]}
+                    onChange={(e) => updateWord(1, num - 1, e.target.value)}
+                    placeholder={`Word ${num}`}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-[#13161f]"
+                  />
                 </div>
-              </SortableContext>
-            </DndContext>
+              ))}
+            </div>
           </div>
 
-          {/* CDs for Chunk 2 - Only show if selectedChunks is 2 */}
-          {selectedChunks === 2 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 uppercase">
-                CDs for Chunk 2
-              </h3>
-              
-              {/* Input for new CD */}
-              <div className="flex gap-3 mb-4">
-                <input
-                  type="text"
-                  value={currentChunk2Input}
-                  onChange={(e) => setCurrentChunk2Input(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addChunk2CD()}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-[#13161f]"
-                  placeholder="Enter a concrete detail for chunk 2..."
-                />
-                <button
-                  onClick={addChunk2CD}
-                  className="px-6 py-3 bg-[#23366e] text-white rounded-lg hover:bg-[#1a2a5a] transition-colors font-medium"
-                >
-                  Add CD
-                </button>
+          {/* Chunk 2 section - Only show if selectedChunks is 2 */}
+          {commentaryData.selectedChunks === 2 && (
+            <>
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <h3 className="text-red-800 font-medium mb-2">Your Selected CD (Chunk 2):</h3>
+                <p className="text-red-700">{commentaryData.selectedCD2 || "No CD selected from previous step"}</p>
               </div>
 
-              {/* Display added CDs with drag-and-drop */}
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={(event) => handleDragEnd(event, 2)}
-              >
-                <SortableContext
-                  items={chunk2CDs.map((_, index) => `chunk2-${index}`)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-2">
-                    {chunk2CDs.map((cd, index) => (
-                      <SortableCDItem
-                        key={`chunk2-${index}`}
-                        id={`chunk2-${index}`}
-                        cd={cd}
-                        index={index}
-                        isSelected={selectedChunk2CD === index}
-                        onSelect={() => selectChunk2CD(index)}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Brainstorm 5 single words that describe how this action makes the character feel:
+                </h3>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <div key={num} className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-[#b3172c] text-white rounded-full flex items-center justify-center text-sm font-medium">
+                        {num}
+                      </div>
+                      <input
+                        type="text"
+                        value={commentaryData.chunk2Words[num - 1]}
+                        onChange={(e) => updateWord(2, num - 1, e.target.value)}
+                        placeholder={`Word ${num}`}
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-[#13161f]"
                       />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
 
-          {/* Selection Instructions */}
+          {/* Instructions */}
           <div className="bg-gray-50 p-6 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Click the one CD per chunk which fits the assignment best.
+              Instructions
             </h3>
             <p className="text-gray-700">
-              Click or tap "Save and Next" when you have selected your best CDs.
+              Think about how the character feels as a result of the action described in your concrete detail. 
+              Write single words that capture these emotions or feelings. These words will become the foundation 
+              for your commentary in the next step.
             </p>
           </div>
         </div>
@@ -599,7 +449,7 @@ export default function GatheringCdsForm({
 
           <button
             onClick={handleSave}
-            disabled={saving || submitting}
+            disabled={saving}
             className="px-6 py-3 bg-[#13161f] text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors font-medium"
           >
             {saving ? "Saving..." : "Save"}
@@ -609,10 +459,10 @@ export default function GatheringCdsForm({
             onClick={async () => {
               await handleSave();
               if (!saving) {
-                router.push(`/dashboard/assignments/${assignment.id}/commentary`);
+                router.push(`/dashboard/assignments/${assignment.id}/decisions`);
               }
             }}
-            disabled={saving || submitting}
+            disabled={saving}
             className="px-6 py-3 bg-[#3f8b31] text-white rounded-lg hover:bg-[#2d6625] disabled:opacity-50 transition-colors font-medium"
           >
             {saving ? "Saving..." : "Save and Next"}
@@ -627,12 +477,12 @@ export default function GatheringCdsForm({
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-[#23366e]">Gathering CDS</div>
+            <div className="text-2xl font-bold text-[#23366e]">Generating Commentary</div>
             <div className="text-sm text-[#23366e]">Current Step</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <div className="text-2xl font-bold text-[#3f8b31]">
-              50%
+              33%
             </div>
             <div className="text-sm text-[#3f8b31]">Estimated Progress</div>
           </div>
@@ -650,7 +500,7 @@ export default function GatheringCdsForm({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">GATHERING CDS Tips</h3>
+              <h3 className="text-xl font-bold text-gray-900">GENERATING COMMENTARY Tips</h3>
               <button
                 onClick={() => setShowTipModal(false)}
                 className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
@@ -661,15 +511,19 @@ export default function GatheringCdsForm({
             
             <div className="space-y-4 text-gray-700">
               <div>
-                <span className="font-semibold text-[#23366e]">1.</span> LIST AND ADD 3-5 concrete details (CDs), but you may also add as many as you like. You may click &lt;Add CD&gt; or touch "Enter" on the keyboard to add CDs.
+                <span className="font-semibold text-[#23366e]">1.</span> Think about the character's emotional response to the action in your concrete detail.
               </div>
               
               <div>
-                <span className="font-semibold text-[#23366e]">2.</span> You may list several and then combine them into one sentence on a CD line and select that one.
+                <span className="font-semibold text-[#23366e]">2.</span> Use single words that describe feelings, emotions, or states of mind.
               </div>
               
               <div>
-                <span className="font-semibold text-[#23366e]">3.</span> HIGHLIGHT the one line of CDs that you want to use for each chunk. Remember, for literary analysis, the ratio is 1:2+, so this step helps you combine the CDs you want into one sentence.
+                <span className="font-semibold text-[#23366e]">3.</span> These words will help you build commentary that explains the significance of your concrete details.
+              </div>
+              
+              <div>
+                <span className="font-semibold text-[#23366e]">4.</span> Examples: frustrated, determined, hopeful, anxious, proud, confused, etc.
               </div>
             </div>
             

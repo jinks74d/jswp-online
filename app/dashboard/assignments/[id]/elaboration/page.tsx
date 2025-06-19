@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import GatheringCdsForm from "@/components/dashboard/assignments/GatheringCdsForm";
+import ElaborationForm from "@/components/dashboard/assignments/ElaborationForm";
 
 interface PageProps {
   params: Promise<{
@@ -9,7 +9,7 @@ interface PageProps {
   }>;
 }
 
-export default async function GatheringCdsPage({ params }: PageProps) {
+export default async function ElaborationPage({ params }: PageProps) {
   const { id } = await params;
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
@@ -68,7 +68,7 @@ export default async function GatheringCdsPage({ params }: PageProps) {
   }
 
   return (
-    <GatheringCdsForm 
+    <ElaborationForm 
       assignment={assignment} 
       studentProfile={userProfile} 
     />

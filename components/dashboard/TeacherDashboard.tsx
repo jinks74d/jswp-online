@@ -44,7 +44,7 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
   });
   const [loading, setLoading] = useState(true);
 
-  const [assignedStudents, setAssignedStudents] = useState<any[]>([]);
+  const [assignedStudents, setAssignedStudents] = useState<Record<string, any[]>>({});
   const [availableStudents, setAvailableStudents] = useState<any[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [addingStudent, setAddingStudent] = useState(false);
@@ -65,7 +65,7 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         .eq("teacher_id", profile.id);
 
       if (!teacherClassPeriods || teacherClassPeriods.length === 0) {
-        setAssignedStudents([]);
+        setAssignedStudents({});
         return;
       }
 
@@ -123,7 +123,7 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
   const fetchAvailableStudents = async () => {
     try {
       // Get all students in the school who are not already enrolled in teacher's classes
-      const enrolledStudentIds = assignedStudents.map(s => s.student.id);
+      const enrolledStudentIds = Object.values(assignedStudents).flat().map(s => s.student.id);
       
       let query = supabase
         .from("user_profiles")
@@ -160,7 +160,7 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
   };
 
   useEffect(() => {
-    if (assignedStudents.length > 0) {
+    if (Object.keys(assignedStudents).length > 0) {
       fetchAvailableStudents();
     }
   }, [assignedStudents]);
@@ -408,7 +408,7 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
                     <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
                       <BookOpen className="w-4 h-4 text-blue-600" />
                       <h4 className="text-sm font-medium text-gray-900">{className}</h4>
-                      <span className="text-xs text-gray-500">({assignedStudents[className].length} students)</span>
+                      <span className="text-xs text-gray-500">({assignedStudents[className]?.length || 0} students)</span>
                     </div>
                     
                     {/* Students in this class */}

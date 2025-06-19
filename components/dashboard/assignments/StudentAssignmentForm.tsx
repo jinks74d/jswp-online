@@ -1,11 +1,13 @@
 // components/dashboard/assignments/StudentAssignmentForm.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Clock, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserProfile } from "@/lib/supabase";
+import GatheringCdsForm from "./GatheringCdsForm";
+import CommentaryGenerationForm from "./CommentaryGenerationForm";
 
 interface Assignment {
   id: string;
@@ -395,20 +397,6 @@ export default function StudentAssignmentForm({
             className="px-6 py-3 bg-[#3f8b31] text-white rounded-lg hover:bg-[#2d6625] disabled:opacity-50 transition-colors font-medium"
           >
             {saving ? "Saving..." : "Save and Continue"}
-          </button>
-
-          <button
-            onClick={() => {
-              if (!formData.workingOn.trim()) {
-                alert("Please select what you are working on today before continuing.");
-                return;
-              }
-              router.push(`/dashboard/assignments/${assignment.id}/gathering-cds`);
-            }}
-            disabled={saving || !formData.workingOn.trim()}
-            className="px-6 py-3 bg-[#23366e] text-white rounded-lg hover:bg-[#1a2a5a] disabled:opacity-50 transition-colors font-medium"
-          >
-            Next
           </button>
         </div>
       </div>

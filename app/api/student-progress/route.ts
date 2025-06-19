@@ -1,24 +1,43 @@
-// app/api/student-progress/route.ts
+import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const supabase = await createServerSupabaseClient(cookieStore);
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // The `setAll` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+        },
+      }
+    );
 
     // Get current user
     const {
       data: { user },
-      error: authError,
+      error: userError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get request body
     const body = await request.json();
     const {
       assignment_id,
@@ -28,7 +47,7 @@ export async function POST(request: NextRequest) {
       selected_chunks,
       notes,
       concrete_details,
-      status = "in_progress",
+      status,
     } = body;
 
     // Validate required fields
@@ -39,58 +58,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify the current user is the student or has permission
-    if (user.id !== student_id) {
-      // Check if user is a teacher/admin with permission
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
+    // Check if progress record already exists
+    const { data: existingProgress } = await supabase
+      .from("student_assignment_progress")
+      .select("*")
+      .eq("assignment_id", assignment_id)
+      .eq("student_id", student_id)
+      .single();
 
-      if (!profile || !["teacher", "school_admin", "district_admin"].includes(profile.role)) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-    }
-
-    // Prepare data for upsert (insert or update)
     const progressData = {
       assignment_id,
       student_id,
-      working_on,
-      paragraph_name,
-      selected_chunks: selected_chunks || 1,
-      notes,
-      concrete_details,
-      status,
+      working_on: working_on || existingProgress?.working_on,
+      paragraph_name: paragraph_name || existingProgress?.paragraph_name,
+      selected_chunks: selected_chunks || existingProgress?.selected_chunks,
+      notes: notes || existingProgress?.notes,
+      concrete_details: concrete_details || existingProgress?.concrete_details,
+      status: status || existingProgress?.status || "in_progress",
       last_saved: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    // Use upsert to insert or update the record
-    const { data, error } = await supabase
-      .from("student_assignment_progress")
-      .upsert(progressData, {
-        onConflict: "assignment_id,student_id",
-        ignoreDuplicates: false,
-      })
-      .select();
+    let result;
+    if (existingProgress) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from("student_assignment_progress")
+        .update(progressData)
+        .eq("assignment_id", assignment_id)
+        .eq("student_id", student_id)
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Database error:", error);
-      return NextResponse.json(
-        { error: "Failed to save progress", details: error.message },
-        { status: 500 }
-      );
+      if (error) {
+        console.error("Error updating progress:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      result = data;
+    } else {
+      // Create new record
+      const { data, error } = await supabase
+        .from("student_assignment_progress")
+        .insert({
+          ...progressData,
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating progress:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      result = data;
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Progress saved successfully",
-      data: data[0],
-    });
+    return NextResponse.json({ data: result }, { status: 200 });
   } catch (error) {
-    console.error("API error:", error);
+    console.error("Error in student progress API:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -101,67 +126,67 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const supabase = await createServerSupabaseClient(cookieStore);
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // The `setAll` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+        },
+      }
+    );
 
     // Get current user
     const {
       data: { user },
-      error: authError,
+      error: userError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get query parameters
     const { searchParams } = new URL(request.url);
-    const assignmentId = searchParams.get("assignment_id");
-    const studentId = searchParams.get("student_id");
+    const assignment_id = searchParams.get("assignment_id");
+    const student_id = searchParams.get("student_id");
 
-    if (!assignmentId || !studentId) {
+    if (!assignment_id || !student_id) {
       return NextResponse.json(
         { error: "Assignment ID and Student ID are required" },
         { status: 400 }
       );
     }
 
-    // Verify the current user has permission to view this progress
-    if (user.id !== studentId) {
-      // Check if user is a teacher/admin with permission
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile || !["teacher", "school_admin", "district_admin"].includes(profile.role)) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-    }
-
-    // Fetch the progress record
-    const { data, error } = await supabase
+    // Get progress record
+    const { data: progress, error } = await supabase
       .from("student_assignment_progress")
       .select("*")
-      .eq("assignment_id", assignmentId)
-      .eq("student_id", studentId)
+      .eq("assignment_id", assignment_id)
+      .eq("student_id", student_id)
       .single();
 
     if (error && error.code !== "PGRST116") {
-      // PGRST116 is "not found" which is okay
-      console.error("Database error:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch progress" },
-        { status: 500 }
-      );
+      // PGRST116 is "not found" error, which is okay
+      console.error("Error fetching progress:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: data || null,
-    });
+    return NextResponse.json({ data: progress }, { status: 200 });
   } catch (error) {
-    console.error("API error:", error);
+    console.error("Error in student progress GET API:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
