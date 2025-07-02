@@ -1,8 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import GatheringCdsForm from "@/components/dashboard/assignments/GatheringCdsForm";
-import ExpositoryGatheringCdsForm from "@/components/dashboard/assignments/ExpositoryGatheringCdsForm";
+import ExpositoryFinalDraftForm from "@/components/dashboard/assignments/ExpositoryFinalDraftForm";
 
 interface PageProps {
   params: Promise<{
@@ -10,7 +9,7 @@ interface PageProps {
   }>;
 }
 
-export default async function GatheringCdsPage({ params }: PageProps) {
+export default async function FinalDraftPage({ params }: PageProps) {
   const { id } = await params;
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
@@ -68,19 +67,8 @@ export default async function GatheringCdsPage({ params }: PageProps) {
     redirect("/dashboard/assignments");
   }
 
-  // Render the appropriate form based on writing style
-  if (assignment.writing_style === "expository") {
-    return (
-      <ExpositoryGatheringCdsForm 
-        assignment={assignment} 
-        studentProfile={userProfile} 
-      />
-    );
-  }
-
-  // Default to literary form for other writing styles
   return (
-    <GatheringCdsForm 
+    <ExpositoryFinalDraftForm 
       assignment={assignment} 
       studentProfile={userProfile} 
     />

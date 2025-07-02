@@ -77,6 +77,9 @@ interface FirstDraftData {
   webWord4: string;
   // Selected commentary words for writing sentences
   selectedCMWords: string[];
+  // Selected words from the green boxes for each chunk
+  selectedChunk1Words: string[];
+  selectedChunk2Words: string[];
 }
 
 interface FirstDraftFormProps {
@@ -127,12 +130,15 @@ export default function FirstDraftForm({
     webWord3: "",
     webWord4: "",
     selectedCMWords: [],
+    selectedChunk1Words: [],
+    selectedChunk2Words: [],
   });
   const [saving, setSaving] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<
     "idle" | "saving" | "saved"
   >("idle");
+  const [circleWidth, setCircleWidth] = useState(8); // Track the circle width in rem
 
   // Auto-save functionality with debouncing
   const debouncedAutoSave = useCallback(
@@ -164,6 +170,12 @@ export default function FirstDraftForm({
             chunk2CommentarySentence2: data.chunk2CommentarySentence2,
             concludingSentence: data.concludingSentence,
             concludingWord: data.concludingWord,
+            selectedChunk1Words: data.selectedChunk1Words,
+            selectedChunk2Words: data.selectedChunk2Words,
+            webWord1: data.webWord1,
+            webWord2: data.webWord2,
+            webWord3: data.webWord3,
+            webWord4: data.webWord4,
           },
           status: "writing_first_draft",
           working_on: "step_5",
@@ -190,6 +202,20 @@ export default function FirstDraftForm({
     },
     [assignment.id, studentProfile.id]
   );
+
+  // Update circle width when any web word or topic sentence word changes
+  useEffect(() => {
+    const newWidth = Math.max(8, Math.max(
+      draftData.webWord1.length,
+      draftData.webWord2.length,
+      draftData.webWord3.length,
+      draftData.webWord4.length,
+      draftData.topicSentenceWord.length
+    ) * 0.6 + 2);
+    
+    // Only expand, never shrink
+    setCircleWidth(prev => Math.max(prev, newWidth));
+  }, [draftData.webWord1, draftData.webWord2, draftData.webWord3, draftData.webWord4, draftData.topicSentenceWord]);
 
   // Auto-save when data changes
   useEffect(() => {
@@ -305,11 +331,13 @@ export default function FirstDraftForm({
                 chunk2CM2Synonym: stepData.step4?.chunk2CM2Synonym || "",
                 chunk2CM2Phrase1: stepData.step4?.chunk2CM2Phrase1 || "",
                 chunk2CM2Phrase2: stepData.step4?.chunk2CM2Phrase2 || "",
-                webWord1: "",
-                webWord2: "",
-                webWord3: "",
-                webWord4: "",
+                webWord1: stepData.step5?.webWord1 || "",
+                webWord2: stepData.step5?.webWord2 || "",
+                webWord3: stepData.step5?.webWord3 || "",
+                webWord4: stepData.step5?.webWord4 || "",
                 selectedCMWords: [],
+                selectedChunk1Words: stepData.step5?.selectedChunk1Words || [],
+                selectedChunk2Words: stepData.step5?.selectedChunk2Words || [],
               });
             } catch (error) {
               console.log("Error parsing step data:", error);
@@ -352,6 +380,12 @@ export default function FirstDraftForm({
           chunk2CommentarySentence2: draftData.chunk2CommentarySentence2,
           concludingSentence: draftData.concludingSentence,
           concludingWord: draftData.concludingWord,
+          selectedChunk1Words: draftData.selectedChunk1Words,
+          selectedChunk2Words: draftData.selectedChunk2Words,
+          webWord1: draftData.webWord1,
+          webWord2: draftData.webWord2,
+          webWord3: draftData.webWord3,
+          webWord4: draftData.webWord4,
         },
         status: "writing_first_draft",
         working_on: "step_5",
@@ -407,13 +441,23 @@ export default function FirstDraftForm({
 
   const daysUntilDue = getDaysUntilDue();
 
-  // Handle CM word selection
-  const toggleCMWordSelection = (word: string) => {
+  // Handle green box word selection for Chunk 1
+  const toggleChunk1WordSelection = (word: string) => {
     setDraftData((prev) => ({
       ...prev,
-      selectedCMWords: prev.selectedCMWords.includes(word)
-        ? prev.selectedCMWords.filter((w) => w !== word)
-        : [...prev.selectedCMWords, word],
+      selectedChunk1Words: prev.selectedChunk1Words.includes(word)
+        ? prev.selectedChunk1Words.filter((w) => w !== word)
+        : [...prev.selectedChunk1Words, word],
+    }));
+  };
+
+  // Handle green box word selection for Chunk 2
+  const toggleChunk2WordSelection = (word: string) => {
+    setDraftData((prev) => ({
+      ...prev,
+      selectedChunk2Words: prev.selectedChunk2Words.includes(word)
+        ? prev.selectedChunk2Words.filter((w) => w !== word)
+        : [...prev.selectedChunk2Words, word],
     }));
   };
 
@@ -587,26 +631,120 @@ export default function FirstDraftForm({
               </p>
             </div>
 
-            {/* Commentary Words Grid */}
+            {/* Commentary Words Grid - Clickable with state management */}
             <div className="grid grid-cols-2 gap-4">
-              {draftData.chunk1CMWords && draftData.chunk1CMWords.length > 0 ? (
-                draftData.chunk1CMWords.filter(word => word && word.trim()).map((word, index) => {
-                  const isSelected = draftData.selectedCMWords.includes(word);
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => toggleCMWordSelection(word)}
-                      className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
-                        isSelected
-                          ? "bg-green-600 text-white"
-                          : "bg-green-100 text-green-800 hover:bg-green-200"
-                      }`}
-                    >
-                      <span className="font-medium">{word}</span>
-                    </button>
-                  );
-                })
-              ) : (
+              {/* Show selected CM1 and its synonyms/phrases */}
+              {draftData.chunk1CM1 && (
+                <button
+                  onClick={() => toggleChunk1WordSelection(draftData.chunk1CM1)}
+                  className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                    draftData.selectedChunk1Words.includes(draftData.chunk1CM1)
+                      ? "bg-green-100 text-green-800"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  <span className="font-medium">{draftData.chunk1CM1}</span>
+                </button>
+              )}
+              
+              {/* Show CM1 synonym if available */}
+              {draftData.chunk1CM1Synonym && (
+                <button
+                  onClick={() => toggleChunk1WordSelection(draftData.chunk1CM1Synonym)}
+                  className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                    draftData.selectedChunk1Words.includes(draftData.chunk1CM1Synonym)
+                      ? "bg-green-100 text-green-800"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  <span className="font-medium">{draftData.chunk1CM1Synonym}</span>
+                </button>
+              )}
+              
+              {/* Show CM1 phrases if available */}
+              {draftData.chunk1CM1Phrase1 && (
+                <button
+                  onClick={() => toggleChunk1WordSelection(draftData.chunk1CM1Phrase1)}
+                  className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                    draftData.selectedChunk1Words.includes(draftData.chunk1CM1Phrase1)
+                      ? "bg-green-100 text-green-800"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  <span className="font-medium">{draftData.chunk1CM1Phrase1}</span>
+                </button>
+              )}
+              
+              {draftData.chunk1CM1Phrase2 && (
+                <button
+                  onClick={() => toggleChunk1WordSelection(draftData.chunk1CM1Phrase2)}
+                  className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                    draftData.selectedChunk1Words.includes(draftData.chunk1CM1Phrase2)
+                      ? "bg-green-100 text-green-800"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  <span className="font-medium">{draftData.chunk1CM1Phrase2}</span>
+                </button>
+              )}
+
+              {/* Show selected CM2 and its synonyms/phrases */}
+              {draftData.chunk1CM2 && (
+                <button
+                  onClick={() => toggleChunk1WordSelection(draftData.chunk1CM2)}
+                  className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                    draftData.selectedChunk1Words.includes(draftData.chunk1CM2)
+                      ? "bg-green-100 text-green-800"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  <span className="font-medium">{draftData.chunk1CM2}</span>
+                </button>
+              )}
+              
+              {/* Show CM2 synonym if available */}
+              {draftData.chunk1CM2Synonym && (
+                <button
+                  onClick={() => toggleChunk1WordSelection(draftData.chunk1CM2Synonym)}
+                  className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                    draftData.selectedChunk1Words.includes(draftData.chunk1CM2Synonym)
+                      ? "bg-green-100 text-green-800"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  <span className="font-medium">{draftData.chunk1CM2Synonym}</span>
+                </button>
+              )}
+              
+              {/* Show CM2 phrases if available */}
+              {draftData.chunk1CM2Phrase1 && (
+                <button
+                  onClick={() => toggleChunk1WordSelection(draftData.chunk1CM2Phrase1)}
+                  className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                    draftData.selectedChunk1Words.includes(draftData.chunk1CM2Phrase1)
+                      ? "bg-green-100 text-green-800"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  <span className="font-medium">{draftData.chunk1CM2Phrase1}</span>
+                </button>
+              )}
+              
+              {draftData.chunk1CM2Phrase2 && (
+                <button
+                  onClick={() => toggleChunk1WordSelection(draftData.chunk1CM2Phrase2)}
+                  className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                    draftData.selectedChunk1Words.includes(draftData.chunk1CM2Phrase2)
+                      ? "bg-green-100 text-green-800"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  <span className="font-medium">{draftData.chunk1CM2Phrase2}</span>
+                </button>
+              )}
+
+              {/* Show message if no CM data available */}
+              {!draftData.chunk1CM1 && !draftData.chunk1CM2 && (
                 <div className="col-span-2 text-center text-gray-500 p-4">
                   No commentary words available from previous steps
                 </div>
@@ -671,27 +809,120 @@ export default function FirstDraftForm({
                 </p>
               </div>
 
-              {/* Commentary Words Grid */}
+              {/* Commentary Words Grid - Clickable with state management */}
               <div className="grid grid-cols-2 gap-4">
-                {draftData.chunk2CMWords &&
-                draftData.chunk2CMWords.length > 0 ? (
-                  draftData.chunk2CMWords.map((word, index) => {
-                    const isSelected = draftData.selectedCMWords.includes(word);
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => toggleCMWordSelection(word)}
-                        className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
-                          isSelected
-                            ? "bg-green-600 text-white"
-                            : "bg-green-100 text-green-800 hover:bg-green-200"
-                        }`}
-                      >
-                        <span className="font-medium">{word}</span>
-                      </button>
-                    );
-                  })
-                ) : (
+                {/* Show selected CM1 and its synonyms/phrases */}
+                {draftData.chunk2CM1 && (
+                  <button
+                    onClick={() => toggleChunk2WordSelection(draftData.chunk2CM1)}
+                    className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                      draftData.selectedChunk2Words.includes(draftData.chunk2CM1)
+                        ? "bg-green-100 text-green-800"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    <span className="font-medium">{draftData.chunk2CM1}</span>
+                  </button>
+                )}
+                
+                {/* Show CM1 synonym if available */}
+                {draftData.chunk2CM1Synonym && (
+                  <button
+                    onClick={() => toggleChunk2WordSelection(draftData.chunk2CM1Synonym)}
+                    className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                      draftData.selectedChunk2Words.includes(draftData.chunk2CM1Synonym)
+                        ? "bg-green-100 text-green-800"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    <span className="font-medium">{draftData.chunk2CM1Synonym}</span>
+                  </button>
+                )}
+                
+                {/* Show CM1 phrases if available */}
+                {draftData.chunk2CM1Phrase1 && (
+                  <button
+                    onClick={() => toggleChunk2WordSelection(draftData.chunk2CM1Phrase1)}
+                    className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                      draftData.selectedChunk2Words.includes(draftData.chunk2CM1Phrase1)
+                        ? "bg-green-100 text-green-800"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    <span className="font-medium">{draftData.chunk2CM1Phrase1}</span>
+                  </button>
+                )}
+                
+                {draftData.chunk2CM1Phrase2 && (
+                  <button
+                    onClick={() => toggleChunk2WordSelection(draftData.chunk2CM1Phrase2)}
+                    className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                      draftData.selectedChunk2Words.includes(draftData.chunk2CM1Phrase2)
+                        ? "bg-green-100 text-green-800"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    <span className="font-medium">{draftData.chunk2CM1Phrase2}</span>
+                  </button>
+                )}
+
+                {/* Show selected CM2 and its synonyms/phrases */}
+                {draftData.chunk2CM2 && (
+                  <button
+                    onClick={() => toggleChunk2WordSelection(draftData.chunk2CM2)}
+                    className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                      draftData.selectedChunk2Words.includes(draftData.chunk2CM2)
+                        ? "bg-green-100 text-green-800"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    <span className="font-medium">{draftData.chunk2CM2}</span>
+                  </button>
+                )}
+                
+                {/* Show CM2 synonym if available */}
+                {draftData.chunk2CM2Synonym && (
+                  <button
+                    onClick={() => toggleChunk2WordSelection(draftData.chunk2CM2Synonym)}
+                    className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                      draftData.selectedChunk2Words.includes(draftData.chunk2CM2Synonym)
+                        ? "bg-green-100 text-green-800"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    <span className="font-medium">{draftData.chunk2CM2Synonym}</span>
+                  </button>
+                )}
+                
+                {/* Show CM2 phrases if available */}
+                {draftData.chunk2CM2Phrase1 && (
+                  <button
+                    onClick={() => toggleChunk2WordSelection(draftData.chunk2CM2Phrase1)}
+                    className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                      draftData.selectedChunk2Words.includes(draftData.chunk2CM2Phrase1)
+                        ? "bg-green-100 text-green-800"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    <span className="font-medium">{draftData.chunk2CM2Phrase1}</span>
+                  </button>
+                )}
+                
+                {draftData.chunk2CM2Phrase2 && (
+                  <button
+                    onClick={() => toggleChunk2WordSelection(draftData.chunk2CM2Phrase2)}
+                    className={`p-3 border border-green-300 rounded text-center cursor-pointer transition-colors ${
+                      draftData.selectedChunk2Words.includes(draftData.chunk2CM2Phrase2)
+                        ? "bg-green-100 text-green-800"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    <span className="font-medium">{draftData.chunk2CM2Phrase2}</span>
+                  </button>
+                )}
+
+                {/* Show message if no CM data available */}
+                {!draftData.chunk2CM1 && !draftData.chunk2CM2 && (
                   <div className="col-span-2 text-center text-gray-500 p-4">
                     No commentary words available from previous steps
                   </div>
@@ -778,7 +1009,8 @@ export default function FirstDraftForm({
                           webWord1: e.target.value,
                         }))
                       }
-                      className="w-32 p-2 border border-blue-400 rounded bg-blue-50 text-blue-800 font-medium text-center text-sm block"
+                      className="p-2 border border-blue-400 rounded bg-blue-50 text-blue-800 font-medium text-center text-sm block"
+                      style={{ width: `${circleWidth}rem` }}
                       placeholder=""
                     />
                     <input
@@ -790,10 +1022,14 @@ export default function FirstDraftForm({
                           webWord2: e.target.value,
                         }))
                       }
-                      className="w-32 p-2 border border-blue-400 rounded bg-blue-50 text-blue-800 font-medium text-center text-sm block"
+                      className="p-2 border border-blue-400 rounded bg-blue-50 text-blue-800 font-medium text-center text-sm block"
+                      style={{ width: `${circleWidth}rem` }}
                       placeholder=""
                     />
-                    <div className="p-3 border-2 border-blue-600 rounded-lg bg-blue-100">
+                    <div 
+                      className="p-3 border-2 border-blue-600 rounded-lg bg-blue-100 flex items-center justify-center"
+                      style={{ width: `${circleWidth}rem` }}
+                    >
                       <span className="text-blue-900 font-bold">
                         {draftData.topicSentenceWord || "extraordinary"}
                       </span>
@@ -807,7 +1043,8 @@ export default function FirstDraftForm({
                           webWord3: e.target.value,
                         }))
                       }
-                      className="w-32 p-2 border border-blue-400 rounded bg-blue-50 text-blue-800 font-medium text-center text-sm block"
+                      className="p-2 border border-blue-400 rounded bg-blue-50 text-blue-800 font-medium text-center text-sm block"
+                      style={{ width: `${circleWidth}rem` }}
                       placeholder=""
                     />
                     <input
@@ -819,7 +1056,8 @@ export default function FirstDraftForm({
                           webWord4: e.target.value,
                         }))
                       }
-                      className="w-32 p-2 border border-blue-400 rounded bg-blue-50 text-blue-800 font-medium text-center text-sm block"
+                      className="p-2 border border-blue-400 rounded bg-blue-50 text-blue-800 font-medium text-center text-sm block"
+                      style={{ width: `${circleWidth}rem` }}
                       placeholder=""
                     />
                   </div>
@@ -828,8 +1066,7 @@ export default function FirstDraftForm({
             </div>
 
             <div className="p-4 bg-blue-50 border border-blue-300 rounded-lg">
-              <input
-                type="text"
+              <textarea
                 value={draftData.concludingSentence}
                 onChange={(e) =>
                   setDraftData((prev) => ({
@@ -837,7 +1074,8 @@ export default function FirstDraftForm({
                     concludingSentence: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent text-left"
+                rows={3}
+                className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent text-left resize-none"
                 placeholder=""
               />
             </div>
@@ -866,7 +1104,7 @@ export default function FirstDraftForm({
               await handleSave();
               if (!saving && isComplete()) {
                 router.push(
-                  `/dashboard/assignments/${assignment.id}/body-paragraphs`
+                  `/dashboard/assignments/${assignment.id}/shaping`
                 );
               } else if (!isComplete()) {
                 alert(

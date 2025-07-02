@@ -167,13 +167,6 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
 
   const fetchTeacherStats = async () => {
     try {
-      // Get actual assigned students count
-      const { count: assignedStudentsCount } = await supabase
-        .from("teacher_student_assignments")
-        .select("*", { count: "exact", head: true })
-        .eq("teacher_id", profile.id)
-        .eq("status", "active");
-
       // Get classes assigned to this teacher
       const { data: teacherClasses, count: classesCount } = await supabase
         .from("class_teacher_assignments")
@@ -182,10 +175,10 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
           class_period:class_period_id(
             id,
             period,
-            classes(
+            classes:class_id(
               id,
               name,
-              subjects(
+              subjects:subject_id(
                 id,
                 name
               )
@@ -193,6 +186,17 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
           )
         `, { count: "exact" })
         .eq("teacher_id", profile.id);
+
+      // Get student count from class enrollments
+      let totalStudentsCount = 0;
+      if (teacherClasses && teacherClasses.length > 0) {
+        const classPeriodIds = teacherClasses.map(tc => tc.class_period_id);
+        const { count: studentsCount } = await supabase
+          .from("class_student_enrollments")
+          .select("*", { count: "exact", head: true })
+          .in("class_period_id", classPeriodIds);
+        totalStudentsCount = studentsCount || 0;
+      }
 
       // Get real assignments created by this teacher
       const { data: recentAssignmentsData, count: assignmentsCount } = await supabase
@@ -202,18 +206,31 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         .order("created_at", { ascending: false })
         .limit(5);
 
-      // Calculate pending grading (for now, use a simple calculation)
-      const pendingCount = Math.floor((assignmentsCount || 0) * 0.3); // Assume 30% need grading
+      // Get actual submission counts for each assignment
+      const assignmentsWithSubmissions = await Promise.all(
+        (recentAssignmentsData || []).map(async (assignment) => {
+          const { count: submissionCount } = await supabase
+            .from("student_progress")
+            .select("*", { count: "exact", head: true })
+            .eq("assignment_id", assignment.id);
 
-      // Transform real assignment data for display
-      const transformedAssignments = (recentAssignmentsData || []).map(assignment => ({
-        id: assignment.id,
-        title: assignment.title,
-        classes: { name: "Literary Assignment" }, // Default since we don't have class info yet
-        due_date: assignment.due_date,
-        created_at: assignment.created_at,
-        _count: [{ count: 0 }], // Default submission count
-      }));
+          return {
+            id: assignment.id,
+            title: assignment.title,
+            classes: { name: "General Assignment" }, // Since assignments don't have class info in current schema
+            due_date: assignment.due_date,
+            created_at: assignment.created_at,
+            _count: [{ count: submissionCount || 0 }],
+          };
+        })
+      );
+
+      // Calculate real pending grading count
+      const { count: pendingCount } = await supabase
+        .from("student_progress")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed")
+        .in("assignment_id", (recentAssignmentsData || []).map(a => a.id));
 
       // Get upcoming assignments (assignments with future due dates)
       const upcomingAssignments = (recentAssignmentsData || [])
@@ -222,16 +239,16 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         .map(assignment => ({
           id: assignment.id,
           title: assignment.title,
-          classes: { name: "Literary Assignment" },
+          classes: { name: "General Assignment" }, // Since assignments don't have class info in current schema
           due_date: assignment.due_date,
         }));
 
       setStats({
         totalClasses: classesCount || 0,
-        totalStudents: assignedStudentsCount || 0,
+        totalStudents: totalStudentsCount,
         totalAssignments: assignmentsCount || 0,
-        pendingGrading: pendingCount,
-        recentAssignments: transformedAssignments,
+        pendingGrading: pendingCount || 0,
+        recentAssignments: assignmentsWithSubmissions,
         upcomingDueDates: upcomingAssignments,
       });
     } catch (error) {

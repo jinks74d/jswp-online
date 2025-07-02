@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import StudentAssignmentForm from "@/components/dashboard/assignments/StudentAssignmentForm";
+import ExpositoryStudentForm from "@/components/dashboard/assignments/ExpositoryStudentForm";
 
 interface StartAssignmentPageProps {
   params: Promise<{ id: string }>;
@@ -100,6 +101,17 @@ export default async function StartAssignmentPage({ params }: StartAssignmentPag
     class_periods: classPeriodInfo
   };
 
+  // Render the appropriate form based on writing style
+  if (assignment.writing_style === "expository") {
+    return (
+      <ExpositoryStudentForm
+        assignment={assignmentWithClassInfo}
+        studentProfile={profile}
+      />
+    );
+  }
+
+  // Default to literary form for other writing styles
   return (
     <StudentAssignmentForm
       assignment={assignmentWithClassInfo}

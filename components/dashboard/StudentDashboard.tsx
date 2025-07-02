@@ -1,7 +1,7 @@
 // components/dashboard/StudentDashboard.tsx
 "use client";
 
-import { FileText, GraduationCap, Users, BookOpen, Calendar, Clock } from "lucide-react";
+import { FileText, GraduationCap, Users, BookOpen, Calendar, Clock, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { UserProfile } from "@/lib/supabase";
 import { useEffect, useState } from "react";
@@ -27,6 +27,15 @@ interface Assignment {
   };
 }
 
+interface AssignmentProgress {
+  id: string;
+  assignment_id: string;
+  student_id: string;
+  teacher_feedback: Record<string, string>;
+  updated_at: string;
+  assignments?: Assignment;
+}
+
 interface StudentDashboardProps {
   profile: UserProfile & {
     districts?: { id: string; name: string; domain: string | null };
@@ -36,6 +45,7 @@ interface StudentDashboardProps {
 
 export default function StudentDashboard({ profile }: StudentDashboardProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignmentsWithFeedback, setAssignmentsWithFeedback] = useState<AssignmentProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -65,9 +75,56 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
         } else {
           setAssignments(studentAssignments || []);
         }
+
+        // Fetch student assignment progress with teacher feedback
+        console.log('Fetching feedback for student ID:', profile.id);
+        
+        // First try a simple query to see if we have any feedback at all
+        const { data: simpleFeedback, error: simpleError } = await supabase
+          .from('student_assignment_progress')
+          .select('*')
+          .eq('student_id', profile.id)
+          .not('teacher_feedback', 'eq', '{}');
+          
+        console.log('Simple feedback query:', { simpleFeedback, simpleError });
+        
+        // Now try the complex query with joins
+        const { data: progressWithFeedback, error: feedbackError } = await supabase
+          .from('student_assignment_progress')
+          .select(`
+            *,
+            assignments!student_assignment_progress_assignment_id_fkey(
+              id,
+              title,
+              user_profiles!assignments_teacher_id_fkey(
+                first_name,
+                last_name
+              )
+            )
+          `)
+          .eq('student_id', profile.id)
+          .not('teacher_feedback', 'eq', '{}')
+          .order('updated_at', { ascending: false });
+
+        console.log('Complex feedback query result:', { progressWithFeedback, feedbackError });
+        
+        if (feedbackError) {
+          console.error('Error fetching feedback:', feedbackError);
+          // Fallback to simple data if complex query fails
+          if (simpleFeedback && simpleFeedback.length > 0) {
+            console.log('Using simple feedback data as fallback');
+            setAssignmentsWithFeedback(simpleFeedback);
+          } else {
+            setAssignmentsWithFeedback([]);
+          }
+        } else {
+          console.log('Found assignments with feedback:', progressWithFeedback?.length || 0);
+          setAssignmentsWithFeedback(progressWithFeedback || []);
+        }
       } catch (error) {
         console.error('Error fetching student data:', error);
         setAssignments([]);
+        setAssignmentsWithFeedback([]);
       } finally {
         setLoading(false);
       }
@@ -219,10 +276,10 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Upcoming Assignments */}
+        {/* My Assignments */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Upcoming Assignments</h2>
+            <h2 className="text-lg font-semibold text-gray-900">My Assignments</h2>
           </div>
           <div className="p-6">
             {loading ? (
@@ -292,6 +349,44 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
           </div>
           <div className="p-6">
             <div className="space-y-4">
+              {/* Teacher Feedback Items */}
+              {!loading && assignmentsWithFeedback.length > 0 && (
+                <>
+                  {assignmentsWithFeedback.slice(0, 2).map((progress) => {
+                    const feedbackCount = Object.keys(progress.teacher_feedback || {}).length;
+                    return (
+                      <Link
+                        key={progress.id}
+                        href={`/dashboard/assignments/${progress.assignment_id}`}
+                        className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <MessageSquare className="w-4 h-4 text-orange-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">
+                              {progress.assignments?.title || 'Assignment'}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              New teacher feedback available
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-orange-600">
+                            {feedbackCount} step{feedbackCount > 1 ? 's' : ''}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(progress.updated_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </>
+              )}
+
               <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">

@@ -6,13 +6,17 @@ export async function middleware(request: NextRequest) {
   try {
     const { supabase, response } = createMiddlewareClient(request);
 
+    const path = request.nextUrl.pathname;
+
+    // Skip auth checks for signout API route
+    if (path === "/api/auth/signout") {
+      return response;
+    }
+
     // Refresh session if expired - required for Server Components
     const {
       data: { user },
-      error,
     } = await supabase.auth.getUser();
-
-    const path = request.nextUrl.pathname;
 
     // Public routes that don't require authentication
     const publicRoutes = ["/", "/login", "/signup"];

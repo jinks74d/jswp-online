@@ -424,6 +424,10 @@ CREATE TABLE assignments (
   due_date DATE,
   teacher_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
   district_id UUID NOT NULL REFERENCES districts(id) ON DELETE CASCADE,
+  school_id UUID REFERENCES schools(id) ON DELETE CASCADE,
+  class_period_id UUID REFERENCES class_periods(id) ON DELETE SET NULL,
+  prompt TEXT,
+  writing_style VARCHAR(50) DEFAULT 'literary' CHECK (writing_style IN ('literary', 'expository', 'argumentation', 'narrative')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -459,6 +463,31 @@ CREATE INDEX idx_assignments_due_date ON assignments(due_date);
 CREATE INDEX idx_assignments_created_at ON assignments(created_at);
 ```
 
+### 6. student_assignment_progress (with teacher feedback and writing style)
+```sql
+-- Add teacher feedback and writing style columns to existing student_assignment_progress table
+ALTER TABLE student_assignment_progress 
+ADD COLUMN IF NOT EXISTS teacher_feedback JSONB DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS writing_style VARCHAR(50) DEFAULT 'literary' CHECK (writing_style IN ('literary', 'expository', 'argumentation', 'narrative'));
+
+-- Create indexes for teacher feedback and writing style queries
+CREATE INDEX IF NOT EXISTS idx_student_assignment_progress_teacher_feedback ON student_assignment_progress USING GIN (teacher_feedback);
+CREATE INDEX IF NOT EXISTS idx_student_assignment_progress_writing_style ON student_assignment_progress(writing_style);
+```
+
+### Teacher Feedback Structure
+The `teacher_feedback` JSONB column stores feedback for each step:
+```json
+{
+  "step1": "Great job gathering concrete details!",
+  "step2": "Consider more varied commentary words.",
+  "step3": "Excellent decision making process.",
+  "step4": "Topic sentence could be more specific.",
+  "step6": "Well organized shaping sheet.",
+  "step7": "Strong final paragraph!"
+}
+```
+
 ## Troubleshooting
 - **Error: "relation does not exist"** - You need to create the database tables first
 - **Error: "permission denied"** - Check that RLS policies are properly set up
@@ -470,18 +499,37 @@ The frontend code is complete and ready to use once the database schema is in pl
 
 ## Assignment System Setup
 
-### IMPORTANT: Assignments Table Required
-The assignment creation functionality requires the assignments table to be created. Execute this SQL in your Supabase SQL editor:
+### IMPORTANT: Assignments Table Updates Required
+If you already have an assignments table, you need to add the new columns for Expository support. Execute this SQL in your Supabase SQL editor:
 
 ```sql
--- Create assignments table
-CREATE TABLE assignments (
+-- Add missing columns to existing assignments table
+ALTER TABLE assignments 
+ADD COLUMN IF NOT EXISTS school_id UUID REFERENCES schools(id) ON DELETE CASCADE,
+ADD COLUMN IF NOT EXISTS class_period_id UUID REFERENCES class_periods(id) ON DELETE SET NULL,
+ADD COLUMN IF NOT EXISTS prompt TEXT,
+ADD COLUMN IF NOT EXISTS writing_style VARCHAR(50) DEFAULT 'literary' CHECK (writing_style IN ('literary', 'expository', 'argumentation', 'narrative'));
+
+-- Create additional indexes for new columns
+CREATE INDEX IF NOT EXISTS idx_assignments_school_id ON assignments(school_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_class_period_id ON assignments(class_period_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_writing_style ON assignments(writing_style);
+```
+
+### If you need to create the assignments table from scratch:
+```sql
+-- Create assignments table (only if it doesn't exist)
+CREATE TABLE IF NOT EXISTS assignments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   description TEXT,
   due_date DATE,
   teacher_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
   district_id UUID NOT NULL REFERENCES districts(id) ON DELETE CASCADE,
+  school_id UUID REFERENCES schools(id) ON DELETE CASCADE,
+  class_period_id UUID REFERENCES class_periods(id) ON DELETE SET NULL,
+  prompt TEXT,
+  writing_style VARCHAR(50) DEFAULT 'literary' CHECK (writing_style IN ('literary', 'expository', 'argumentation', 'narrative')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -508,4 +556,7 @@ CREATE INDEX idx_assignments_teacher_id ON assignments(teacher_id);
 CREATE INDEX idx_assignments_district_id ON assignments(district_id);
 CREATE INDEX idx_assignments_due_date ON assignments(due_date);
 CREATE INDEX idx_assignments_created_at ON assignments(created_at);
+CREATE INDEX idx_assignments_school_id ON assignments(school_id);
+CREATE INDEX idx_assignments_class_period_id ON assignments(class_period_id);
+CREATE INDEX idx_assignments_writing_style ON assignments(writing_style);
 ```

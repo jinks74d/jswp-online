@@ -1,4 +1,4 @@
-// components/dashboard/assignments/StudentAssignmentForm.tsx
+// components/dashboard/assignments/ExpositoryStudentForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,8 +6,6 @@ import { ArrowLeft, Clock, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserProfile, createClient } from "@/lib/supabase";
-import GatheringCdsForm from "./GatheringCdsForm";
-import CommentaryGenerationForm from "./CommentaryGenerationForm";
 
 interface Assignment {
   id: string;
@@ -17,6 +15,7 @@ interface Assignment {
   created_at: string;
   teacher_id: string;
   prompt?: string;
+  writing_style: string;
   user_profiles?: {
     first_name: string;
     last_name: string;
@@ -36,7 +35,7 @@ interface Assignment {
   } | null;
 }
 
-interface StudentAssignmentFormProps {
+interface ExpositoryStudentFormProps {
   assignment: Assignment;
   studentProfile: UserProfile & {
     districts?: { id: string; name: string };
@@ -44,14 +43,13 @@ interface StudentAssignmentFormProps {
   };
 }
 
-export default function StudentAssignmentForm({
+export default function ExpositoryStudentForm({
   assignment,
   studentProfile,
-}: StudentAssignmentFormProps) {
+}: ExpositoryStudentFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     workingOn: "", // What are you working on today
-    paragraphName: "", // Name Your Body Paragraph, Introduction, or Conclusion
     selectedChunks: 1, // Select one or two chunks
     notes: "",
   });
@@ -75,14 +73,13 @@ export default function StudentAssignmentForm({
           // Populate form with existing data
           setFormData({
             workingOn: progressData.working_on || "",
-            paragraphName: progressData.paragraph_name || "",
             selectedChunks: progressData.selected_chunks || 1,
             notes: progressData.notes || "",
           });
           
-          console.log("Loaded existing progress:", progressData);
+          console.log("Loaded existing expository progress:", progressData);
         } else {
-          console.log("No existing progress found - starting fresh");
+          console.log("No existing expository progress found - starting fresh");
         }
       } catch (error) {
         console.error("Error loading existing progress:", error);
@@ -118,13 +115,13 @@ export default function StudentAssignmentForm({
         assignment_id: assignment.id,
         student_id: studentProfile.id,
         working_on: formData.workingOn,
-        paragraph_name: formData.paragraphName,
         selected_chunks: formData.selectedChunks,
         notes: formData.notes,
         status: "in_progress",
+        writing_style: "expository", // Track that this is expository
       };
 
-      console.log("Saving student-specific progress:", progressData);
+      console.log("Saving student-specific expository progress:", progressData);
       console.log(`This data belongs ONLY to student: ${studentProfile.first_name} ${studentProfile.last_name} (ID: ${studentProfile.id})`);
 
       // Call the API to save to database
@@ -144,22 +141,21 @@ export default function StudentAssignmentForm({
       const savedFields = [
         `Student: ${studentProfile.first_name} ${studentProfile.last_name}`,
         `Assignment: ${assignment.title}`,
+        `Writing Style: Expository`,
         progressData.working_on && `Working on: ${progressData.working_on}`,
-        progressData.paragraph_name && `Paragraph name: ${progressData.paragraph_name}`,
         `Chunks selected: ${progressData.selected_chunks}`,
         progressData.notes && `Notes: ${progressData.notes}`,
       ].filter(Boolean);
 
-      alert(`✅ Progress saved to database!\n\nThis data is saved ONLY for this student:\n${savedFields.join('\n')}`);
+      alert(`✅ Expository progress saved to database!\n\nThis data is saved ONLY for this student:\n${savedFields.join('\n')}`);
       
     } catch (error) {
-      console.error("Error saving progress:", error);
+      console.error("Error saving expository progress:", error);
       alert(`❌ Error saving progress: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
   };
-
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -185,7 +181,7 @@ export default function StudentAssignmentForm({
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-gray-600">Loading assignment...</span>
+          <span className="text-gray-600">Loading expository assignment...</span>
         </div>
       </div>
     );
@@ -227,8 +223,8 @@ export default function StudentAssignmentForm({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center gap-4 mb-4">
           <img
-            src="/assets/literary01-circle-cmyk.jpg"
-            alt="Literary"
+            src="/assets/expository01-circle-cmyk.jpg"
+            alt="Expository"
             className="w-12 h-12 rounded-full object-cover"
           />
           <div>
@@ -262,39 +258,36 @@ export default function StudentAssignmentForm({
         )}
       </div>
 
-      {/* Main Form - Same structure as teacher's form */}
+      {/* Main Form - Expository Student Version */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-4xl mx-auto">
-        {/* Literary Header with Icon */}
+        {/* Expository Header with Icon */}
         <div className="flex items-center gap-4 mb-8">
           <img
-            src="/assets/literary01-circle-cmyk.jpg"
-            alt="Literary"
+            src="/assets/expository01-circle-cmyk.jpg"
+            alt="Expository"
             className="w-12 h-12 rounded-full object-cover"
           />
           <h2 className="text-2xl font-bold text-gray-900">
-            RESPONSE TO LITERATURE
+            EXPOSITORY
           </h2>
         </div>
 
-        {/* Form Fields - Same structure as teacher's form but for student completion */}
+        {/* Subtitle */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium text-gray-700">
+            {studentProfile.first_name?.toUpperCase()}, NAME YOUR NEW ASSIGNMENT
+          </h3>
+        </div>
+
+        {/* Form Fields */}
         <div className="space-y-8">
           {/* Assignment Name - Read Only */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Assignment Name
+              Name Your Assignment
             </label>
             <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
               {assignment.title}
-            </div>
-          </div>
-
-          {/* Description - Read Only */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Assignment Description
-            </label>
-            <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 min-h-[80px]">
-              {assignment.description || "No description provided"}
             </div>
           </div>
 
@@ -306,7 +299,19 @@ export default function StudentAssignmentForm({
             <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
               {assignment.class_periods
                 ? `${assignment.class_periods.classes.name} - Period ${assignment.class_periods.period}`
-                : "Literary Assignment"}
+                : "Expository Assignment"}
+            </div>
+          </div>
+
+          {/* Class Period - Read Only */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Class Period
+            </label>
+            <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+              {assignment.class_periods
+                ? `Period ${assignment.class_periods.period}`
+                : "Not specified"}
             </div>
           </div>
 
@@ -320,17 +325,17 @@ export default function StudentAssignmentForm({
             </div>
           </div>
 
-          {/* Prompt - Read Only */}
+          {/* Enter Prompt - Read Only */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Writing Prompt
+              Enter Prompt
             </label>
-            <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+            <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 min-h-[100px]">
               {assignment.prompt || "No prompt provided"}
             </div>
           </div>
 
-          {/* What are you working on today? */}
+          {/* What are you working on today? - Student Interactive */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-4">
               What are you working on today?
@@ -343,7 +348,7 @@ export default function StudentAssignmentForm({
                 }
                 className={`px-4 py-2 rounded-lg border transition-colors ${
                   formData.workingOn === "New Body Paragraph"
-                    ? "bg-[#23366e] text-white border-[#23366e]"
+                    ? "bg-[#22356d] text-white border-[#22356d]"
                     : "bg-[#4a6fa5] text-white border-[#4a6fa5] hover:bg-[#3a5a8a]"
                 }`}
               >
@@ -354,7 +359,7 @@ export default function StudentAssignmentForm({
                 onClick={() => handleInputChange("workingOn", "Introduction")}
                 className={`px-4 py-2 rounded-lg border transition-colors ${
                   formData.workingOn === "Introduction"
-                    ? "bg-[#23366e] text-white border-[#23366e]"
+                    ? "bg-[#22356d] text-white border-[#22356d]"
                     : "bg-[#4a6fa5] text-white border-[#4a6fa5] hover:bg-[#3a5a8a]"
                 }`}
               >
@@ -365,7 +370,7 @@ export default function StudentAssignmentForm({
                 onClick={() => handleInputChange("workingOn", "Conclusion")}
                 className={`px-4 py-2 rounded-lg border transition-colors ${
                   formData.workingOn === "Conclusion"
-                    ? "bg-[#23366e] text-white border-[#23366e]"
+                    ? "bg-[#22356d] text-white border-[#22356d]"
                     : "bg-[#4a6fa5] text-white border-[#4a6fa5] hover:bg-[#3a5a8a]"
                 }`}
               >
@@ -374,23 +379,7 @@ export default function StudentAssignmentForm({
             </div>
           </div>
 
-          {/* Name Your Body Paragraph */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Name Your Body Paragraph, Introduction, or Conclusion
-            </label>
-            <input
-              type="text"
-              value={formData.paragraphName}
-              onChange={(e) =>
-                handleInputChange("paragraphName", e.target.value)
-              }
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-gray-900"
-              placeholder="Enter a name for your body paragraph..."
-            />
-          </div>
-
-          {/* Select one or two chunks */}
+          {/* Select one or two chunks - Student Interactive */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-4">
               Select one or two chunks
@@ -403,7 +392,7 @@ export default function StudentAssignmentForm({
                 }
                 className={`px-4 py-2 rounded-lg border transition-colors ${
                   formData.selectedChunks === 1
-                    ? "bg-[#23366e] text-white border-[#23366e]"
+                    ? "bg-[#22356d] text-white border-[#22356d]"
                     : "bg-[#4a6fa5] text-white border-[#4a6fa5] hover:bg-[#3a5a8a]"
                 }`}
               >
@@ -416,7 +405,7 @@ export default function StudentAssignmentForm({
                 }
                 className={`px-4 py-2 rounded-lg border transition-colors ${
                   formData.selectedChunks === 2
-                    ? "bg-[#23366e] text-white border-[#23366e]"
+                    ? "bg-[#22356d] text-white border-[#22356d]"
                     : "bg-[#4a6fa5] text-white border-[#4a6fa5] hover:bg-[#3a5a8a]"
                 }`}
               >
@@ -426,12 +415,12 @@ export default function StudentAssignmentForm({
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Student gets all three buttons */}
         <div className="flex items-center gap-4 mt-12">
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-3 bg-[#13161f] text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors font-medium"
+            className="px-6 py-3 bg-[#4dd0e1] text-white rounded-lg hover:bg-[#26c6da] disabled:opacity-50 transition-colors font-medium"
           >
             {saving ? "Saving..." : "Save"}
           </button>
@@ -440,13 +429,28 @@ export default function StudentAssignmentForm({
             onClick={async () => {
               await handleSave();
               if (!saving) {
+                // Navigate to next step in expository workflow
                 router.push(`/dashboard/assignments/${assignment.id}/gathering-cds`);
               }
             }}
             disabled={saving || !formData.workingOn.trim()}
-            className="px-6 py-3 bg-[#3f8b31] text-white rounded-lg hover:bg-[#2d6625] disabled:opacity-50 transition-colors font-medium"
+            className="px-6 py-3 bg-[#4dd0e1] text-white rounded-lg hover:bg-[#26c6da] disabled:opacity-50 transition-colors font-medium"
           >
-            {saving ? "Saving..." : "Save and Continue"}
+            {saving ? "Saving..." : "Save and Next"}
+          </button>
+
+          <button
+            onClick={async () => {
+              await handleSave();
+              if (!saving) {
+                // Navigate to next step in expository workflow
+                router.push(`/dashboard/assignments/${assignment.id}/gathering-cds`);
+              }
+            }}
+            disabled={saving || !formData.workingOn.trim()}
+            className="px-6 py-3 bg-[#4dd0e1] text-white rounded-lg hover:bg-[#26c6da] disabled:opacity-50 transition-colors font-medium"
+          >
+            {saving ? "Saving..." : "Next"}
           </button>
         </div>
       </div>
@@ -454,12 +458,12 @@ export default function StudentAssignmentForm({
       {/* Assignment Status */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Assignment Status
+          Expository Assignment Status
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-[#23366e]">In Progress</div>
-            <div className="text-sm text-[#23366e]">Current Status</div>
+            <div className="text-2xl font-bold text-[#22356d]">In Progress</div>
+            <div className="text-sm text-[#22356d]">Current Status</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <div className="text-2xl font-bold text-[#3f8b31]">

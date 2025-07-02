@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       notes,
       concrete_details,
       status,
+      writing_style,
     } = body;
 
     // Validate required fields
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
       selected_chunks: selected_chunks || existingProgress?.selected_chunks,
       notes: notes || existingProgress?.notes,
       concrete_details: concrete_details || existingProgress?.concrete_details,
+      writing_style: writing_style || existingProgress?.writing_style,
       status: status || existingProgress?.status || "in_progress",
       last_saved: new Date().toISOString(),
       updated_at: new Date().toISOString(),

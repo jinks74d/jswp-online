@@ -80,22 +80,33 @@ export default async function AssignmentsPage() {
     console.error('Error fetching assignments:', error);
   }
 
-  // Transform assignments to match the expected interface
-  const transformedAssignments = (assignments || []).map(assignment => ({
-    id: assignment.id,
-    title: assignment.title,
-    description: assignment.description,
-    subject: assignment.class_periods?.classes?.subjects?.name || "Subject",
-    class_name: assignment.class_periods?.classes?.name || "Class",
-    period: assignment.class_periods?.period || "",
-    teacher_name: assignment.user_profiles ? 
-      `${assignment.user_profiles.first_name} ${assignment.user_profiles.last_name}` : 
-      "Teacher",
-    due_date: assignment.due_date,
-    created_at: assignment.created_at,
-    status: "active",
-    submissions_count: 0,
-    total_students: 0,
+  // Get submission statistics for each assignment
+  const transformedAssignments = await Promise.all((assignments || []).map(async assignment => {
+    // Get submission count for this assignment
+    const { data: submissions } = await supabase
+      .from("student_assignment_progress")
+      .select("status")
+      .eq("assignment_id", assignment.id);
+
+    const submissionsCount = submissions?.filter(s => s.status === "submitted").length || 0;
+    const totalStudents = submissions?.length || 0;
+
+    return {
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description,
+      subject: assignment.class_periods?.classes?.subjects?.name || "Subject",
+      class_name: assignment.class_periods?.classes?.name || "Class",
+      period: assignment.class_periods?.period || "",
+      teacher_name: assignment.user_profiles ? 
+        `${assignment.user_profiles.first_name} ${assignment.user_profiles.last_name}` : 
+        "Teacher",
+      due_date: assignment.due_date,
+      created_at: assignment.created_at,
+      status: "active",
+      submissions_count: submissionsCount,
+      total_students: totalStudents,
+    };
   }));
 
   return (

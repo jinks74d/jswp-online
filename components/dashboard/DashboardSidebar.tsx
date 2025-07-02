@@ -191,10 +191,12 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
     setSigningOut(true);
     try {
       await signOut();
-      // Force a hard redirect to ensure session is cleared
-      window.location.href = "/";
+      // Use router for navigation instead of hard redirect
+      router.push("/");
     } catch (error) {
       console.error("Error signing out:", error);
+      // Show user-friendly error message
+      alert("Failed to sign out. Please try again.");
       setSigningOut(false);
     }
   };

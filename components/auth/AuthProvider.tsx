@@ -97,8 +97,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setProfile(null);
       
-      // Sign out from Supabase
-      await supabase.auth.signOut();
+      // Call the signout API route for proper server-side cleanup
+      const response = await fetch('/api/auth/signout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to sign out');
+      }
       
       // Clear any cached data
       if (typeof window !== 'undefined') {
@@ -107,8 +117,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Clear sessionStorage
         sessionStorage.clear();
       }
+
+      // Also call client-side signout as backup
+      await supabase.auth.signOut();
+      
     } catch (error) {
       console.error("Error signing out:", error);
+      // Reset state even if signout fails
+      setUser(null);
+      setProfile(null);
       throw error;
     }
   };
