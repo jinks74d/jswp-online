@@ -15,7 +15,7 @@ import {
   School,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { UserProfile, UserRole } from "@/lib/supabase";
 
@@ -183,7 +183,6 @@ const getRoleDisplayName = (role: UserRole): string => {
 
 export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const { signOut } = useAuth();
 
@@ -191,8 +190,7 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
     setSigningOut(true);
     try {
       await signOut();
-      // Use router for navigation instead of hard redirect
-      router.push("/");
+      // AuthProvider will handle the redirect with full page refresh
     } catch (error) {
       console.error("Error signing out:", error);
       // Show user-friendly error message

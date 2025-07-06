@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import GatheringCdsForm from "@/components/dashboard/assignments/GatheringCdsForm";
 import ExpositoryGatheringCdsForm from "@/components/dashboard/assignments/ExpositoryGatheringCdsForm";
+import ArgumentationGatheringCdsForm from "@/components/dashboard/assignments/ArgumentationGatheringCdsForm";
 
 interface PageProps {
   params: Promise<{
@@ -72,6 +73,15 @@ export default async function GatheringCdsPage({ params }: PageProps) {
   if (assignment.writing_style === "expository") {
     return (
       <ExpositoryGatheringCdsForm 
+        assignment={assignment} 
+        studentProfile={userProfile} 
+      />
+    );
+  }
+
+  if (assignment.writing_style === "argumentation") {
+    return (
+      <ArgumentationGatheringCdsForm 
         assignment={assignment} 
         studentProfile={userProfile} 
       />

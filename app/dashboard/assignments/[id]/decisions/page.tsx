@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import DecisionMakingForm from "@/components/dashboard/assignments/DecisionMakingForm";
+import ArgumentationTSDevForm from "@/components/dashboard/assignments/ArgumentationTSDevForm";
 
 interface PageProps {
   params: Promise<{
@@ -67,6 +68,17 @@ export default async function DecisionsPage({ params }: PageProps) {
     redirect("/dashboard/assignments");
   }
 
+  // Render the appropriate form based on writing style
+  if (assignment.writing_style === "argumentation") {
+    return (
+      <ArgumentationTSDevForm 
+        assignment={assignment} 
+        studentProfile={userProfile} 
+      />
+    );
+  }
+
+  // Default to DecisionMakingForm for other writing styles
   return (
     <DecisionMakingForm 
       assignment={assignment} 

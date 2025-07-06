@@ -35,6 +35,7 @@ interface Assignment {
   district_id: string;
   school_id: string;
   prompt?: string;
+  writing_style: "literary" | "expository" | "argumentation" | "narrative";
 }
 
 interface StudentProgress {
@@ -47,6 +48,7 @@ interface StudentProgress {
   created_at?: string;
   updated_at?: string;
   teacher_feedback?: Record<string, string>;
+  writing_style?: "literary" | "expository" | "argumentation" | "narrative";
 }
 
 interface StudentWithProgress {
@@ -197,11 +199,9 @@ export default function AssignmentDetail({
 
           setStudents(studentsWithProgress);
 
-          const submissions = progressData?.length || 0;
-          const pending =
-            progressData?.filter((p) => p.status === "completed").length || 0;
-          const graded =
-            progressData?.filter((p) => p.status === "graded").length || 0;
+          const submissions = progressData?.filter((p) => p.status === "submitted").length || 0;
+          const pending = progressData?.filter((p) => p.status === "in_progress" || (p.working_on && p.status !== "submitted")).length || 0;
+          const graded = progressData?.filter((p) => p.status === "graded").length || 0;
 
           setStats({
             totalStudents: allStudents?.length || 0,
@@ -511,8 +511,8 @@ export default function AssignmentDetail({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Assignment Type
                   </label>
-                  <p className="text-gray-900">
-                    Literary - Response to Literature
+                  <p className="text-gray-900 capitalize">
+                    {assignment.writing_style}
                   </p>
                 </div>
 
@@ -810,7 +810,435 @@ export default function AssignmentDetail({
                         selectedSubmission.concrete_details
                       );
 
-                      // Display all available steps
+                      if (assignment.writing_style === "expository") {
+                        const {
+                          topicSentence,
+                          chunk1CD,
+                          chunk2CD,
+                          commentarySentence,
+                          concludingSentence,
+                        } = details.shapingSheet || {};
+                        const { finalParagraph } = details.finalDraft || {};
+
+                        const renderColorCodedParagraph = () => {
+                          if (!finalParagraph) {
+                            return (
+                              <p className="text-gray-500 italic">
+                                No final paragraph submitted.
+                              </p>
+                            );
+                          }
+
+                          const paragraph = finalParagraph;
+                          const colorCodedElements: JSX.Element[] = [];
+                          let currentIndex = 0;
+
+                          const highlightSentence = (
+                            sentence: string,
+                            color: string,
+                            label: string
+                          ) => {
+                            if (!sentence || !sentence.trim()) return;
+
+                            const index = paragraph
+                              .toLowerCase()
+                              .indexOf(sentence.toLowerCase());
+                            if (index !== -1) {
+                              if (index > currentIndex) {
+                                colorCodedElements.push(
+                                  <span
+                                    key={`text-${currentIndex}`}
+                                    className="text-gray-900"
+                                  >
+                                    {paragraph.substring(currentIndex, index)}
+                                  </span>
+                                );
+                              }
+                              colorCodedElements.push(
+                                <span
+                                  key={`${label}-${index}`}
+                                  className={color}
+                                  title={label}
+                                >
+                                  {paragraph.substring(
+                                    index,
+                                    index + sentence.length
+                                  )}
+                                </span>
+                              );
+                              currentIndex = index + sentence.length;
+                            }
+                          };
+
+                          highlightSentence(
+                            topicSentence,
+                            "text-blue-600",
+                            "Topic Sentence (TS)"
+                          );
+                          highlightSentence(
+                            chunk1CD,
+                            "text-red-600",
+                            "Concrete Detail 1 (CD)"
+                          );
+                          if (chunk2CD) {
+                            highlightSentence(
+                              chunk2CD,
+                              "text-red-600",
+                              "Concrete Detail 2 (CD)"
+                            );
+                          }
+                          highlightSentence(
+                            commentarySentence,
+                            "text-green-600",
+                            "Commentary (CM)"
+                          );
+                          highlightSentence(
+                            concludingSentence,
+                            "text-blue-600",
+                            "Concluding Sentence (CS)"
+                          );
+
+                          if (currentIndex < paragraph.length) {
+                            colorCodedElements.push(
+                              <span key={`text-end`} className="text-gray-900">
+                                {paragraph.substring(currentIndex)}
+                              </span>
+                            );
+                          }
+
+                          return (
+                            <div className="leading-relaxed">
+                              {colorCodedElements.length > 0 ? (
+                                colorCodedElements
+                              ) : (
+                                <span className="text-gray-900">
+                                  {paragraph}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        };
+
+                        const sections = [];
+
+                        // Step 1: Gathering CDs - Check multiple possible data structures
+                        const step1Data = details.gatheringCds || details.step1 || details.cds || details.gatheringConcreteDetails || details.chunk1CDs;
+                        if (step1Data || details.chunk1CDs) {
+                          sections.push(
+                            <div key="gatheringCds" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 1: Gathering Concrete Details</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("gatheringCds")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              {/* Handle chunk1CDs array directly */}
+                              {details.chunk1CDs && Array.isArray(details.chunk1CDs) && details.chunk1CDs.length > 0 && (
+                                <div className="mb-4">
+                                  <h5 className="font-medium text-gray-800 mb-2">Concrete Details</h5>
+                                  {details.chunk1CDs.map((cd: string, index: number) => (
+                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{cd}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {/* Handle chunk2CDs array if it exists and has content */}
+                              {details.chunk2CDs && Array.isArray(details.chunk2CDs) && details.chunk2CDs.length > 0 && (
+                                <div className="mb-4">
+                                  <h5 className="font-medium text-gray-800 mb-2">Additional Concrete Details (Chunk 2)</h5>
+                                  {details.chunk2CDs.map((cd: string, index: number) => (
+                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{cd}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {/* Fallback for other data structures */}
+                              {!details.chunk1CDs && !details.chunk2CDs && (
+                                <>
+                                  {details.gatheringCds?.cds && Array.isArray(details.gatheringCds.cds) && details.gatheringCds.cds.map((cd: string, index: number) => (
+                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{cd}</p>
+                                    </div>
+                                  ))}
+                                  {details.step1?.cds && Array.isArray(details.step1.cds) && details.step1.cds.map((cd: string, index: number) => (
+                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{cd}</p>
+                                    </div>
+                                  ))}
+                                  {details.cds && Array.isArray(details.cds) && details.cds.map((cd: string, index: number) => (
+                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{cd}</p>
+                                    </div>
+                                  ))}
+                                  {step1Data && typeof step1Data === 'object' && step1Data.cds && Array.isArray(step1Data.cds) && step1Data.cds.map((cd: string, index: number) => (
+                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{cd}</p>
+                                    </div>
+                                  ))}
+                                  {Array.isArray(step1Data) && step1Data.map((cd: string, index: number) => (
+                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{cd}</p>
+                                    </div>
+                                  ))}
+                                  {typeof step1Data === 'string' && (
+                                    <div className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{step1Data}</p>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {/* Display feedback if exists */}
+                              {selectedSubmission?.teacher_feedback?.gatheringCds && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.gatheringCds}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Step 2: Working Topic Sentence - Check multiple possible data structures
+                        if (details.workingTopicSentence || details.step2 || details.topicSentence) {
+                          sections.push(
+                            <div key="workingTopicSentence" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 2: Working Topic Sentence</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("workingTopicSentence")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              <div className="bg-blue-50 p-3 rounded">
+                                <p className="text-blue-800">
+                                  {typeof details.workingTopicSentence === 'string' 
+                                    ? details.workingTopicSentence
+                                    : details.workingTopicSentence?.topicSentence || 
+                                      details.step2?.topicSentence || 
+                                      details.topicSentence ||
+                                      "No topic sentence provided"}
+                                </p>
+                              </div>
+                              {/* Display feedback if exists */}
+                              {selectedSubmission?.teacher_feedback?.workingTopicSentence && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.workingTopicSentence}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Step 3: Commentary Development - Check multiple possible data structures
+                        const step3Data = details.commentaryDevelopment || details.step3 || details.commentary || details.commentaryWords || details.cdSections;
+                        if (step3Data || details.cdSections) {
+                          sections.push(
+                            <div key="commentaryDevelopment" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 3: Commentary Development</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("commentaryDevelopment")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              {/* Handle cdSections array structure */}
+                              {details.cdSections && Array.isArray(details.cdSections) ? (
+                                <div className="space-y-3">
+                                  {details.cdSections.map((section: { cdText: string; cms: string[] }, index: number) => (
+                                    <div key={index} className="bg-green-50 p-3 rounded">
+                                      <p className="text-sm font-medium text-green-900 mb-2">
+                                        CD: {section.cdText}
+                                      </p>
+                                      <p className="text-green-800">
+                                        Commentary Words: {section.cms && Array.isArray(section.cms) ? section.cms.join(", ") : "No commentary words"}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="bg-green-50 p-3 rounded">
+                                  <p className="text-green-800">
+                                    {details.commentaryDevelopment?.commentary && Array.isArray(details.commentaryDevelopment.commentary) 
+                                      ? details.commentaryDevelopment.commentary.join(", ")
+                                      : details.step3?.commentary && Array.isArray(details.step3.commentary)
+                                      ? details.step3.commentary.join(", ")
+                                      : details.commentary && Array.isArray(details.commentary)
+                                      ? details.commentary.join(", ")
+                                      : details.commentaryWords && Array.isArray(details.commentaryWords)
+                                      ? details.commentaryWords.join(", ")
+                                      : Array.isArray(step3Data)
+                                      ? step3Data.join(", ")
+                                      : typeof step3Data === 'object' && step3Data.commentary && Array.isArray(step3Data.commentary)
+                                      ? step3Data.commentary.join(", ")
+                                      : typeof step3Data === 'string'
+                                      ? step3Data
+                                      : details.commentaryDevelopment?.commentary || details.step3?.commentary || details.commentary || "No commentary provided"}
+                                  </p>
+                                </div>
+                              )}
+                              {/* Display feedback if exists */}
+                              {selectedSubmission?.teacher_feedback?.commentaryDevelopment && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.commentaryDevelopment}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Step 4: Shaping Sheet - Check multiple possible data structures
+                        if (details.shapingSheet || details.step4) {
+                          sections.push(
+                            <div key="shapingSheet" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 4: Shaping Sheet</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("shapingSheet")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                {(details.shapingSheet?.topicSentence || details.step4?.topicSentence) && (
+                                  <div className="bg-blue-50 p-2 rounded">
+                                    <p className="text-blue-800">TS: {details.shapingSheet?.topicSentence || details.step4?.topicSentence}</p>
+                                  </div>
+                                )}
+                                {(details.shapingSheet?.chunk1CD || details.step4?.chunk1CD) && (
+                                  <div className="bg-red-50 p-2 rounded">
+                                    <p className="text-red-800">CD: {details.shapingSheet?.chunk1CD || details.step4?.chunk1CD}</p>
+                                  </div>
+                                )}
+                                {(details.shapingSheet?.commentarySentence || details.step4?.commentarySentence) && (
+                                  <div className="bg-green-50 p-2 rounded">
+                                    <p className="text-green-800">CM: {details.shapingSheet?.commentarySentence || details.step4?.commentarySentence}</p>
+                                  </div>
+                                )}
+                                {(details.shapingSheet?.chunk2CD || details.step4?.chunk2CD) && (
+                                  <div className="bg-red-50 p-2 rounded">
+                                    <p className="text-red-800">CD: {details.shapingSheet?.chunk2CD || details.step4?.chunk2CD}</p>
+                                  </div>
+                                )}
+                                {(details.shapingSheet?.concludingSentence || details.step4?.concludingSentence) && (
+                                  <div className="bg-blue-50 p-2 rounded">
+                                    <p className="text-blue-800">CS: {details.shapingSheet?.concludingSentence || details.step4?.concludingSentence}</p>
+                                  </div>
+                                )}
+                              </div>
+                              {/* Display feedback if exists */}
+                              {selectedSubmission?.teacher_feedback?.shapingSheet && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.shapingSheet}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        
+                        // Step 5: Final Draft - Check multiple possible data structures
+                        if (details.finalDraft || details.step5) {
+                          sections.push(
+                            <div key="finalDraft" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 5: Final Draft</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("finalDraft")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              {(details.finalDraft?.creativeTitle || details.step5?.creativeTitle) && (
+                                <div className="bg-gray-50 p-3 rounded mb-2">
+                                  <p className="text-sm font-medium text-gray-700 mb-1">Creative Title:</p>
+                                  <p className="text-gray-900 font-medium">{details.finalDraft?.creativeTitle || details.step5?.creativeTitle}</p>
+                                </div>
+                              )}
+                              <div className="bg-gray-50 p-3 rounded">
+                                <p className="text-sm font-medium text-gray-900 mb-2">Final Paragraph:</p>
+                                <div className="text-gray-800 leading-relaxed">{renderColorCodedParagraph()}</div>
+                              </div>
+                              {/* Display feedback if exists */}
+                              {selectedSubmission?.teacher_feedback?.finalDraft && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.finalDraft}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Show progress status
+                        if (selectedSubmission.status || selectedSubmission.working_on) {
+                          sections.unshift(
+                            <div key="status" className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                              <h4 className="font-semibold text-gray-900 mb-3">Student Progress</h4>
+                              <div className="flex gap-4">
+                                {selectedSubmission.status && (
+                                  <div>
+                                    <span className="text-sm font-medium text-gray-600">Status: </span>
+                                    <span className="text-gray-900 font-medium capitalize">{selectedSubmission.status}</span>
+                                  </div>
+                                )}
+                                {selectedSubmission.working_on && (
+                                  <div>
+                                    <span className="text-sm font-medium text-gray-600">Current Step: </span>
+                                    <span className="text-gray-900 font-medium capitalize">{selectedSubmission.working_on.replace(/_/g, " ")}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // If no sections found, show fallback message
+                        if (sections.length === 0) {
+                          sections.push(
+                            <div key="fallback" className="border border-red-200 rounded-lg p-4 bg-red-50">
+                              <h4 className="font-semibold text-gray-900 mb-3">No Steps Found</h4>
+                              <p className="text-red-800">No expository steps found in the submission data.</p>
+                            </div>
+                          );
+                        }
+
+                        return <div className="space-y-4">{sections}</div>;
+                      }
+
+                      // Fallback for Literary and other types
                       const sections = [];
 
                       // Step 1: Gathering CDs
@@ -893,7 +1321,10 @@ export default function AssignmentDetail({
                                       Teacher Feedback:
                                     </h6>
                                     <p className="text-orange-800 text-sm leading-relaxed">
-                                      {selectedSubmission.teacher_feedback.step1}
+                                      {
+                                        selectedSubmission.teacher_feedback
+                                          .step1
+                                      }
                                     </p>
                                   </div>
                                 </div>
@@ -1061,6 +1492,23 @@ export default function AssignmentDetail({
                                 </p>
                               </div>
                             )}
+
+                            {/* Display feedback if exists */}
+                            {selectedSubmission?.teacher_feedback?.step2 && (
+                              <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <div className="flex items-start gap-2">
+                                  <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                  <div>
+                                    <h6 className="font-medium text-orange-900 mb-1">
+                                      Teacher Feedback:
+                                    </h6>
+                                    <p className="text-orange-800 text-sm leading-relaxed">
+                                      {selectedSubmission.teacher_feedback.step2}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       }
@@ -1114,6 +1562,23 @@ export default function AssignmentDetail({
                                 <p className="text-red-800">
                                   {details.step3.selectedCD2}
                                 </p>
+                              </div>
+                            )}
+
+                            {/* Display feedback if exists */}
+                            {selectedSubmission?.teacher_feedback?.step3 && (
+                              <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <div className="flex items-start gap-2">
+                                  <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                  <div>
+                                    <h6 className="font-medium text-orange-900 mb-1">
+                                      Teacher Feedback:
+                                    </h6>
+                                    <p className="text-orange-800 text-sm leading-relaxed">
+                                      {selectedSubmission.teacher_feedback.step3}
+                                    </p>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1196,6 +1661,23 @@ export default function AssignmentDetail({
                                 </div>
                               )}
                             </div>
+
+                            {/* Display feedback if exists */}
+                            {selectedSubmission?.teacher_feedback?.step4 && (
+                              <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <div className="flex items-start gap-2">
+                                  <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                  <div>
+                                    <h6 className="font-medium text-orange-900 mb-1">
+                                      Teacher Feedback:
+                                    </h6>
+                                    <p className="text-orange-800 text-sm leading-relaxed">
+                                      {selectedSubmission.teacher_feedback.step4}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       }
@@ -1296,6 +1778,23 @@ export default function AssignmentDetail({
                                 </div>
                               )}
                             </div>
+
+                            {/* Display feedback if exists */}
+                            {selectedSubmission?.teacher_feedback?.step5 && (
+                              <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <div className="flex items-start gap-2">
+                                  <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                  <div>
+                                    <h6 className="font-medium text-orange-900 mb-1">
+                                      Teacher Feedback:
+                                    </h6>
+                                    <p className="text-orange-800 text-sm leading-relaxed">
+                                      {selectedSubmission.teacher_feedback.step5}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       }
@@ -1414,11 +1913,28 @@ export default function AssignmentDetail({
                                 </div>
                               )}
                             </div>
+
+                            {/* Display feedback if exists */}
+                            {selectedSubmission?.teacher_feedback?.step6 && (
+                              <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <div className="flex items-start gap-2">
+                                  <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                  <div>
+                                    <h6 className="font-medium text-orange-900 mb-1">
+                                      Teacher Feedback:
+                                    </h6>
+                                    <p className="text-orange-800 text-sm leading-relaxed">
+                                      {selectedSubmission.teacher_feedback.step6}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       }
 
-                      // Step 7: Final Draft
+                      // Step 7: Final Draft (for literary)
                       if (details.step7) {
                         sections.push(
                           <div
@@ -1472,6 +1988,23 @@ export default function AssignmentDetail({
                                 </div>
                               )}
                             </div>
+
+                            {/* Display feedback if exists */}
+                            {selectedSubmission?.teacher_feedback?.step7 && (
+                              <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <div className="flex items-start gap-2">
+                                  <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                  <div>
+                                    <h6 className="font-medium text-orange-900 mb-1">
+                                      Teacher Feedback:
+                                    </h6>
+                                    <p className="text-orange-800 text-sm leading-relaxed">
+                                      {selectedSubmission.teacher_feedback.step7}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       }

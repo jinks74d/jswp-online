@@ -111,6 +111,11 @@ export default async function StartAssignmentPage({ params }: StartAssignmentPag
     );
   }
 
+  if (assignment.writing_style === "argumentation") {
+    // For argumentation, redirect to the gathering CDs step
+    redirect(`/dashboard/assignments/${id}/gathering-cds`);
+  }
+
   // Default to literary form for other writing styles
   return (
     <StudentAssignmentForm

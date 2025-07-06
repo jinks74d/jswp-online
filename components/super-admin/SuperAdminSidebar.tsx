@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Building2, Users, Settings, LogOut, Home } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { UserProfile } from "@/lib/supabase";
 
@@ -14,7 +14,6 @@ interface SuperAdminSidebarProps {
 
 export default function SuperAdminSidebar({ profile }: SuperAdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const { signOut } = useAuth();
 
@@ -22,10 +21,11 @@ export default function SuperAdminSidebar({ profile }: SuperAdminSidebarProps) {
     setSigningOut(true);
     try {
       await signOut();
-      // Force a hard redirect to ensure session is cleared
-      window.location.href = "/";
+      // AuthProvider will handle the redirect with full page refresh
     } catch (error) {
       console.error("Error signing out:", error);
+      // Show user-friendly error message
+      alert("Failed to sign out. Please try again.");
       setSigningOut(false);
     }
   };

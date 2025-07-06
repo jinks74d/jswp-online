@@ -121,11 +121,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Also call client-side signout as backup
       await supabase.auth.signOut();
       
+      // Force a full page refresh to ensure clean state
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+      
     } catch (error) {
       console.error("Error signing out:", error);
       // Reset state even if signout fails
       setUser(null);
       setProfile(null);
+      
+      // Even on error, try to redirect to login
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
       throw error;
     }
   };
