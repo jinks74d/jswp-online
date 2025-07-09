@@ -86,6 +86,12 @@ export default function ArgumentationWorkingTSForm({
         // Merge with existing data to preserve previous steps
         const mergedData = {
           ...existingStepData,
+          step3: {
+            workingTopicSentence: data.workingTopicSentence,
+            commentaryData: data.commentaryData,
+            status: "working_topic_sentence",
+            working_on: "step_3"
+          },
           step: 'working_topic_sentence',
           workingTopicSentence: data.workingTopicSentence,
           commentaryData: data.commentaryData,
@@ -459,7 +465,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-1`]: e.target.value
                               }))}
-                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                             <input
@@ -469,7 +475,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-2`]: e.target.value
                               }))}
-                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                           </div>
@@ -482,7 +488,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-3`]: e.target.value
                               }))}
-                              className="w-1/2 px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="w-1/2 px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                           </div>
@@ -495,7 +501,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-4`]: e.target.value
                               }))}
-                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                             <input
@@ -505,7 +511,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-5`]: e.target.value
                               }))}
-                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                           </div>
@@ -550,7 +556,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-1`]: e.target.value
                               }))}
-                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                             <input
@@ -560,7 +566,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-2`]: e.target.value
                               }))}
-                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                           </div>
@@ -573,7 +579,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-3`]: e.target.value
                               }))}
-                              className="w-1/2 px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="w-1/2 px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                           </div>
@@ -586,7 +592,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-4`]: e.target.value
                               }))}
-                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                             <input
@@ -596,7 +602,7 @@ export default function ArgumentationWorkingTSForm({
                                 ...prev,
                                 [`${cdKey}-5`]: e.target.value
                               }))}
-                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                              className="px-3 py-2 border-2 border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                               placeholder=""
                             />
                           </div>
@@ -631,7 +637,7 @@ export default function ArgumentationWorkingTSForm({
             onClick={async () => {
               await handleSave();
               if (!saving && canProceed()) {
-                router.push(`/dashboard/assignments/${assignment.id}/body-paragraphs`);
+                router.push(`/dashboard/assignments/${assignment.id}/first-draft`);
               }
             }}
             disabled={saving || !canProceed()}

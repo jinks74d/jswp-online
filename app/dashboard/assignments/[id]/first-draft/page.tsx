@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import FirstDraftForm from "@/components/dashboard/assignments/FirstDraftForm";
+import ArgumentationFirstDraftForm from "@/components/dashboard/assignments/ArgumentationFirstDraftForm";
 
 interface PageProps {
   params: Promise<{
@@ -67,6 +68,17 @@ export default async function FirstDraftPage({ params }: PageProps) {
     redirect("/dashboard/assignments");
   }
 
+  // Render the appropriate form based on writing style
+  if (assignment.writing_style === "argumentation") {
+    return (
+      <ArgumentationFirstDraftForm 
+        assignment={assignment} 
+        studentProfile={userProfile} 
+      />
+    );
+  }
+
+  // Default to regular FirstDraftForm for other writing styles
   return (
     <FirstDraftForm 
       assignment={assignment} 

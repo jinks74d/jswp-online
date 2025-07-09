@@ -1,6 +1,7 @@
 // app/dashboard/assignments/[id]/working-topic-sentence/page.tsx
+import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase";
+import { cookies } from "next/headers";
 import ArgumentationWorkingTSForm from "@/components/dashboard/assignments/ArgumentationWorkingTSForm";
 
 interface PageProps {
@@ -11,7 +12,8 @@ interface PageProps {
 
 export default async function WorkingTopicSentencePage({ params }: PageProps) {
   const { id } = await params;
-  const supabase = createClient();
+  const cookieStore = await cookies();
+  const supabase = await createServerSupabaseClient(cookieStore);
 
   // Get current user
   const {
@@ -24,22 +26,22 @@ export default async function WorkingTopicSentencePage({ params }: PageProps) {
   }
 
   // Get user profile
-  const { data: profile, error: profileError } = await supabase
+  const { data: userProfile, error: profileError } = await supabase
     .from("user_profiles")
     .select(`
       *,
-      districts (id, name),
-      schools (id, name)
+      districts:district_id(id, name),
+      schools:school_id(id, name)
     `)
     .eq("id", user.id)
     .single();
 
-  if (profileError || !profile) {
+  if (profileError || !userProfile) {
     redirect("/");
   }
 
-  // Only students can access this page
-  if (profile.role !== "student") {
+  // Only allow students to access this page
+  if (userProfile.role !== "student") {
     redirect("/dashboard");
   }
 
@@ -48,21 +50,14 @@ export default async function WorkingTopicSentencePage({ params }: PageProps) {
     .from("assignments")
     .select(`
       *,
-      user_profiles!assignments_teacher_id_fkey (
-        first_name,
-        last_name,
-        email
-      ),
-      class_periods (
+      user_profiles:teacher_id(first_name, last_name, email),
+      class_periods:class_period_id(
         id,
         period,
-        classes (
+        classes:class_id(
           id,
           name,
-          subjects (
-            id,
-            name
-          )
+          subjects:subject_id(id, name)
         )
       )
     `)
@@ -81,7 +76,7 @@ export default async function WorkingTopicSentencePage({ params }: PageProps) {
   return (
     <ArgumentationWorkingTSForm
       assignment={assignment}
-      studentProfile={profile}
+      studentProfile={userProfile}
     />
   );
 }

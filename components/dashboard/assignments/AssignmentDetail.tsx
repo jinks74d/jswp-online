@@ -1238,6 +1238,465 @@ export default function AssignmentDetail({
                         return <div className="space-y-4">{sections}</div>;
                       }
 
+                      // Handle Argumentation assignments specifically
+                      if (assignment.writing_style === "argumentation") {
+                        const sections = [];
+
+                        // Step 1: Gathering CDs
+                        if (details.chunk1CDs || details.chunk2CDs) {
+                          sections.push(
+                            <div key="step1" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 1: Gathering Concrete Details</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("step1")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              {details.chunk1CDs && Array.isArray(details.chunk1CDs) && details.chunk1CDs.length > 0 && (
+                                <div className="mb-4">
+                                  <h5 className="font-medium text-gray-800 mb-2">Chunk 1 CDs:</h5>
+                                  {details.chunk1CDs.map((cd: string, index: number) => (
+                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{cd}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {details.chunk2CDs && Array.isArray(details.chunk2CDs) && details.chunk2CDs.length > 0 && (
+                                <div className="mb-4">
+                                  <h5 className="font-medium text-gray-800 mb-2">Chunk 2 CDs:</h5>
+                                  {details.chunk2CDs.map((cd: string, index: number) => (
+                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
+                                      <p className="text-red-800">{cd}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {selectedSubmission?.teacher_feedback?.step1 && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step1}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Step 2: T-Chart (Topic Sentence Development)
+                        if (details.step2 || details.tChartData) {
+                          sections.push(
+                            <div key="step2" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 2: Topic Sentence Development (T-Chart)</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("step2")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              {(() => {
+                                const tChartData = details.step2?.tChartData || details.tChartData;
+                                if (tChartData) {
+                                  return (
+                                    <div className="space-y-4">
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <h5 className="font-medium text-blue-800 mb-2">FOR/PRO/AGREE/DEFEND:</h5>
+                                          <div className="space-y-2">
+                                            {tChartData.positiveRows && tChartData.positiveRows.filter((row: any) => row.reason?.trim()).map((row: any, index: number) => (
+                                              <div key={index} className="bg-blue-50 p-2 rounded">
+                                                <p className="text-blue-800 text-sm">{row.reason}</p>
+                                                <div className="flex gap-1 mt-1">
+                                                  {row.isTS && <span className="bg-green-600 text-white text-xs px-1 rounded">TS</span>}
+                                                  {row.isC && <span className="bg-blue-600 text-white text-xs px-1 rounded">C</span>}
+                                                  {row.isCA && <span className="bg-orange-600 text-white text-xs px-1 rounded">CA</span>}
+                                                  {row.isR && <span className="bg-purple-600 text-white text-xs px-1 rounded">R</span>}
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <h5 className="font-medium text-red-800 mb-2">AGAINST/CON/DISAGREE/CHALLENGE:</h5>
+                                          <div className="space-y-2">
+                                            {tChartData.negativeRows && tChartData.negativeRows.filter((row: any) => row.reason?.trim()).map((row: any, index: number) => (
+                                              <div key={index} className="bg-red-50 p-2 rounded">
+                                                <p className="text-red-800 text-sm">{row.reason}</p>
+                                                <div className="flex gap-1 mt-1">
+                                                  {row.isTS && <span className="bg-green-600 text-white text-xs px-1 rounded">TS</span>}
+                                                  {row.isC && <span className="bg-blue-600 text-white text-xs px-1 rounded">C</span>}
+                                                  {row.isCA && <span className="bg-orange-600 text-white text-xs px-1 rounded">CA</span>}
+                                                  {row.isR && <span className="bg-purple-600 text-white text-xs px-1 rounded">R</span>}
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                return <p className="text-gray-500">No T-Chart data available</p>;
+                              })()}
+                              {selectedSubmission?.teacher_feedback?.step2 && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step2}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Step 3: Working Topic Sentence
+                        if (details.step3 || details.workingTopicSentence) {
+                          sections.push(
+                            <div key="step3" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 3: Working Topic Sentence</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("step3")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              <div className="bg-blue-50 p-3 rounded mb-4">
+                                <p className="text-blue-800">
+                                  {details.step3?.workingTopicSentence || details.workingTopicSentence || "No working topic sentence provided"}
+                                </p>
+                              </div>
+                              {(() => {
+                                const commentaryData = details.step3?.commentaryData || details.commentaryData;
+                                if (commentaryData && typeof commentaryData === 'object') {
+                                  return (
+                                    <div className="space-y-3">
+                                      <h5 className="font-medium text-gray-800">Commentary Development:</h5>
+                                      {Object.entries(commentaryData).map(([key, value]: [string, any]) => (
+                                        <div key={key} className="bg-green-50 p-2 rounded">
+                                          <p className="text-green-800 text-sm">{key}: {value}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
+                              {selectedSubmission?.teacher_feedback?.step3 && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step3}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Step 4: First Draft
+                        if (details.step4 || details.step5) {
+                          sections.push(
+                            <div key="step4" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 4: First Draft</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("step4")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              {(() => {
+                                const firstDraftData = details.step4 || details.step5;
+                                if (firstDraftData) {
+                                  return (
+                                    <div className="space-y-3">
+                                      {firstDraftData.revisedTopicSentence && (
+                                        <div className="bg-blue-50 p-3 rounded">
+                                          <p className="text-sm font-medium text-blue-900 mb-1">Revised Topic Sentence:</p>
+                                          <p className="text-blue-800">{firstDraftData.revisedTopicSentence}</p>
+                                        </div>
+                                      )}
+                                      {firstDraftData.concessionCounterargument && (
+                                        <div className="bg-gray-50 p-3 rounded">
+                                          <p className="text-sm font-medium text-gray-900 mb-1">Concession/Counterargument:</p>
+                                          <p className="text-gray-800">{firstDraftData.concessionCounterargument}</p>
+                                        </div>
+                                      )}
+                                      {firstDraftData.refutation && (
+                                        <div className="bg-gray-50 p-3 rounded">
+                                          <p className="text-sm font-medium text-gray-900 mb-1">Refutation:</p>
+                                          <p className="text-gray-800">{firstDraftData.refutation}</p>
+                                        </div>
+                                      )}
+                                      {firstDraftData.commentarySentence && (
+                                        <div className="bg-green-50 p-3 rounded">
+                                          <p className="text-sm font-medium text-green-900 mb-1">Commentary Sentence:</p>
+                                          <p className="text-green-800">{firstDraftData.commentarySentence}</p>
+                                        </div>
+                                      )}
+                                      {firstDraftData.concludingSentence && (
+                                        <div className="bg-blue-50 p-3 rounded">
+                                          <p className="text-sm font-medium text-blue-900 mb-1">Concluding Sentence:</p>
+                                          <p className="text-blue-800">{firstDraftData.concludingSentence}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                                return <p className="text-gray-500">No first draft data available</p>;
+                              })()}
+                              {selectedSubmission?.teacher_feedback?.step4 && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step4}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Step 5: Shaping Sheet
+                        if (details.shapingSheet) {
+                          sections.push(
+                            <div key="step5" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 5: Shaping Sheet</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("step5")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                {details.shapingSheet.topicSentence && (
+                                  <div className="bg-blue-50 p-2 rounded">
+                                    <p className="text-blue-800">TS: {details.shapingSheet.topicSentence}</p>
+                                  </div>
+                                )}
+                                {details.shapingSheet.concessionCounterargument && (
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <p className="text-gray-800">Concession/Counterargument: {details.shapingSheet.concessionCounterargument}</p>
+                                  </div>
+                                )}
+                                {details.shapingSheet.refutation && (
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <p className="text-gray-800">Refutation: {details.shapingSheet.refutation}</p>
+                                  </div>
+                                )}
+                                {details.shapingSheet.concreteDetails && Array.isArray(details.shapingSheet.concreteDetails) && (
+                                  <div>
+                                    {details.shapingSheet.concreteDetails.map((cd: string, index: number) => (
+                                      <div key={index} className="bg-red-50 p-2 rounded mb-1">
+                                        <p className="text-red-800">CD: {cd}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {details.shapingSheet.commentarySentence && (
+                                  <div className="bg-green-50 p-2 rounded">
+                                    <p className="text-green-800">CM: {details.shapingSheet.commentarySentence}</p>
+                                  </div>
+                                )}
+                                {details.shapingSheet.concludingSentence && (
+                                  <div className="bg-blue-50 p-2 rounded">
+                                    <p className="text-blue-800">CS: {details.shapingSheet.concludingSentence}</p>
+                                  </div>
+                                )}
+                              </div>
+                              {selectedSubmission?.teacher_feedback?.step5 && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step5}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Step 6: Final Draft
+                        if (details.finalDraft) {
+                          sections.push(
+                            <div key="step6" className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-gray-900">Step 6: Final Draft</h4>
+                                {currentUserRole !== "student" && (
+                                  <button onClick={() => handleAddFeedback("step6")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
+                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  </button>
+                                )}
+                              </div>
+                              {details.finalDraft.creativeTitle && (
+                                <div className="bg-gray-50 p-3 rounded mb-2">
+                                  <p className="text-sm font-medium text-gray-700 mb-1">Creative Title:</p>
+                                  <p className="text-gray-900 font-medium">{details.finalDraft.creativeTitle}</p>
+                                </div>
+                              )}
+                              <div className="bg-gray-50 p-3 rounded">
+                                <p className="text-sm font-medium text-gray-900 mb-2">Final Paragraph:</p>
+                                <div className="text-gray-800 leading-relaxed">
+                                  {(() => {
+                                    const renderColorCodedParagraph = () => {
+                                      if (!details.finalDraft.finalParagraph) {
+                                        return <p className="text-gray-500 italic">No final paragraph provided</p>;
+                                      }
+
+                                      // Get sentence components from shaping sheet or other steps
+                                      const topicSentence = details.shapingSheet?.topicSentence || "";
+                                      const concessionCounterargument = details.shapingSheet?.concessionCounterargument || "";
+                                      const refutation = details.shapingSheet?.refutation || "";
+                                      const concreteDetails = details.shapingSheet?.concreteDetails || [];
+                                      const commentarySentence = details.shapingSheet?.commentarySentence || "";
+                                      const concludingSentence = details.shapingSheet?.concludingSentence || "";
+
+                                      const paragraph = details.finalDraft.finalParagraph;
+                                      const colorCodedElements: JSX.Element[] = [];
+                                      let currentIndex = 0;
+
+                                      // Helper function to find and highlight a sentence
+                                      const highlightSentence = (sentence: string, color: string, label: string) => {
+                                        if (!sentence || !sentence.trim()) return;
+                                        
+                                        const index = paragraph.toLowerCase().indexOf(sentence.toLowerCase());
+                                        if (index !== -1) {
+                                          // Add text before the sentence
+                                          if (index > currentIndex) {
+                                            colorCodedElements.push(
+                                              <span key={`text-${currentIndex}`} className="text-gray-900">
+                                                {paragraph.substring(currentIndex, index)}
+                                              </span>
+                                            );
+                                          }
+                                          
+                                          // Add the colored sentence
+                                          colorCodedElements.push(
+                                            <span 
+                                              key={`${label}-${index}`} 
+                                              className={color}
+                                              title={label}
+                                            >
+                                              {paragraph.substring(index, index + sentence.length)}
+                                            </span>
+                                          );
+                                          
+                                          currentIndex = index + sentence.length;
+                                        }
+                                      };
+
+                                      // Highlight sentences in order
+                                      highlightSentence(topicSentence, "text-blue-600", "Topic Sentence (TS)");
+                                      highlightSentence(concessionCounterargument, "text-gray-600", "Concession/Counterargument");
+                                      highlightSentence(refutation, "text-gray-600", "Refutation");
+                                      
+                                      // Highlight concrete details
+                                      if (Array.isArray(concreteDetails)) {
+                                        concreteDetails.forEach((cd: string, index: number) => {
+                                          highlightSentence(cd, "text-red-600", `Concrete Detail ${index + 1} (CD)`);
+                                        });
+                                      }
+                                      
+                                      highlightSentence(commentarySentence, "text-green-600", "Commentary (CM)");
+                                      highlightSentence(concludingSentence, "text-blue-600", "Concluding Sentence (CS)");
+
+                                      // Add any remaining text
+                                      if (currentIndex < paragraph.length) {
+                                        colorCodedElements.push(
+                                          <span key={`text-end`} className="text-gray-900">
+                                            {paragraph.substring(currentIndex)}
+                                          </span>
+                                        );
+                                      }
+
+                                      return (
+                                        <div className="leading-relaxed">
+                                          <div className="indent-8">
+                                            {colorCodedElements.length > 0 ? colorCodedElements : (
+                                              <span className="text-gray-900">{paragraph}</span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    };
+
+                                    return renderColorCodedParagraph();
+                                  })()}
+                                </div>
+                              </div>
+                              {selectedSubmission?.teacher_feedback?.step6 && (
+                                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step6}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Show progress status
+                        if (selectedSubmission.status || selectedSubmission.working_on) {
+                          sections.unshift(
+                            <div key="status" className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                              <h4 className="font-semibold text-gray-900 mb-3">Student Progress</h4>
+                              <div className="flex gap-4">
+                                {selectedSubmission.status && (
+                                  <div>
+                                    <span className="text-sm font-medium text-gray-600">Status: </span>
+                                    <span className="text-gray-900 font-medium capitalize">{selectedSubmission.status}</span>
+                                  </div>
+                                )}
+                                {selectedSubmission.working_on && (
+                                  <div>
+                                    <span className="text-sm font-medium text-gray-600">Current Step: </span>
+                                    <span className="text-gray-900 font-medium capitalize">{selectedSubmission.working_on.replace(/_/g, " ")}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // If no sections found, show fallback message
+                        if (sections.length === 0) {
+                          sections.push(
+                            <div key="fallback" className="border border-red-200 rounded-lg p-4 bg-red-50">
+                              <h4 className="font-semibold text-gray-900 mb-3">No Steps Found</h4>
+                              <p className="text-red-800">No argumentation steps found in the submission data.</p>
+                            </div>
+                          );
+                        }
+
+                        return <div className="space-y-4">{sections}</div>;
+                      }
+
                       // Fallback for Literary and other types
                       const sections = [];
 

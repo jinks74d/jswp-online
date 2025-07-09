@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import ExpositoryFinalDraftForm from "@/components/dashboard/assignments/ExpositoryFinalDraftForm";
+import ArgumentationFinalDraftForm from "@/components/dashboard/assignments/ArgumentationFinalDraftForm";
 
 interface PageProps {
   params: Promise<{
@@ -67,6 +68,17 @@ export default async function FinalDraftPage({ params }: PageProps) {
     redirect("/dashboard/assignments");
   }
 
+  // Render the appropriate final draft form based on writing style
+  if (assignment.writing_style === "argumentation") {
+    return (
+      <ArgumentationFinalDraftForm 
+        assignment={assignment} 
+        studentProfile={userProfile} 
+      />
+    );
+  }
+
+  // Default to ExpositoryFinalDraftForm for other writing styles
   return (
     <ExpositoryFinalDraftForm 
       assignment={assignment} 

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import ShapingSheetForm from "@/components/dashboard/assignments/ShapingSheetForm";
 import ExpositoryShapingSheetForm from "@/components/dashboard/assignments/ExpositoryShapingSheetForm";
+import ArgumentationShapingSheetForm from "@/components/dashboard/assignments/ArgumentationShapingSheetForm";
 
 interface PageProps {
   params: Promise<{
@@ -72,6 +73,15 @@ export default async function ShapingPage({ params }: PageProps) {
   if (assignment.writing_style === "expository") {
     return (
       <ExpositoryShapingSheetForm 
+        assignment={assignment} 
+        studentProfile={userProfile} 
+      />
+    );
+  }
+
+  if (assignment.writing_style === "argumentation") {
+    return (
+      <ArgumentationShapingSheetForm 
         assignment={assignment} 
         studentProfile={userProfile} 
       />

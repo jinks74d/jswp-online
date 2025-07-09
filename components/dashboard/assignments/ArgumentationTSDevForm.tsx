@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Clock, User, HelpCircle, X, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Clock, User, HelpCircle, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserProfile } from "@/lib/supabase";
@@ -106,15 +106,13 @@ export default function ArgumentationTSDevForm({
       selectedCounterargument: ''
     };
   });
-  const [newPositiveInput, setNewPositiveInput] = useState("");
-  const [newNegativeInput, setNewNegativeInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   // Auto-save functionality with debouncing
   const debouncedAutoSave = useCallback(
-    async (data: any) => {
+    async (data: TChartData) => {
       setAutoSaveStatus('saving');
       try {
         // First get existing data to preserve previous steps
@@ -125,7 +123,7 @@ export default function ArgumentationTSDevForm({
         if (existingResponse.ok && existingResult.data?.concrete_details) {
           try {
             existingStepData = JSON.parse(existingResult.data.concrete_details);
-          } catch (error) {
+          } catch {
             console.log("No existing data to preserve");
           }
         }
@@ -133,6 +131,11 @@ export default function ArgumentationTSDevForm({
         // Merge with existing data to preserve previous steps
         const mergedData = {
           ...existingStepData,
+          step2: {
+            tChartData: data,
+            status: "topic_sentence_development",
+            working_on: "step_2"
+          },
           step: 'topic_sentence_development',
           tChartData: data,
           status: "topic_sentence_development",
@@ -282,38 +285,6 @@ export default function ArgumentationTSDevForm({
   }, [tChartData.positiveRows.length, tChartData.negativeRows.length]);
 
   // T-Chart row management functions
-  const addPositiveRow = () => {
-    const newRow: TChartRow = {
-      id: `pos-${Date.now()}`,
-      cdNumbers: '',
-      reason: '',
-      isTS: false,
-      isC: false,
-      isCA: false,
-      isR: false
-    };
-    setTChartData(prev => ({
-      ...prev,
-      positiveRows: [...prev.positiveRows, newRow]
-    }));
-  };
-
-  const addNegativeRow = () => {
-    const newRow: TChartRow = {
-      id: `neg-${Date.now()}`,
-      cdNumbers: '',
-      reason: '',
-      isTS: false,
-      isC: false,
-      isCA: false,
-      isR: false
-    };
-    setTChartData(prev => ({
-      ...prev,
-      negativeRows: [...prev.negativeRows, newRow]
-    }));
-  };
-
   const updatePositiveRow = (id: string, field: keyof TChartRow, value: string | boolean) => {
     setTChartData(prev => ({
       ...prev,
@@ -332,20 +303,6 @@ export default function ArgumentationTSDevForm({
     }));
   };
 
-  const removePositiveRow = (id: string) => {
-    setTChartData(prev => ({
-      ...prev,
-      positiveRows: prev.positiveRows.filter(row => row.id !== id)
-    }));
-  };
-
-  const removeNegativeRow = (id: string) => {
-    setTChartData(prev => ({
-      ...prev,
-      negativeRows: prev.negativeRows.filter(row => row.id !== id)
-    }));
-  };
-
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -357,7 +314,7 @@ export default function ArgumentationTSDevForm({
       if (existingResponse.ok && existingResult.data?.concrete_details) {
         try {
           existingStepData = JSON.parse(existingResult.data.concrete_details);
-        } catch (error) {
+        } catch {
           console.log("No existing data to preserve");
         }
       }
@@ -399,6 +356,7 @@ export default function ArgumentationTSDevForm({
       setSaving(false);
     }
   };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -770,15 +728,9 @@ export default function ArgumentationTSDevForm({
             {saving ? "Saving..." : "Save"}
           </button>
 
-          <Link
-            href={`/dashboard/assignments/${assignment.id}/working-topic-sentence`}
-            onClick={async (e) => {
-              e.preventDefault();
-              await handleSave();
-              if (!saving && canProceed()) {
-                console.log('Navigating to:', `/dashboard/assignments/${assignment.id}/working-topic-sentence`);
-                window.location.href = `/dashboard/assignments/${assignment.id}/working-topic-sentence`;
-              } else if (!saving) {
+          <button
+            onClick={async () => {
+              if (!canProceed()) {
                 const hasSelectedCDs = selectedCDs.selectedChunk1CDs.length > 0;
                 const hasSelectedTS = [...tChartData.positiveRows, ...tChartData.negativeRows].some(row => row.isTS);
                 
@@ -787,16 +739,23 @@ export default function ArgumentationTSDevForm({
                 } else if (!hasSelectedTS) {
                   alert("Please select a Topic Sentence (TS) by clicking the TS button next to one of your reasons in the T-Chart.");
                 }
+                return;
+              }
+              
+              await handleSave();
+              if (!saving && canProceed()) {
+                router.push(`/dashboard/assignments/${assignment.id}/working-topic-sentence`);
               }
             }}
-            className={`inline-block px-6 py-3 rounded-lg font-medium transition-colors ${
+            disabled={saving || !canProceed()}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
               saving || !canProceed()
                 ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                 : "bg-[#3d8c33] text-white hover:bg-[#2d6625]"
             }`}
           >
             {saving ? "Saving..." : "Save and Next"}
-          </Link>
+          </button>
         </div>
       </div>
 
