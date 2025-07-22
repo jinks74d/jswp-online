@@ -210,32 +210,32 @@ export default function WritingStyleSelection({
         </div>
       </div>
 
-      {/* Coming Soon Notice */}
+      {/* Writing Style Status */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Assignment Creation System
+            Available Writing Styles
           </h3>
           <p className="text-gray-600 mb-4">
-            The full assignment creation forms for each writing style are currently in development. 
-            For now, selecting a style will log your choice to the console.
+            Select any writing style above to create a new assignment. Each style includes a complete set of forms
+            that guide students through the writing process using the Jane Schaffer methodology.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm text-gray-700">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#b3172c' }}></div>
-              <span>Literary Forms</span>
+              <span>Literary Analysis</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#22356d' }}></div>
-              <span>Expository Forms</span>
+              <span>Expository Writing</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3d8c33' }}></div>
-              <span>Argumentation Forms</span>
+              <span>Argumentation</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#13161f' }}></div>
-              <span>Narrative Forms</span>
+              <span>Narrative Writing</span>
             </div>
           </div>
         </div>

@@ -1,10 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import GatheringCdsForm from "@/components/dashboard/assignments/GatheringCdsForm";
-import ExpositoryGatheringCdsForm from "@/components/dashboard/assignments/ExpositoryGatheringCdsForm";
-import ArgumentationGatheringCdsForm from "@/components/dashboard/assignments/ArgumentationGatheringCdsForm";
-import NarrativeGatheringCdsForm from "@/components/dashboard/assignments/NarrativeGatheringCdsForm";
+import NarrativeShapingSheet2Form from "@/components/dashboard/assignments/NarrativeShapingSheet2Form";
 
 interface PageProps {
   params: Promise<{
@@ -12,7 +9,7 @@ interface PageProps {
   }>;
 }
 
-export default async function GatheringCdsPage({ params }: PageProps) {
+export default async function NarrativeShaping2Page({ params }: PageProps) {
   const { id } = await params;
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
@@ -70,37 +67,13 @@ export default async function GatheringCdsPage({ params }: PageProps) {
     redirect("/dashboard/assignments");
   }
 
-  // Render the appropriate form based on writing style
-  if (assignment.writing_style === "expository") {
-    return (
-      <ExpositoryGatheringCdsForm 
-        assignment={assignment} 
-        studentProfile={userProfile} 
-      />
-    );
+  // Only render for narrative assignments
+  if (assignment.writing_style !== "narrative") {
+    redirect(`/dashboard/assignments/${id}`);
   }
 
-  if (assignment.writing_style === "argumentation") {
-    return (
-      <ArgumentationGatheringCdsForm 
-        assignment={assignment} 
-        studentProfile={userProfile} 
-      />
-    );
-  }
-
-  if (assignment.writing_style === "narrative") {
-    return (
-      <NarrativeGatheringCdsForm 
-        assignment={assignment} 
-        studentProfile={userProfile} 
-      />
-    );
-  }
-
-  // Default to literary form for other writing styles
   return (
-    <GatheringCdsForm 
+    <NarrativeShapingSheet2Form 
       assignment={assignment} 
       studentProfile={userProfile} 
     />

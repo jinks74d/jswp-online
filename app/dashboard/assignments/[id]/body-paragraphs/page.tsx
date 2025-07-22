@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import BodyParagraphsForm from "@/components/dashboard/assignments/BodyParagraphsForm";
+import NarrativeBodyParagraphsForm from "@/components/dashboard/assignments/NarrativeBodyParagraphsForm";
 
 interface PageProps {
   params: Promise<{
@@ -65,6 +66,16 @@ export default async function BodyParagraphsPage({ params }: PageProps) {
 
   if (assignmentError || !assignment) {
     redirect("/dashboard/assignments");
+  }
+
+  // Render appropriate form based on writing style
+  if (assignment.writing_style === "narrative") {
+    return (
+      <NarrativeBodyParagraphsForm 
+        assignment={assignment} 
+        studentProfile={userProfile} 
+      />
+    );
   }
 
   return (

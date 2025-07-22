@@ -65,12 +65,30 @@ export default async function StartAssignmentPage({ params }: StartAssignmentPag
     redirect("/dashboard/assignments");
   }
 
+  console.log("Assignment fetched successfully:", {
+    id: assignment.id,
+    title: assignment.title,
+    writing_style: assignment.writing_style,
+    school_id: assignment.school_id,
+    teacher_id: assignment.teacher_id
+  });
+
+  console.log("User profile:", {
+    id: profile.id,
+    role: profile.role,
+    school_id: profile.school_id,
+    first_name: profile.first_name,
+    last_name: profile.last_name
+  });
+
   // For now, allow students from the same school to access assignments
   // TODO: Implement proper class enrollment checking
   if (assignment.school_id && assignment.school_id !== profile.school_id) {
     console.error("School mismatch:", assignment.school_id, "vs", profile.school_id);
     redirect("/dashboard/assignments");
   }
+
+  console.log("About to redirect to discovering-topic for narrative assignment");
 
   // Fetch class period information separately if it exists
   let classPeriodInfo = null;
@@ -114,6 +132,11 @@ export default async function StartAssignmentPage({ params }: StartAssignmentPag
   if (assignment.writing_style === "argumentation") {
     // For argumentation, redirect to the gathering CDs step
     redirect(`/dashboard/assignments/${id}/gathering-cds`);
+  }
+
+  if (assignment.writing_style === "narrative") {
+    // For narrative, redirect to the discovering topic step
+    redirect(`/dashboard/assignments/${id}/discovering-topic`);
   }
 
   // Default to literary form for other writing styles

@@ -387,47 +387,130 @@ export default function ArgumentationFinalDraftForm({
     }
 
     const paragraph = finalDraftData.finalParagraph;
-    let htmlString = '';
-    let currentIndex = 0;
-
-    // Helper function to find and highlight a sentence
-    const highlightSentence = (sentence: string, color: string, label: string) => {
-      if (!sentence.trim()) return;
+    
+    // Split paragraph into sentences for better identification
+    const sentences = paragraph.split(/[.!?]+/).filter(s => s.trim());
+    
+    // If we have sentences and original components, apply colors based on position and content
+    if (sentences.length > 0 && (topicSentence || concessionCounterargument || refutation || concreteDetails.length > 0 || commentarySentence || concludingSentence)) {
+      let coloredHtml = '';
+      let usedIndices = new Set();
       
-      const index = paragraph.toLowerCase().indexOf(sentence.toLowerCase());
-      if (index !== -1) {
-        // Add text before the sentence
-        if (index > currentIndex) {
-          htmlString += `<span class="text-gray-900">${paragraph.substring(currentIndex, index)}</span>`;
+      // Helper function to find best sentence match (allows for modifications)
+      const findBestMatch = (originalSentence: string, color: string, label: string) => {
+        if (!originalSentence.trim()) return;
+        
+        for (let i = 0; i < sentences.length; i++) {
+          if (usedIndices.has(i)) continue;
+          
+          const currentSentence = sentences[i].trim();
+          const original = originalSentence.trim();
+          
+          // Check for exact match first
+          if (currentSentence.toLowerCase().includes(original.toLowerCase()) || 
+              original.toLowerCase().includes(currentSentence.toLowerCase())) {
+            usedIndices.add(i);
+            return { index: i, sentence: currentSentence, color, label };
+          }
+          
+          // Check for partial match (at least 50% word overlap)
+          const currentWords = currentSentence.toLowerCase().split(/\s+/);
+          const originalWords = original.toLowerCase().split(/\s+/);
+          const commonWords = currentWords.filter(word => originalWords.includes(word));
+          
+          if (commonWords.length >= Math.min(currentWords.length, originalWords.length) * 0.5) {
+            usedIndices.add(i);
+            return { index: i, sentence: currentSentence, color, label };
+          }
+        }
+        return null;
+      };
+      
+      // Apply colors based on logical order and content matching
+      const coloredSentences = [];
+      
+      // 1. Topic Sentence (usually first, should stay blue)
+      if (topicSentence) {
+        const tsMatch = findBestMatch(topicSentence, "text-blue-600", "Topic Sentence (TS)");
+        if (tsMatch) {
+          coloredSentences[tsMatch.index] = tsMatch;
+        } else if (sentences.length > 0 && !usedIndices.has(0)) {
+          // If no match found, color the first sentence as TS
+          coloredSentences[0] = { index: 0, sentence: sentences[0], color: "text-blue-600", label: "Topic Sentence (TS)" };
+          usedIndices.add(0);
+        }
+      }
+      
+      // 2. Concession/Counterargument
+      if (concessionCounterargument) {
+        const ccMatch = findBestMatch(concessionCounterargument, "text-gray-600", "Concession/Counterargument");
+        if (ccMatch) {
+          coloredSentences[ccMatch.index] = ccMatch;
+        }
+      }
+      
+      // 3. Refutation
+      if (refutation) {
+        const refMatch = findBestMatch(refutation, "text-gray-600", "Refutation");
+        if (refMatch) {
+          coloredSentences[refMatch.index] = refMatch;
+        }
+      }
+      
+      // 4. Concrete Details
+      concreteDetails.forEach((cd, cdIndex) => {
+        const cdMatch = findBestMatch(cd, "text-red-600", `Concrete Detail ${cdIndex + 1} (CD)`);
+        if (cdMatch) {
+          coloredSentences[cdMatch.index] = cdMatch;
+        }
+      });
+      
+      // 5. Commentary
+      if (commentarySentence) {
+        const cmMatch = findBestMatch(commentarySentence, "text-green-600", "Commentary (CM)");
+        if (cmMatch) {
+          coloredSentences[cmMatch.index] = cmMatch;
+        }
+      }
+      
+      // 6. Concluding Sentence (usually last, should stay blue)
+      if (concludingSentence) {
+        const csMatch = findBestMatch(concludingSentence, "text-blue-600", "Concluding Sentence (CS)");
+        if (csMatch) {
+          coloredSentences[csMatch.index] = csMatch;
+        } else if (sentences.length > 1 && !usedIndices.has(sentences.length - 1)) {
+          // If no match found, color the last sentence as CS
+          const lastIndex = sentences.length - 1;
+          coloredSentences[lastIndex] = { index: lastIndex, sentence: sentences[lastIndex], color: "text-blue-600", label: "Concluding Sentence (CS)" };
+          usedIndices.add(lastIndex);
+        }
+      }
+      
+      // Build the colored HTML
+      for (let i = 0; i < sentences.length; i++) {
+        const sentence = sentences[i].trim();
+        if (!sentence) continue;
+        
+        if (coloredSentences[i]) {
+          const colored = coloredSentences[i];
+          coloredHtml += `<span class="${colored.color}" title="${colored.label}">${sentence}</span>`;
+        } else {
+          coloredHtml += `<span class="text-gray-900">${sentence}</span>`;
         }
         
-        // Add the colored sentence
-        const colorClass = color.replace('text-', '');
-        htmlString += `<span class="${color}" title="${label}">${paragraph.substring(index, index + sentence.length)}</span>`;
-        
-        currentIndex = index + sentence.length;
+        // Add period back if it was removed and not the last sentence
+        if (i < sentences.length - 1) {
+          coloredHtml += '. ';
+        } else {
+          coloredHtml += '.';
+        }
       }
-    };
-
-    // Highlight sentences in order
-    highlightSentence(topicSentence, "text-blue-600", "Topic Sentence (TS)");
-    highlightSentence(concessionCounterargument, "text-gray-600", "Concession/Counterargument");
-    highlightSentence(refutation, "text-gray-600", "Refutation");
-    
-    // Highlight concrete details
-    concreteDetails.forEach((cd, index) => {
-      highlightSentence(cd, "text-red-600", `Concrete Detail ${index + 1} (CD)`);
-    });
-    
-    highlightSentence(commentarySentence, "text-green-600", "Commentary (CM)");
-    highlightSentence(concludingSentence, "text-blue-600", "Concluding Sentence (CS)");
-
-    // Add any remaining text
-    if (currentIndex < paragraph.length) {
-      htmlString += `<span class="text-gray-900">${paragraph.substring(currentIndex)}</span>`;
+      
+      return coloredHtml;
     }
-
-    return htmlString || `<span class="text-gray-900">${paragraph}</span>`;
+    
+    // Fallback to original exact matching if no structured data
+    return `<span class="text-gray-900">${paragraph}</span>`;
   };
 
   // Validation for completion

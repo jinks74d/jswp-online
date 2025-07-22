@@ -16,6 +16,9 @@ interface Assignment {
   teacher_id: string;
   district_id: string;
   school_id: string;
+  writing_style: string;
+  prompt: string;
+  class_period_id: string;
 }
 
 interface ClassPeriod {
@@ -54,9 +57,9 @@ export default function EditAssignmentForm({
   const [formData, setFormData] = useState({
     assignmentName: assignment.title,
     description: assignment.description,
-    course: (assignment as any).class_period_id || "", // Get from assignment
+    course: assignment.class_period_id || "",
     dueDate: assignment.due_date,
-    prompt: (assignment as any).prompt || "", // Get from assignment
+    prompt: assignment.prompt || "",
   });
 
   const [saving, setSaving] = useState(false);
@@ -67,6 +70,43 @@ export default function EditAssignmentForm({
       [field]: value
     }));
   };
+
+  const getWritingStyleInfo = (writingStyle: string) => {
+    switch (writingStyle) {
+      case 'literary':
+        return {
+          title: 'RESPONSE TO LITERATURE',
+          icon: '/assets/literary01-circle-cmyk.jpg',
+          color: '#b3172c'
+        };
+      case 'expository':
+        return {
+          title: 'EXPOSITORY/INFORMAL',
+          icon: '/assets/expository01-circle-cmyk.jpg',
+          color: '#22356d'
+        };
+      case 'argumentation':
+        return {
+          title: 'ARGUMENTATION',
+          icon: '/assets/argumentation01-circle-cmyk.jpg',
+          color: '#3d8c33'
+        };
+      case 'narrative':
+        return {
+          title: 'NARRATIVE',
+          icon: '/assets/narrative01-circle-cmyk.jpg',
+          color: '#13161f'
+        };
+      default:
+        return {
+          title: 'WRITING ASSIGNMENT',
+          icon: '/assets/literary01-circle-cmyk.jpg',
+          color: '#b3172c'
+        };
+    }
+  };
+
+  const writingStyleInfo = getWritingStyleInfo(assignment.writing_style);
 
   const handleSave = async () => {
     setSaving(true);
@@ -147,15 +187,15 @@ export default function EditAssignmentForm({
 
       {/* Main Form */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-4xl mx-auto">
-        {/* Literary Header with Icon */}
+        {/* Dynamic Writing Style Header */}
         <div className="flex items-center gap-4 mb-8">
           <img
-            src="/assets/literary01-circle-cmyk.jpg"
-            alt="Literary"
+            src={writingStyleInfo.icon}
+            alt={writingStyleInfo.title}
             className="w-12 h-12 rounded-full object-cover"
           />
           <h2 className="text-2xl font-bold text-gray-900">
-            RESPONSE TO LITERATURE
+            {writingStyleInfo.title}
           </h2>
         </div>
 
@@ -172,7 +212,11 @@ export default function EditAssignmentForm({
               onChange={(e) =>
                 handleInputChange("assignmentName", e.target.value)
               }
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-gray-900"
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900`}
+              style={{ 
+                '--tw-ring-color': writingStyleInfo.color,
+                borderColor: `${writingStyleInfo.color}33`
+              } as React.CSSProperties}
               placeholder="Enter assignment name"
             />
           </div>
@@ -186,7 +230,11 @@ export default function EditAssignmentForm({
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
               rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-gray-900"
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900`}
+              style={{ 
+                '--tw-ring-color': writingStyleInfo.color,
+                borderColor: `${writingStyleInfo.color}33`
+              } as React.CSSProperties}
               placeholder="Enter assignment description"
             />
           </div>
@@ -199,7 +247,11 @@ export default function EditAssignmentForm({
             <select
               value={formData.course}
               onChange={(e) => handleInputChange("course", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-gray-900"
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900`}
+              style={{ 
+                '--tw-ring-color': writingStyleInfo.color,
+                borderColor: `${writingStyleInfo.color}33`
+              } as React.CSSProperties}
             >
               <option value="">Select a course</option>
               {teacherClasses.map((classPeriod) => (
@@ -219,7 +271,11 @@ export default function EditAssignmentForm({
               type="date"
               value={formData.dueDate}
               onChange={(e) => handleInputChange("dueDate", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-gray-900"
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900`}
+              style={{ 
+                '--tw-ring-color': writingStyleInfo.color,
+                borderColor: `${writingStyleInfo.color}33`
+              } as React.CSSProperties}
             />
           </div>
 
@@ -232,7 +288,11 @@ export default function EditAssignmentForm({
               type="text"
               value={formData.prompt}
               onChange={(e) => handleInputChange("prompt", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b3172c] focus:border-[#b3172c] text-gray-900"
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900`}
+              style={{ 
+                '--tw-ring-color': writingStyleInfo.color,
+                borderColor: `${writingStyleInfo.color}33`
+              } as React.CSSProperties}
               placeholder="Enter the writing prompt"
             />
           </div>

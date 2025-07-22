@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("POST /api/student-progress called");
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,10 +36,15 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
+      console.error("Auth error:", userError);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    console.log("User authenticated:", user.id);
+
     const body = await request.json();
+    console.log("Request body:", body);
+    
     const {
       assignment_id,
       student_id,
@@ -53,19 +59,28 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!assignment_id || !student_id) {
+      console.error("Missing required fields:", { assignment_id, student_id });
       return NextResponse.json(
         { error: "Assignment ID and Student ID are required" },
         { status: 400 }
       );
     }
 
+    console.log("Checking for existing progress...");
+
     // Check if progress record already exists
-    const { data: existingProgress } = await supabase
+    const { data: existingProgress, error: fetchError } = await supabase
       .from("student_assignment_progress")
       .select("*")
       .eq("assignment_id", assignment_id)
       .eq("student_id", student_id)
       .single();
+
+    if (fetchError && fetchError.code !== "PGRST116") {
+      console.error("Error fetching existing progress:", fetchError);
+    }
+
+    console.log("Existing progress:", existingProgress);
 
     const progressData = {
       assignment_id,
@@ -81,8 +96,11 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
+    console.log("Progress data to save:", progressData);
+
     let result;
     if (existingProgress) {
+      console.log("Updating existing record...");
       // Update existing record
       const { data, error } = await supabase
         .from("student_assignment_progress")
@@ -96,8 +114,10 @@ export async function POST(request: NextRequest) {
         console.error("Error updating progress:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
+      console.log("Update successful:", data);
       result = data;
     } else {
+      console.log("Creating new record...");
       // Create new record
       const { data, error } = await supabase
         .from("student_assignment_progress")
@@ -112,6 +132,7 @@ export async function POST(request: NextRequest) {
         console.error("Error creating progress:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
+      console.log("Create successful:", data);
       result = data;
     }
 
