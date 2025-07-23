@@ -63,12 +63,7 @@ export default function NarrativeShapingSheetForm({
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
 
-  // Load existing progress
-  useEffect(() => {
-    loadProgress();
-  }, [assignment.id, studentProfile.id]);
-
-  const loadProgress = async () => {
+  const loadProgress = useCallback(async () => {
     try {
       const response = await fetch(
         `/api/student-progress?assignment_id=${assignment.id}&student_id=${studentProfile.id}`
@@ -91,7 +86,12 @@ export default function NarrativeShapingSheetForm({
     } catch (error) {
       console.error("Error loading progress:", error);
     }
-  };
+  }, [assignment.id, studentProfile.id]);
+
+  // Load existing progress
+  useEffect(() => {
+    loadProgress();
+  }, [loadProgress]);
 
   const saveProgress = useCallback(
     async (updatedNotes: any) => {

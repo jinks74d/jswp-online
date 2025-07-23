@@ -1,7 +1,7 @@
 // components/dashboard/SchoolAdminDashboard.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
 import {
   Users,
@@ -49,11 +49,7 @@ export default function SchoolAdminDashboard({
 
   const supabase = createClient();
 
-  useEffect(() => {
-    fetchSchoolStats();
-  }, []);
-
-  const fetchSchoolStats = async () => {
+  const fetchSchoolStats = useCallback(async () => {
     try {
       if (!profile.school_id) return;
 
@@ -99,7 +95,11 @@ export default function SchoolAdminDashboard({
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile.school_id]);
+
+  useEffect(() => {
+    fetchSchoolStats();
+  }, [fetchSchoolStats]);
 
   const statCards = [
     {

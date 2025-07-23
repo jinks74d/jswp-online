@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(git restore:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(find:*)",
+      "Bash(npm ls:*)",
+      "Bash(npx next telemetry:*)",
+      "Bash(npx next dev:*)",
+      "Bash(ls:*)",
+      "Bash(npx next lint:*)",
+      "Bash(grep:*)",
+      "Bash(curl:*)",
+      "Bash(claude mcp:*)"
     ],
     "deny": []
   }

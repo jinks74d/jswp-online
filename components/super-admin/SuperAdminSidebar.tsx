@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, Users, Settings, LogOut, Home } from "lucide-react";
+import { Building2, Users, Settings, LogOut, Home, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -22,6 +22,13 @@ export default function SuperAdminSidebar({ profile }: SuperAdminSidebarProps) {
     try {
       await signOut();
       // AuthProvider will handle the redirect with full page refresh
+      // Set a timeout as a fallback in case redirect doesn't work
+      setTimeout(() => {
+        setSigningOut(false);
+        if (typeof window !== 'undefined') {
+          window.location.href = '/';
+        }
+      }, 3000); // 3 second fallback
     } catch (error) {
       console.error("Error signing out:", error);
       // Show user-friendly error message
@@ -48,6 +55,12 @@ export default function SuperAdminSidebar({ profile }: SuperAdminSidebarProps) {
       href: "/super-admin/users",
       icon: Users,
       current: pathname.startsWith("/super-admin/users"),
+    },
+    {
+      name: "Analytics",
+      href: "/super-admin/analytics",
+      icon: BarChart3,
+      current: pathname.startsWith("/super-admin/analytics"),
     },
     {
       name: "Settings",

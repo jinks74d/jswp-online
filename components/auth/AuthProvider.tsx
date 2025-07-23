@@ -123,7 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Force a full page refresh to ensure clean state
       if (typeof window !== 'undefined') {
-        window.location.href = '/';
+        // Use replace to avoid back button issues
+        window.location.replace('/');
       }
       
     } catch (error) {
@@ -134,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Even on error, try to redirect to login
       if (typeof window !== 'undefined') {
-        window.location.href = '/';
+        window.location.replace('/');
       }
       throw error;
     }

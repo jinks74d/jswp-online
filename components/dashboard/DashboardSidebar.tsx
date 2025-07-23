@@ -13,6 +13,7 @@ import {
   BookOpen,
   UserPlus,
   School,
+  BarChart3,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -66,6 +67,12 @@ const getNavigationItems = (role: UserRole, pathname: string) => {
           current: pathname.startsWith("/dashboard/assignments"),
         },
         {
+          name: "Analytics",
+          href: "/dashboard/analytics",
+          icon: BarChart3,
+          current: pathname.startsWith("/dashboard/analytics"),
+        },
+        {
           name: "Settings",
           href: "/dashboard/settings",
           icon: Settings,
@@ -99,6 +106,12 @@ const getNavigationItems = (role: UserRole, pathname: string) => {
           href: "/dashboard/assignments",
           icon: FileText,
           current: pathname.startsWith("/dashboard/assignments"),
+        },
+        {
+          name: "Analytics",
+          href: "/dashboard/analytics",
+          icon: BarChart3,
+          current: pathname.startsWith("/dashboard/analytics"),
         },
         {
           name: "Settings",
@@ -191,6 +204,13 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
     try {
       await signOut();
       // AuthProvider will handle the redirect with full page refresh
+      // Set a timeout as a fallback in case redirect doesn't work
+      setTimeout(() => {
+        setSigningOut(false);
+        if (typeof window !== 'undefined') {
+          window.location.href = '/';
+        }
+      }, 3000); // 3 second fallback
     } catch (error) {
       console.error("Error signing out:", error);
       // Show user-friendly error message

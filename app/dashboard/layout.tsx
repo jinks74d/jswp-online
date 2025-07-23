@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import { SessionTrackingProvider } from "@/components/analytics/SessionTrackingProvider";
 
 export default async function DashboardLayout({
   children,
@@ -50,13 +51,15 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardSidebar profile={profile} />
+    <SessionTrackingProvider>
+      <div className="min-h-screen bg-gray-50">
+        <DashboardSidebar profile={profile} />
 
-      {/* Main content */}
-      <div className="pl-64">
-        <main className="py-8 px-8">{children}</main>
+        {/* Main content */}
+        <div className="pl-64">
+          <main className="py-8 px-8">{children}</main>
+        </div>
       </div>
-    </div>
+    </SessionTrackingProvider>
   );
 }
