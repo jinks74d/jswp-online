@@ -165,16 +165,25 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
     }
   }, [endSession]);
 
-  // Handle page visibility changes
+  // Handle page visibility changes (only pause/resume session tracking, don't logout)
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden) {
-      // Page is now hidden, sign out user completely
-      signOutUser();
-    } else if (user && profile && !sessionIdRef.current) {
-      // Page is visible again, start new session
-      startSession();
+      // Page is now hidden, pause activity tracking but don't sign out
+      if (activityIntervalRef.current) {
+        clearInterval(activityIntervalRef.current);
+        activityIntervalRef.current = null;
+      }
+    } else if (user && profile && sessionIdRef.current) {
+      // Page is visible again, resume activity tracking
+      if (!activityIntervalRef.current) {
+        activityIntervalRef.current = setInterval(() => {
+          if (sessionIdRef.current) {
+            updateActivity();
+          }
+        }, config.activityInterval);
+      }
     }
-  }, [user, profile, signOutUser, startSession]);
+  }, [user, profile, updateActivity, config.activityInterval]);
 
   // Track page changes
   useEffect(() => {
