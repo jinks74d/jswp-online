@@ -38,7 +38,7 @@ interface AssignmentProgress {
 
 interface StudentDashboardProps {
   profile: UserProfile & {
-    districts?: { id: string; name: string; domain: string | null };
+    districts?: { id: string; name: string; domain: string | null; logo_url: string | null; primary_color: string | null; secondary_color: string | null };
     schools?: { id: string; name: string };
   };
 }
@@ -51,6 +51,12 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
 
   useEffect(() => {
     const fetchStudentData = async () => {
+      if (!profile.id || !profile.school_id) {
+        console.error('Cannot fetch student data: missing profile id or school_id');
+        setLoading(false);
+        return;
+      }
+      
       try {
         // TEMPORARY: Until class_period_id is added to assignments table,
         // show assignments from the same school for students
@@ -164,6 +170,10 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
 
   const stats = getAssignmentStats();
   const upcomingAssignments = getUpcomingAssignments();
+  
+  // Get district secondary color for borders
+  const districtSecondaryColor = profile.districts?.secondary_color || '#64748B';
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -181,7 +191,7 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-blue-600" />
@@ -198,7 +208,7 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-green-600" />
@@ -213,7 +223,7 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
           <p className="text-xs text-gray-500">Active this semester</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
               <GraduationCap className="w-5 h-5 text-orange-600" />
@@ -230,7 +240,7 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm p-6" style={{ border: `2px solid ${districtSecondaryColor}` }}>
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
@@ -277,7 +287,7 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* My Assignments */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">My Assignments</h2>
           </div>
@@ -343,7 +353,7 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
         </div>
 
         {/* Grades and Feedback */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Recent Grades & Feedback</h2>
           </div>

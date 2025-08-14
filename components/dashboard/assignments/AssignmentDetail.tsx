@@ -93,9 +93,10 @@ export default function AssignmentDetail({
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<StudentWithProgress[]>([]);
-  const [selectedSubmission, setSelectedSubmission] = useState<StudentProgress | null>(null);
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<StudentProgress | null>(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
-  
+
   // Feedback state
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [currentFeedbackStep, setCurrentFeedbackStep] = useState<string>("");
@@ -182,26 +183,36 @@ export default function AssignmentDetail({
             .eq("assignment_id", assignment.id);
 
           // Combine student data with their progress
-          const studentsWithProgress = (allStudents || []).map((student) => {
-            const progress = progressData?.find(
-              (p) => p.student_id === student.id
-            );
-            const status = progress?.status || "not_started";
+          const studentsWithProgress = (allStudents || []).map(
+            (student: any) => {
+              const progress = progressData?.find(
+                (p: any) => p.student_id === student.id
+              );
+              const status = progress?.status || "not_started";
 
-            return {
-              ...student,
-              status: status,
-              progress_data: progress,
-              hasSubmitted: status === "submitted",
-              hasProgress: !!progress && progress.concrete_details,
-            };
-          });
+              return {
+                ...student,
+                status: status,
+                progress_data: progress,
+                hasSubmitted: status === "submitted",
+                hasProgress: !!progress && progress.concrete_details,
+              };
+            }
+          );
 
           setStudents(studentsWithProgress);
 
-          const submissions = progressData?.filter((p) => p.status === "submitted").length || 0;
-          const pending = progressData?.filter((p) => p.status === "in_progress" || (p.working_on && p.status !== "submitted")).length || 0;
-          const graded = progressData?.filter((p) => p.status === "graded").length || 0;
+          const submissions =
+            progressData?.filter((p: any) => p.status === "submitted").length ||
+            0;
+          const pending =
+            progressData?.filter(
+              (p: any) =>
+                p.status === "in_progress" ||
+                (p.working_on && p.status !== "submitted")
+            ).length || 0;
+          const graded =
+            progressData?.filter((p: any) => p.status === "graded").length || 0;
 
           setStats({
             totalStudents: allStudents?.length || 0,
@@ -303,9 +314,9 @@ export default function AssignmentDetail({
       }
 
       await response.json();
-      
+
       // Update the selected submission with new feedback
-      setSelectedSubmission(prev => ({
+      setSelectedSubmission((prev) => ({
         ...prev!,
         teacher_feedback: {
           ...prev?.teacher_feedback,
@@ -317,7 +328,7 @@ export default function AssignmentDetail({
       setShowFeedbackModal(false);
       setCurrentFeedbackStep("");
       setFeedbackText("");
-      
+
       alert("Feedback saved successfully!");
     } catch (error) {
       console.error("Error saving feedback:", error);
@@ -351,7 +362,7 @@ export default function AssignmentDetail({
         if (details.step7?.finalParagraph) {
           return details.step7.finalParagraph;
         }
-        if (typeof details.step7 === 'string') {
+        if (typeof details.step7 === "string") {
           return details.step7;
         }
       } catch {
@@ -775,7 +786,7 @@ export default function AssignmentDetail({
 
         {/* Student Teacher Feedback Section */}
         {currentUserRole === "student" && (
-          <StudentTeacherFeedback 
+          <StudentTeacherFeedback
             assignmentId={assignment.id}
             studentId={currentUserId}
           />
@@ -922,83 +933,163 @@ export default function AssignmentDetail({
                         const sections = [];
 
                         // Step 1: Gathering CDs - Check multiple possible data structures
-                        const step1Data = details.gatheringCds || details.step1 || details.cds || details.gatheringConcreteDetails || details.chunk1CDs;
+                        const step1Data =
+                          details.gatheringCds ||
+                          details.step1 ||
+                          details.cds ||
+                          details.gatheringConcreteDetails ||
+                          details.chunk1CDs;
                         if (step1Data || details.chunk1CDs) {
                           sections.push(
-                            <div key="gatheringCds" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="gatheringCds"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 1: Gathering Concrete Details</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 1: Gathering Concrete Details
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("gatheringCds")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() =>
+                                      handleAddFeedback("gatheringCds")
+                                    }
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
                               {/* Handle chunk1CDs array directly */}
-                              {details.chunk1CDs && Array.isArray(details.chunk1CDs) && details.chunk1CDs.length > 0 && (
-                                <div className="mb-4">
-                                  <h5 className="font-medium text-gray-800 mb-2">Concrete Details</h5>
-                                  {details.chunk1CDs.map((cd: string, index: number) => (
-                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{cd}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              {details.chunk1CDs &&
+                                Array.isArray(details.chunk1CDs) &&
+                                details.chunk1CDs.length > 0 && (
+                                  <div className="mb-4">
+                                    <h5 className="font-medium text-gray-800 mb-2">
+                                      Concrete Details
+                                    </h5>
+                                    {details.chunk1CDs.map(
+                                      (cd: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="bg-red-50 p-3 rounded mb-2"
+                                        >
+                                          <p className="text-red-800">{cd}</p>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                )}
                               {/* Handle chunk2CDs array if it exists and has content */}
-                              {details.chunk2CDs && Array.isArray(details.chunk2CDs) && details.chunk2CDs.length > 0 && (
-                                <div className="mb-4">
-                                  <h5 className="font-medium text-gray-800 mb-2">Additional Concrete Details (Chunk 2)</h5>
-                                  {details.chunk2CDs.map((cd: string, index: number) => (
-                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{cd}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              {details.chunk2CDs &&
+                                Array.isArray(details.chunk2CDs) &&
+                                details.chunk2CDs.length > 0 && (
+                                  <div className="mb-4">
+                                    <h5 className="font-medium text-gray-800 mb-2">
+                                      Additional Concrete Details (Chunk 2)
+                                    </h5>
+                                    {details.chunk2CDs.map(
+                                      (cd: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="bg-red-50 p-3 rounded mb-2"
+                                        >
+                                          <p className="text-red-800">{cd}</p>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                )}
                               {/* Fallback for other data structures */}
                               {!details.chunk1CDs && !details.chunk2CDs && (
                                 <>
-                                  {details.gatheringCds?.cds && Array.isArray(details.gatheringCds.cds) && details.gatheringCds.cds.map((cd: string, index: number) => (
-                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{cd}</p>
-                                    </div>
-                                  ))}
-                                  {details.step1?.cds && Array.isArray(details.step1.cds) && details.step1.cds.map((cd: string, index: number) => (
-                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{cd}</p>
-                                    </div>
-                                  ))}
-                                  {details.cds && Array.isArray(details.cds) && details.cds.map((cd: string, index: number) => (
-                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{cd}</p>
-                                    </div>
-                                  ))}
-                                  {step1Data && typeof step1Data === 'object' && step1Data.cds && Array.isArray(step1Data.cds) && step1Data.cds.map((cd: string, index: number) => (
-                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{cd}</p>
-                                    </div>
-                                  ))}
-                                  {Array.isArray(step1Data) && step1Data.map((cd: string, index: number) => (
-                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{cd}</p>
-                                    </div>
-                                  ))}
-                                  {typeof step1Data === 'string' && (
+                                  {details.gatheringCds?.cds &&
+                                    Array.isArray(details.gatheringCds.cds) &&
+                                    details.gatheringCds.cds.map(
+                                      (cd: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="bg-red-50 p-3 rounded mb-2"
+                                        >
+                                          <p className="text-red-800">{cd}</p>
+                                        </div>
+                                      )
+                                    )}
+                                  {details.step1?.cds &&
+                                    Array.isArray(details.step1.cds) &&
+                                    details.step1.cds.map(
+                                      (cd: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="bg-red-50 p-3 rounded mb-2"
+                                        >
+                                          <p className="text-red-800">{cd}</p>
+                                        </div>
+                                      )
+                                    )}
+                                  {details.cds &&
+                                    Array.isArray(details.cds) &&
+                                    details.cds.map(
+                                      (cd: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="bg-red-50 p-3 rounded mb-2"
+                                        >
+                                          <p className="text-red-800">{cd}</p>
+                                        </div>
+                                      )
+                                    )}
+                                  {step1Data &&
+                                    typeof step1Data === "object" &&
+                                    step1Data.cds &&
+                                    Array.isArray(step1Data.cds) &&
+                                    step1Data.cds.map(
+                                      (cd: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="bg-red-50 p-3 rounded mb-2"
+                                        >
+                                          <p className="text-red-800">{cd}</p>
+                                        </div>
+                                      )
+                                    )}
+                                  {Array.isArray(step1Data) &&
+                                    step1Data.map(
+                                      (cd: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="bg-red-50 p-3 rounded mb-2"
+                                        >
+                                          <p className="text-red-800">{cd}</p>
+                                        </div>
+                                      )
+                                    )}
+                                  {typeof step1Data === "string" && (
                                     <div className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{step1Data}</p>
+                                      <p className="text-red-800">
+                                        {step1Data}
+                                      </p>
                                     </div>
                                   )}
                                 </>
                               )}
                               {/* Display feedback if exists */}
-                              {selectedSubmission?.teacher_feedback?.gatheringCds && (
+                              {selectedSubmission?.teacher_feedback
+                                ?.gatheringCds && (
                                 <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.gatheringCds}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .gatheringCds
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1008,35 +1099,60 @@ export default function AssignmentDetail({
                         }
 
                         // Step 2: Working Topic Sentence - Check multiple possible data structures
-                        if (details.workingTopicSentence || details.step2 || details.topicSentence) {
+                        if (
+                          details.workingTopicSentence ||
+                          details.step2 ||
+                          details.topicSentence
+                        ) {
                           sections.push(
-                            <div key="workingTopicSentence" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="workingTopicSentence"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 2: Working Topic Sentence</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 2: Working Topic Sentence
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("workingTopicSentence")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() =>
+                                      handleAddFeedback("workingTopicSentence")
+                                    }
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
                               <div className="bg-blue-50 p-3 rounded">
                                 <p className="text-blue-800">
-                                  {typeof details.workingTopicSentence === 'string' 
+                                  {typeof details.workingTopicSentence ===
+                                  "string"
                                     ? details.workingTopicSentence
-                                    : details.workingTopicSentence?.topicSentence || 
-                                      details.step2?.topicSentence || 
+                                    : details.workingTopicSentence
+                                        ?.topicSentence ||
+                                      details.step2?.topicSentence ||
                                       details.topicSentence ||
                                       "No topic sentence provided"}
                                 </p>
                               </div>
                               {/* Display feedback if exists */}
-                              {selectedSubmission?.teacher_feedback?.workingTopicSentence && (
+                              {selectedSubmission?.teacher_feedback
+                                ?.workingTopicSentence && (
                                 <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.workingTopicSentence}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .workingTopicSentence
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1046,61 +1162,116 @@ export default function AssignmentDetail({
                         }
 
                         // Step 3: Commentary Development - Check multiple possible data structures
-                        const step3Data = details.commentaryDevelopment || details.step3 || details.commentary || details.commentaryWords || details.cdSections;
+                        const step3Data =
+                          details.commentaryDevelopment ||
+                          details.step3 ||
+                          details.commentary ||
+                          details.commentaryWords ||
+                          details.cdSections;
                         if (step3Data || details.cdSections) {
                           sections.push(
-                            <div key="commentaryDevelopment" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="commentaryDevelopment"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 3: Commentary Development</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 3: Commentary Development
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("commentaryDevelopment")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() =>
+                                      handleAddFeedback("commentaryDevelopment")
+                                    }
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
                               {/* Handle cdSections array structure */}
-                              {details.cdSections && Array.isArray(details.cdSections) ? (
+                              {details.cdSections &&
+                              Array.isArray(details.cdSections) ? (
                                 <div className="space-y-3">
-                                  {details.cdSections.map((section: { cdText: string; cms: string[] }, index: number) => (
-                                    <div key={index} className="bg-green-50 p-3 rounded">
-                                      <p className="text-sm font-medium text-green-900 mb-2">
-                                        CD: {section.cdText}
-                                      </p>
-                                      <p className="text-green-800">
-                                        Commentary Words: {section.cms && Array.isArray(section.cms) ? section.cms.join(", ") : "No commentary words"}
-                                      </p>
-                                    </div>
-                                  ))}
+                                  {details.cdSections.map(
+                                    (
+                                      section: {
+                                        cdText: string;
+                                        cms: string[];
+                                      },
+                                      index: number
+                                    ) => (
+                                      <div
+                                        key={index}
+                                        className="bg-green-50 p-3 rounded"
+                                      >
+                                        <p className="text-sm font-medium text-green-900 mb-2">
+                                          CD: {section.cdText}
+                                        </p>
+                                        <p className="text-green-800">
+                                          Commentary Words:{" "}
+                                          {section.cms &&
+                                          Array.isArray(section.cms)
+                                            ? section.cms.join(", ")
+                                            : "No commentary words"}
+                                        </p>
+                                      </div>
+                                    )
+                                  )}
                                 </div>
                               ) : (
                                 <div className="bg-green-50 p-3 rounded">
                                   <p className="text-green-800">
-                                    {details.commentaryDevelopment?.commentary && Array.isArray(details.commentaryDevelopment.commentary) 
-                                      ? details.commentaryDevelopment.commentary.join(", ")
-                                      : details.step3?.commentary && Array.isArray(details.step3.commentary)
+                                    {details.commentaryDevelopment
+                                      ?.commentary &&
+                                    Array.isArray(
+                                      details.commentaryDevelopment.commentary
+                                    )
+                                      ? details.commentaryDevelopment.commentary.join(
+                                          ", "
+                                        )
+                                      : details.step3?.commentary &&
+                                        Array.isArray(details.step3.commentary)
                                       ? details.step3.commentary.join(", ")
-                                      : details.commentary && Array.isArray(details.commentary)
+                                      : details.commentary &&
+                                        Array.isArray(details.commentary)
                                       ? details.commentary.join(", ")
-                                      : details.commentaryWords && Array.isArray(details.commentaryWords)
+                                      : details.commentaryWords &&
+                                        Array.isArray(details.commentaryWords)
                                       ? details.commentaryWords.join(", ")
                                       : Array.isArray(step3Data)
                                       ? step3Data.join(", ")
-                                      : typeof step3Data === 'object' && step3Data.commentary && Array.isArray(step3Data.commentary)
+                                      : typeof step3Data === "object" &&
+                                        step3Data.commentary &&
+                                        Array.isArray(step3Data.commentary)
                                       ? step3Data.commentary.join(", ")
-                                      : typeof step3Data === 'string'
+                                      : typeof step3Data === "string"
                                       ? step3Data
-                                      : details.commentaryDevelopment?.commentary || details.step3?.commentary || details.commentary || "No commentary provided"}
+                                      : details.commentaryDevelopment
+                                          ?.commentary ||
+                                        details.step3?.commentary ||
+                                        details.commentary ||
+                                        "No commentary provided"}
                                   </p>
                                 </div>
                               )}
                               {/* Display feedback if exists */}
-                              {selectedSubmission?.teacher_feedback?.commentaryDevelopment && (
+                              {selectedSubmission?.teacher_feedback
+                                ?.commentaryDevelopment && (
                                 <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.commentaryDevelopment}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .commentaryDevelopment
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1112,50 +1283,96 @@ export default function AssignmentDetail({
                         // Step 4: Shaping Sheet - Check multiple possible data structures
                         if (details.shapingSheet || details.step4) {
                           sections.push(
-                            <div key="shapingSheet" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="shapingSheet"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 4: Shaping Sheet</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 4: Shaping Sheet
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("shapingSheet")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() =>
+                                      handleAddFeedback("shapingSheet")
+                                    }
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
                               <div className="space-y-2">
-                                {(details.shapingSheet?.topicSentence || details.step4?.topicSentence) && (
+                                {(details.shapingSheet?.topicSentence ||
+                                  details.step4?.topicSentence) && (
                                   <div className="bg-blue-50 p-2 rounded">
-                                    <p className="text-blue-800">TS: {details.shapingSheet?.topicSentence || details.step4?.topicSentence}</p>
+                                    <p className="text-blue-800">
+                                      TS:{" "}
+                                      {details.shapingSheet?.topicSentence ||
+                                        details.step4?.topicSentence}
+                                    </p>
                                   </div>
                                 )}
-                                {(details.shapingSheet?.chunk1CD || details.step4?.chunk1CD) && (
+                                {(details.shapingSheet?.chunk1CD ||
+                                  details.step4?.chunk1CD) && (
                                   <div className="bg-red-50 p-2 rounded">
-                                    <p className="text-red-800">CD: {details.shapingSheet?.chunk1CD || details.step4?.chunk1CD}</p>
+                                    <p className="text-red-800">
+                                      CD:{" "}
+                                      {details.shapingSheet?.chunk1CD ||
+                                        details.step4?.chunk1CD}
+                                    </p>
                                   </div>
                                 )}
-                                {(details.shapingSheet?.commentarySentence || details.step4?.commentarySentence) && (
+                                {(details.shapingSheet?.commentarySentence ||
+                                  details.step4?.commentarySentence) && (
                                   <div className="bg-green-50 p-2 rounded">
-                                    <p className="text-green-800">CM: {details.shapingSheet?.commentarySentence || details.step4?.commentarySentence}</p>
+                                    <p className="text-green-800">
+                                      CM:{" "}
+                                      {details.shapingSheet
+                                        ?.commentarySentence ||
+                                        details.step4?.commentarySentence}
+                                    </p>
                                   </div>
                                 )}
-                                {(details.shapingSheet?.chunk2CD || details.step4?.chunk2CD) && (
+                                {(details.shapingSheet?.chunk2CD ||
+                                  details.step4?.chunk2CD) && (
                                   <div className="bg-red-50 p-2 rounded">
-                                    <p className="text-red-800">CD: {details.shapingSheet?.chunk2CD || details.step4?.chunk2CD}</p>
+                                    <p className="text-red-800">
+                                      CD:{" "}
+                                      {details.shapingSheet?.chunk2CD ||
+                                        details.step4?.chunk2CD}
+                                    </p>
                                   </div>
                                 )}
-                                {(details.shapingSheet?.concludingSentence || details.step4?.concludingSentence) && (
+                                {(details.shapingSheet?.concludingSentence ||
+                                  details.step4?.concludingSentence) && (
                                   <div className="bg-blue-50 p-2 rounded">
-                                    <p className="text-blue-800">CS: {details.shapingSheet?.concludingSentence || details.step4?.concludingSentence}</p>
+                                    <p className="text-blue-800">
+                                      CS:{" "}
+                                      {details.shapingSheet
+                                        ?.concludingSentence ||
+                                        details.step4?.concludingSentence}
+                                    </p>
                                   </div>
                                 )}
                               </div>
                               {/* Display feedback if exists */}
-                              {selectedSubmission?.teacher_feedback?.shapingSheet && (
+                              {selectedSubmission?.teacher_feedback
+                                ?.shapingSheet && (
                                 <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.shapingSheet}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .shapingSheet
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1163,37 +1380,66 @@ export default function AssignmentDetail({
                             </div>
                           );
                         }
-                        
+
                         // Step 5: Final Draft - Check multiple possible data structures
                         if (details.finalDraft || details.step5) {
                           sections.push(
-                            <div key="finalDraft" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="finalDraft"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 5: Final Draft</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 5: Final Draft
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("finalDraft")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() =>
+                                      handleAddFeedback("finalDraft")
+                                    }
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
-                              {(details.finalDraft?.creativeTitle || details.step5?.creativeTitle) && (
+                              {(details.finalDraft?.creativeTitle ||
+                                details.step5?.creativeTitle) && (
                                 <div className="bg-gray-50 p-3 rounded mb-2">
-                                  <p className="text-sm font-medium text-gray-700 mb-1">Creative Title:</p>
-                                  <p className="text-gray-900 font-medium">{details.finalDraft?.creativeTitle || details.step5?.creativeTitle}</p>
+                                  <p className="text-sm font-medium text-gray-700 mb-1">
+                                    Creative Title:
+                                  </p>
+                                  <p className="text-gray-900 font-medium">
+                                    {details.finalDraft?.creativeTitle ||
+                                      details.step5?.creativeTitle}
+                                  </p>
                                 </div>
                               )}
                               <div className="bg-gray-50 p-3 rounded">
-                                <p className="text-sm font-medium text-gray-900 mb-2">Final Paragraph:</p>
-                                <div className="text-gray-800 leading-relaxed">{renderColorCodedParagraph()}</div>
+                                <p className="text-sm font-medium text-gray-900 mb-2">
+                                  Final Paragraph:
+                                </p>
+                                <div className="text-gray-800 leading-relaxed">
+                                  {renderColorCodedParagraph()}
+                                </div>
                               </div>
                               {/* Display feedback if exists */}
-                              {selectedSubmission?.teacher_feedback?.finalDraft && (
+                              {selectedSubmission?.teacher_feedback
+                                ?.finalDraft && (
                                 <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.finalDraft}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .finalDraft
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1203,21 +1449,40 @@ export default function AssignmentDetail({
                         }
 
                         // Show progress status
-                        if (selectedSubmission.status || selectedSubmission.working_on) {
+                        if (
+                          selectedSubmission.status ||
+                          selectedSubmission.working_on
+                        ) {
                           sections.unshift(
-                            <div key="status" className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                              <h4 className="font-semibold text-gray-900 mb-3">Student Progress</h4>
+                            <div
+                              key="status"
+                              className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                            >
+                              <h4 className="font-semibold text-gray-900 mb-3">
+                                Student Progress
+                              </h4>
                               <div className="flex gap-4">
                                 {selectedSubmission.status && (
                                   <div>
-                                    <span className="text-sm font-medium text-gray-600">Status: </span>
-                                    <span className="text-gray-900 font-medium capitalize">{selectedSubmission.status}</span>
+                                    <span className="text-sm font-medium text-gray-600">
+                                      Status:{" "}
+                                    </span>
+                                    <span className="text-gray-900 font-medium capitalize">
+                                      {selectedSubmission.status}
+                                    </span>
                                   </div>
                                 )}
                                 {selectedSubmission.working_on && (
                                   <div>
-                                    <span className="text-sm font-medium text-gray-600">Current Step: </span>
-                                    <span className="text-gray-900 font-medium capitalize">{selectedSubmission.working_on.replace(/_/g, " ")}</span>
+                                    <span className="text-sm font-medium text-gray-600">
+                                      Current Step:{" "}
+                                    </span>
+                                    <span className="text-gray-900 font-medium capitalize">
+                                      {selectedSubmission.working_on.replace(
+                                        /_/g,
+                                        " "
+                                      )}
+                                    </span>
                                   </div>
                                 )}
                               </div>
@@ -1228,9 +1493,17 @@ export default function AssignmentDetail({
                         // If no sections found, show fallback message
                         if (sections.length === 0) {
                           sections.push(
-                            <div key="fallback" className="border border-red-200 rounded-lg p-4 bg-red-50">
-                              <h4 className="font-semibold text-gray-900 mb-3">No Steps Found</h4>
-                              <p className="text-red-800">No expository steps found in the submission data.</p>
+                            <div
+                              key="fallback"
+                              className="border border-red-200 rounded-lg p-4 bg-red-50"
+                            >
+                              <h4 className="font-semibold text-gray-900 mb-3">
+                                No Steps Found
+                              </h4>
+                              <p className="text-red-800">
+                                No expository steps found in the submission
+                                data.
+                              </p>
                             </div>
                           );
                         }
@@ -1245,42 +1518,76 @@ export default function AssignmentDetail({
                         // Step 1: Gathering CDs
                         if (details.chunk1CDs || details.chunk2CDs) {
                           sections.push(
-                            <div key="step1" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="step1"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 1: Gathering Concrete Details</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 1: Gathering Concrete Details
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("step1")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() => handleAddFeedback("step1")}
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
-                              {details.chunk1CDs && Array.isArray(details.chunk1CDs) && details.chunk1CDs.length > 0 && (
-                                <div className="mb-4">
-                                  <h5 className="font-medium text-gray-800 mb-2">Chunk 1 CDs:</h5>
-                                  {details.chunk1CDs.map((cd: string, index: number) => (
-                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{cd}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              {details.chunk2CDs && Array.isArray(details.chunk2CDs) && details.chunk2CDs.length > 0 && (
-                                <div className="mb-4">
-                                  <h5 className="font-medium text-gray-800 mb-2">Chunk 2 CDs:</h5>
-                                  {details.chunk2CDs.map((cd: string, index: number) => (
-                                    <div key={index} className="bg-red-50 p-3 rounded mb-2">
-                                      <p className="text-red-800">{cd}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              {details.chunk1CDs &&
+                                Array.isArray(details.chunk1CDs) &&
+                                details.chunk1CDs.length > 0 && (
+                                  <div className="mb-4">
+                                    <h5 className="font-medium text-gray-800 mb-2">
+                                      Chunk 1 CDs:
+                                    </h5>
+                                    {details.chunk1CDs.map(
+                                      (cd: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="bg-red-50 p-3 rounded mb-2"
+                                        >
+                                          <p className="text-red-800">{cd}</p>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                )}
+                              {details.chunk2CDs &&
+                                Array.isArray(details.chunk2CDs) &&
+                                details.chunk2CDs.length > 0 && (
+                                  <div className="mb-4">
+                                    <h5 className="font-medium text-gray-800 mb-2">
+                                      Chunk 2 CDs:
+                                    </h5>
+                                    {details.chunk2CDs.map(
+                                      (cd: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="bg-red-50 p-3 rounded mb-2"
+                                        >
+                                          <p className="text-red-800">{cd}</p>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                )}
                               {selectedSubmission?.teacher_feedback?.step1 && (
                                 <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step1}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .step1
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1292,66 +1599,148 @@ export default function AssignmentDetail({
                         // Step 2: T-Chart (Topic Sentence Development)
                         if (details.step2 || details.tChartData) {
                           sections.push(
-                            <div key="step2" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="step2"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 2: Topic Sentence Development (T-Chart)</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 2: Topic Sentence Development (T-Chart)
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("step2")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() => handleAddFeedback("step2")}
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
                               {(() => {
-                                const tChartData = details.step2?.tChartData || details.tChartData;
+                                const tChartData =
+                                  details.step2?.tChartData ||
+                                  details.tChartData;
                                 if (tChartData) {
                                   return (
                                     <div className="space-y-4">
                                       <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                          <h5 className="font-medium text-blue-800 mb-2">FOR/PRO/AGREE/DEFEND:</h5>
+                                          <h5 className="font-medium text-blue-800 mb-2">
+                                            FOR/PRO/AGREE/DEFEND:
+                                          </h5>
                                           <div className="space-y-2">
-                                            {tChartData.positiveRows && tChartData.positiveRows.filter((row: any) => row.reason?.trim()).map((row: any, index: number) => (
-                                              <div key={index} className="bg-blue-50 p-2 rounded">
-                                                <p className="text-blue-800 text-sm">{row.reason}</p>
-                                                <div className="flex gap-1 mt-1">
-                                                  {row.isTS && <span className="bg-green-600 text-white text-xs px-1 rounded">TS</span>}
-                                                  {row.isC && <span className="bg-blue-600 text-white text-xs px-1 rounded">C</span>}
-                                                  {row.isCA && <span className="bg-orange-600 text-white text-xs px-1 rounded">CA</span>}
-                                                  {row.isR && <span className="bg-purple-600 text-white text-xs px-1 rounded">R</span>}
-                                                </div>
-                                              </div>
-                                            ))}
+                                            {tChartData.positiveRows &&
+                                              tChartData.positiveRows
+                                                .filter((row: any) =>
+                                                  row.reason?.trim()
+                                                )
+                                                .map(
+                                                  (row: any, index: number) => (
+                                                    <div
+                                                      key={index}
+                                                      className="bg-blue-50 p-2 rounded"
+                                                    >
+                                                      <p className="text-blue-800 text-sm">
+                                                        {row.reason}
+                                                      </p>
+                                                      <div className="flex gap-1 mt-1">
+                                                        {row.isTS && (
+                                                          <span className="bg-green-600 text-white text-xs px-1 rounded">
+                                                            TS
+                                                          </span>
+                                                        )}
+                                                        {row.isC && (
+                                                          <span className="bg-blue-600 text-white text-xs px-1 rounded">
+                                                            C
+                                                          </span>
+                                                        )}
+                                                        {row.isCA && (
+                                                          <span className="bg-orange-600 text-white text-xs px-1 rounded">
+                                                            CA
+                                                          </span>
+                                                        )}
+                                                        {row.isR && (
+                                                          <span className="bg-purple-600 text-white text-xs px-1 rounded">
+                                                            R
+                                                          </span>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  )
+                                                )}
                                           </div>
                                         </div>
                                         <div>
-                                          <h5 className="font-medium text-red-800 mb-2">AGAINST/CON/DISAGREE/CHALLENGE:</h5>
+                                          <h5 className="font-medium text-red-800 mb-2">
+                                            AGAINST/CON/DISAGREE/CHALLENGE:
+                                          </h5>
                                           <div className="space-y-2">
-                                            {tChartData.negativeRows && tChartData.negativeRows.filter((row: any) => row.reason?.trim()).map((row: any, index: number) => (
-                                              <div key={index} className="bg-red-50 p-2 rounded">
-                                                <p className="text-red-800 text-sm">{row.reason}</p>
-                                                <div className="flex gap-1 mt-1">
-                                                  {row.isTS && <span className="bg-green-600 text-white text-xs px-1 rounded">TS</span>}
-                                                  {row.isC && <span className="bg-blue-600 text-white text-xs px-1 rounded">C</span>}
-                                                  {row.isCA && <span className="bg-orange-600 text-white text-xs px-1 rounded">CA</span>}
-                                                  {row.isR && <span className="bg-purple-600 text-white text-xs px-1 rounded">R</span>}
-                                                </div>
-                                              </div>
-                                            ))}
+                                            {tChartData.negativeRows &&
+                                              tChartData.negativeRows
+                                                .filter((row: any) =>
+                                                  row.reason?.trim()
+                                                )
+                                                .map(
+                                                  (row: any, index: number) => (
+                                                    <div
+                                                      key={index}
+                                                      className="bg-red-50 p-2 rounded"
+                                                    >
+                                                      <p className="text-red-800 text-sm">
+                                                        {row.reason}
+                                                      </p>
+                                                      <div className="flex gap-1 mt-1">
+                                                        {row.isTS && (
+                                                          <span className="bg-green-600 text-white text-xs px-1 rounded">
+                                                            TS
+                                                          </span>
+                                                        )}
+                                                        {row.isC && (
+                                                          <span className="bg-blue-600 text-white text-xs px-1 rounded">
+                                                            C
+                                                          </span>
+                                                        )}
+                                                        {row.isCA && (
+                                                          <span className="bg-orange-600 text-white text-xs px-1 rounded">
+                                                            CA
+                                                          </span>
+                                                        )}
+                                                        {row.isR && (
+                                                          <span className="bg-purple-600 text-white text-xs px-1 rounded">
+                                                            R
+                                                          </span>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  )
+                                                )}
                                           </div>
                                         </div>
                                       </div>
                                     </div>
                                   );
                                 }
-                                return <p className="text-gray-500">No T-Chart data available</p>;
+                                return (
+                                  <p className="text-gray-500">
+                                    No T-Chart data available
+                                  </p>
+                                );
                               })()}
                               {selectedSubmission?.teacher_feedback?.step2 && (
                                 <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step2}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .step2
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1363,31 +1752,56 @@ export default function AssignmentDetail({
                         // Step 3: Working Topic Sentence
                         if (details.step3 || details.workingTopicSentence) {
                           sections.push(
-                            <div key="step3" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="step3"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 3: Working Topic Sentence</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 3: Working Topic Sentence
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("step3")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() => handleAddFeedback("step3")}
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
                               <div className="bg-blue-50 p-3 rounded mb-4">
                                 <p className="text-blue-800">
-                                  {details.step3?.workingTopicSentence || details.workingTopicSentence || "No working topic sentence provided"}
+                                  {details.step3?.workingTopicSentence ||
+                                    details.workingTopicSentence ||
+                                    "No working topic sentence provided"}
                                 </p>
                               </div>
                               {(() => {
-                                const commentaryData = details.step3?.commentaryData || details.commentaryData;
-                                if (commentaryData && typeof commentaryData === 'object') {
+                                const commentaryData =
+                                  details.step3?.commentaryData ||
+                                  details.commentaryData;
+                                if (
+                                  commentaryData &&
+                                  typeof commentaryData === "object"
+                                ) {
                                   return (
                                     <div className="space-y-3">
-                                      <h5 className="font-medium text-gray-800">Commentary Development:</h5>
-                                      {Object.entries(commentaryData).map(([key, value]: [string, any]) => (
-                                        <div key={key} className="bg-green-50 p-2 rounded">
-                                          <p className="text-green-800 text-sm">{key}: {value}</p>
-                                        </div>
-                                      ))}
+                                      <h5 className="font-medium text-gray-800">
+                                        Commentary Development:
+                                      </h5>
+                                      {Object.entries(commentaryData).map(
+                                        ([key, value]: [string, any]) => (
+                                          <div
+                                            key={key}
+                                            className="bg-green-50 p-2 rounded"
+                                          >
+                                            <p className="text-green-800 text-sm">
+                                              {key}: {value}
+                                            </p>
+                                          </div>
+                                        )
+                                      )}
                                     </div>
                                   );
                                 }
@@ -1398,8 +1812,15 @@ export default function AssignmentDetail({
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step3}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .step3
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1411,62 +1832,107 @@ export default function AssignmentDetail({
                         // Step 4: First Draft
                         if (details.step4 || details.step5) {
                           sections.push(
-                            <div key="step4" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="step4"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 4: First Draft</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 4: First Draft
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("step4")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() => handleAddFeedback("step4")}
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
                               {(() => {
-                                const firstDraftData = details.step4 || details.step5;
+                                const firstDraftData =
+                                  details.step4 || details.step5;
                                 if (firstDraftData) {
                                   return (
                                     <div className="space-y-3">
                                       {firstDraftData.revisedTopicSentence && (
                                         <div className="bg-blue-50 p-3 rounded">
-                                          <p className="text-sm font-medium text-blue-900 mb-1">Revised Topic Sentence:</p>
-                                          <p className="text-blue-800">{firstDraftData.revisedTopicSentence}</p>
+                                          <p className="text-sm font-medium text-blue-900 mb-1">
+                                            Revised Topic Sentence:
+                                          </p>
+                                          <p className="text-blue-800">
+                                            {
+                                              firstDraftData.revisedTopicSentence
+                                            }
+                                          </p>
                                         </div>
                                       )}
                                       {firstDraftData.concessionCounterargument && (
                                         <div className="bg-gray-50 p-3 rounded">
-                                          <p className="text-sm font-medium text-gray-900 mb-1">Concession/Counterargument:</p>
-                                          <p className="text-gray-800">{firstDraftData.concessionCounterargument}</p>
+                                          <p className="text-sm font-medium text-gray-900 mb-1">
+                                            Concession/Counterargument:
+                                          </p>
+                                          <p className="text-gray-800">
+                                            {
+                                              firstDraftData.concessionCounterargument
+                                            }
+                                          </p>
                                         </div>
                                       )}
                                       {firstDraftData.refutation && (
                                         <div className="bg-gray-50 p-3 rounded">
-                                          <p className="text-sm font-medium text-gray-900 mb-1">Refutation:</p>
-                                          <p className="text-gray-800">{firstDraftData.refutation}</p>
+                                          <p className="text-sm font-medium text-gray-900 mb-1">
+                                            Refutation:
+                                          </p>
+                                          <p className="text-gray-800">
+                                            {firstDraftData.refutation}
+                                          </p>
                                         </div>
                                       )}
                                       {firstDraftData.commentarySentence && (
                                         <div className="bg-green-50 p-3 rounded">
-                                          <p className="text-sm font-medium text-green-900 mb-1">Commentary Sentence:</p>
-                                          <p className="text-green-800">{firstDraftData.commentarySentence}</p>
+                                          <p className="text-sm font-medium text-green-900 mb-1">
+                                            Commentary Sentence:
+                                          </p>
+                                          <p className="text-green-800">
+                                            {firstDraftData.commentarySentence}
+                                          </p>
                                         </div>
                                       )}
                                       {firstDraftData.concludingSentence && (
                                         <div className="bg-blue-50 p-3 rounded">
-                                          <p className="text-sm font-medium text-blue-900 mb-1">Concluding Sentence:</p>
-                                          <p className="text-blue-800">{firstDraftData.concludingSentence}</p>
+                                          <p className="text-sm font-medium text-blue-900 mb-1">
+                                            Concluding Sentence:
+                                          </p>
+                                          <p className="text-blue-800">
+                                            {firstDraftData.concludingSentence}
+                                          </p>
                                         </div>
                                       )}
                                     </div>
                                   );
                                 }
-                                return <p className="text-gray-500">No first draft data available</p>;
+                                return (
+                                  <p className="text-gray-500">
+                                    No first draft data available
+                                  </p>
+                                );
                               })()}
                               {selectedSubmission?.teacher_feedback?.step4 && (
                                 <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step4}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .step4
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1478,48 +1944,85 @@ export default function AssignmentDetail({
                         // Step 5: Shaping Sheet
                         if (details.shapingSheet) {
                           sections.push(
-                            <div key="step5" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="step5"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 5: Shaping Sheet</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 5: Shaping Sheet
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("step5")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() => handleAddFeedback("step5")}
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
                               <div className="space-y-2">
                                 {details.shapingSheet.topicSentence && (
                                   <div className="bg-blue-50 p-2 rounded">
-                                    <p className="text-blue-800">TS: {details.shapingSheet.topicSentence}</p>
+                                    <p className="text-blue-800">
+                                      TS: {details.shapingSheet.topicSentence}
+                                    </p>
                                   </div>
                                 )}
-                                {details.shapingSheet.concessionCounterargument && (
+                                {details.shapingSheet
+                                  .concessionCounterargument && (
                                   <div className="bg-gray-50 p-2 rounded">
-                                    <p className="text-gray-800">Concession/Counterargument: {details.shapingSheet.concessionCounterargument}</p>
+                                    <p className="text-gray-800">
+                                      Concession/Counterargument:{" "}
+                                      {
+                                        details.shapingSheet
+                                          .concessionCounterargument
+                                      }
+                                    </p>
                                   </div>
                                 )}
                                 {details.shapingSheet.refutation && (
                                   <div className="bg-gray-50 p-2 rounded">
-                                    <p className="text-gray-800">Refutation: {details.shapingSheet.refutation}</p>
+                                    <p className="text-gray-800">
+                                      Refutation:{" "}
+                                      {details.shapingSheet.refutation}
+                                    </p>
                                   </div>
                                 )}
-                                {details.shapingSheet.concreteDetails && Array.isArray(details.shapingSheet.concreteDetails) && (
-                                  <div>
-                                    {details.shapingSheet.concreteDetails.map((cd: string, index: number) => (
-                                      <div key={index} className="bg-red-50 p-2 rounded mb-1">
-                                        <p className="text-red-800">CD: {cd}</p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                                {details.shapingSheet.concreteDetails &&
+                                  Array.isArray(
+                                    details.shapingSheet.concreteDetails
+                                  ) && (
+                                    <div>
+                                      {details.shapingSheet.concreteDetails.map(
+                                        (cd: string, index: number) => (
+                                          <div
+                                            key={index}
+                                            className="bg-red-50 p-2 rounded mb-1"
+                                          >
+                                            <p className="text-red-800">
+                                              CD: {cd}
+                                            </p>
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
                                 {details.shapingSheet.commentarySentence && (
                                   <div className="bg-green-50 p-2 rounded">
-                                    <p className="text-green-800">CM: {details.shapingSheet.commentarySentence}</p>
+                                    <p className="text-green-800">
+                                      CM:{" "}
+                                      {details.shapingSheet.commentarySentence}
+                                    </p>
                                   </div>
                                 )}
                                 {details.shapingSheet.concludingSentence && (
                                   <div className="bg-blue-50 p-2 rounded">
-                                    <p className="text-blue-800">CS: {details.shapingSheet.concludingSentence}</p>
+                                    <p className="text-blue-800">
+                                      CS:{" "}
+                                      {details.shapingSheet.concludingSentence}
+                                    </p>
                                   </div>
                                 )}
                               </div>
@@ -1528,8 +2031,15 @@ export default function AssignmentDetail({
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step5}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .step5
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1541,91 +2051,171 @@ export default function AssignmentDetail({
                         // Step 6: Final Draft
                         if (details.finalDraft) {
                           sections.push(
-                            <div key="step6" className="border border-gray-200 rounded-lg p-4">
+                            <div
+                              key="step6"
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">Step 6: Final Draft</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  Step 6: Final Draft
+                                </h4>
                                 {currentUserRole !== "student" && (
-                                  <button onClick={() => handleAddFeedback("step6")} className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors">
-                                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                                  <button
+                                    onClick={() => handleAddFeedback("step6")}
+                                    className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition-colors"
+                                  >
+                                    <MessageSquare className="w-4 h-4" /> Add
+                                    Feedback
                                   </button>
                                 )}
                               </div>
                               {details.finalDraft.creativeTitle && (
                                 <div className="bg-gray-50 p-3 rounded mb-2">
-                                  <p className="text-sm font-medium text-gray-700 mb-1">Creative Title:</p>
-                                  <p className="text-gray-900 font-medium">{details.finalDraft.creativeTitle}</p>
+                                  <p className="text-sm font-medium text-gray-700 mb-1">
+                                    Creative Title:
+                                  </p>
+                                  <p className="text-gray-900 font-medium">
+                                    {details.finalDraft.creativeTitle}
+                                  </p>
                                 </div>
                               )}
                               <div className="bg-gray-50 p-3 rounded">
-                                <p className="text-sm font-medium text-gray-900 mb-2">Final Paragraph:</p>
+                                <p className="text-sm font-medium text-gray-900 mb-2">
+                                  Final Paragraph:
+                                </p>
                                 <div className="text-gray-800 leading-relaxed">
                                   {(() => {
                                     const renderColorCodedParagraph = () => {
                                       if (!details.finalDraft.finalParagraph) {
-                                        return <p className="text-gray-500 italic">No final paragraph provided</p>;
+                                        return (
+                                          <p className="text-gray-500 italic">
+                                            No final paragraph provided
+                                          </p>
+                                        );
                                       }
 
                                       // Get sentence components from shaping sheet or other steps
-                                      const topicSentence = details.shapingSheet?.topicSentence || "";
-                                      const concessionCounterargument = details.shapingSheet?.concessionCounterargument || "";
-                                      const refutation = details.shapingSheet?.refutation || "";
-                                      const concreteDetails = details.shapingSheet?.concreteDetails || [];
-                                      const commentarySentence = details.shapingSheet?.commentarySentence || "";
-                                      const concludingSentence = details.shapingSheet?.concludingSentence || "";
+                                      const topicSentence =
+                                        details.shapingSheet?.topicSentence ||
+                                        "";
+                                      const concessionCounterargument =
+                                        details.shapingSheet
+                                          ?.concessionCounterargument || "";
+                                      const refutation =
+                                        details.shapingSheet?.refutation || "";
+                                      const concreteDetails =
+                                        details.shapingSheet?.concreteDetails ||
+                                        [];
+                                      const commentarySentence =
+                                        details.shapingSheet
+                                          ?.commentarySentence || "";
+                                      const concludingSentence =
+                                        details.shapingSheet
+                                          ?.concludingSentence || "";
 
-                                      const paragraph = details.finalDraft.finalParagraph;
-                                      const colorCodedElements: JSX.Element[] = [];
+                                      const paragraph =
+                                        details.finalDraft.finalParagraph;
+                                      const colorCodedElements: JSX.Element[] =
+                                        [];
                                       let currentIndex = 0;
 
                                       // Helper function to find and highlight a sentence
-                                      const highlightSentence = (sentence: string, color: string, label: string) => {
-                                        if (!sentence || !sentence.trim()) return;
-                                        
-                                        const index = paragraph.toLowerCase().indexOf(sentence.toLowerCase());
+                                      const highlightSentence = (
+                                        sentence: string,
+                                        color: string,
+                                        label: string
+                                      ) => {
+                                        if (!sentence || !sentence.trim())
+                                          return;
+
+                                        const index = paragraph
+                                          .toLowerCase()
+                                          .indexOf(sentence.toLowerCase());
                                         if (index !== -1) {
                                           // Add text before the sentence
                                           if (index > currentIndex) {
                                             colorCodedElements.push(
-                                              <span key={`text-${currentIndex}`} className="text-gray-900">
-                                                {paragraph.substring(currentIndex, index)}
+                                              <span
+                                                key={`text-${currentIndex}`}
+                                                className="text-gray-900"
+                                              >
+                                                {paragraph.substring(
+                                                  currentIndex,
+                                                  index
+                                                )}
                                               </span>
                                             );
                                           }
-                                          
+
                                           // Add the colored sentence
                                           colorCodedElements.push(
-                                            <span 
-                                              key={`${label}-${index}`} 
+                                            <span
+                                              key={`${label}-${index}`}
                                               className={color}
                                               title={label}
                                             >
-                                              {paragraph.substring(index, index + sentence.length)}
+                                              {paragraph.substring(
+                                                index,
+                                                index + sentence.length
+                                              )}
                                             </span>
                                           );
-                                          
-                                          currentIndex = index + sentence.length;
+
+                                          currentIndex =
+                                            index + sentence.length;
                                         }
                                       };
 
                                       // Highlight sentences in order
-                                      highlightSentence(topicSentence, "text-blue-600", "Topic Sentence (TS)");
-                                      highlightSentence(concessionCounterargument, "text-gray-600", "Concession/Counterargument");
-                                      highlightSentence(refutation, "text-gray-600", "Refutation");
-                                      
+                                      highlightSentence(
+                                        topicSentence,
+                                        "text-blue-600",
+                                        "Topic Sentence (TS)"
+                                      );
+                                      highlightSentence(
+                                        concessionCounterargument,
+                                        "text-gray-600",
+                                        "Concession/Counterargument"
+                                      );
+                                      highlightSentence(
+                                        refutation,
+                                        "text-gray-600",
+                                        "Refutation"
+                                      );
+
                                       // Highlight concrete details
                                       if (Array.isArray(concreteDetails)) {
-                                        concreteDetails.forEach((cd: string, index: number) => {
-                                          highlightSentence(cd, "text-red-600", `Concrete Detail ${index + 1} (CD)`);
-                                        });
+                                        concreteDetails.forEach(
+                                          (cd: string, index: number) => {
+                                            highlightSentence(
+                                              cd,
+                                              "text-red-600",
+                                              `Concrete Detail ${
+                                                index + 1
+                                              } (CD)`
+                                            );
+                                          }
+                                        );
                                       }
-                                      
-                                      highlightSentence(commentarySentence, "text-green-600", "Commentary (CM)");
-                                      highlightSentence(concludingSentence, "text-blue-600", "Concluding Sentence (CS)");
+
+                                      highlightSentence(
+                                        commentarySentence,
+                                        "text-green-600",
+                                        "Commentary (CM)"
+                                      );
+                                      highlightSentence(
+                                        concludingSentence,
+                                        "text-blue-600",
+                                        "Concluding Sentence (CS)"
+                                      );
 
                                       // Add any remaining text
                                       if (currentIndex < paragraph.length) {
                                         colorCodedElements.push(
-                                          <span key={`text-end`} className="text-gray-900">
+                                          <span
+                                            key={`text-end`}
+                                            className="text-gray-900"
+                                          >
                                             {paragraph.substring(currentIndex)}
                                           </span>
                                         );
@@ -1634,8 +2224,12 @@ export default function AssignmentDetail({
                                       return (
                                         <div className="leading-relaxed">
                                           <div className="indent-8">
-                                            {colorCodedElements.length > 0 ? colorCodedElements : (
-                                              <span className="text-gray-900">{paragraph}</span>
+                                            {colorCodedElements.length > 0 ? (
+                                              colorCodedElements
+                                            ) : (
+                                              <span className="text-gray-900">
+                                                {paragraph}
+                                              </span>
                                             )}
                                           </div>
                                         </div>
@@ -1651,8 +2245,15 @@ export default function AssignmentDetail({
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h6 className="font-medium text-orange-900 mb-1">Teacher Feedback:</h6>
-                                      <p className="text-orange-800 text-sm leading-relaxed">{selectedSubmission.teacher_feedback.step6}</p>
+                                      <h6 className="font-medium text-orange-900 mb-1">
+                                        Teacher Feedback:
+                                      </h6>
+                                      <p className="text-orange-800 text-sm leading-relaxed">
+                                        {
+                                          selectedSubmission.teacher_feedback
+                                            .step6
+                                        }
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -1662,21 +2263,40 @@ export default function AssignmentDetail({
                         }
 
                         // Show progress status
-                        if (selectedSubmission.status || selectedSubmission.working_on) {
+                        if (
+                          selectedSubmission.status ||
+                          selectedSubmission.working_on
+                        ) {
                           sections.unshift(
-                            <div key="status" className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                              <h4 className="font-semibold text-gray-900 mb-3">Student Progress</h4>
+                            <div
+                              key="status"
+                              className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                            >
+                              <h4 className="font-semibold text-gray-900 mb-3">
+                                Student Progress
+                              </h4>
                               <div className="flex gap-4">
                                 {selectedSubmission.status && (
                                   <div>
-                                    <span className="text-sm font-medium text-gray-600">Status: </span>
-                                    <span className="text-gray-900 font-medium capitalize">{selectedSubmission.status}</span>
+                                    <span className="text-sm font-medium text-gray-600">
+                                      Status:{" "}
+                                    </span>
+                                    <span className="text-gray-900 font-medium capitalize">
+                                      {selectedSubmission.status}
+                                    </span>
                                   </div>
                                 )}
                                 {selectedSubmission.working_on && (
                                   <div>
-                                    <span className="text-sm font-medium text-gray-600">Current Step: </span>
-                                    <span className="text-gray-900 font-medium capitalize">{selectedSubmission.working_on.replace(/_/g, " ")}</span>
+                                    <span className="text-sm font-medium text-gray-600">
+                                      Current Step:{" "}
+                                    </span>
+                                    <span className="text-gray-900 font-medium capitalize">
+                                      {selectedSubmission.working_on.replace(
+                                        /_/g,
+                                        " "
+                                      )}
+                                    </span>
                                   </div>
                                 )}
                               </div>
@@ -1687,9 +2307,17 @@ export default function AssignmentDetail({
                         // If no sections found, show fallback message
                         if (sections.length === 0) {
                           sections.push(
-                            <div key="fallback" className="border border-red-200 rounded-lg p-4 bg-red-50">
-                              <h4 className="font-semibold text-gray-900 mb-3">No Steps Found</h4>
-                              <p className="text-red-800">No argumentation steps found in the submission data.</p>
+                            <div
+                              key="fallback"
+                              className="border border-red-200 rounded-lg p-4 bg-red-50"
+                            >
+                              <h4 className="font-semibold text-gray-900 mb-3">
+                                No Steps Found
+                              </h4>
+                              <p className="text-red-800">
+                                No argumentation steps found in the submission
+                                data.
+                              </p>
                             </div>
                           );
                         }
@@ -1823,52 +2451,75 @@ export default function AssignmentDetail({
                             </div>
 
                             {/* Handle step2 object structure */}
-                            {details.step2 && typeof details.step2 === "object" && (
-                              <div className="space-y-3">
-                                {details.step2.chunk1Words && Array.isArray(details.step2.chunk1Words) && (
-                                  <div className="mb-4">
-                                    <h5 className="font-medium text-gray-800 mb-2">
-                                      Chunk 1 - Commentary Words
-                                    </h5>
-                                    <div className="bg-green-50 p-3 rounded">
-                                      <p className="text-green-800">
-                                        {details.step2.chunk1Words.join(", ")}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-                                {details.step2.chunk2Words && Array.isArray(details.step2.chunk2Words) && (
-                                  <div>
-                                    <h5 className="font-medium text-gray-800 mb-2">
-                                      Chunk 2 - Commentary Words
-                                    </h5>
-                                    <div className="bg-green-50 p-3 rounded">
-                                      <p className="text-green-800">
-                                        {details.step2.chunk2Words.join(", ")}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-                                {/* Handle other step2 properties */}
-                                {Object.keys(details.step2).map((key) => {
-                                  if (key !== 'chunk1Words' && key !== 'chunk2Words' && details.step2[key]) {
-                                    return (
-                                      <div key={key} className="bg-green-50 p-3 rounded">
-                                        <p className="text-sm font-medium text-green-900 mb-1">
-                                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
-                                        </p>
-                                        <p className="text-green-800">
-                                          {Array.isArray(details.step2[key]) 
-                                            ? details.step2[key].join(", ") 
-                                            : details.step2[key]}
-                                        </p>
+                            {details.step2 &&
+                              typeof details.step2 === "object" && (
+                                <div className="space-y-3">
+                                  {details.step2.chunk1Words &&
+                                    Array.isArray(
+                                      details.step2.chunk1Words
+                                    ) && (
+                                      <div className="mb-4">
+                                        <h5 className="font-medium text-gray-800 mb-2">
+                                          Chunk 1 - Commentary Words
+                                        </h5>
+                                        <div className="bg-green-50 p-3 rounded">
+                                          <p className="text-green-800">
+                                            {details.step2.chunk1Words.join(
+                                              ", "
+                                            )}
+                                          </p>
+                                        </div>
                                       </div>
-                                    );
-                                  }
-                                  return null;
-                                })}
-                              </div>
-                            )}
+                                    )}
+                                  {details.step2.chunk2Words &&
+                                    Array.isArray(
+                                      details.step2.chunk2Words
+                                    ) && (
+                                      <div>
+                                        <h5 className="font-medium text-gray-800 mb-2">
+                                          Chunk 2 - Commentary Words
+                                        </h5>
+                                        <div className="bg-green-50 p-3 rounded">
+                                          <p className="text-green-800">
+                                            {details.step2.chunk2Words.join(
+                                              ", "
+                                            )}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  {/* Handle other step2 properties */}
+                                  {Object.keys(details.step2).map((key) => {
+                                    if (
+                                      key !== "chunk1Words" &&
+                                      key !== "chunk2Words" &&
+                                      details.step2[key]
+                                    ) {
+                                      return (
+                                        <div
+                                          key={key}
+                                          className="bg-green-50 p-3 rounded"
+                                        >
+                                          <p className="text-sm font-medium text-green-900 mb-1">
+                                            {key
+                                              .replace(/([A-Z])/g, " $1")
+                                              .replace(/^./, (str) =>
+                                                str.toUpperCase()
+                                              )}
+                                            :
+                                          </p>
+                                          <p className="text-green-800">
+                                            {Array.isArray(details.step2[key])
+                                              ? details.step2[key].join(", ")
+                                              : details.step2[key]}
+                                          </p>
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  })}
+                                </div>
+                              )}
 
                             {/* Handle direct chunk words arrays */}
                             {details.chunk1Words &&
@@ -1944,13 +2595,14 @@ export default function AssignmentDetail({
                               )}
 
                             {/* Fallback for step2 as string */}
-                            {details.step2 && typeof details.step2 === "string" && (
-                              <div className="bg-green-50 p-3 rounded">
-                                <p className="text-green-800 whitespace-pre-wrap">
-                                  {details.step2}
-                                </p>
-                              </div>
-                            )}
+                            {details.step2 &&
+                              typeof details.step2 === "string" && (
+                                <div className="bg-green-50 p-3 rounded">
+                                  <p className="text-green-800 whitespace-pre-wrap">
+                                    {details.step2}
+                                  </p>
+                                </div>
+                              )}
 
                             {/* Display feedback if exists */}
                             {selectedSubmission?.teacher_feedback?.step2 && (
@@ -1962,7 +2614,10 @@ export default function AssignmentDetail({
                                       Teacher Feedback:
                                     </h6>
                                     <p className="text-orange-800 text-sm leading-relaxed">
-                                      {selectedSubmission.teacher_feedback.step2}
+                                      {
+                                        selectedSubmission.teacher_feedback
+                                          .step2
+                                      }
                                     </p>
                                   </div>
                                 </div>
@@ -2034,7 +2689,10 @@ export default function AssignmentDetail({
                                       Teacher Feedback:
                                     </h6>
                                     <p className="text-orange-800 text-sm leading-relaxed">
-                                      {selectedSubmission.teacher_feedback.step3}
+                                      {
+                                        selectedSubmission.teacher_feedback
+                                          .step3
+                                      }
                                     </p>
                                   </div>
                                 </div>
@@ -2131,7 +2789,10 @@ export default function AssignmentDetail({
                                       Teacher Feedback:
                                     </h6>
                                     <p className="text-orange-800 text-sm leading-relaxed">
-                                      {selectedSubmission.teacher_feedback.step4}
+                                      {
+                                        selectedSubmission.teacher_feedback
+                                          .step4
+                                      }
                                     </p>
                                   </div>
                                 </div>
@@ -2248,7 +2909,10 @@ export default function AssignmentDetail({
                                       Teacher Feedback:
                                     </h6>
                                     <p className="text-orange-800 text-sm leading-relaxed">
-                                      {selectedSubmission.teacher_feedback.step5}
+                                      {
+                                        selectedSubmission.teacher_feedback
+                                          .step5
+                                      }
                                     </p>
                                   </div>
                                 </div>
@@ -2383,7 +3047,10 @@ export default function AssignmentDetail({
                                       Teacher Feedback:
                                     </h6>
                                     <p className="text-orange-800 text-sm leading-relaxed">
-                                      {selectedSubmission.teacher_feedback.step6}
+                                      {
+                                        selectedSubmission.teacher_feedback
+                                          .step6
+                                      }
                                     </p>
                                   </div>
                                 </div>
@@ -2458,7 +3125,10 @@ export default function AssignmentDetail({
                                       Teacher Feedback:
                                     </h6>
                                     <p className="text-orange-800 text-sm leading-relaxed">
-                                      {selectedSubmission.teacher_feedback.step7}
+                                      {
+                                        selectedSubmission.teacher_feedback
+                                          .step7
+                                      }
                                     </p>
                                   </div>
                                 </div>
@@ -2560,7 +3230,10 @@ export default function AssignmentDetail({
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
-                Add Feedback - {currentFeedbackStep.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                Add Feedback -{" "}
+                {currentFeedbackStep
+                  .replace(/([A-Z])/g, " $1")
+                  .replace(/^./, (str) => str.toUpperCase())}
               </h3>
               <button
                 onClick={() => {
@@ -2643,16 +3316,34 @@ export default function AssignmentDetail({
         <PrintableAssignment
           ref={printableComponentRef}
           studentName={
-            currentUserRole === 'student' 
-              ? `${students.find(s => s.id === currentUserId)?.first_name || 'Student'} ${students.find(s => s.id === currentUserId)?.last_name || 'Name'}`
-              : selectedSubmission 
-                ? `${students.find(s => s.id === selectedSubmission.student_id)?.first_name || 'Student'} ${students.find(s => s.id === selectedSubmission.student_id)?.last_name || 'Name'}`
-                : 'Student Name'
+            currentUserRole === "student"
+              ? `${
+                  students.find((s) => s.id === currentUserId)?.first_name ||
+                  "Student"
+                } ${
+                  students.find((s) => s.id === currentUserId)?.last_name ||
+                  "Name"
+                }`
+              : selectedSubmission
+              ? `${
+                  students.find((s) => s.id === selectedSubmission.student_id)
+                    ?.first_name || "Student"
+                } ${
+                  students.find((s) => s.id === selectedSubmission.student_id)
+                    ?.last_name || "Name"
+                }`
+              : "Student Name"
           }
           teacherName={
             students.length > 0 && assignment.teacher_id
-              ? `${students.find(s => s.id === assignment.teacher_id)?.first_name || 'Teacher'} ${students.find(s => s.id === assignment.teacher_id)?.last_name || 'Name'}`
-              : 'Teacher Name'
+              ? `${
+                  students.find((s) => s.id === assignment.teacher_id)
+                    ?.first_name || "Teacher"
+                } ${
+                  students.find((s) => s.id === assignment.teacher_id)
+                    ?.last_name || "Name"
+                }`
+              : "Teacher Name"
           }
           courseName={currentUserSchool?.name || "Class Name"}
           assignment={assignment}

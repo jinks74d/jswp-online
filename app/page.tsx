@@ -1,81 +1,340 @@
 // app/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
-import { UserCheck, Users, Eye, EyeOff, AlertCircle } from "lucide-react";
 
-type LoginMode = "super_admin" | "district_user";
+import { Eye, EyeOff, AlertCircle, Shield } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { AuthCache } from "@/lib/auth-cache";
+import Link from "next/link";
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<LoginMode>("district_user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasRedirected = useRef(false);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
 
-  const router = useRouter();
-  const supabase = createClient();
+  // Check if we've already attempted a redirect in this session
+  const hasAttemptedRedirect = useRef(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const redirectAttempted = sessionStorage.getItem(
+        "jswp-redirect-attempted"
+      );
+      if (redirectAttempted === "true") {
+        hasAttemptedRedirect.current = true;
+        hasRedirected.current = true;
+      }
+    }
+  }, []);
+
+  console.log("LoginPage: Component rendered at", new Date().toISOString());
+
+  const { user, profile, loading: authLoading } = useAuth();
+
+  console.log("LoginPage: useAuth values:", {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    authLoading,
+    userEmail: user?.email,
+    profileRole: profile?.role,
+  });
+
+  // Debug auth state changes
+  useEffect(() => {
+    console.log("Login: Auth state update detected:", {
+      authLoading,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      userEmail: user?.email,
+      profileRole: profile?.role,
+      timestamp: new Date().toISOString(),
+    });
+  }, [user, profile, authLoading]);
+
+  // Initialize Supabase client only once
+  useEffect(() => {
+    if (typeof window !== "undefined" && !supabaseRef.current) {
+      supabaseRef.current = createClient();
+    }
+  }, []);
+
+  // Handle redirects for already authenticated users visiting the login page
+  // This prevents users from getting stuck on login page when already logged in
+  useEffect(() => {
+    console.log("Login: Redirect check:", {
+      authLoading,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      isLoading: loading,
+      hasRedirected: hasRedirected.current,
+      hasAttemptedRedirect: hasAttemptedRedirect.current,
+      userEmail: user?.email,
+      profileRole: profile?.role,
+    });
+
+    // Only redirect if auth is fully loaded, we have both user and profile, not currently logging in, and haven't redirected yet
+    // BUT: Don't auto-redirect super admins - they should use /admin to login
+    if (
+      !authLoading &&
+      user &&
+      profile &&
+      profile.role !== "super_admin" &&
+      !loading &&
+      !hasRedirected.current &&
+      !hasAttemptedRedirect.current
+    ) {
+      hasRedirected.current = true;
+      hasAttemptedRedirect.current = true;
+
+      // Set sessionStorage flag to prevent future redirect attempts
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("jswp-redirect-attempted", "true");
+      }
+
+      console.log("Login: Authenticated user detected, redirecting...", {
+        userId: user.id,
+        role: profile.role,
+        email: profile.email,
+      });
+
+      // Only regular users reach this point (super admins are excluded in the condition above)
+      console.log("Login: Regular user detected, redirecting to /dashboard");
+      window.location.href = "/dashboard";
+    }
+  }, [user, profile, authLoading, loading]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Show loading state while auth is being determined
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-gray-700 font-medium">
+                Checking authentication...
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Please wait while we verify your session
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show redirecting state if we have user and profile (but not for super admins)
+  if (user && profile && !hasRedirected.current) {
+    // Super admins should not be auto-redirected from regular login
+    if (profile.role === "super_admin") {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+          <div className="max-w-md w-full text-center">
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Shield className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Super Admin Detected
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                You are logged in as a Super Administrator. Please use the
+                dedicated admin portal to access your dashboard.
+              </p>
+              <div className="space-y-3">
+                <a
+                  href="/admin"
+                  className="block w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Go to Admin Portal
+                </a>
+                <button
+                  onClick={async () => {
+                    if (supabaseRef.current) {
+                      await supabaseRef.current.auth.signOut();
+                      window.location.reload();
+                    }
+                  }}
+                  className="block w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Regular users get redirecting message
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-gray-700 font-medium">
+                Redirecting to dashboard...
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Welcome back, {profile.first_name || profile.email}!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
+    // Clear any previous redirect attempts and auth cache for fresh login
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("jswp-redirect-attempted");
+    }
+    hasAttemptedRedirect.current = false;
+    hasRedirected.current = false;
+
+    // Clear auth cache to ensure fresh login
+    AuthCache.clearAll();
+
+    if (!supabaseRef.current) {
+      setError("Authentication service not available");
+      setLoading(false);
+      return;
+    }
+
+    // Increase timeout to 30 seconds for slower connections
+    const loginTimeout = setTimeout(() => {
+      console.error("Login timeout - resetting state");
+      setLoading(false);
+      setError("Login timed out. Please try again.");
+    }, 30000); // 30 second timeout
+
     try {
-      // Authenticate with Supabase
-      const { data: authData, error: authError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      console.log("Login: Starting authentication for", email);
+
+      // Authenticate with Supabase with timeout
+      const authPromise = supabaseRef.current.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      const authResult = await Promise.race([
+        authPromise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Authentication timeout")), 3000)
+        ),
+      ]);
+
+      const { data: authData, error: authError } = authResult as any;
 
       if (authError) {
+        clearTimeout(loginTimeout);
         throw authError;
       }
 
       if (!authData.user) {
+        clearTimeout(loginTimeout);
         throw new Error("No user returned from authentication");
       }
 
-      // Get user profile to check role
-      const { data: profile, error: profileError } = await supabase
-        .from("user_profiles")
-        .select("role, district_id")
-        .eq("id", authData.user.id)
-        .single();
+      console.log(
+        "Login: Authentication successful, manually fetching profile"
+      );
 
-      if (profileError) {
-        throw new Error("Could not fetch user profile");
+      // Clear the timeout since authentication was successful
+      clearTimeout(loginTimeout);
+
+      // Manual profile fetch since AuthProvider isn't triggering
+      try {
+        console.log("Login: Fetching user profile...");
+
+        // Add timeout to profile fetch
+        const profilePromise = supabaseRef.current
+          .from("user_profiles")
+          .select("role, district_id, email, first_name, last_name")
+          .eq("id", authData.user.id)
+          .single();
+
+        const profileTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Profile fetch timeout")), 2000)
+        );
+
+        console.log("Login: Executing profile query with timeout...");
+        const profileResult = await Promise.race([
+          profilePromise,
+          profileTimeout,
+        ]);
+        console.log("Login: Profile query result:", profileResult);
+
+        const { data: profileData, error: profileError } = profileResult;
+
+        if (profileError || !profileData) {
+          console.error("Login: Profile fetch failed:", profileError);
+          throw new Error(
+            `Could not fetch user profile: ${
+              profileError?.message || "No data"
+            }`
+          );
+        }
+
+        console.log("Login: Profile fetched:", profileData.role);
+
+        // Validate user is NOT super admin (they should use /admin)
+        if (profileData.role === "super_admin") {
+          await supabaseRef.current.auth.signOut();
+          throw new Error(
+            "Super Admin users must use the administrator login page at /admin to access the system."
+          );
+        }
+
+        // Determine redirect path (always dashboard for regular users)
+        const targetPath = "/dashboard";
+
+        console.log(`Login: Profile validated, redirecting to ${targetPath}`);
+
+        // Immediate redirect
+        setLoading(false);
+        window.location.href = targetPath;
+      } catch (profileError) {
+        console.error("Login: Profile validation failed:", profileError);
+        throw profileError;
       }
-
-      if (!profile) {
-        throw new Error("User profile not found");
-      }
-
-      // Validate user type matches login mode
-      if (mode === "super_admin" && profile.role !== "super_admin") {
-        await supabase.auth.signOut();
-        throw new Error("Access denied. Super Admin credentials required.");
-      }
-
-      if (mode === "district_user" && profile.role === "super_admin") {
-        await supabase.auth.signOut();
-        throw new Error("Please use Super Admin login.");
-      }
-
-      // Redirect based on role
-      const redirectPath =
-        profile.role === "super_admin" ? "/super-admin" : "/dashboard";
-      router.push(redirectPath);
-      router.refresh();
     } catch (error: any) {
       console.error("Login error:", error);
+      clearTimeout(loginTimeout);
       setError(error.message || "An error occurred during login");
-    } finally {
       setLoading(false);
+
+      // Ensure we're signed out on error
+      try {
+        if (supabaseRef.current) {
+          await supabaseRef.current.auth.signOut();
+        }
+      } catch (signOutError) {
+        console.error("Error signing out after login failure:", signOutError);
+      }
     }
   };
 
@@ -84,54 +343,31 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Education Platform
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">JSWP Online</h1>
           <p className="text-gray-600">
             Sign in to access your assignments and tools
           </p>
         </div>
 
-        {/* Login Mode Selector */}
-        <div className="bg-gray-100 p-1 rounded-lg flex">
-          <button
-            type="button"
-            onClick={() => setMode("district_user")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              mode === "district_user"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+        {/* Admin Login Link */}
+        <div className="flex items-center justify-center">
+          <Link
+            href="/admin"
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
           >
-            <Users className="w-4 h-4" />
-            District User
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("super_admin")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              mode === "super_admin"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            <UserCheck className="w-4 h-4" />
-            Super Admin
-          </button>
+            <Shield className="w-4 h-4" />
+            Administrator Login
+          </Link>
         </div>
 
         {/* Login Form */}
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {mode === "super_admin"
-                ? "Super Admin Login"
-                : "District User Login"}
+              User Login
             </h2>
             <p className="text-sm text-gray-600">
-              {mode === "super_admin"
-                ? "Access system administration tools"
-                : "Access your district assignments and tools"}
+              Access your district assignments and tools
             </p>
           </div>
 
@@ -208,12 +444,10 @@ export default function LoginPage() {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Signing in...
+                  <span>Signing in...</span>
                 </div>
               ) : (
-                `Sign in as ${
-                  mode === "super_admin" ? "Super Admin" : "District User"
-                }`
+                "Sign in"
               )}
             </button>
           </form>
@@ -221,22 +455,23 @@ export default function LoginPage() {
           {/* Demo credentials info */}
           <div className="mt-6 p-4 bg-gray-50 rounded-md">
             <h4 className="text-sm font-medium text-gray-900 mb-2">
-              Demo Access
+              User Access
             </h4>
             <p className="text-xs text-gray-600">
-              {mode === "super_admin"
-                ? "Use your super admin credentials to manage districts and system settings."
-                : "Use your district-assigned credentials to access assignments and tools."}
+              Use your district-assigned credentials to access assignments and
+              tools.
             </p>
           </div>
         </div>
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
-          Need help? Contact your{" "}
-          {mode === "super_admin"
-            ? "system administrator"
-            : "district administrator"}
+          <p>Need help? Contact your district administrator</p>
+          <p className="mt-2">
+            <Link href="/admin" className="text-blue-600 hover:text-blue-700">
+              System Administrator? Use the admin portal
+            </Link>
+          </p>
         </div>
       </div>
     </div>

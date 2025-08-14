@@ -1,0 +1,70 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "uvx",
+      "args": ["mcp-server-filesystem", "--path", "."],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": true,
+      "autoApprove": ["read_file", "list_directory", "write_file"]
+    },
+    "git": {
+      "command": "uvx",
+      "args": ["mcp-server-git"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["git_status", "git_log", "git_diff"]
+    },
+    "sqlite": {
+      "command": "uvx",
+      "args": ["mcp-server-sqlite", "--db-path", "./data.db"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": true,
+      "autoApprove": ["query", "list_tables"]
+    },
+    "postgres": {
+      "command": "uvx",
+      "args": ["postgres-mcp-server"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "DATABASE_URL": "postgresql://postgres.zyivphqxqmbslxcrzbnh:[YOUR_DB_PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
+      },
+      "disabled": true,
+      "autoApprove": ["query", "list_tables", "describe_table"]
+    },
+    "web-search": {
+      "command": "uvx",
+      "args": ["mcp-server-brave-search"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "BRAVE_API_KEY": ""
+      },
+      "disabled": true,
+      "autoApprove": ["search"]
+    },
+    "aws-docs": {
+      "command": "uvx",
+      "args": ["mcp-server-aws-docs"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": true,
+      "autoApprove": ["search_docs"]
+    },
+    "github": {
+      "command": "uvx",
+      "args": ["mcp-server-github"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+      },
+      "disabled": true,
+      "autoApprove": ["search_repositories", "get_file_contents"]
+    }
+  }
+}

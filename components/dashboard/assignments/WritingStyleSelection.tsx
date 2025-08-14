@@ -19,6 +19,9 @@ interface WritingStyleSelectionProps {
   currentUserRole: UserRole;
   currentUserSchool?: { id: string; name: string } | null;
   districtName: string;
+  logo_url?: string | null;
+  primary_color?: string | null;
+  secondary_color?: string | null;
 }
 
 const writingStyles: WritingStyle[] = [
@@ -56,9 +59,15 @@ export default function WritingStyleSelection({
   currentUserRole,
   currentUserSchool,
   districtName,
+  logo_url,
+  primary_color,
+  secondary_color,
 }: WritingStyleSelectionProps) {
   const router = useRouter();
   const [selectedStyle, setSelectedStyle] = useState<string>("");
+
+  // District branding
+  const districtSecondaryColor = secondary_color || '#0B2559';
 
   const handleStyleSelect = (styleId: string) => {
     setSelectedStyle(styleId);
@@ -109,7 +118,10 @@ export default function WritingStyleSelection({
       </div>
 
       {/* Writing Style Selection */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+      <div 
+        className="bg-white rounded-lg shadow-sm border-2 p-8"
+        style={{ border: `2px solid ${districtSecondaryColor}` }}
+      >
         <div className="text-center mb-8">
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">
             Choose a Writing Style

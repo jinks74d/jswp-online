@@ -44,7 +44,14 @@ interface ClassPeriod {
 interface ClassDetailProps {
   classPeriod: ClassPeriod;
   profile: UserProfile & {
-    districts?: { id: string; name: string; domain: string | null };
+    districts?: {
+      id: string;
+      name: string;
+      domain: string | null;
+      logo_url: string | null;
+      primary_color: string | null;
+      secondary_color: string | null;
+    };
     schools?: { id: string; name: string };
   };
 }
@@ -79,11 +86,22 @@ interface AvailableStudent {
   email: string;
 }
 
-export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) {
-  const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([]);
-  const [assignedTeachers, setAssignedTeachers] = useState<AssignedTeacher[]>([]);
-  const [availableTeachers, setAvailableTeachers] = useState<AvailableTeacher[]>([]);
-  const [availableStudents, setAvailableStudents] = useState<AvailableStudent[]>([]);
+export default function ClassDetail({
+  classPeriod,
+  profile,
+}: ClassDetailProps) {
+  const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>(
+    []
+  );
+  const [assignedTeachers, setAssignedTeachers] = useState<AssignedTeacher[]>(
+    []
+  );
+  const [availableTeachers, setAvailableTeachers] = useState<
+    AvailableTeacher[]
+  >([]);
+  const [availableStudents, setAvailableStudents] = useState<
+    AvailableStudent[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [showAssignTeacherModal, setShowAssignTeacherModal] = useState(false);
   const [showEnrollStudentModal, setShowEnrollStudentModal] = useState(false);
@@ -94,18 +112,26 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
 
+  // District branding
+  const districtSecondaryColor =
+    profile.districts?.secondary_color || "#0B2559";
+
   const supabase = createClient();
 
   useEffect(() => {
-    fetchClassData();
-  }, []);
+    if (classPeriod?.id) {
+      setLoading(true);
+      fetchClassData();
+    }
+  }, [classPeriod?.id]);
 
   const fetchClassData = async () => {
     try {
       // Fetch assigned teachers for this class
       const { data: teacherAssignments, error: teachersError } = await supabase
         .from("class_teacher_assignments")
-        .select(`
+        .select(
+          `
           id,
           created_at,
           teacher:teacher_id(
@@ -114,26 +140,29 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
             last_name,
             email
           )
-        `)
+        `
+        )
         .eq("class_period_id", classPeriod.id);
 
       if (teachersError) {
         console.error("Error fetching teachers:", teachersError);
       } else {
-        const teachers = teacherAssignments?.map((assignment: any) => ({
-          id: assignment.teacher.id,
-          first_name: assignment.teacher.first_name,
-          last_name: assignment.teacher.last_name,
-          email: assignment.teacher.email,
-          created_at: assignment.created_at,
-        })) || [];
+        const teachers =
+          teacherAssignments?.map((assignment: any) => ({
+            id: assignment.teacher.id,
+            first_name: assignment.teacher.first_name,
+            last_name: assignment.teacher.last_name,
+            email: assignment.teacher.email,
+            created_at: assignment.created_at,
+          })) || [];
         setAssignedTeachers(teachers);
       }
 
       // Fetch enrolled students for this class
       const { data: studentEnrollments, error: studentsError } = await supabase
         .from("class_student_enrollments")
-        .select(`
+        .select(
+          `
           id,
           created_at,
           student:student_id(
@@ -142,19 +171,21 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
             last_name,
             email
           )
-        `)
+        `
+        )
         .eq("class_period_id", classPeriod.id);
 
       if (studentsError) {
         console.error("Error fetching students:", studentsError);
       } else {
-        const students = studentEnrollments?.map((enrollment: any) => ({
-          id: enrollment.student.id,
-          first_name: enrollment.student.first_name,
-          last_name: enrollment.student.last_name,
-          email: enrollment.student.email,
-          created_at: enrollment.created_at,
-        })) || [];
+        const students =
+          studentEnrollments?.map((enrollment: any) => ({
+            id: enrollment.student.id,
+            first_name: enrollment.student.first_name,
+            last_name: enrollment.student.last_name,
+            email: enrollment.student.email,
+            created_at: enrollment.created_at,
+          })) || [];
         setEnrolledStudents(students);
       }
     } catch (error) {
@@ -167,8 +198,8 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
   const fetchAvailableTeachers = async () => {
     try {
       // Get all teachers in the school who are not already assigned to this class
-      const assignedTeacherIds = assignedTeachers.map(t => t.id);
-      
+      const assignedTeacherIds = assignedTeachers.map((t) => t.id);
+
       let query = supabase
         .from("user_profiles")
         .select("id, first_name, last_name, email")
@@ -199,13 +230,16 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
     setSuccess("");
 
     try {
-      const response = await fetch(`/api/dashboard/classes/${classPeriod.id}/assign-teacher`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ teacherId }),
-      });
+      const response = await fetch(
+        `/api/dashboard/classes/${classPeriod.id}/assign-teacher`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ teacherId }),
+        }
+      );
 
       const result = await response.json();
 
@@ -214,10 +248,10 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
       }
 
       setSuccess("Teacher assigned successfully!");
-      
+
       // Refresh the class data to show the new teacher
       await fetchClassData();
-      
+
       // Close the modal after a short delay
       setTimeout(() => {
         setShowAssignTeacherModal(false);
@@ -232,18 +266,23 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
   };
 
   const handleUnassignTeacher = async (teacherId: string) => {
-    if (!confirm("Are you sure you want to unassign this teacher from the class?")) {
+    if (
+      !confirm("Are you sure you want to unassign this teacher from the class?")
+    ) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/dashboard/classes/${classPeriod.id}/assign-teacher`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ teacherId }),
-      });
+      const response = await fetch(
+        `/api/dashboard/classes/${classPeriod.id}/assign-teacher`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ teacherId }),
+        }
+      );
 
       const result = await response.json();
 
@@ -252,10 +291,10 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
       }
 
       setSuccess("Teacher unassigned successfully!");
-      
+
       // Refresh the class data
       await fetchClassData();
-      
+
       // Clear success message after delay
       setTimeout(() => {
         setSuccess("");
@@ -278,8 +317,8 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
   const fetchAvailableStudents = async () => {
     try {
       // Get all students in the school who are not already enrolled in this class
-      const enrolledStudentIds = enrolledStudents.map(s => s.id);
-      
+      const enrolledStudentIds = enrolledStudents.map((s) => s.id);
+
       let query = supabase
         .from("user_profiles")
         .select("id, first_name, last_name, email")
@@ -310,13 +349,16 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
     setSuccess("");
 
     try {
-      const response = await fetch(`/api/dashboard/classes/${classPeriod.id}/enroll-student`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ studentId }),
-      });
+      const response = await fetch(
+        `/api/dashboard/classes/${classPeriod.id}/enroll-student`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ studentId }),
+        }
+      );
 
       const result = await response.json();
 
@@ -325,10 +367,10 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
       }
 
       setSuccess("Student enrolled successfully!");
-      
+
       // Refresh the class data to show the new student
       await fetchClassData();
-      
+
       // Close the modal after a short delay
       setTimeout(() => {
         setShowEnrollStudentModal(false);
@@ -349,17 +391,25 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
     fetchAvailableStudents();
   };
 
-  const filteredTeachers = availableTeachers.filter(teacher =>
-    `${teacher.first_name} ${teacher.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    teacher.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTeachers = availableTeachers.filter(
+    (teacher) =>
+      `${teacher.first_name} ${teacher.last_name}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      teacher.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredStudents = availableStudents.filter(student =>
-    `${student.first_name} ${student.last_name}`.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(studentSearchTerm.toLowerCase())
+  const filteredStudents = availableStudents.filter(
+    (student) =>
+      `${student.first_name} ${student.last_name}`
+        .toLowerCase()
+        .includes(studentSearchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(studentSearchTerm.toLowerCase())
   );
 
-  const canManageClass = ["school_admin", "district_admin"].includes(profile.role);
+  const canManageClass = ["school_admin", "district_admin"].includes(
+    profile.role
+  );
 
   if (loading) {
     return (
@@ -386,7 +436,10 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
       </div>
 
       {/* Class Overview Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div
+        className="bg-white rounded-lg shadow-sm border-2 p-6"
+        style={{ border: `2px solid ${districtSecondaryColor}` }}
+      >
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -397,11 +450,10 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                 {classPeriod.classes.name}
               </h1>
               <p className="text-gray-600">
-                {classPeriod.classes.subjects.name} • Period {classPeriod.period}
+                {classPeriod.classes.subjects.name} • Period{" "}
+                {classPeriod.period}
               </p>
-              <p className="text-sm text-gray-500">
-                {profile.schools?.name}
-              </p>
+              <p className="text-sm text-gray-500">{profile.schools?.name}</p>
             </div>
           </div>
           {canManageClass && (
@@ -422,7 +474,9 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Subject Information</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                Subject Information
+              </h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-gray-600">
                   <School className="w-4 h-4" />
@@ -437,7 +491,9 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Class Details</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                Class Details
+              </h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-gray-600">
                   <BookOpen className="w-4 h-4" />
@@ -453,11 +509,15 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
 
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Created</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                Created
+              </h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-gray-600">
                   <Calendar className="w-4 h-4" />
-                  <span>{new Date(classPeriod.created_at).toLocaleDateString()}</span>
+                  <span>
+                    {new Date(classPeriod.created_at).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -477,31 +537,44 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div
+          className="bg-white rounded-lg shadow-sm border-2 p-4"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <Users className="w-4 h-4 text-blue-600" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Students</p>
-              <p className="text-xl font-bold text-gray-900">{enrolledStudents.length}</p>
+              <p className="text-xl font-bold text-gray-900">
+                {enrolledStudents.length}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div
+          className="bg-white rounded-lg shadow-sm border-2 p-4"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <GraduationCap className="w-4 h-4 text-green-600" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Teachers</p>
-              <p className="text-xl font-bold text-gray-900">{assignedTeachers.length}</p>
+              <p className="text-xl font-bold text-gray-900">
+                {assignedTeachers.length}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div
+          className="bg-white rounded-lg shadow-sm border-2 p-4"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <FileText className="w-4 h-4 text-purple-600" />
@@ -513,7 +586,10 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div
+          className="bg-white rounded-lg shadow-sm border-2 p-4"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
               <Calendar className="w-4 h-4 text-orange-600" />
@@ -529,14 +605,17 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Enrolled Students */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div
+          className="bg-white rounded-lg shadow-sm border-2"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
                 Enrolled Students
               </h2>
               {canManageClass && (
-                <button 
+                <button
                   onClick={openEnrollStudentModal}
                   className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
                 >
@@ -557,7 +636,7 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                   Students will appear here when they're enrolled in this class
                 </p>
                 {canManageClass && (
-                  <button 
+                  <button
                     onClick={openEnrollStudentModal}
                     className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
@@ -585,7 +664,8 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                       </div>
                     </div>
                     <div className="text-xs text-gray-500">
-                      Enrolled {new Date(student.created_at).toLocaleDateString()}
+                      Enrolled{" "}
+                      {new Date(student.created_at).toLocaleDateString()}
                     </div>
                   </div>
                 ))}
@@ -595,14 +675,17 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
         </div>
 
         {/* Assigned Teachers */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div
+          className="bg-white rounded-lg shadow-sm border-2"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
                 Assigned Teachers
               </h2>
               {canManageClass && (
-                <button 
+                <button
                   onClick={openAssignTeacherModal}
                   className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
                 >
@@ -623,7 +706,7 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                   Teachers will appear here when they're assigned to this class
                 </p>
                 {canManageClass && (
-                  <button 
+                  <button
                     onClick={openAssignTeacherModal}
                     className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                   >
@@ -651,7 +734,8 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                       </div>
                     </div>
                     <div className="text-xs text-gray-500">
-                      Assigned {new Date(teacher.created_at).toLocaleDateString()}
+                      Assigned{" "}
+                      {new Date(teacher.created_at).toLocaleDateString()}
                     </div>
                   </div>
                 ))}
@@ -663,12 +747,15 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
 
       {/* Quick Actions */}
       {canManageClass && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div
+          className="bg-white rounded-lg shadow-sm border-2 p-6"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <h2 className="text-lg font-semibold text-gray-900 mb-6">
             Quick Actions
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <button 
+            <button
               onClick={openEnrollStudentModal}
               className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -677,7 +764,9 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
               </div>
               <div className="text-left">
                 <h3 className="font-medium text-gray-900">Enroll Students</h3>
-                <p className="text-sm text-gray-600">Add students to this class</p>
+                <p className="text-sm text-gray-600">
+                  Add students to this class
+                </p>
               </div>
             </button>
 
@@ -687,7 +776,9 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
               </div>
               <div className="text-left">
                 <h3 className="font-medium text-gray-900">Assign Teachers</h3>
-                <p className="text-sm text-gray-600">Add teachers to this class</p>
+                <p className="text-sm text-gray-600">
+                  Add teachers to this class
+                </p>
               </div>
             </button>
 
@@ -714,45 +805,14 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
         </div>
       )}
 
-      {/* Coming Soon Notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-            <BookOpen className="w-4 h-4 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-blue-900">
-            Class Management Features Coming Soon
-          </h3>
-        </div>
-        <p className="text-blue-800 mb-4">
-          Advanced class management features are in development! The class structure is ready for future enhancements.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-700">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            <span>Student enrollment and management</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4" />
-            <span>Teacher assignment system</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            <span>Assignment creation and tracking</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            <span>Attendance and session management</span>
-          </div>
-        </div>
-      </div>
-
       {/* Assign Teacher Modal */}
       {showAssignTeacherModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Assign Teacher</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Assign Teacher
+              </h3>
               <button
                 onClick={() => setShowAssignTeacherModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -777,7 +837,9 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                 <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-start gap-3 mb-4">
                   <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <h3 className="text-sm font-medium text-green-800">Success</h3>
+                    <h3 className="text-sm font-medium text-green-800">
+                      Success
+                    </h3>
                     <p className="text-sm text-green-700 mt-1">{success}</p>
                   </div>
                 </div>
@@ -803,13 +865,14 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                   <div className="text-center py-8">
                     <GraduationCap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {searchTerm ? "No teachers found" : "No available teachers"}
+                      {searchTerm
+                        ? "No teachers found"
+                        : "No available teachers"}
                     </h3>
                     <p className="text-gray-600">
-                      {searchTerm 
+                      {searchTerm
                         ? "Try adjusting your search terms"
-                        : "All teachers in this school are already assigned to this class"
-                      }
+                        : "All teachers in this school are already assigned to this class"}
                     </p>
                   </div>
                 ) : (
@@ -826,7 +889,9 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                           <h3 className="font-medium text-gray-900">
                             {teacher.first_name} {teacher.last_name}
                           </h3>
-                          <p className="text-sm text-gray-600">{teacher.email}</p>
+                          <p className="text-sm text-gray-600">
+                            {teacher.email}
+                          </p>
                         </div>
                       </div>
                       <button
@@ -859,7 +924,9 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Enroll Student</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Enroll Student
+              </h3>
               <button
                 onClick={() => setShowEnrollStudentModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -884,7 +951,9 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                 <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-start gap-3 mb-4">
                   <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <h3 className="text-sm font-medium text-green-800">Success</h3>
+                    <h3 className="text-sm font-medium text-green-800">
+                      Success
+                    </h3>
                     <p className="text-sm text-green-700 mt-1">{success}</p>
                   </div>
                 </div>
@@ -910,13 +979,14 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                   <div className="text-center py-8">
                     <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {studentSearchTerm ? "No students found" : "No available students"}
+                      {studentSearchTerm
+                        ? "No students found"
+                        : "No available students"}
                     </h3>
                     <p className="text-gray-600">
-                      {studentSearchTerm 
+                      {studentSearchTerm
                         ? "Try adjusting your search terms"
-                        : "All students in this school are already enrolled in this class"
-                      }
+                        : "All students in this school are already enrolled in this class"}
                     </p>
                   </div>
                 ) : (
@@ -933,7 +1003,9 @@ export default function ClassDetail({ classPeriod, profile }: ClassDetailProps) 
                           <h3 className="font-medium text-gray-900">
                             {student.first_name} {student.last_name}
                           </h3>
-                          <p className="text-sm text-gray-600">{student.email}</p>
+                          <p className="text-sm text-gray-600">
+                            {student.email}
+                          </p>
                         </div>
                       </div>
                       <button

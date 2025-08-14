@@ -22,8 +22,8 @@ export default async function TeachersPage() {
     .select(
       `
       *,
-      districts:district_id(id, name),
-      schools:school_id(id, name)
+      districts:district_id(id, name, logo_url, primary_color, secondary_color),
+      schools:school_id(id, name, logo_url, primary_color, secondary_color)
     `
     )
     .eq("id", user.id)
@@ -83,6 +83,16 @@ export default async function TeachersPage() {
       currentUserRole={profile.role}
       currentUserSchool={profile.schools}
       districtName={profile.districts?.name || "District"}
+      districtBranding={{
+        primary_color: profile.districts?.primary_color || null,
+        secondary_color: profile.districts?.secondary_color || null,
+        logo_url: profile.districts?.logo_url || null,
+      }}
+      schoolBranding={profile.role === "school_admin" && profile.schools ? {
+        primary_color: profile.schools.primary_color || null,
+        secondary_color: profile.schools.secondary_color || null,
+        logo_url: profile.schools.logo_url || null,
+      } : undefined}
     />
   );
 }

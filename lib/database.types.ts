@@ -419,8 +419,11 @@ export type Database = {
           created_at: string | null
           domain: string | null
           id: string
+          logo_url: string | null
           name: string
           poc_email: string
+          primary_color: string | null
+          secondary_color: string | null
           settings: Json | null
           updated_at: string | null
         }
@@ -428,8 +431,11 @@ export type Database = {
           created_at?: string | null
           domain?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           poc_email: string
+          primary_color?: string | null
+          secondary_color?: string | null
           settings?: Json | null
           updated_at?: string | null
         }
@@ -437,8 +443,11 @@ export type Database = {
           created_at?: string | null
           domain?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           poc_email?: string
+          primary_color?: string | null
+          secondary_color?: string | null
           settings?: Json | null
           updated_at?: string | null
         }

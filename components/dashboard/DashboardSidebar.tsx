@@ -19,10 +19,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { UserProfile, UserRole } from "@/lib/supabase";
+import DistrictLogo from "@/components/ui/DistrictLogo";
 
 interface DashboardSidebarProps {
   profile: UserProfile & {
-    districts?: { id: string; name: string; domain: string | null };
+    districts?: {
+      id: string;
+      name: string;
+      domain: string | null;
+      logo_url: string | null;
+      primary_color: string | null;
+      secondary_color: string | null;
+    };
     schools?: { id: string; name: string };
   };
 }
@@ -142,12 +150,6 @@ const getNavigationItems = (role: UserRole, pathname: string) => {
           icon: Users,
           current: pathname.startsWith("/dashboard/students"),
         },
-        {
-          name: "Profile",
-          href: "/dashboard/profile",
-          icon: Settings,
-          current: pathname.startsWith("/dashboard/profile"),
-        },
       ];
 
     case "student":
@@ -199,6 +201,24 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
   const [signingOut, setSigningOut] = useState(false);
   const { signOut } = useAuth();
 
+  // Add null check for profile before accessing properties
+  if (!profile) {
+    return (
+      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-sidebar">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading sidebar...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Debug logging (now safe after null check)
+  console.log("DashboardSidebar profile.districts:", profile.districts);
+  console.log("DashboardSidebar full profile:", profile);
+
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
@@ -207,8 +227,8 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
       // Set a timeout as a fallback in case redirect doesn't work
       setTimeout(() => {
         setSigningOut(false);
-        if (typeof window !== 'undefined') {
-          window.location.href = '/';
+        if (typeof window !== "undefined") {
+          window.location.href = "/";
         }
       }, 3000); // 3 second fallback
     } catch (error) {
@@ -223,16 +243,15 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
   const roleDisplayName = getRoleDisplayName(profile.role);
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
+    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-sidebar">
       {/* Logo and District Info */}
       <div className="flex flex-col h-20 justify-center px-6 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-1">
-          <img 
-            src="/favicon.ico" 
-            alt="JSWP Online" 
-            className="w-8 h-8"
+        <div className="flex items-center justify-center mb-1">
+          <img
+            src="/assets/jswp-logo.svg"
+            alt="JSWP Online"
+            className="w-full h-full max-w-none max-h-16"
           />
-          <span className="text-lg font-bold text-gray-900">JSWP Online</span>
         </div>
         <p className="text-xs text-gray-600 truncate">
           {profile.districts?.name || "District Dashboard"}
@@ -249,9 +268,10 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 item.current
-                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                  ? "bg-gray-100 text-gray-800 border border-gray-300"
                   : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
+              style={item.current ? { backgroundColor: '#f8f9fa', color: '#455A64', borderColor: '#6b7280' } : {}}
             >
               <Icon className="w-5 h-5" />
               {item.name}
@@ -288,30 +308,39 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
         </div>
       )}
 
-      {/* User info */}
+      {/* District Logo and User info */}
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-blue-600">
-              {profile.first_name?.[0] || profile.email[0].toUpperCase()}
-            </span>
+        {/* District Logo */}
+        {profile.districts && (
+          <div className="flex justify-center mb-4">
+            <DistrictLogo
+              districtId={profile.districts.id}
+              districtName={profile.districts.name}
+              size={96}
+              className="rounded-lg"
+            />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {profile.first_name} {profile.last_name}
+        )}
+
+        {/* User info without avatar */}
+        <div className="mb-3">
+          <p className="text-sm font-medium text-gray-900 truncate text-center">
+            {profile.first_name} {profile.last_name}
+          </p>
+          <p className="text-xs text-gray-500 truncate text-center">
+            {roleDisplayName}
+          </p>
+          {profile.schools?.name && (
+            <p className="text-xs text-gray-400 truncate text-center">
+              {profile.schools.name}
             </p>
-            <p className="text-xs text-gray-500 truncate">{roleDisplayName}</p>
-            {profile.schools?.name && (
-              <p className="text-xs text-gray-400 truncate">
-                {profile.schools.name}
-              </p>
-            )}
-          </div>
+          )}
         </div>
+
         <button
           onClick={handleSignOut}
           disabled={signingOut}
-          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50"
         >
           <LogOut className="w-4 h-4" />
           {signingOut ? "Signing out..." : "Sign Out"}

@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("Request body:", body);
 
-    const { name, domain, pocEmail, pocFirstName, pocLastName, pocPassword } =
+    const { name, domain, pocEmail, pocFirstName, pocLastName, pocPassword, primaryColor, secondaryColor } =
       body;
 
     // Validate required fields
@@ -83,6 +83,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if domain already exists (if provided)
+    if (domain && domain.trim()) {
+      const { data: existingDistrict, error: domainCheckError } = await supabase
+        .from("districts")
+        .select("id, name")
+        .eq("domain", domain.trim())
+        .maybeSingle();
+
+      if (domainCheckError) {
+        console.error("Domain check error:", domainCheckError);
+        return NextResponse.json(
+          { error: "Error checking domain availability" },
+          { status: 500 }
+        );
+      }
+
+      if (existingDistrict) {
+        return NextResponse.json(
+          { error: `Domain "${domain}" is already used by district "${existingDistrict.name}"` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate hex colors if provided
+    const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (primaryColor && !hexRegex.test(primaryColor)) {
+      return NextResponse.json(
+        { error: "Invalid primary color format. Must be a valid hex color (e.g., #FF0000)" },
+        { status: 400 }
+      );
+    }
+    if (secondaryColor && !hexRegex.test(secondaryColor)) {
+      return NextResponse.json(
+        { error: "Invalid secondary color format. Must be a valid hex color (e.g., #00FF00)" },
+        { status: 400 }
+      );
+    }
+
     // Step 1: Create the district
     const { data: district, error: districtError } = await supabase
       .from("districts")
@@ -90,6 +129,8 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         domain: domain?.trim() || null,
         poc_email: pocEmail.trim(),
+        primary_color: primaryColor || null,
+        secondary_color: secondaryColor || null,
         settings: {},
       })
       .select()

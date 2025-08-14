@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { usePathname } from 'next/navigation';
+import { isLikelyRealPageUnload, onNavigationStart } from '@/lib/navigation-detection';
 
 interface SessionTrackingOptions {
   trackPageViews?: boolean;
@@ -14,7 +15,7 @@ interface SessionTrackingOptions {
 const defaultOptions: SessionTrackingOptions = {
   trackPageViews: true,
   activityInterval: 30000, // 30 seconds
-  idleTimeout: 900000, // 15 minutes
+  idleTimeout: 1800000, // 30 minutes
   trackActions: true,
 };
 
@@ -205,8 +206,11 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
   // Main effect - setup and cleanup
   useEffect(() => {
     if (!isClient || !user || !profile) {
+      // Only end session, don't trigger signout API if user/profile don't exist
       if (sessionIdRef.current) {
-        endSession();
+        // Just clear the session tracking, don't call signout API
+        sessionIdRef.current = null;
+        isTrackingRef.current = false;
       }
       return;
     }
@@ -236,8 +240,13 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
     // Listen for page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Listen for beforeunload to sign out user
-    const handleBeforeUnload = () => {
+    // Listen for beforeunload - only sign out on actual browser/tab close
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // Only proceed if this appears to be a real page unload
+      if (!isLikelyRealPageUnload()) {
+        return;
+      }
+      
       // Use navigator.sendBeacon for reliable signout during page unload
       const signoutData = JSON.stringify({});
       
@@ -262,7 +271,33 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
       endSession();
     };
 
+    // More reliable detection for actual page unloads using pagehide
+    const handlePageHide = (event: PageTransitionEvent) => {
+      // pagehide fires on actual navigation away from page
+      // event.persisted indicates if page is being cached (back/forward navigation)
+      if (!event.persisted && isLikelyRealPageUnload()) {
+        // This is likely a real page unload, not navigation
+        const signoutData = JSON.stringify({});
+        
+        try {
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/auth/signout', signoutData);
+          }
+        } catch (error) {
+          console.warn('Error during pagehide signout:', error);
+        }
+        
+        endSession();
+      }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handlePageHide);
+    
+    // Set up navigation detection
+    const unsubscribeNavigation = onNavigationStart(() => {
+      // Navigation started, this helps our detection logic
+    });
 
     // Cleanup
     return () => {
@@ -280,6 +315,10 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
       });
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
+      
+      // Clean up navigation detection
+      unsubscribeNavigation();
 
       // End session
       endSession();

@@ -30,11 +30,23 @@ interface School {
   name: string;
 }
 
+interface DistrictBranding {
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+}
+
 interface UsersListProps {
   users: User[];
   schools: School[];
   currentUserRole: UserRole;
   districtName: string;
+  districtBranding: DistrictBranding;
+  schoolBranding?: {
+    primary_color?: string | null;
+    secondary_color?: string | null;
+    logo_url?: string | null;
+  };
 }
 
 const getRoleDisplayName = (role: UserRole): string => {
@@ -72,10 +84,18 @@ export default function UsersList({
   schools,
   currentUserRole,
   districtName,
+  districtBranding,
+  schoolBranding,
 }: UsersListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [schoolFilter, setSchoolFilter] = useState<string>("all");
+  
+  // School branding with district fallback
+  const schoolSecondaryColor = 
+    schoolBranding?.secondary_color || 
+    districtBranding.secondary_color || 
+    '#64748B';
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -118,7 +138,7 @@ export default function UsersList({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
               <Users className="w-4 h-4 text-gray-600" />
@@ -132,7 +152,7 @@ export default function UsersList({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <Users className="w-4 h-4 text-purple-600" />
@@ -148,7 +168,7 @@ export default function UsersList({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <Users className="w-4 h-4 text-blue-600" />
@@ -162,7 +182,7 @@ export default function UsersList({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <Users className="w-4 h-4 text-green-600" />
@@ -178,7 +198,7 @@ export default function UsersList({
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -236,7 +256,7 @@ export default function UsersList({
 
       {/* Users Table */}
       {filteredUsers.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
             {searchTerm || roleFilter !== "all" || schoolFilter !== "all"
@@ -259,7 +279,7 @@ export default function UsersList({
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">

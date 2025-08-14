@@ -66,6 +66,9 @@ interface SchoolDetailsProps {
   assignments: Assignment[];
   userStats: UserStats;
   districtName: string;
+  logo_url?: string | null;
+  primary_color?: string | null;
+  secondary_color?: string | null;
 }
 
 const getRoleDisplayName = (role: UserRole): string => {
@@ -104,10 +107,16 @@ export default function SchoolDetails({
   assignments,
   userStats,
   districtName,
+  logo_url,
+  primary_color,
+  secondary_color,
 }: SchoolDetailsProps) {
   const [activeTab, setActiveTab] = useState<
     "overview" | "users" | "teachers" | "assignments"
   >("overview");
+
+  // District branding
+  const districtSecondaryColor = secondary_color || '#0B2559';
 
   const tabs = [
     { id: "overview" as const, name: "Overview", icon: Building2 },
@@ -182,7 +191,10 @@ export default function SchoolDetails({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div 
+          className="bg-white rounded-lg shadow-sm border-2 p-6"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-gray-600" />
@@ -196,7 +208,10 @@ export default function SchoolDetails({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div 
+          className="bg-white rounded-lg shadow-sm border-2 p-6"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-blue-600" />
@@ -210,7 +225,10 @@ export default function SchoolDetails({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div 
+          className="bg-white rounded-lg shadow-sm border-2 p-6"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <GraduationCap className="w-5 h-5 text-green-600" />
@@ -224,7 +242,10 @@ export default function SchoolDetails({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div 
+          className="bg-white rounded-lg shadow-sm border-2 p-6"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-orange-600" />
@@ -240,7 +261,10 @@ export default function SchoolDetails({
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div 
+        className="bg-white rounded-lg shadow-sm border-2"
+        style={{ border: `2px solid ${districtSecondaryColor}` }}
+      >
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {tabs.map((tab) => {

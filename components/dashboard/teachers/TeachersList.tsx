@@ -39,6 +39,16 @@ interface TeachersListProps {
   currentUserRole: UserRole;
   currentUserSchool?: { id: string; name: string } | null;
   districtName: string;
+  districtBranding?: {
+    primary_color?: string | null;
+    secondary_color?: string | null;
+    logo_url?: string | null;
+  };
+  schoolBranding?: {
+    primary_color?: string | null;
+    secondary_color?: string | null;
+    logo_url?: string | null;
+  };
 }
 
 export default function TeachersList({
@@ -47,9 +57,17 @@ export default function TeachersList({
   currentUserRole,
   currentUserSchool,
   districtName,
+  districtBranding,
+  schoolBranding,
 }: TeachersListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [schoolFilter, setSchoolFilter] = useState<string>("all");
+
+  // School branding with district fallback
+  const schoolSecondaryColor = 
+    schoolBranding?.secondary_color || 
+    districtBranding?.secondary_color || 
+    "#64748B";
 
   const filteredTeachers = teachers.filter((teacher) => {
     const matchesSearch =
@@ -116,7 +134,7 @@ export default function TeachersList({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <GraduationCap className="w-4 h-4 text-green-600" />
@@ -132,7 +150,7 @@ export default function TeachersList({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <Building2 className="w-4 h-4 text-blue-600" />
@@ -148,7 +166,7 @@ export default function TeachersList({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
               <Users className="w-4 h-4 text-orange-600" />
@@ -162,7 +180,7 @@ export default function TeachersList({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <Calendar className="w-4 h-4 text-purple-600" />
@@ -180,7 +198,7 @@ export default function TeachersList({
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="bg-white rounded-lg shadow-sm p-4" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -222,7 +240,7 @@ export default function TeachersList({
 
       {/* Teachers List */}
       {filteredTeachers.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <GraduationCap className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
             {searchTerm || schoolFilter !== "all"
@@ -249,7 +267,7 @@ export default function TeachersList({
             )}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -359,7 +377,7 @@ export default function TeachersList({
 
       {/* Quick Stats Summary */}
       {teachers.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6" style={{ border: `2px solid ${schoolSecondaryColor}` }}>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Teaching Staff Overview
           </h2>

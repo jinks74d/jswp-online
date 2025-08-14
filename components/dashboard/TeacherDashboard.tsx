@@ -28,7 +28,14 @@ interface TeacherStats {
 
 interface TeacherDashboardProps {
   profile: UserProfile & {
-    districts?: { id: string; name: string; domain: string | null };
+    districts?: {
+      id: string;
+      name: string;
+      domain: string | null;
+      logo_url: string | null;
+      primary_color: string | null;
+      secondary_color: string | null;
+    };
     schools?: { id: string; name: string };
   };
 }
@@ -44,7 +51,9 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
   });
   const [loading, setLoading] = useState(true);
 
-  const [assignedStudents, setAssignedStudents] = useState<Record<string, any[]>>({});
+  const [assignedStudents, setAssignedStudents] = useState<
+    Record<string, any[]>
+  >({});
   const [availableStudents, setAvailableStudents] = useState<any[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [addingStudent, setAddingStudent] = useState(false);
@@ -52,11 +61,21 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
   const supabase = createClient();
 
   useEffect(() => {
-    fetchTeacherStats();
-    fetchAssignedStudents();
-  }, []);
+    if (profile.id) {
+      fetchTeacherStats();
+      fetchAssignedStudents();
+    } else {
+      console.error("No profile id found for teacher");
+      setLoading(false);
+    }
+  }, [profile.id]);
 
   const fetchAssignedStudents = async () => {
+    if (!profile.id) {
+      console.error("Cannot fetch assigned students: no profile id");
+      return;
+    }
+
     try {
       // First get class periods where this teacher is assigned
       const { data: teacherClassPeriods } = await supabase
@@ -69,12 +88,15 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         return;
       }
 
-      const classPeriodIds = teacherClassPeriods.map(tc => tc.class_period_id);
+      const classPeriodIds = teacherClassPeriods.map(
+        (tc: any) => tc.class_period_id
+      );
 
       // Get students enrolled in those classes
       const { data: studentsData } = await supabase
         .from("class_student_enrollments")
-        .select(`
+        .select(
+          `
           *,
           student:student_id(
             id,
@@ -94,24 +116,28 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
               )
             )
           )
-        `)
+        `
+        )
         .in("class_period_id", classPeriodIds)
         .order("created_at", { ascending: false })
         .limit(20);
 
       // Group students by class and sort
-      const groupedStudents = (studentsData || []).reduce((acc: any, enrollment: any) => {
-        const className = `${enrollment.class_period.classes.name} - Period ${enrollment.class_period.period}`;
-        if (!acc[className]) {
-          acc[className] = [];
-        }
-        acc[className].push({
-          ...enrollment,
-          className,
-          subject: enrollment.class_period.classes.subjects.name,
-        });
-        return acc;
-      }, {});
+      const groupedStudents = (studentsData || []).reduce(
+        (acc: any, enrollment: any) => {
+          const className = `${enrollment.class_period.classes.name} - Period ${enrollment.class_period.period}`;
+          if (!acc[className]) {
+            acc[className] = [];
+          }
+          acc[className].push({
+            ...enrollment,
+            className,
+            subject: enrollment.class_period.classes.subjects.name,
+          });
+          return acc;
+        },
+        {}
+      );
 
       // Keep grouped structure for display
       setAssignedStudents(groupedStudents);
@@ -123,8 +149,10 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
   const fetchAvailableStudents = async () => {
     try {
       // Get all students in the school who are not already enrolled in teacher's classes
-      const enrolledStudentIds = Object.values(assignedStudents).flat().map(s => s.student.id);
-      
+      const enrolledStudentIds = Object.values(assignedStudents)
+        .flat()
+        .map((s) => s.student.id);
+
       let query = supabase
         .from("user_profiles")
         .select("id, first_name, last_name, email")
@@ -149,11 +177,11 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
 
   const handleAddStudent = async () => {
     if (!selectedStudentId) return;
-    
+
     setAddingStudent(true);
     // TODO: Implement student assignment logic
     console.log("Adding student:", selectedStudentId);
-    
+
     // Reset selection
     setSelectedStudentId("");
     setAddingStudent(false);
@@ -166,11 +194,18 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
   }, [assignedStudents]);
 
   const fetchTeacherStats = async () => {
+    if (!profile.id) {
+      console.error("Cannot fetch teacher stats: no profile id");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Get classes assigned to this teacher
       const { data: teacherClasses, count: classesCount } = await supabase
         .from("class_teacher_assignments")
-        .select(`
+        .select(
+          `
           *,
           class_period:class_period_id(
             id,
@@ -184,13 +219,17 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
               )
             )
           )
-        `, { count: "exact" })
+        `,
+          { count: "exact" }
+        )
         .eq("teacher_id", profile.id);
 
       // Get student count from class enrollments
       let totalStudentsCount = 0;
       if (teacherClasses && teacherClasses.length > 0) {
-        const classPeriodIds = teacherClasses.map(tc => tc.class_period_id);
+        const classPeriodIds = teacherClasses.map(
+          (tc: any) => tc.class_period_id
+        );
         const { count: studentsCount } = await supabase
           .from("class_student_enrollments")
           .select("*", { count: "exact", head: true })
@@ -199,16 +238,17 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
       }
 
       // Get real assignments created by this teacher
-      const { data: recentAssignmentsData, count: assignmentsCount } = await supabase
-        .from("assignments")
-        .select("*", { count: "exact" })
-        .eq("teacher_id", profile.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+      const { data: recentAssignmentsData, count: assignmentsCount } =
+        await supabase
+          .from("assignments")
+          .select("*", { count: "exact" })
+          .eq("teacher_id", profile.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
 
       // Get actual submission counts for each assignment
       const assignmentsWithSubmissions = await Promise.all(
-        (recentAssignmentsData || []).map(async (assignment) => {
+        (recentAssignmentsData || []).map(async (assignment: any) => {
           const { count: submissionCount } = await supabase
             .from("student_progress")
             .select("*", { count: "exact", head: true })
@@ -230,13 +270,19 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         .from("student_progress")
         .select("*", { count: "exact", head: true })
         .eq("status", "completed")
-        .in("assignment_id", (recentAssignmentsData || []).map(a => a.id));
+        .in(
+          "assignment_id",
+          (recentAssignmentsData || []).map((a: any) => a.id)
+        );
 
       // Get upcoming assignments (assignments with future due dates)
       const upcomingAssignments = (recentAssignmentsData || [])
-        .filter(assignment => assignment.due_date && new Date(assignment.due_date) > new Date())
+        .filter(
+          (assignment: any) =>
+            assignment.due_date && new Date(assignment.due_date) > new Date()
+        )
         .slice(0, 3)
-        .map(assignment => ({
+        .map((assignment: any) => ({
           id: assignment.id,
           title: assignment.title,
           classes: { name: "General Assignment" }, // Since assignments don't have class info in current schema
@@ -293,6 +339,10 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
     },
   ];
 
+  // Get district secondary color for borders
+  const districtSecondaryColor =
+    profile.districts?.secondary_color || "#64748B";
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -343,7 +393,8 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
             <Link
               key={stat.name}
               href={stat.href}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+              style={{ border: `2px solid ${districtSecondaryColor}` }}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`${stat.color} rounded-lg p-3`}>
@@ -370,7 +421,10 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Assigned Students */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div
+          className="bg-white rounded-lg shadow-sm"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -419,37 +473,49 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
               </div>
             ) : (
               <div className="space-y-4">
-                {Object.keys(assignedStudents).sort().map((className) => (
-                  <div key={className} className="space-y-2">
-                    {/* Class Header */}
-                    <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
-                      <BookOpen className="w-4 h-4 text-blue-600" />
-                      <h4 className="text-sm font-medium text-gray-900">{className}</h4>
-                      <span className="text-xs text-gray-500">({assignedStudents[className]?.length || 0} students)</span>
-                    </div>
-                    
-                    {/* Students in this class */}
-                    <div className="space-y-1 ml-6">
-                      {assignedStudents[className].map((assignment: any) => (
-                        <div
-                          key={assignment.id}
-                          className="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded transition-colors"
-                        >
-                          <Link
-                            href={`/dashboard/students/${assignment.student.id}`}
-                            className="text-sm text-gray-900 hover:text-blue-600 transition-colors"
+                {Object.keys(assignedStudents)
+                  .sort()
+                  .map((className) => (
+                    <div key={className} className="space-y-2">
+                      {/* Class Header */}
+                      <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
+                        <BookOpen className="w-4 h-4 text-blue-600" />
+                        <h4 className="text-sm font-medium text-gray-900">
+                          {className}
+                        </h4>
+                        <span className="text-xs text-gray-500">
+                          ({assignedStudents[className]?.length || 0} students)
+                        </span>
+                      </div>
+
+                      {/* Students in this class */}
+                      <div className="space-y-1 ml-6">
+                        {assignedStudents[className].map((assignment: any) => (
+                          <div
+                            key={assignment.id}
+                            className="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded transition-colors"
                           >
-                            {assignment.student.first_name} {assignment.student.last_name}
-                          </Link>
-                          <div className="text-xs text-gray-400">
-                            {new Date(assignment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            <Link
+                              href={`/dashboard/students/${assignment.student.id}`}
+                              className="text-sm text-gray-900 hover:text-blue-600 transition-colors"
+                            >
+                              {assignment.student.first_name}{" "}
+                              {assignment.student.last_name}
+                            </Link>
+                            <div className="text-xs text-gray-400">
+                              {new Date(
+                                assignment.created_at
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-                
+                  ))}
+
                 {/* Show more students indicator */}
                 <div className="text-center pt-2 border-t border-gray-100">
                   <Link
@@ -465,7 +531,10 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         </div>
 
         {/* Recent Assignments */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div
+          className="bg-white rounded-lg shadow-sm"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -541,7 +610,10 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
         </div>
 
         {/* Upcoming Due Dates */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div
+          className="bg-white rounded-lg shadow-sm"
+          style={{ border: `2px solid ${districtSecondaryColor}` }}
+        >
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -640,7 +712,10 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div
+        className="bg-white rounded-lg shadow-sm p-6"
+        style={{ border: `2px solid ${districtSecondaryColor}` }}
+      >
         <h2 className="text-lg font-semibold text-gray-900 mb-6">
           Quick Actions
         </h2>
@@ -706,7 +781,10 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
       </div>
 
       {/* Today's Schedule */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div
+        className="bg-white rounded-lg shadow-sm p-6"
+        style={{ border: `2px solid ${districtSecondaryColor}` }}
+      >
         <h2 className="text-lg font-semibold text-gray-900 mb-6">
           Today's Schedule
         </h2>
@@ -807,7 +885,6 @@ export default function TeacherDashboard({ profile }: TeacherDashboardProps) {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

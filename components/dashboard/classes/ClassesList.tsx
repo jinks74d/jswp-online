@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { UserProfile } from "@/lib/supabase";
+import BulkClassUpload from "./BulkClassUpload";
 
 interface ClassPeriod {
   id: string;
@@ -31,17 +32,49 @@ interface ClassPeriod {
   };
 }
 
+interface DistrictBranding {
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+}
+
 interface ClassesListProps {
   classPeriods: ClassPeriod[];
   profile: UserProfile & {
-    districts?: { id: string; name: string; domain: string | null };
-    schools?: { id: string; name: string };
+    districts?: {
+      id: string;
+      name: string;
+      domain: string | null;
+      logo_url: string | null;
+      primary_color: string | null;
+      secondary_color: string | null;
+    };
+    schools?: {
+      id: string;
+      name: string;
+      primary_color?: string | null;
+      secondary_color?: string | null;
+      logo_url?: string | null;
+    };
   };
+  districtBranding: DistrictBranding;
+  onRefresh?: () => void;
 }
 
-export default function ClassesList({ classPeriods, profile }: ClassesListProps) {
+export default function ClassesList({
+  classPeriods,
+  profile,
+  districtBranding,
+  onRefresh,
+}: ClassesListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
+
+  // School branding with district fallback
+  const schoolSecondaryColor =
+    profile.schools?.secondary_color ||
+    districtBranding.secondary_color ||
+    "#64748B";
 
   // Get unique subjects for filtering
   const subjects = Array.from(
@@ -50,17 +83,26 @@ export default function ClassesList({ classPeriods, profile }: ClassesListProps)
 
   const filteredClassPeriods = classPeriods.filter((classPeriod) => {
     const matchesSearch =
-      classPeriod.classes.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      classPeriod.classes.subjects.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      classPeriod.classes.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      classPeriod.classes.subjects.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       classPeriod.period.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesSubject =
-      subjectFilter === "all" || classPeriod.classes.subjects.name === subjectFilter;
+      subjectFilter === "all" ||
+      classPeriod.classes.subjects.name === subjectFilter;
 
     return matchesSearch && matchesSubject;
   });
 
-  const canManageClasses = ["school_admin", "district_admin", "teacher"].includes(profile.role);
+  const canManageClasses = [
+    "school_admin",
+    "district_admin",
+    "teacher",
+  ].includes(profile.role);
 
   // Group class periods by subject for better organization
   const groupedBySubject = filteredClassPeriods.reduce((acc, classPeriod) => {
@@ -76,31 +118,44 @@ export default function ClassesList({ classPeriods, profile }: ClassesListProps)
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div
+          className="bg-white rounded-lg shadow-sm p-4"
+          style={{ border: `2px solid ${schoolSecondaryColor}` }}
+        >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-blue-600" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Total Classes</p>
-              <p className="text-xl font-bold text-gray-900">{classPeriods.length}</p>
+              <p className="text-xl font-bold text-gray-900">
+                {classPeriods.length}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div
+          className="bg-white rounded-lg shadow-sm p-4"
+          style={{ border: `2px solid ${schoolSecondaryColor}` }}
+        >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <Users className="w-4 h-4 text-green-600" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Subjects</p>
-              <p className="text-xl font-bold text-gray-900">{subjects.length}</p>
+              <p className="text-xl font-bold text-gray-900">
+                {subjects.length}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div
+          className="bg-white rounded-lg shadow-sm p-4"
+          style={{ border: `2px solid ${schoolSecondaryColor}` }}
+        >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <Clock className="w-4 h-4 text-purple-600" />
@@ -108,7 +163,10 @@ export default function ClassesList({ classPeriods, profile }: ClassesListProps)
             <div>
               <p className="text-sm font-medium text-gray-600">Periods</p>
               <p className="text-xl font-bold text-gray-900">
-                {Array.from(new Set(classPeriods.map((cp) => cp.period))).length}
+                {
+                  Array.from(new Set(classPeriods.map((cp) => cp.period)))
+                    .length
+                }
               </p>
             </div>
           </div>
@@ -124,18 +182,30 @@ export default function ClassesList({ classPeriods, profile }: ClassesListProps)
           </p>
         </div>
         {canManageClasses && (
-          <Link
-            href="/dashboard/classes/create"
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            Create Class
-          </Link>
+          <div className="flex items-center gap-3">
+            {profile.school_id && (
+              <BulkClassUpload
+                schoolId={profile.school_id}
+                schoolName={profile.schools?.name || "School"}
+                onUploadComplete={onRefresh}
+              />
+            )}
+            <Link
+              href="/dashboard/classes/create"
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              Create Class
+            </Link>
+          </div>
         )}
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div
+        className="bg-white rounded-lg shadow-sm p-4"
+        style={{ border: `2px solid ${schoolSecondaryColor}` }}
+      >
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -171,7 +241,10 @@ export default function ClassesList({ classPeriods, profile }: ClassesListProps)
 
       {/* Classes List */}
       {filteredClassPeriods.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <div
+          className="bg-white rounded-lg shadow-sm p-12 text-center"
+          style={{ border: `2px solid ${schoolSecondaryColor}` }}
+        >
           <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
             {searchTerm || subjectFilter !== "all"
@@ -195,107 +268,88 @@ export default function ClassesList({ classPeriods, profile }: ClassesListProps)
         </div>
       ) : (
         <div className="space-y-6">
-          {Object.entries(groupedBySubject).map(([subjectName, subjectClassPeriods]) => (
-            <div key={subjectName} className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h3 className="text-lg font-semibold text-gray-900">{subjectName}</h3>
-                <p className="text-sm text-gray-600">
-                  {subjectClassPeriods.length} class period{subjectClassPeriods.length !== 1 ? 's' : ''}
-                </p>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {subjectClassPeriods.map((classPeriod) => (
-                    <div
-                      key={classPeriod.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <BookOpen className="w-5 h-5 text-blue-600" />
+          {Object.entries(groupedBySubject).map(
+            ([subjectName, subjectClassPeriods]) => (
+              <div
+                key={subjectName}
+                className="bg-white rounded-lg shadow-sm"
+                style={{ border: `2px solid ${schoolSecondaryColor}` }}
+              >
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {subjectName}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {subjectClassPeriods.length} class period
+                    {subjectClassPeriods.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {subjectClassPeriods.map((classPeriod) => (
+                      <div
+                        key={classPeriod.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <BookOpen className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-900">
+                                {classPeriod.classes.name}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                Period {classPeriod.period}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-medium text-gray-900">
-                              {classPeriod.classes.name}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              Period {classPeriod.period}
-                            </p>
-                          </div>
+                          {canManageClasses && (
+                            <div className="flex items-center gap-1">
+                              <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors">
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button className="p-1 text-gray-400 hover:text-red-600 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        {canManageClasses && (
-                          <div className="flex items-center gap-1">
-                            <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors">
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button className="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          <span>Created {new Date(classPeriod.created_at).toLocaleDateString()}</span>
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            <span>
+                              Created{" "}
+                              {new Date(
+                                classPeriod.created_at
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            <span>
+                              {classPeriod.studentCount || 0} students enrolled
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4" />
-                          <span>{classPeriod.studentCount || 0} students enrolled</span>
-                        </div>
-                      </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-200">
-                        <Link
-                          href={`/dashboard/classes/${classPeriod.id}`}
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                        >
-                          View Details →
-                        </Link>
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                          <Link
+                            href={`/dashboard/classes/${classPeriod.id}`}
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          >
+                            View Details →
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Coming Soon Notice */}
-      {classPeriods.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-blue-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-blue-900">
-              Class Management Features Coming Soon
-            </h3>
-          </div>
-          <p className="text-blue-800 mb-4">
-            Advanced class management tools are in development! You can create the basic structure now.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-700">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              <span>Student enrollment and management</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              <span>Schedule and timetable management</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <span>Attendance tracking</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              <span>Assignment and grade management</span>
-            </div>
-          </div>
+            )
+          )}
         </div>
       )}
     </div>

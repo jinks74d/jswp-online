@@ -22,16 +22,27 @@ interface School {
   user_count: number;
 }
 
+interface DistrictBranding {
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+}
+
 interface SchoolsListProps {
   schools: School[];
   districtName: string;
+  districtBranding: DistrictBranding;
 }
 
 export default function SchoolsList({
   schools = [],
   districtName,
+  districtBranding,
 }: SchoolsListProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // District branding
+  const districtSecondaryColor = districtBranding.secondary_color || '#64748B';
 
   const filteredSchools = schools.filter(
     (school) =>
@@ -76,7 +87,7 @@ export default function SchoolsList({
 
       {/* Schools Grid/List */}
       {filteredSchools.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
             {searchTerm ? "No schools found" : "No schools yet"}
@@ -101,7 +112,8 @@ export default function SchoolsList({
           {filteredSchools.map((school) => (
             <div
               key={school.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+              style={{ border: `2px solid ${districtSecondaryColor}` }}
             >
               {/* School Header */}
               <div className="flex items-start justify-between mb-4">
@@ -163,7 +175,7 @@ export default function SchoolsList({
 
       {/* Summary Stats */}
       {schools.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             District Summary
           </h3>

@@ -1,8 +1,7 @@
 // app/super-admin/page.tsx
-"use client";
-
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { createServerSupabaseClient } from "@/lib/supabase";
 import { Building2, Users, GraduationCap, FileText, Plus } from "lucide-react";
 import Link from "next/link";
 
@@ -13,72 +12,74 @@ interface Stats {
   totalAssignments: number;
 }
 
-export default function SuperAdminDashboard() {
-  const [stats, setStats] = useState<Stats>({
-    totalDistricts: 0,
-    totalUsers: 0,
-    totalSchools: 0,
-    totalAssignments: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [recentDistricts, setRecentDistricts] = useState<any[]>([]);
+// Server-side data fetching with parallel queries
+async function fetchDashboardData() {
+  const cookieStore = await cookies();
+  const supabase = await createServerSupabaseClient(cookieStore);
 
-  const supabase = createClient();
-
-  useEffect(() => {
-    fetchStats();
-    fetchRecentDistricts();
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      // Get district count
-      const { count: districtCount } = await supabase
-        .from("districts")
-        .select("*", { count: "exact", head: true });
-
-      // Get user count
-      const { count: userCount } = await supabase
-        .from("user_profiles")
-        .select("*", { count: "exact", head: true });
-
-      // Get school count
-      const { count: schoolCount } = await supabase
-        .from("schools")
-        .select("*", { count: "exact", head: true });
-
-      // Get assignment count
-      const { count: assignmentCount } = await supabase
-        .from("assignments")
-        .select("*", { count: "exact", head: true });
-
-      setStats({
-        totalDistricts: districtCount || 0,
-        totalUsers: userCount || 0,
-        totalSchools: schoolCount || 0,
-        totalAssignments: assignmentCount || 0,
-      });
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchRecentDistricts = async () => {
-    try {
-      const { data, error } = await supabase
+  try {
+    // Execute all queries in parallel for optimal performance
+    const [
+      { count: districtCount },
+      { count: userCount },
+      { count: schoolCount },
+      { count: assignmentCount },
+      { data: recentDistricts }
+    ] = await Promise.all([
+      supabase.from("districts").select("*", { count: "exact", head: true }),
+      supabase.from("user_profiles").select("*", { count: "exact", head: true }),
+      supabase.from("schools").select("*", { count: "exact", head: true }),
+      supabase.from("assignments").select("*", { count: "exact", head: true }),
+      supabase
         .from("districts")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(5)
+    ]);
 
-      if (error) throw error;
-      setRecentDistricts(data || []);
-    } catch (error) {
-      console.error("Error fetching recent districts:", error);
-    }
-  };
+    const stats: Stats = {
+      totalDistricts: districtCount || 0,
+      totalUsers: userCount || 0,
+      totalSchools: schoolCount || 0,
+      totalAssignments: assignmentCount || 0,
+    };
+
+    return { stats, recentDistricts: recentDistricts || [] };
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    return {
+      stats: { totalDistricts: 0, totalUsers: 0, totalSchools: 0, totalAssignments: 0 },
+      recentDistricts: []
+    };
+  }
+}
+
+export default async function SuperAdminDashboard() {
+  const cookieStore = await cookies();
+  const supabase = await createServerSupabaseClient(cookieStore);
+
+  // Verify authentication and permissions
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    redirect("/");
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("user_profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile || profile.role !== "super_admin") {
+    redirect("/");
+  }
+
+  // Fetch dashboard data
+  const { stats, recentDistricts } = await fetchDashboardData();
 
   const statCards = [
     {
@@ -111,17 +112,6 @@ export default function SuperAdminDashboard() {
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-gray-600">Loading dashboard...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -151,7 +141,7 @@ export default function SuperAdminDashboard() {
             <Link
               key={stat.name}
               href={stat.href}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow-sm border-2 border-[#0B2559] p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -172,7 +162,7 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Recent Districts */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border-2 border-[#0B2559]">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -209,7 +199,7 @@ export default function SuperAdminDashboard() {
               {recentDistricts.map((district) => (
                 <div
                   key={district.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                  className="flex items-center justify-between p-4 border-2 border-[#0B2559] rounded-lg hover:bg-gray-50"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -241,14 +231,14 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border-2 border-[#0B2559] p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
             href="/super-admin/districts/create"
-            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-3 p-4 border-2 border-[#0B2559] rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <Building2 className="w-5 h-5 text-blue-600" />
@@ -263,7 +253,7 @@ export default function SuperAdminDashboard() {
 
           <Link
             href="/super-admin/users"
-            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-3 p-4 border-2 border-[#0B2559] rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-green-600" />
@@ -276,7 +266,7 @@ export default function SuperAdminDashboard() {
 
           <Link
             href="/super-admin/settings"
-            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-3 p-4 border-2 border-[#0B2559] rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
               <Building2 className="w-5 h-5 text-gray-600" />

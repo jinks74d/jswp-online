@@ -25,7 +25,7 @@ interface DistrictStats {
 
 interface DistrictAdminDashboardProps {
   profile: UserProfile & {
-    districts?: { id: string; name: string; domain: string | null };
+    districts?: { id: string; name: string; domain: string | null; logo_url: string | null; primary_color: string | null; secondary_color: string | null };
   };
 }
 
@@ -45,10 +45,21 @@ export default function DistrictAdminDashboard({
   const supabase = createClient();
 
   useEffect(() => {
-    fetchDistrictStats();
-  }, []);
+    if (profile.district_id) {
+      fetchDistrictStats();
+    } else {
+      console.error('No district_id found for user profile');
+      setLoading(false);
+    }
+  }, [profile.district_id]);
 
   const fetchDistrictStats = async () => {
+    if (!profile.district_id) {
+      console.error('Cannot fetch district stats: no district_id');
+      setLoading(false);
+      return;
+    }
+    
     try {
       // Get schools count
       const { count: schoolsCount } = await supabase
@@ -143,6 +154,9 @@ export default function DistrictAdminDashboard({
     },
   ];
 
+  // Get district secondary color for borders
+  const districtSecondaryColor = profile.districts?.secondary_color || '#64748B';
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -157,32 +171,14 @@ export default function DistrictAdminDashboard({
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            District Dashboard
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Welcome back, {profile.first_name}! Here&apos;s what&apos;s
-            happening in {profile.districts?.name || "your district"}.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard/users/invite"
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            Invite Users
-          </Link>
-          <Link
-            href="/dashboard/schools/create"
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            <Building2 className="w-5 h-5" />
-            Add School
-          </Link>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          District Dashboard
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Welcome back, {profile.first_name}! Here&apos;s what&apos;s
+          happening in {profile.districts?.name || "your district"}.
+        </p>
       </div>
 
       {/* Stats Grid */}
@@ -193,7 +189,8 @@ export default function DistrictAdminDashboard({
             <Link
               key={stat.name}
               href={stat.href}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+              style={{ border: `2px solid ${districtSecondaryColor}` }}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`${stat.color} rounded-lg p-3`}>
@@ -218,7 +215,7 @@ export default function DistrictAdminDashboard({
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Schools */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -283,7 +280,7 @@ export default function DistrictAdminDashboard({
         </div>
 
         {/* Recent Users */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -366,7 +363,7 @@ export default function DistrictAdminDashboard({
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm p-6" style={{ border: `2px solid ${districtSecondaryColor}` }}>
         <h2 className="text-lg font-semibold text-gray-900 mb-6">
           Quick Actions
         </h2>

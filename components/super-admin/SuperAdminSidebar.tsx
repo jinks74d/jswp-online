@@ -71,14 +71,15 @@ export default function SuperAdminSidebar({ profile }: SuperAdminSidebarProps) {
   ];
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
+    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-sidebar">
       {/* Logo */}
       <div className="flex h-16 items-center justify-center border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-bold text-gray-900">EduAdmin</span>
+        <div className="flex items-center justify-center">
+          <img 
+            src="/assets/jswp-logo.svg" 
+            alt="JSWP Online" 
+            className="w-full h-full max-w-none max-h-12"
+          />
         </div>
       </div>
 
