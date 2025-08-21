@@ -6,63 +6,61 @@ import SchoolAdminDashboard from "@/components/dashboard/SchoolAdminDashboard";
 import TeacherDashboard from "@/components/dashboard/TeacherDashboard";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
 import { ClientDashboardPage } from "@/components/dashboard/ClientDashboardPage";
+import { Suspense } from "react";
+
+// PERFORMANCE: Use dynamic rendering with caching for static parts
+export const dynamic = "force-dynamic";
+export const revalidate = 0; // No caching for dashboard to ensure fresh data
 
 export default async function DashboardPage() {
   let user = null;
   let profile = null;
 
+  // PERFORMANCE: Optimized server-side auth with faster timeouts and better error handling
   try {
     const cookieStore = await cookies();
     const supabase = await createServerSupabaseClient(cookieStore);
 
-    // Get current user profile with timeout
-    const userResult = await Promise.race([
-      supabase.auth.getUser(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('User fetch timeout')), 2000)
-      )
-    ]);
+    // PERFORMANCE: Reduced timeout for faster failure detection
+    const authPromise = supabase.auth.getUser();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Auth timeout")), 1500) // Reduced from 2000ms
+    );
 
+    const userResult = await Promise.race([authPromise, timeoutPromise]);
     const { data: userData, error: userError } = userResult as any;
-    
+
     if (userError || !userData?.user) {
-      console.log('Dashboard Page: No user found, using client-side component');
-      user = null;
-    } else {
-      user = userData.user;
+      // Fail fast and use client-side component
+      return <ClientDashboardPage />;
     }
 
-    if (user) {
-      const profileResult = await Promise.race([
-        supabase
-          .from("user_profiles")
-          .select(
-            `
-            *,
-            districts:district_id(id, name, domain, logo_url, primary_color, secondary_color),
-            schools:school_id(id, name)
-          `
-          )
-          .eq("id", user.id)
-          .single(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Profile fetch timeout')), 2000)
-        )
-      ]);
+    user = userData.user;
 
-      const { data: profileData, error: profileError } = profileResult as any;
-      
-      if (profileError || !profileData) {
-        console.log('Dashboard Page: No profile found, using client-side component');
-        profile = null;
-      } else {
-        profile = profileData;
-      }
+    // PERFORMANCE: Optimized profile query with only necessary fields
+    const profilePromise = supabase
+      .from("user_profiles")
+      .select("id, role, district_id, school_id, first_name, last_name, email, districts:district_id(id, name, domain, logo_url, primary_color, secondary_color), schools:school_id(id, name)")
+      .eq("id", user.id)
+      .maybeSingle(); // Use maybeSingle to avoid errors
+
+    const profileTimeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Profile timeout")), 1500) // Reduced from 2000ms
+    );
+
+    const profileResult = await Promise.race([profilePromise, profileTimeoutPromise]);
+    const { data: profileData, error: profileError } = profileResult as any;
+
+    if (profileError || !profileData) {
+      // Fail fast and use client-side component
+      return <ClientDashboardPage />;
     }
+
+    profile = profileData;
   } catch (error) {
-    console.error('Dashboard Page: Error during auth check:', error);
-    user = null;
-    profile = null;
+    console.warn("Dashboard Page: Server auth failed, using client component");
+    // Always fallback to client-side component on any error
+    return <ClientDashboardPage />;
   }
 
   // If server-side auth failed, use client-side component

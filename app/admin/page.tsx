@@ -6,6 +6,12 @@ import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Shield, Eye, EyeOff, AlertCircle, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { RedirectHandler } from "@/lib/redirect-handler";
+import {
+  LoadingState,
+  RedirectingState,
+  RoleMismatchState,
+} from "@/components/ui/LoadingStates";
 import Link from "next/link";
 
 export default function SuperAdminLoginPage() {
@@ -14,24 +20,7 @@ export default function SuperAdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hasRedirected = useRef(false);
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
-
-  // Check if we've already attempted a redirect in this session
-  const hasAttemptedRedirect = useRef(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const redirectAttempted = sessionStorage.getItem(
-        "jswp-admin-redirect-attempted"
-      );
-      if (redirectAttempted === "true") {
-        hasAttemptedRedirect.current = true;
-        hasRedirected.current = true;
-      }
-    }
-  }, []);
 
   console.log(
     "SuperAdminLoginPage: Component rendered at",
@@ -56,114 +45,65 @@ export default function SuperAdminLoginPage() {
     }
   }, []);
 
-  // Handle redirects for already authenticated users visiting the admin login page
+  // Simplified redirect handling using centralized logic
   useEffect(() => {
-    console.log("SuperAdminLogin: Redirect check:", {
-      authLoading,
-      hasUser: !!user,
-      hasProfile: !!profile,
-      isLoading: loading,
-      hasRedirected: hasRedirected.current,
-      hasAttemptedRedirect: hasAttemptedRedirect.current,
-      userEmail: user?.email,
-      profileRole: profile?.role,
+    const redirectResult = RedirectHandler.handleAuthenticatedRedirect({
+      user,
+      profile,
+      loading: authLoading || loading,
+      currentPath: "/admin",
     });
 
-    // Only redirect if auth is fully loaded, we have both user and profile, not currently logging in, and haven't redirected yet
-    if (
-      !authLoading &&
-      user &&
-      profile &&
-      !loading &&
-      !hasRedirected.current &&
-      !hasAttemptedRedirect.current
-    ) {
-      hasRedirected.current = true;
-      hasAttemptedRedirect.current = true;
-
-      // Set sessionStorage flag to prevent future redirect attempts
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("jswp-admin-redirect-attempted", "true");
-      }
-
-      console.log(
-        "SuperAdminLogin: Authenticated user detected, redirecting...",
-        {
-          userId: user.id,
-          role: profile.role,
-          email: profile.email,
-        }
+    if (redirectResult.shouldRedirect && redirectResult.targetPath) {
+      RedirectHandler.performRedirect(
+        redirectResult.targetPath,
+        redirectResult.reason
       );
-
-      // Redirect based on role
-      if (profile.role === "super_admin") {
-        console.log(
-          "SuperAdminLogin: Super admin detected, redirecting to /super-admin"
-        );
-        window.location.href = "/super-admin";
-      } else {
-        console.log(
-          "SuperAdminLogin: Non-super admin detected, redirecting to /dashboard"
-        );
-        window.location.href = "/dashboard";
-      }
     }
   }, [user, profile, authLoading, loading]);
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (redirectTimeoutRef.current) {
-        clearTimeout(redirectTimeoutRef.current);
-      }
-    };
-  }, []);
-
   // Show loading state while auth is being determined
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center">
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-700 font-medium">
-                Checking authentication...
-              </span>
-            </div>
-            <p className="text-sm text-gray-500 mt-2">
-              Please wait while we verify your session
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingState type="auth" />;
   }
 
-  // Show redirecting state if we have user and profile
-  if (user && profile && !hasRedirected.current) {
-    const targetPath =
-      profile.role === "super_admin" ? "/super-admin" : "/dashboard";
+  // Handle role mismatch and redirecting states
+  if (user && profile) {
+    const roleMismatchMessage = RedirectHandler.getRoleMismatchMessage(
+      profile,
+      "/admin"
+    );
+
+    if (roleMismatchMessage) {
+      return (
+        <RoleMismatchState
+          message={roleMismatchMessage}
+          userRole={profile.role}
+          onRedirect={() =>
+            RedirectHandler.performRedirect(
+              "/dashboard",
+              "role_mismatch_redirect"
+            )
+          }
+          onSignOut={async () => {
+            if (supabaseRef.current) {
+              await supabaseRef.current.auth.signOut();
+              window.location.reload();
+            }
+          }}
+        />
+      );
+    }
+
+    // Show redirecting state
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center">
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-700 font-medium">
-                Redirecting to{" "}
-                {profile.role === "super_admin"
-                  ? "admin dashboard"
-                  : "user dashboard"}
-                ...
-              </span>
-            </div>
-            <p className="text-sm text-gray-500 mt-2">
-              Welcome back, {profile.first_name || profile.email}!
-            </p>
-          </div>
-        </div>
-      </div>
+      <RedirectingState
+        userType={profile.role === "super_admin" ? "super_admin" : "regular"}
+        userName={profile.first_name || profile.email}
+        targetPath={
+          profile.role === "super_admin" ? "/super-admin" : "/dashboard"
+        }
+      />
     );
   }
 
@@ -172,12 +112,8 @@ export default function SuperAdminLoginPage() {
     setLoading(true);
     setError("");
 
-    // Clear any previous redirect attempts
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem("jswp-admin-redirect-attempted");
-    }
-    hasAttemptedRedirect.current = false;
-    hasRedirected.current = false;
+    // Reset redirect state for fresh login
+    RedirectHandler.resetRedirectState();
 
     if (!supabaseRef.current) {
       setError("Authentication service not available");

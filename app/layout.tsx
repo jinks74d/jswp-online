@@ -23,7 +23,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           {children}
-          <AuthDebug enabled={process.env.NODE_ENV === 'development'} />
+          <AuthDebug enabled={process.env.NODE_ENV === "development"} />
           <AuthFlowMonitor />
         </AuthProvider>
       </body>

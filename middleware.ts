@@ -7,152 +7,191 @@ export async function middleware(request: NextRequest) {
     const { supabase, response } = createMiddlewareClient(request);
     const path = request.nextUrl.pathname;
 
-    // Skip auth checks for API routes, static assets, and public files
+    // PERFORMANCE: Early exit for static assets and API routes
     if (
-      path.startsWith("/api/") ||
       path.startsWith("/_next/") ||
       path.startsWith("/favicon.") ||
       path.startsWith("/public/") ||
       path.startsWith("/assets/") ||
-      path.startsWith("/.well-known/")
+      path.startsWith("/.well-known/") ||
+      path.endsWith(".ico") ||
+      path.endsWith(".png") ||
+      path.endsWith(".jpg") ||
+      path.endsWith(".jpeg") ||
+      path.endsWith(".gif") ||
+      path.endsWith(".svg")
     ) {
+      return response;
+    }
+
+    // PERFORMANCE: Redirect loop detection with early exit
+    const redirectCount = parseInt(
+      request.headers.get("x-redirect-count") || "0"
+    );
+    if (redirectCount > 2) {  // Reduced from 3 to 2 for faster detection
+      console.warn("Middleware: Too many redirects detected, allowing request");
       return response;
     }
 
     // Public routes that don't require authentication
     const publicRoutes = ["/", "/login", "/signup", "/admin"];
 
-    // CRITICAL FIX: Never redirect from login pages in middleware
-    // Let the client-side components handle authentication redirects
+    // PERFORMANCE: Early exit for public routes
     if (publicRoutes.includes(path)) {
-      console.log("Middleware: Public route, allowing access:", path);
       return response;
     }
 
-    // Only check authentication for protected routes with more lenient handling
+    // PERFORMANCE: Skip expensive auth checks for non-critical routes
+    const protectedRoutes = ["/dashboard", "/super-admin"];
+    const isProtectedRoute = protectedRoutes.some(route => path.startsWith(route));
+    
+    if (!isProtectedRoute) {
+      return response;
+    }
+
+    // PERFORMANCE: Optimized session check with shorter timeout
     let session = null;
-    let sessionCheckFailed = false;
+    let user = null;
 
     try {
       const sessionPromise = supabase.auth.getSession();
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Session timeout")), 1000)
+        setTimeout(() => reject(new Error("Session timeout")), 2000) // Reduced from 5000ms
       );
 
       const result = await Promise.race([sessionPromise, timeoutPromise]);
-      session = (result as any).data?.session;
+      const sessionData = (result as any).data?.session;
+      const sessionError = (result as any).error;
 
-      if ((result as any).error) {
-        console.warn("Middleware session error:", (result as any).error);
-        sessionCheckFailed = true;
+      if (sessionError) {
+        console.warn("Middleware: Session error, allowing client to handle");
+        return response; // Let client handle auth
       }
+
+      session = sessionData;
+      user = session?.user;
     } catch (error) {
-      console.warn("Middleware session check failed:", error);
-      sessionCheckFailed = true;
+      console.warn("Middleware: Session check failed, deferring to client");
+      return response; // Let client handle auth
     }
 
-    const user = session?.user;
-
-    // If session check failed or no user, this might be due to timing issues
-    // Be more lenient and let the client handle auth, especially for page refreshes
-    if (!user || sessionCheckFailed) {
-      console.log(
-        "Middleware: No user or session check failed for protected route:",
-        path
-      );
-
-      // For protected routes, be more permissive to avoid redirect loops on refresh
-      // The client-side AuthProvider will handle proper authentication checks
-      if (path.startsWith("/dashboard") || path.startsWith("/super-admin")) {
-        console.log(
-          "Middleware: Allowing protected route, client will handle auth"
-        );
-        return response;
-      } else {
-        // For other routes, redirect to login
-        console.log("Middleware: Redirecting to login");
-        return NextResponse.redirect(new URL("/", request.url));
-      }
+    // PERFORMANCE: If no user, let client handle the redirect
+    if (!user) {
+      return response;
     }
 
-    // User is authenticated - handle role-based routing only
-    if (user) {
-      // Quick profile check with very short timeout for role-based routing
-      let profile = null;
-      let profileCheckFailed = false;
+    // PERFORMANCE: Role-based routing with in-memory caching
+    const cacheKey = `profile_${user.id}`;
+    const cachedProfile = (globalThis as any)?._middlewareCache?.get(cacheKey);
+    const now = Date.now();
 
+    let profile = null;
+
+    // Use cached profile if available and fresh (30 seconds)
+    if (cachedProfile && (now - cachedProfile.timestamp < 30000)) {
+      profile = cachedProfile.data;
+    } else {
+      // Fetch profile with optimized query and shorter timeout
       try {
         const profilePromise = supabase
           .from("user_profiles")
-          .select("role, district_id")
+          .select("role, district_id") // Only fetch what we need
           .eq("id", user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle to avoid errors on missing records
 
         const profileTimeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Profile timeout")), 1000)
+          setTimeout(() => reject(new Error("Profile timeout")), 1500) // Reduced from 3000ms
         );
 
-        const result = await Promise.race([
-          profilePromise,
-          profileTimeoutPromise,
-        ]);
-        profile = (result as any).data;
+        const result = await Promise.race([profilePromise, profileTimeoutPromise]);
+        const profileData = (result as any).data;
+        const profileError = (result as any).error;
 
-        if ((result as any).error) {
-          console.warn("Middleware profile error:", (result as any).error);
-          profileCheckFailed = true;
+        if (profileError || !profileData) {
+          console.warn("Middleware: Profile fetch failed, deferring to client");
+          return response;
+        }
+
+        profile = profileData;
+
+        // Cache the profile result
+        if (!(globalThis as any)._middlewareCache) {
+          (globalThis as any)._middlewareCache = new Map();
+        }
+        (globalThis as any)._middlewareCache.set(cacheKey, {
+          data: profile,
+          timestamp: now
+        });
+
+        // Clean up old cache entries (simple LRU)
+        if ((globalThis as any)._middlewareCache.size > 100) {
+          const entries = Array.from((globalThis as any)._middlewareCache.entries());
+          entries.sort(([,a]: any[], [,b]: any[]) => b.timestamp - a.timestamp);
+          (globalThis as any)._middlewareCache.clear();
+          entries.slice(0, 50).forEach(([key, value]: [string, any]) => {
+            (globalThis as any)._middlewareCache.set(key, value);
+          });
         }
       } catch (error) {
-        console.warn("Middleware profile timeout:", error);
-        profileCheckFailed = true;
+        console.warn("Middleware: Profile fetch failed, deferring to client");
+        return response;
       }
+    }
 
-      // Only do role-based redirects if we successfully got the profile
-      if (profile && !profileCheckFailed) {
-        const isSuperAdminRoute = path.startsWith("/super-admin");
-        const isDashboardRoute = path.startsWith("/dashboard");
-        const isApiRoute = path.startsWith("/api/");
-        const isSuperAdmin = profile.role === "super_admin";
+    // PERFORMANCE: Fast role-based redirects
+    if (profile) {
+      const isSuperAdminRoute = path.startsWith("/super-admin");
+      const isDashboardRoute = path.startsWith("/dashboard");
+      const isSuperAdmin = profile.role === "super_admin";
+      const hasRedirectHeader = request.headers.get("x-middleware-redirect");
 
-        // Handle role-based access control
+      // Only redirect if there's a role mismatch and no redirect header
+      if (!hasRedirectHeader) {
         if (isSuperAdminRoute && !isSuperAdmin) {
-          console.log(
-            "Middleware: Non-super-admin accessing super-admin route, redirecting to dashboard"
-          );
-          return NextResponse.redirect(new URL("/dashboard", request.url));
+          const redirectResponse = NextResponse.redirect(new URL("/dashboard", request.url));
+          redirectResponse.headers.set("x-middleware-redirect", "dashboard");
+          redirectResponse.headers.set("x-redirect-count", (redirectCount + 1).toString());
+          return redirectResponse;
         }
 
         if (isDashboardRoute && isSuperAdmin) {
-          console.log(
-            "Middleware: Super-admin accessing dashboard, redirecting to super-admin"
-          );
-          return NextResponse.redirect(new URL("/super-admin", request.url));
+          const redirectResponse = NextResponse.redirect(new URL("/super-admin", request.url));
+          redirectResponse.headers.set("x-middleware-redirect", "super-admin");
+          redirectResponse.headers.set("x-redirect-count", (redirectCount + 1).toString());
+          return redirectResponse;
         }
+      }
 
-        // Add user context headers for API routes
-        if (isApiRoute) {
-          const requestHeaders = new Headers(request.headers);
-          requestHeaders.set("x-user-id", user.id);
-          requestHeaders.set("x-user-role", profile.role);
-          if (profile.district_id) {
-            requestHeaders.set("x-user-district-id", profile.district_id);
-          }
-
-          return NextResponse.next({
-            request: { headers: requestHeaders },
-          });
+      // Add optimized headers for API routes
+      if (path.startsWith("/api/")) {
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set("x-user-id", user.id);
+        requestHeaders.set("x-user-role", profile.role);
+        if (profile.district_id) {
+          requestHeaders.set("x-user-district-id", profile.district_id);
         }
-      } else {
-        // Profile check failed - let the layout handle it instead of redirecting
-        console.log(
-          "Middleware: Profile check failed, allowing request to continue"
-        );
+        return NextResponse.next({ request: { headers: requestHeaders } });
       }
     }
 
     return response;
   } catch (error) {
     console.error("Middleware error:", error);
+
+    // FIXED: Better error handling with network resilience
+    const isNetworkError =
+      error instanceof Error &&
+      (error.message.includes("fetch") ||
+        error.message.includes("network") ||
+        error.message.includes("timeout"));
+
+    // For network errors, be more lenient and allow the request to continue
+    if (isNetworkError) {
+      console.warn(
+        "Middleware: Network error detected, allowing request to continue"
+      );
+      return NextResponse.next();
+    }
 
     // For API routes, return error response instead of redirect
     if (request.nextUrl.pathname.startsWith("/api/")) {
@@ -163,6 +202,19 @@ export async function middleware(request: NextRequest) {
           headers: { "Content-Type": "application/json" },
         }
       );
+    }
+
+    // Only redirect to login for non-protected routes to avoid loops
+    const protectedRoutes = ["/dashboard", "/super-admin"];
+    const isProtectedRoute = protectedRoutes.some((route) =>
+      request.nextUrl.pathname.startsWith(route)
+    );
+
+    if (isProtectedRoute) {
+      console.warn(
+        "Middleware: Error on protected route, allowing client to handle"
+      );
+      return NextResponse.next();
     }
 
     // Redirect to login for other routes

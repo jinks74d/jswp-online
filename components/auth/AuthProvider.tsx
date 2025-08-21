@@ -14,7 +14,9 @@ import { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase";
 import { UserProfile } from "@/lib/supabase";
 import { NetworkRecoveryModal } from "./NetworkRecoveryModal";
+import { SessionWarningModal } from "./SessionWarningModal";
 import { AuthCache } from "@/lib/auth-cache";
+import { SessionSecurity } from "@/lib/session-security";
 
 interface AuthContextType {
   user: User | null;
@@ -30,190 +32,116 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [networkError, setNetworkError] = useState(false);
   const [showNetworkRecovery, setShowNetworkRecovery] = useState(false);
+  const [showSessionWarning, setShowSessionWarning] = useState(false);
+
+  // Refs for cleanup and state management
   const mountedRef = useRef(true);
   const authProcessingRef = useRef(false);
-  const networkGracePeriodRef = useRef<NodeJS.Timeout | null>(null);
+  const profileFetchRef = useRef<AbortController | null>(null);
+  const timeoutsRef = useRef<Set<NodeJS.Timeout>>(new Set());
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
+  const sessionSecurityRef = useRef<SessionSecurity | null>(null);
+  const lastAuthEventRef = useRef<Map<string, number>>(new Map());
 
-  // Create client once and reuse - only on client side
+  // PERFORMANCE: Create client once and reuse with better SSR handling
   const supabase = useMemo(() => {
     if (typeof window !== "undefined") {
-      console.log("AuthProvider: Creating Supabase client");
       return createClient();
     }
     return null;
   }, []);
 
+  // FIXED: Reliable profile fetching with timeout and error handling
   const fetchProfile = useCallback(
     async (userId: string): Promise<UserProfile | null> => {
       if (!userId || !mountedRef.current || !supabase) {
-        console.log("AuthProvider: fetchProfile early return:", {
-          userId: !!userId,
-          mounted: mountedRef.current,
-          supabase: !!supabase,
-        });
         return null;
       }
 
-      // Check cache first for faster loading
-      const cachedProfile = AuthCache.getProfile();
-      if (cachedProfile && cachedProfile.id === userId) {
-        console.log("AuthProvider: Using cached profile for user:", userId);
-        return cachedProfile;
+      // Cancel any existing profile fetch
+      if (profileFetchRef.current) {
+        profileFetchRef.current.abort();
       }
 
-      // Retry logic for profile fetch
-      for (let attempt = 1; attempt <= 2; attempt++) {
-        try {
-          console.log(
-            `AuthProvider: Fetching profile for user (attempt ${attempt}):`,
-            userId
-          );
+      // Create new abort controller for this fetch
+      const abortController = new AbortController();
+      profileFetchRef.current = abortController;
 
-          // First verify we have a valid session before querying
-          console.log(`AuthProvider: Getting session for attempt ${attempt}`);
+      try {
+        // Check cache first with improved validation
+        const cachedProfile = AuthCache.getProfile();
+        if (
+          cachedProfile &&
+          cachedProfile.id === userId &&
+          mountedRef.current
+        ) {
+          return cachedProfile;
+        }
 
-          // Add timeout to getSession call
-          const sessionPromise = supabase.auth.getSession();
-          const sessionTimeout = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("getSession timeout")), 3000)
-          );
 
-          const sessionResult = await Promise.race([
-            sessionPromise,
-            sessionTimeout,
-          ]);
-          console.log(`AuthProvider: Session result:`, sessionResult);
+        // PERFORMANCE: Optimized profile fetch with selective fields and shorter timeout
+        const fetchPromise = supabase
+          .from("user_profiles")
+          .select("id, role, district_id, school_id, first_name, last_name, email, created_at, updated_at, districts:district_id(id, name, domain, primary_color, secondary_color, logo_url), schools:school_id(id, name)")
+          .eq("id", userId)
+          .abortSignal(abortController.signal)
+          .maybeSingle(); // Use maybeSingle to avoid errors on missing records
 
-          const {
-            data: { session },
-            error: sessionError,
-          } = sessionResult;
-          if (sessionError) {
-            console.warn(
-              `AuthProvider: Session error before profile fetch:`,
-              sessionError
-            );
-            return null;
-          }
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Database query timeout")), 3000) // Reduced from 5000ms
+        );
 
-          if (!session || !session.user) {
-            console.warn(`AuthProvider: No valid session for profile fetch`);
-            return null;
-          }
+        const result = await Promise.race([fetchPromise, timeoutPromise]);
+        const { data, error } = result as any;
 
-          console.log(
-            `AuthProvider: Session confirmed, proceeding with profile query for:`,
-            session.user.email
-          );
-
-          // Add a small delay to ensure session is fully propagated
-          console.log(`AuthProvider: Waiting 500ms for session propagation`);
-          await new Promise((resolve) => setTimeout(resolve, 500));
-
-          console.log(
-            `AuthProvider: Starting database query for user:`,
-            userId
-          );
-
-          // Simplified profile query with timeout to prevent hanging
-          const profilePromise = supabase
-            .from("user_profiles")
-            .select("*")
-            .eq("id", userId)
-            .single();
-
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Profile fetch timeout")), 2000)
-          );
-
-          console.log(
-            `AuthProvider: Executing Promise.race for database query`
-          );
-          const result = await Promise.race([profilePromise, timeoutPromise]);
-          console.log(`AuthProvider: Promise.race completed:`, result);
-
-          const { data, error } = result as any;
-
-          // Log the actual error for debugging
-          if (error) {
-            console.error(
-              `AuthProvider: Database error (attempt ${attempt}):`,
-              error
-            );
-          }
-
-          if (error) {
-            console.warn(
-              `AuthProvider: Profile fetch error (attempt ${attempt}):`,
-              error
-            );
-
-            // If it's a timeout or connection error and we have more attempts, try again
-            if (
-              attempt === 1 &&
-              (error.message.includes("timeout") || error.code === "PGRST301")
-            ) {
-              console.log(
-                "AuthProvider: Retrying profile fetch after connection error..."
-              );
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-              continue;
-            }
-
-            return null;
-          }
-
-          if (!data) {
-            console.warn("AuthProvider: No profile data returned");
-            return null;
-          }
-
-          console.log(
-            "AuthProvider: Profile fetched successfully:",
-            data.email
-          );
-          console.log("AuthProvider: Profile data:", {
-            role: data.role,
-            email: data.email,
-            id: data.id,
-          });
-
-          // Cache the profile for faster subsequent loads
-          AuthCache.setProfile(data);
-
-          return data as UserProfile;
-        } catch (error) {
-          console.warn(
-            `AuthProvider: Error in fetchProfile attempt ${attempt}:`,
-            error
-          );
-
-          // If this was the first attempt and it was a timeout, try again
-          if (
-            attempt === 1 &&
-            error instanceof Error &&
-            error.message.includes("timeout")
-          ) {
-            console.log(
-              "AuthProvider: Retrying profile fetch after timeout..."
-            );
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            continue;
-          }
-
-          // If this was the last attempt or a non-timeout error, give up
+        if (abortController.signal.aborted || !mountedRef.current) {
           return null;
         }
-      }
 
-      return null;
+        if (error) {
+          console.warn("AuthProvider: Profile fetch error:", error);
+          return null;
+        }
+
+        if (!data) {
+          console.warn("AuthProvider: No profile data returned");
+          return null;
+        }
+
+        // Cache the profile
+        AuthCache.setProfile(data);
+        return data as UserProfile;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          console.log("AuthProvider: Profile fetch aborted");
+          return null;
+        }
+        console.warn("AuthProvider: Profile fetch failed:", error);
+        return null;
+      }
     },
     [supabase]
   );
+
+  // Cleanup utility
+  const cleanup = useCallback(() => {
+    // Cancel any ongoing profile fetch
+    if (profileFetchRef.current) {
+      profileFetchRef.current.abort();
+      profileFetchRef.current = null;
+    }
+
+    // Clear all timeouts
+    timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+    timeoutsRef.current.clear();
+
+    // Close broadcast channel
+    if (broadcastChannelRef.current) {
+      broadcastChannelRef.current.close();
+      broadcastChannelRef.current = null;
+    }
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     if (user && mountedRef.current) {
@@ -224,210 +152,159 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, fetchProfile]);
 
-  // Optimized auth change handler - skip profile fetch for SIGNED_IN events
+  // FIXED: Simplified auth change handler with better timeout management
   const handleAuthChange = useCallback(
     async (event: AuthChangeEvent, session: Session | null) => {
-      console.log("AuthProvider: handleAuthChange ENTRY:", {
-        mounted: mountedRef.current,
-        processing: authProcessingRef.current,
-        event,
-        userEmail: session?.user?.email,
-      });
-
       if (!mountedRef.current || authProcessingRef.current) {
-        console.log("AuthProvider: handleAuthChange EARLY RETURN:", {
-          mounted: mountedRef.current,
-          processing: authProcessingRef.current,
-        });
         return;
       }
 
+      // Debounce rapid auth change events (especially SIGNED_IN events)
+      const now = Date.now();
+      const lastEventKey = `${event}_${!!session?.user}`;
+      const lastEventTime = lastAuthEventRef.current.get(lastEventKey) || 0;
+
+      if (now - lastEventTime < 1000) {
+        // 1 second debounce
+        return;
+      }
+
+      lastAuthEventRef.current.set(lastEventKey, now);
       authProcessingRef.current = true;
 
       try {
-        console.log(
-          "AuthProvider: Auth state changed:",
-          event,
-          session?.user?.email
-        );
 
         const currentUser = session?.user || null;
         setUser(currentUser);
 
-        // Cache session if we have one
-        if (session) {
-          AuthCache.setSession(session);
-        }
-
         if (currentUser) {
-          // Always fetch profile for any authenticated user regardless of event type
-          console.log(
-            "AuthProvider: Fetching profile for event:",
-            event,
-            "User ID:",
-            currentUser.id
-          );
-          console.log("AuthProvider: About to call fetchProfile...");
-          const profileData = await fetchProfile(currentUser.id);
-          console.log(
-            "AuthProvider: fetchProfile returned:",
-            profileData ? "DATA" : "NULL"
-          );
-          if (mountedRef.current) {
-            console.log(
-              "AuthProvider: Setting profile state:",
-              profileData ? "SUCCESS" : "NULL"
-            );
-            setProfile(profileData);
-            console.log("AuthProvider: Profile state updated");
+          // Cache session
+          if (session) {
+            AuthCache.setSession(session);
           }
-        } else {
-          // Before clearing profile, check if this might be a temporary network issue
-          console.log(
-            "AuthProvider: No user found, checking for session recovery..."
-          );
 
-          // Only attempt session recovery if we're not on the login page
-          const isOnLoginPage =
-            typeof window !== "undefined" &&
-            (window.location.pathname === "/" ||
-              window.location.pathname === "/admin");
-          const cachedProfile = AuthCache.getProfile();
-          const cachedSession = AuthCache.getSession();
 
-          if (
-            cachedProfile &&
-            cachedSession &&
-            event === "INITIAL_SESSION" &&
-            !isOnLoginPage
-          ) {
-            console.log(
-              "AuthProvider: Attempting session recovery from cache..."
+          // PERFORMANCE: Optimized profile fetch with reduced timeout and better error handling
+          let profileData: UserProfile | null = null;
+          try {
+            const profilePromise = fetchProfile(currentUser.id);
+            const timeoutPromise = new Promise<UserProfile | null>((_, reject) =>
+              setTimeout(() => reject(new Error("Profile fetch timeout")), 2000) // Reduced from 3000ms
             );
-
-            // Try to refresh the session
-            try {
-              const { data: refreshData, error: refreshError } =
-                await supabase.auth.refreshSession();
-
-              if (!refreshError && refreshData.session) {
-                console.log("AuthProvider: Session recovery successful");
-                // Don't clear the profile yet, let the refreshed session trigger a new auth event
-                return;
-              } else {
-                console.log(
-                  "AuthProvider: Session recovery failed:",
-                  refreshError?.message
-                );
+            
+            profileData = await Promise.race([profilePromise, timeoutPromise]);
+          } catch (error) {
+            console.warn("AuthProvider: Profile fetch failed, using cache:", error);
+            profileData = AuthCache.getProfile();
+            
+            // If no cached profile, try a quick fallback fetch
+            if (!profileData && currentUser.id) {
+              try {
+                const fallbackProfile = await supabase
+                  .from("user_profiles")
+                  .select("id, role, district_id, email")
+                  .eq("id", currentUser.id)
+                  .maybeSingle()
+                  .then((res: any) => res.data);
+                profileData = fallbackProfile;
+              } catch (fallbackError) {
+                console.warn("AuthProvider: Fallback profile fetch failed");
               }
-            } catch (error) {
-              console.log(
-                "AuthProvider: Session recovery attempt failed:",
-                error
-              );
             }
           }
 
-          // Clear profile and cache for unauthenticated user
-          console.log("AuthProvider: Clearing profile for signed out user");
-          AuthCache.clearAll();
+
+          if (mountedRef.current) {
+            setProfile(profileData);
+            // Update auth state cache for quick access
+            if (profileData) {
+              AuthCache.setAuthState({
+                hasUser: true,
+                hasProfile: true,
+                userEmail: profileData.email,
+                userRole: profileData.role,
+              });
+            }
+          }
+        } else {
+          // Clear state for unauthenticated user
+          AuthCache.secureCleanup();
           setProfile(null);
+
+          // Clean up session security
+          if (sessionSecurityRef.current) {
+            sessionSecurityRef.current.cleanup();
+            sessionSecurityRef.current = null;
+          }
         }
 
+        // FIXED: Always set loading to false at the end
         if (mountedRef.current) {
           setLoading(false);
-          setInitialLoadComplete(true);
-          console.log(
-            "AuthProvider: Set loading to false and initialLoadComplete to true"
-          );
         }
       } catch (error) {
         console.error("AuthProvider: Error in auth change handler:", error);
 
-        // Don't clear user state on errors during auth changes
-        // This prevents unexpected sign-outs due to network issues
         if (mountedRef.current) {
           setLoading(false);
-          setInitialLoadComplete(true);
-
-          // If we had a user before this error, don't clear them
-          // Let the cached profile serve as a fallback
+          // Use cached profile as fallback on error
           const cachedProfile = AuthCache.getProfile();
           if (cachedProfile && !profile) {
-            console.log("AuthProvider: Using cached profile after auth error");
             setProfile(cachedProfile);
           }
         }
       } finally {
+        // FIXED: Always clear processing flag
         authProcessingRef.current = false;
-        console.log("AuthProvider: handleAuthChange COMPLETE");
       }
     },
-    [fetchProfile]
+    [fetchProfile, profile, supabase]
   );
 
-  // Handle network errors with grace period
+  // Simplified network error handling
   const handleNetworkError = useCallback(() => {
-    console.log(
-      "AuthProvider: Handling network error with 5-minute grace period"
-    );
-    setNetworkError(true);
 
-    // Clear existing grace period
-    if (networkGracePeriodRef.current) {
-      clearTimeout(networkGracePeriodRef.current);
-    }
+    // Show recovery modal after shorter grace period (30 seconds)
+    const timeout = setTimeout(() => {
+      if (mountedRef.current) {
+        setShowNetworkRecovery(true);
+      }
+    }, 30000);
 
-    // Set 5-minute grace period
-    networkGracePeriodRef.current = setTimeout(() => {
-      console.log(
-        "AuthProvider: Network grace period expired, showing recovery options"
-      );
-      setShowNetworkRecovery(true);
-    }, 5 * 60 * 1000); // 5 minutes
+    timeoutsRef.current.add(timeout);
   }, []);
 
-  // Initialize authentication
+  // Simplified initialization
   useEffect(() => {
     if (!supabase) {
-      console.log("AuthProvider: No Supabase client (SSR context)");
       return;
     }
 
-    console.log("AuthProvider: Setting up auth listeners");
-
-    let mounted = true;
+    // Setting up auth listeners
 
     // Set up cross-tab communication
     if (typeof window !== "undefined" && window.BroadcastChannel) {
       broadcastChannelRef.current = new BroadcastChannel("jswp-auth");
 
-      broadcastChannelRef.current.addEventListener("message", (event) => {
-        if (!mounted) return;
-
-        console.log("AuthProvider: Received broadcast message:", event.data);
+      const handleBroadcastMessage = (event: MessageEvent) => {
+        if (!mountedRef.current) return;
 
         if (event.data.type === "LOGOUT_ALL_TABS") {
-          console.log("AuthProvider: Logging out due to cross-tab logout");
-          // Clear local state immediately
           setUser(null);
           setProfile(null);
           setLoading(false);
-          // Redirect to login
           if (typeof window !== "undefined") {
             window.location.replace("/");
           }
         } else if (event.data.type === "EXTEND_SESSION") {
-          console.log("AuthProvider: Session extended in another tab");
-          // Reset any network error states
-          setNetworkError(false);
           setShowNetworkRecovery(false);
-          if (networkGracePeriodRef.current) {
-            clearTimeout(networkGracePeriodRef.current);
-            networkGracePeriodRef.current = null;
-          }
         }
-      });
+      };
+
+      broadcastChannelRef.current.addEventListener(
+        "message",
+        handleBroadcastMessage
+      );
     }
 
     // Set up auth state listener
@@ -435,176 +312,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    // Add visibility change handler to refresh session when user returns
-    const handleVisibilityChange = () => {
-      if (!document.hidden && user && supabase) {
-        // Page became visible - check if session is still valid
-        console.log(
-          "AuthProvider: Page became visible, checking session validity"
-        );
-
-        supabase.auth.getSession().then(({ data: { session }, error }: any) => {
-          if (error) {
-            console.log(
-              "AuthProvider: Session check error after visibility change:",
-              error
-            );
-          } else if (!session && user) {
-            console.log(
-              "AuthProvider: No session found but user exists, attempting refresh"
-            );
-            supabase.auth
-              .refreshSession()
-              .then(({ data, error: refreshError }: any) => {
-                if (refreshError) {
-                  console.log(
-                    "AuthProvider: Session refresh failed:",
-                    refreshError
-                  );
-                } else {
-                  console.log("AuthProvider: Session refreshed successfully");
-                }
-              });
-          }
-        });
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Check initial session with fast timeout
+    // Optimized initial session check with cache
     const checkInitialSession = async () => {
       try {
-        console.log("AuthProvider: Checking initial session");
 
-        // Add 3-second timeout to initial session check
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error("Initial session check timeout")),
-            3000
-          )
-        );
+        // Quick check for cached auth state first
+        const cachedAuthState = AuthCache.getAuthState();
+        if (
+          cachedAuthState &&
+          cachedAuthState.hasUser &&
+          cachedAuthState.hasProfile
+        ) {
+          // We have cached auth data, but still need to verify session
+        }
 
-        const sessionResult = await Promise.race([
-          sessionPromise,
-          timeoutPromise,
-        ]);
         const {
           data: { session },
           error,
-        } = sessionResult as any;
+        } = await supabase.auth.getSession();
 
         if (error) {
-          // More robust error logging to avoid console issues
-          if (process.env.NODE_ENV === "development") {
-            console.log("AuthProvider: Session error:", {
-              message: error.message || "Unknown error",
-              code: error.code || "No code",
-              name: error.name || "Unknown",
-            });
-          }
-
-          // Check if this is a network error
+          console.warn("AuthProvider: Session error:", error.message);
           if (
-            error.message?.includes("fetch") ||
             error.message?.includes("network") ||
-            error.message?.includes("timeout")
+            error.message?.includes("fetch")
           ) {
-            console.log(
-              "AuthProvider: Network error detected, starting grace period"
-            );
             handleNetworkError();
-          } else {
-            if (mounted) {
-              setLoading(false);
-              setInitialLoadComplete(true);
-            }
+          } else if (mountedRef.current) {
+            setLoading(false);
           }
-        } else if (mounted) {
-          // Check if we have cached auth data before treating as signed out (but not on login pages)
-          const isOnLoginPage =
-            typeof window !== "undefined" &&
-            (window.location.pathname === "/" ||
-              window.location.pathname === "/admin");
-          const cachedProfile = AuthCache.getProfile();
-          const cachedSession = AuthCache.getSession();
+          return;
+        }
 
-          if (!session && cachedProfile && cachedSession && !isOnLoginPage) {
-            console.log(
-              "AuthProvider: No session found but have cached data, attempting refresh"
-            );
-
-            try {
-              const { data: refreshData, error: refreshError } =
-                await supabase.auth.refreshSession();
-
-              if (!refreshError && refreshData.session) {
-                console.log(
-                  "AuthProvider: Session refresh successful during initial load"
-                );
-                await handleAuthChange("INITIAL_SESSION", refreshData.session);
-              } else {
-                console.log(
-                  "AuthProvider: Session refresh failed during initial load"
-                );
-                await handleAuthChange("SIGNED_OUT", null);
-              }
-            } catch (refreshError) {
-              console.log(
-                "AuthProvider: Session refresh error during initial load:",
-                refreshError
-              );
-              await handleAuthChange("SIGNED_OUT", null);
-            }
-          } else {
-            // Use INITIAL_SESSION event for initial loads to avoid unnecessary delay
-            await handleAuthChange(
-              session ? "INITIAL_SESSION" : "SIGNED_OUT",
-              session
-            );
-          }
+        if (mountedRef.current) {
+          await handleAuthChange(
+            session ? "INITIAL_SESSION" : "SIGNED_OUT",
+            session
+          );
         }
       } catch (error) {
-        console.error("AuthProvider: Error in initial session check:", error);
-
-        // Handle network errors with grace period
-        if (
-          error instanceof Error &&
-          (error.message.includes("fetch") ||
-            error.message.includes("network") ||
-            error.message.includes("timeout"))
-        ) {
-          console.log("AuthProvider: Network error in initial session check");
-          handleNetworkError();
-        } else {
-          if (mounted) {
-            setLoading(false);
-            setInitialLoadComplete(true);
-          }
+        console.error("AuthProvider: Initial session check failed:", error);
+        if (mountedRef.current) {
+          setLoading(false);
         }
       }
     };
 
     checkInitialSession();
 
+    // FIXED: Removed competing safety timeout - let auth change handler complete
     return () => {
-      mounted = false;
       subscription.unsubscribe();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      if (broadcastChannelRef.current) {
-        broadcastChannelRef.current.close();
-      }
+      cleanup();
     };
-  }, [supabase, handleAuthChange, handleNetworkError, user]);
+  }, [supabase, handleAuthChange, handleNetworkError, cleanup]);
 
-  // Sign out function - defined before being used in effects
+  // Enhanced sign out function with security measures
   const signOut = useCallback(async () => {
     try {
-      console.log("AuthProvider: Signing out");
 
-      // Broadcast logout to all tabs before local logout
-      if (broadcastChannelRef.current && user) {
+      // Broadcast security logout to all tabs
+      if (sessionSecurityRef.current) {
+        sessionSecurityRef.current.broadcastSecurityLogout();
+      }
+
+      if (broadcastChannelRef.current) {
         try {
           broadcastChannelRef.current.postMessage({
             type: "LOGOUT_ALL_TABS",
@@ -615,27 +387,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Immediately clear state
+      // Clear state immediately
       setUser(null);
       setProfile(null);
       setLoading(false);
+      setShowSessionWarning(false);
+      setShowNetworkRecovery(false);
 
-      // Clear auth cache
-      AuthCache.clearAll();
+      // Secure cache cleanup
+      AuthCache.secureCleanup();
 
-      // Clear any remaining session storage (but Supabase now handles cookies)
-      if (typeof window !== "undefined") {
-        try {
-          // Only clear our custom cache, let Supabase handle its own storage
-          sessionStorage.removeItem("jswp-profile-cache");
-          sessionStorage.removeItem("jswp-session-cache");
-        } catch (error) {
-          console.warn("AuthProvider: Failed to clear cache:", error);
-        }
+      // Clean up session security
+      if (sessionSecurityRef.current) {
+        sessionSecurityRef.current.cleanup();
+        sessionSecurityRef.current = null;
       }
 
+      // Sign out from Supabase with timeout
       if (supabase) {
-        await supabase.auth.signOut({ scope: "global" });
+        const signOutPromise = supabase.auth.signOut({ scope: "global" });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Sign out timeout")), 5000)
+        );
+
+        try {
+          await Promise.race([signOutPromise, timeoutPromise]);
+        } catch (error) {
+          console.warn(
+            "AuthProvider: Sign out timeout, proceeding with redirect"
+          );
+        }
       }
 
       // Force redirect to login
@@ -643,153 +424,94 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.location.replace("/");
       }
     } catch (error) {
-      console.error("AuthProvider: Error signing out:", error);
-      // Still redirect even if signout fails
+      console.error("AuthProvider: Error during secure sign out:", error);
+      // Ensure cleanup even on error
+      AuthCache.secureCleanup();
+      if (sessionSecurityRef.current) {
+        sessionSecurityRef.current.cleanup();
+        sessionSecurityRef.current = null;
+      }
+      // Force redirect even on error
       if (typeof window !== "undefined") {
         window.location.replace("/");
       }
     }
-  }, [supabase, user]);
-
-  // Browser close detection and cleanup
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const handleBeforeUnload = () => {
-      console.log("AuthProvider: Browser closing, clearing session storage");
-
-      // Clear our custom cache (Supabase handles its own storage)
-      try {
-        sessionStorage.removeItem("jswp-profile-cache");
-        sessionStorage.removeItem("jswp-session-cache");
-      } catch (error) {
-        console.warn("AuthProvider: Failed to clear cache:", error);
-      }
-
-      // Broadcast logout to other tabs
-      if (broadcastChannelRef.current && user) {
-        try {
-          broadcastChannelRef.current.postMessage({
-            type: "LOGOUT_ALL_TABS",
-            timestamp: Date.now(),
-          });
-        } catch (error) {
-          console.warn("AuthProvider: Failed to broadcast logout:", error);
-        }
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        console.log("AuthProvider: Page became hidden");
-      } else {
-        console.log("AuthProvider: Page became visible, checking session");
-        // When page becomes visible, verify session is still valid
-        if (user && supabase) {
-          supabase.auth.getSession().then((result: any) => {
-            const session = result.data?.session;
-            const error = result.error;
-            if (!session && user) {
-              console.log(
-                "AuthProvider: Session lost while page was hidden, signing out"
-              );
-              signOut();
-            }
-          });
-        }
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [user, supabase, signOut]);
+  }, [supabase]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       mountedRef.current = false;
-    };
-  }, []);
+      cleanup();
 
-  // Fallback timeout for initial load - keep it very short to show login quickly
-  useEffect(() => {
-    // Use 3 seconds max to avoid wasting user time
-    const timeoutDuration = 3000; // 3 seconds
-
-    const timeout = setTimeout(() => {
-      if (!initialLoadComplete && loading) {
-        console.warn(
-          `AuthProvider: Initial load timeout after ${timeoutDuration}ms, setting loading to false`
-        );
-        setLoading(false);
-        setInitialLoadComplete(true);
+      // Clean up session security
+      if (sessionSecurityRef.current) {
+        sessionSecurityRef.current.cleanup();
+        sessionSecurityRef.current = null;
       }
-    }, timeoutDuration);
 
+      // Destroy session security singleton
+      SessionSecurity.destroy();
+    };
+  }, [cleanup]);
+
+  // FIXED: Single fallback timeout for initial load
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading && mountedRef.current && !authProcessingRef.current) {
+        setLoading(false);
+      }
+    }, 8000); // Increased to 8 seconds to allow auth change handler to complete
+
+    timeoutsRef.current.add(timeout);
     return () => clearTimeout(timeout);
-  }, [loading, initialLoadComplete]);
+  }, []); // Empty dependency array to run only once
 
-  // Handle extending session during network recovery
+  // Simplified network recovery handlers
   const handleExtendSession = useCallback(async () => {
-    console.log("AuthProvider: Extending session");
-
     try {
-      // Reset network error states
-      setNetworkError(false);
       setShowNetworkRecovery(false);
 
-      // Clear grace period
-      if (networkGracePeriodRef.current) {
-        clearTimeout(networkGracePeriodRef.current);
-        networkGracePeriodRef.current = null;
-      }
-
-      // Broadcast session extension to other tabs
+      // Broadcast session extension
       if (broadcastChannelRef.current) {
-        try {
-          broadcastChannelRef.current.postMessage({
-            type: "EXTEND_SESSION",
-            timestamp: Date.now(),
-          });
-        } catch (error) {
-          console.warn(
-            "AuthProvider: Failed to broadcast session extension:",
-            error
-          );
-        }
+        broadcastChannelRef.current.postMessage({
+          type: "EXTEND_SESSION",
+          timestamp: Date.now(),
+        });
       }
 
-      // Verify session is still valid with Supabase
+      // Verify session is still valid
       if (supabase) {
         const {
           data: { session },
           error,
         } = await supabase.auth.getSession();
         if (error || !session) {
-          console.log("AuthProvider: Session no longer valid, signing out");
           await signOut();
-          return;
         }
       }
-
-      console.log("AuthProvider: Session extended successfully");
     } catch (error) {
       console.error("AuthProvider: Error extending session:", error);
-      // On error, sign out for security
       await signOut();
     }
   }, [supabase, signOut]);
 
-  // Handle closing the network recovery modal
   const handleCloseNetworkRecovery = useCallback(() => {
     setShowNetworkRecovery(false);
-    // Keep the grace period running, just hide the modal
   }, []);
+
+  // Session warning handlers
+  const handleExtendSessionWarning = useCallback(() => {
+    setShowSessionWarning(false);
+    if (sessionSecurityRef.current) {
+      sessionSecurityRef.current.extendSession();
+    }
+  }, []);
+
+  const handleSessionWarningSignOut = useCallback(() => {
+    setShowSessionWarning(false);
+    signOut();
+  }, [signOut]);
 
   return (
     <AuthContext.Provider
@@ -807,6 +529,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         onExtendSession={handleExtendSession}
         onSignOut={signOut}
         onClose={handleCloseNetworkRecovery}
+      />
+      <SessionWarningModal
+        isOpen={showSessionWarning}
+        onExtendSession={handleExtendSessionWarning}
+        onSignOut={handleSessionWarningSignOut}
+        onClose={() => setShowSessionWarning(false)}
       />
     </AuthContext.Provider>
   );

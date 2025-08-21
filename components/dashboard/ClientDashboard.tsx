@@ -3,7 +3,7 @@
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, memo, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
 import DashboardSidebar from "./DashboardSidebar";
 
@@ -11,35 +11,43 @@ interface ClientDashboardProps {
   children: React.ReactNode;
 }
 
-export function ClientDashboard({ children }: ClientDashboardProps) {
+function ClientDashboard({ children }: ClientDashboardProps) {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
   const [fullProfile, setFullProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [lastValidProfile, setLastValidProfile] = useState<any>(null);
+  const mountedRef = useRef(true);
+  const profileFetchRef = useRef<AbortController | null>(null);
 
-  // Fetch full profile with district data when user and profile are available
+  // Optimized profile fetching with smart caching
   useEffect(() => {
-    if (user && profile && !fullProfile && !profileLoading) {
-      // Log the current state for debugging
-      console.log("ClientDashboard: Starting full profile fetch", {
-        userId: user.id,
-        profileId: profile.id,
-        hasDistrictId: !!profile.district_id,
-        profileRole: profile.role,
-      });
+    if (!user || !profile || fullProfile || profileLoading) {
+      return;
+    }
 
-      setProfileLoading(true);
+    // Skip full profile fetch if basic profile has all needed data
+    if (profile.district_id && profile.districts) {
+      setFullProfile(profile);
+      return;
+    }
 
-      const supabase = createClient();
+    // Cancel any existing fetch
+    if (profileFetchRef.current) {
+      profileFetchRef.current.abort();
+    }
 
-      // Use a promise with timeout to avoid hanging
-      const fetchWithTimeout = new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-          reject(new Error("Profile fetch timeout"));
-        }, 5000);
+    const abortController = new AbortController();
+    profileFetchRef.current = abortController;
 
-        supabase
+    setProfileLoading(true);
+
+    const fetchFullProfile = async () => {
+      try {
+        const supabase = createClient();
+
+        // Only fetch what we need - districts and schools data
+        const { data, error } = await supabase
           .from("user_profiles")
           .select(
             `
@@ -49,49 +57,41 @@ export function ClientDashboard({ children }: ClientDashboardProps) {
           `
           )
           .eq("id", user.id)
-          .single()
-          .then((result: any) => {
-            clearTimeout(timer);
-            resolve(result);
-          })
-          .catch((error: any) => {
-            clearTimeout(timer);
-            reject(error);
-          });
-      });
+          .abortSignal(abortController.signal)
+          .single();
 
-      fetchWithTimeout
-        .then(({ data, error }: any) => {
-          if (error) {
-            console.error("Error fetching full profile:", error);
-            // Only fall back to basic profile if it has district_id
-            if (profile?.district_id) {
-              setFullProfile(profile);
-            } else {
-              console.error(
-                "Basic profile also missing district_id, keeping loading state"
-              );
-              // Don't set fullProfile, let it stay null to trigger loading
-            }
-          } else {
-            setFullProfile(data);
-          }
-          setProfileLoading(false);
-        })
-        .catch((error) => {
-          console.error("Profile fetch timed out or failed:", error);
-          // Only use basic profile on timeout if it has district_id
+        if (abortController.signal.aborted || !mountedRef.current) {
+          return;
+        }
+
+        if (error) {
+          // Fallback to basic profile if it has district_id
           if (profile?.district_id) {
             setFullProfile(profile);
-          } else {
-            console.error(
-              "Basic profile missing district_id during timeout fallback"
-            );
-            // Don't set fullProfile, let it stay null to trigger loading
           }
+        } else {
+          setFullProfile(data);
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
+        // Fallback to basic profile
+        if (profile?.district_id && mountedRef.current) {
+          setFullProfile(profile);
+        }
+      } finally {
+        if (mountedRef.current) {
           setProfileLoading(false);
-        });
-    }
+        }
+      }
+    };
+
+    fetchFullProfile();
+
+    return () => {
+      abortController.abort();
+    };
   }, [user, profile, fullProfile, profileLoading]);
 
   // Track the last valid profile for use during temporary state transitions
@@ -102,15 +102,20 @@ export function ClientDashboard({ children }: ClientDashboardProps) {
     }
   }, [fullProfile, profile]);
 
-  // Redirect logic - only for role-based routing, not auth failures
+  // Cleanup on unmount
   useEffect(() => {
-    // Only redirect super admins to their dashboard - no auth failure redirects
+    return () => {
+      mountedRef.current = false;
+      if (profileFetchRef.current) {
+        profileFetchRef.current.abort();
+      }
+    };
+  }, []);
+
+  // Simplified redirect logic
+  useEffect(() => {
     if (!loading && user && profile && profile.role === "super_admin") {
-      console.log(
-        "ClientDashboard: Super admin detected, redirecting to super-admin"
-      );
       router.replace("/super-admin");
-      return;
     }
   }, [user, profile, loading, router]);
 
@@ -172,14 +177,6 @@ export function ClientDashboard({ children }: ClientDashboardProps) {
     !profile?.district_id &&
     !lastValidProfile?.district_id
   ) {
-    console.error("User profile missing district_id:", {
-      userId: user?.id,
-      profileId: profileToCheck.id,
-      hasDistrictId: !!profileToCheck.district_id,
-      fullProfile: !!fullProfile,
-      basicProfile: !!profile,
-      basicProfileHasDistrictId: !!profile?.district_id,
-    });
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
@@ -224,3 +221,6 @@ export function ClientDashboard({ children }: ClientDashboardProps) {
     </div>
   );
 }
+
+// Memoized export for better performance
+export default memo(ClientDashboard);

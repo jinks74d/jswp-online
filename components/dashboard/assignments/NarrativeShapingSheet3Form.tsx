@@ -6,6 +6,7 @@ import { ArrowLeft, Clock, User, HelpCircle, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserProfile } from "@/lib/supabase";
+import { SafeHTML } from "@/lib/sanitization";
 
 interface Assignment {
   id: string;
@@ -502,11 +503,11 @@ export default function NarrativeShapingSheet3Form({
               Shaping Sheet 3
             </div>
             <div className="border-2 border-gray-400 rounded-b-lg p-6 bg-white min-h-[500px]">
-              <div
+              <SafeHTML 
+                content={shapingData.assembledParagraph || "Your paragraph will appear here as you fill in the form..."}
                 className="prose max-w-none leading-relaxed"
-                dangerouslySetInnerHTML={{
-                  __html: shapingData.assembledParagraph || "Your paragraph will appear here as you fill in the form..."
-                }}
+                sanitizeLevel="educational"
+                fallback="Your paragraph will appear here as you fill in the form..."
               />
             </div>
           </div>

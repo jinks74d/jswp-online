@@ -6,6 +6,7 @@ import { ArrowLeft, Clock, User, HelpCircle, X, Printer } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserProfile } from "@/lib/supabase";
+import { SafeHTML } from "@/lib/sanitization";
 
 interface Assignment {
   id: string;
@@ -680,7 +681,11 @@ export default function ArgumentationFinalDraftForm({
               <div className="p-4 border-2 border-gray-300 rounded-lg bg-white min-h-[200px]">
                 <div className="text-base leading-relaxed" style={{ textIndent: '2em' }}>
                   {finalDraftData.finalParagraph ? (
-                    <div dangerouslySetInnerHTML={{ __html: renderColorCodedParagraphHTML() }} />
+                    <SafeHTML 
+                      content={renderColorCodedParagraphHTML()} 
+                      sanitizeLevel="educational"
+                      fallback="Unable to display formatted content"
+                    />
                   ) : (
                     <span className="text-gray-500 italic">Your color-coded paragraph will appear here as you type...</span>
                   )}

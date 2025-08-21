@@ -4,7 +4,6 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import AnalyticsDashboard from "@/components/dashboard/analytics/AnalyticsDashboard";
-import { AnalyticsDebug } from "@/components/debug/AnalyticsDebug";
 
 export default function AnalyticsPage() {
   const { user, profile, loading } = useAuth();
@@ -71,7 +70,6 @@ export default function AnalyticsPage() {
             : undefined
         }
       />
-      <AnalyticsDebug />
     </div>
   );
 }

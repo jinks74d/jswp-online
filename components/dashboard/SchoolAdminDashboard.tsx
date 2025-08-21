@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { UserProfile } from "@/lib/supabase";
-import { AnalyticsDebug } from "@/components/debug/AnalyticsDebug";
 
 interface SchoolStats {
   totalTeachers: number;
@@ -168,8 +167,6 @@ export default function SchoolAdminDashboard({
   }
 
   return (
-    <>
-      <AnalyticsDebug />
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -488,6 +485,5 @@ export default function SchoolAdminDashboard({
           </div>
         </div>
       </div>
-    </>
   );
 }

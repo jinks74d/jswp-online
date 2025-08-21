@@ -1,7 +1,22 @@
 // lib/supabase.ts
 import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
+
+// Database type placeholder
+export interface Database {
+  public: {
+    Tables: {
+      user_profiles: {
+        Row: UserProfile;
+        Insert: Partial<UserProfile>;
+        Update: Partial<UserProfile>;
+      };
+      [key: string]: any;
+    };
+  };
+}
 
 // Types for our database
 export type UserRole =
@@ -50,43 +65,22 @@ export interface School {
   updated_at: string;
 }
 
-// Global client instance with proper singleton pattern
-let browserClient: ReturnType<typeof createBrowserClient> | null = null;
-let clientInitialized = false;
+// PERFORMANCE: Singleton client instance for browser
+let browserClient: SupabaseClient<Database> | null = null;
 
-// Browser client for client components - robust singleton pattern
-export function createClient() {
+// Browser client for client components - optimized singleton pattern
+export function createClient(): SupabaseClient<Database> {
   // Handle server-side rendering gracefully
   if (typeof window === "undefined") {
-    console.log("Supabase: SSR context, returning minimal client");
-    // Return a minimal client for SSR that won't cause errors
-    return {
-      auth: {
-        onAuthStateChange: () => ({
-          data: { subscription: { unsubscribe: () => {} } },
-        }),
-        getSession: () =>
-          Promise.resolve({ data: { session: null }, error: null }),
-        signOut: () => Promise.resolve({ error: null }),
-        signInWithPassword: () =>
-          Promise.resolve({ data: null, error: new Error("SSR context") }),
-      },
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            single: () =>
-              Promise.resolve({
-                data: null,
-                error: { message: "SSR context", code: "SSR" },
-              }),
-          }),
-        }),
-      }),
-    } as any;
+    // Return a new client for each SSR request (no shared state)
+    return createBrowserClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
   }
 
-  // Return existing client if already initialized
-  if (clientInitialized && browserClient) {
+  // Return existing singleton for browser
+  if (browserClient) {
     return browserClient;
   }
 
@@ -95,45 +89,33 @@ export function createClient() {
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   ) {
-    console.error("Missing Supabase environment variables");
+    console.error("Supabase: Missing environment variables");
     throw new Error("Missing Supabase environment variables");
   }
 
-  console.log("Supabase: Creating new browser client instance");
-
-  try {
-    // Create new client instance
-    browserClient = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: false, // Prevent URL parsing issues
-          flowType: "pkce",
-          debug: false,
-          storage:
-            typeof window !== "undefined" ? window.localStorage : undefined,
-          storageKey: "sb-auth-token",
+  // Create singleton browser client
+  browserClient = createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false, // Prevent URL parsing issues
+        flowType: "pkce",
+        debug: false,
+        storage: typeof window !== "undefined" ? window.localStorage : undefined,
+        storageKey: "sb-auth-token",
+      },
+      global: {
+        headers: {
+          "X-Client-Info": "jswp-web-client",
         },
-        global: {
-          headers: {
-            "X-Client-Info": "jswp-web-client",
-          },
-        },
-      }
-    );
+      },
+    }
+  );
 
-    clientInitialized = true;
-    console.log("Supabase: Browser client created successfully");
-    return browserClient;
-  } catch (error) {
-    console.error("Supabase: Failed to create browser client:", error);
-    clientInitialized = false;
-    browserClient = null;
-    throw error;
-  }
+  return browserClient;
 }
 
 // Server client for server components and API routes

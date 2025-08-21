@@ -6,7 +6,6 @@ import DistrictAdminDashboard from "./DistrictAdminDashboard";
 import SchoolAdminDashboard from "./SchoolAdminDashboard";
 import TeacherDashboard from "./TeacherDashboard";
 import StudentDashboard from "./StudentDashboard";
-import { AnalyticsDebug } from "@/components/debug/AnalyticsDebug";
 
 export function ClientDashboardPage() {
   const { user, profile, loading } = useAuth();
@@ -76,10 +75,5 @@ export function ClientDashboardPage() {
     }
   };
 
-  return (
-    <>
-      {renderDashboard()}
-      <AnalyticsDebug />
-    </>
-  );
+  return renderDashboard();
 }

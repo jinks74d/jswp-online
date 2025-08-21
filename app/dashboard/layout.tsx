@@ -1,6 +1,6 @@
 // app/dashboard/layout.tsx
 import { SessionTrackingProvider } from "@/components/analytics/SessionTrackingProvider";
-import { ClientDashboard } from "@/components/dashboard/ClientDashboard";
+import ClientDashboard from "@/components/dashboard/ClientDashboard";
 
 export default function DashboardLayout({
   children,

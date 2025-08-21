@@ -1,7 +1,7 @@
 // components/dashboard/DashboardSidebar.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, memo, useCallback, useMemo } from "react";
 import {
   Home,
   Building2,
@@ -196,10 +196,16 @@ const getRoleDisplayName = (role: UserRole): string => {
   }
 };
 
-export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
+function DashboardSidebar({ profile }: DashboardSidebarProps) {
   const pathname = usePathname();
   const [signingOut, setSigningOut] = useState(false);
   const { signOut } = useAuth();
+
+  // Memoize navigation items to prevent recalculation on every render
+  const navigationItems = useMemo(() => getNavigationItems(profile?.role || 'student', pathname), [profile?.role, pathname]);
+
+  // Memoize sign out handler
+  const handleSignOut = useCallback(async () => {
 
   // Add null check for profile before accessing properties
   if (!profile) {
@@ -215,11 +221,6 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
     );
   }
 
-  // Debug logging (now safe after null check)
-  console.log("DashboardSidebar profile.districts:", profile.districts);
-  console.log("DashboardSidebar full profile:", profile);
-
-  const handleSignOut = async () => {
     setSigningOut(true);
     try {
       await signOut();
@@ -237,9 +238,9 @@ export default function DashboardSidebar({ profile }: DashboardSidebarProps) {
       alert("Failed to sign out. Please try again.");
       setSigningOut(false);
     }
-  };
+  }, [signOut]);
 
-  const navigation = getNavigationItems(profile.role, pathname);
+  const navigation = navigationItems;
   const roleDisplayName = getRoleDisplayName(profile.role);
 
   return (

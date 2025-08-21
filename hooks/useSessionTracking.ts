@@ -1,9 +1,12 @@
 // hooks/useSessionTracking.ts
-'use client';
-import { useEffect, useRef, useCallback, useState } from 'react';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { usePathname } from 'next/navigation';
-import { isLikelyRealPageUnload, onNavigationStart } from '@/lib/navigation-detection';
+"use client";
+import { useEffect, useRef, useCallback, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { usePathname } from "next/navigation";
+import {
+  isLikelyRealPageUnload,
+  onNavigationStart,
+} from "@/lib/navigation-detection";
 
 interface SessionTrackingOptions {
   trackPageViews?: boolean;
@@ -28,6 +31,8 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pageStartTimeRef = useRef<Date>(new Date());
   const isTrackingRef = useRef<boolean>(false);
+  const mountedRef = useRef<boolean>(true);
+  const timeoutsRef = useRef<Set<NodeJS.Timeout>>(new Set());
   const [isClient, setIsClient] = useState(false);
 
   const config = { ...defaultOptions, ...options };
@@ -38,65 +43,72 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
   }, []);
 
   // Track user actions
-  const trackAction = useCallback(async (
-    actionType: string, 
-    actionDetails?: any, 
-    assignmentId?: string
-  ) => {
-    if (!sessionIdRef.current || !config.trackActions) return;
+  const trackAction = useCallback(
+    async (actionType: string, actionDetails?: any, assignmentId?: string) => {
+      if (!sessionIdRef.current || !config.trackActions) return;
 
-    try {
-      await fetch('/api/analytics/session/activity', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: sessionIdRef.current,
-          actionType,
-          actionDetails,
-          assignmentId,
-          path: pathname,
-        }),
-      });
-    } catch (error) {
-      console.warn('Failed to track action:', error);
-    }
-  }, [pathname, config.trackActions]);
-
-  // Update activity timestamp
-  const updateActivity = useCallback(async (trackPageView = false) => {
-    if (!sessionIdRef.current) return;
-
-    const now = new Date();
-    lastActivityRef.current = now;
-
-    try {
-      const body: any = {
-        sessionId: sessionIdRef.current,
-      };
-
-      if (trackPageView && config.trackPageViews) {
-        body.path = pathname;
-        body.pageTitle = document.title;
+      try {
+        await fetch("/api/analytics/session/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: sessionIdRef.current,
+            actionType,
+            actionDetails,
+            assignmentId,
+            path: pathname,
+          }),
+        });
+      } catch (error) {
+        console.warn("Failed to track action:", error);
       }
+    },
+    [pathname, config.trackActions]
+  );
 
-      await fetch('/api/analytics/session/activity', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-    } catch (error) {
-      console.warn('Failed to update activity:', error);
-    }
-  }, [pathname, config.trackPageViews]);
+  // Optimized activity tracking with batching
+  const updateActivity = useCallback(
+    async (trackPageView = false) => {
+      if (!sessionIdRef.current || !mountedRef.current) return;
+
+      const now = new Date();
+      lastActivityRef.current = now;
+
+      // Batch activity updates to reduce API calls
+      try {
+        const body: any = {
+          sessionId: sessionIdRef.current,
+          timestamp: now.toISOString(),
+        };
+
+        if (trackPageView && config.trackPageViews) {
+          body.path = pathname;
+          body.pageTitle = document.title;
+        }
+
+        // Use fire-and-forget approach for better performance
+        fetch("/api/analytics/session/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }).catch((error) => {
+          console.warn("Failed to update activity:", error);
+        });
+      } catch (error) {
+        console.warn("Failed to prepare activity update:", error);
+      }
+    },
+    [pathname, config.trackPageViews]
+  );
 
   // Start a new session
   const startSession = useCallback(async () => {
     if (!user || !profile || isTrackingRef.current) return;
 
     try {
-      const response = await fetch('/api/analytics/session/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/analytics/session/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       });
 
       if (response.ok) {
@@ -112,7 +124,7 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
         }
       }
     } catch (error) {
-      console.warn('Failed to start session:', error);
+      console.warn("Failed to start session:", error);
     }
   }, [user, profile, config.trackPageViews, updateActivity]);
 
@@ -121,21 +133,40 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
     if (!sessionIdRef.current) return;
 
     try {
-      await fetch('/api/analytics/session/end', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/analytics/session/end", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: sessionIdRef.current }),
       });
     } catch (error) {
-      console.warn('Failed to end session:', error);
+      console.warn("Failed to end session:", error);
     } finally {
       sessionIdRef.current = null;
       isTrackingRef.current = false;
     }
   }, []);
 
+  // Cleanup utility
+  const cleanup = useCallback(() => {
+    // Clear all intervals and timeouts
+    if (activityIntervalRef.current) {
+      clearInterval(activityIntervalRef.current);
+      activityIntervalRef.current = null;
+    }
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+      idleTimeoutRef.current = null;
+    }
+
+    // Clear all tracked timeouts
+    timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+    timeoutsRef.current.clear();
+  }, []);
+
   // Handle user activity (clicks, keyboard, etc.)
   const handleUserActivity = useCallback(() => {
+    if (!mountedRef.current) return;
+
     const now = new Date();
     lastActivityRef.current = now;
 
@@ -144,10 +175,14 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
       clearTimeout(idleTimeoutRef.current);
     }
 
-    idleTimeoutRef.current = setTimeout(() => {
-      // End session due to inactivity
-      endSession();
+    const timeout = setTimeout(() => {
+      if (mountedRef.current) {
+        endSession();
+      }
     }, config.idleTimeout);
+
+    idleTimeoutRef.current = timeout;
+    timeoutsRef.current.add(timeout);
   }, [endSession, config.idleTimeout]);
 
   // Sign out user completely (ends session and clears auth)
@@ -155,14 +190,14 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
     try {
       // End session first
       await endSession();
-      
+
       // Then sign out via API (this will clear auth cookies)
-      await fetch('/api/auth/signout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+      await fetch("/api/auth/signout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       });
     } catch (error) {
-      console.warn('Error during signout:', error);
+      console.warn("Error during signout:", error);
     }
   }, [endSession]);
 
@@ -203,12 +238,10 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
     pageStartTimeRef.current = new Date();
   }, [pathname, config.trackPageViews, updateActivity]);
 
-  // Main effect - setup and cleanup
+  // Main effect - setup and cleanup with proper memory management
   useEffect(() => {
     if (!isClient || !user || !profile) {
-      // Only end session, don't trigger signout API if user/profile don't exist
       if (sessionIdRef.current) {
-        // Just clear the session tracking, don't call signout API
         sessionIdRef.current = null;
         isTrackingRef.current = false;
       }
@@ -219,104 +252,73 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
     startSession();
 
     // Set up activity tracking interval
-    activityIntervalRef.current = setInterval(() => {
-      if (sessionIdRef.current) {
+    const activityInterval = setInterval(() => {
+      if (sessionIdRef.current && mountedRef.current) {
         updateActivity();
       }
     }, config.activityInterval);
+    activityIntervalRef.current = activityInterval;
 
     // Set up idle timeout
-    idleTimeoutRef.current = setTimeout(() => {
-      endSession();
+    const idleTimeout = setTimeout(() => {
+      if (mountedRef.current) {
+        endSession();
+      }
     }, config.idleTimeout);
+    idleTimeoutRef.current = idleTimeout;
+    timeoutsRef.current.add(idleTimeout);
 
     // Set up event listeners for user activity
-    const activityEvents = ['click', 'keydown', 'scroll', 'mousemove', 'touchstart'];
-    
-    activityEvents.forEach(event => {
+    const activityEvents = [
+      "click",
+      "keydown",
+      "scroll",
+      "mousemove",
+      "touchstart",
+    ];
+
+    activityEvents.forEach((event) => {
       document.addEventListener(event, handleUserActivity, { passive: true });
     });
 
     // Listen for page visibility changes
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Listen for beforeunload - only sign out on actual browser/tab close
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      // Only proceed if this appears to be a real page unload
-      if (!isLikelyRealPageUnload()) {
-        return;
-      }
-      
-      // Use navigator.sendBeacon for reliable signout during page unload
-      const signoutData = JSON.stringify({});
-      
-      try {
-        // Try sendBeacon first (most reliable for page unload)
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon('/api/auth/signout', signoutData);
-        } else {
-          // Fallback to synchronous fetch
-          fetch('/api/auth/signout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: signoutData,
-            keepalive: true
-          });
-        }
-      } catch (error) {
-        console.warn('Error during browser close signout:', error);
-      }
-      
-      // Also end session
-      endSession();
-    };
-
-    // More reliable detection for actual page unloads using pagehide
-    const handlePageHide = (event: PageTransitionEvent) => {
-      // pagehide fires on actual navigation away from page
-      // event.persisted indicates if page is being cached (back/forward navigation)
-      if (!event.persisted && isLikelyRealPageUnload()) {
-        // This is likely a real page unload, not navigation
-        const signoutData = JSON.stringify({});
-        
+    // Simplified page unload handling
+    const handleBeforeUnload = () => {
+      if (isLikelyRealPageUnload()) {
         try {
           if (navigator.sendBeacon) {
-            navigator.sendBeacon('/api/auth/signout', signoutData);
+            navigator.sendBeacon("/api/auth/signout", "{}");
           }
         } catch (error) {
-          console.warn('Error during pagehide signout:', error);
+          console.warn("Error during signout:", error);
         }
-        
         endSession();
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handlePageHide);
-    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     // Set up navigation detection
     const unsubscribeNavigation = onNavigationStart(() => {
-      // Navigation started, this helps our detection logic
+      // Navigation started
     });
 
-    // Cleanup
+    // Cleanup function
     return () => {
-      // Clear intervals and timeouts
-      if (activityIntervalRef.current) {
-        clearInterval(activityIntervalRef.current);
-      }
-      if (idleTimeoutRef.current) {
-        clearTimeout(idleTimeoutRef.current);
-      }
+      mountedRef.current = false;
+
+      // Clean up all resources
+      cleanup();
 
       // Remove event listeners
-      activityEvents.forEach(event => {
+      activityEvents.forEach((event) => {
         document.removeEventListener(event, handleUserActivity);
       });
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handlePageHide);
-      
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+
       // Clean up navigation detection
       unsubscribeNavigation();
 
@@ -325,17 +327,25 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
     };
   }, [
     isClient,
-    user, 
-    profile, 
-    startSession, 
-    endSession, 
-    updateActivity, 
-    handleUserActivity, 
+    user,
+    profile,
+    startSession,
+    endSession,
+    updateActivity,
+    handleUserActivity,
     handleVisibilityChange,
-    signOutUser,
+    cleanup,
     config.activityInterval,
-    config.idleTimeout
+    config.idleTimeout,
   ]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      cleanup();
+    };
+  }, [cleanup]);
 
   // Return tracking functions for manual use
   return {

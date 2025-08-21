@@ -21,7 +21,10 @@
       "Bash(npm run dev:*)",
       "Bash(npm run lint)",
       "Bash(taskkill:*)",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "Bash(git checkout:*)",
+      "Bash(timeout 10 npm run dev)",
+      "Bash(npx next build --debug)"
     ],
     "deny": []
   }
