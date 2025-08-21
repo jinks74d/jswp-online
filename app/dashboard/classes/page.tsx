@@ -1,26 +1,16 @@
 // app/dashboard/classes/page.tsx
 "use client";
 
-import { useAuth } from "@/components/auth/AuthProvider";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "../auth-provider";
+import { useState, useCallback, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import ClassesList from "@/components/dashboard/classes/ClassesList";
 
 export default function ClassesPage() {
-  const { user, profile, loading } = useAuth();
-  const router = useRouter();
+  const { user, profile } = useAuth();
   const [classPeriods, setClassPeriods] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const supabase = createClient();
-
-  // Redirect if not authorized
-  useEffect(() => {
-    if (!loading && (!user || !profile)) {
-      router.replace("/");
-      return;
-    }
-  }, [user, profile, loading, router]);
 
   // Fetch class periods data function
   const fetchClassPeriods = useCallback(async () => {
@@ -137,8 +127,8 @@ export default function ClassesPage() {
     fetchClassPeriods();
   };
 
-  // Show loading while auth or data is loading
-  if (loading || dataLoading) {
+  // Show loading while data is loading
+  if (dataLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-2">
@@ -149,19 +139,13 @@ export default function ClassesPage() {
     );
   }
 
-  // Don't render if not authorized (redirect should handle this)
-  if (!user || !profile) {
-    return null;
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Classes</h1>
         <p className="text-gray-600 mt-1">
-          Manage class periods and schedules for{" "}
-          {(profile as any).schools?.name || "your school"}
+          Manage class periods and schedules for your school
         </p>
       </div>
 
@@ -170,9 +154,9 @@ export default function ClassesPage() {
         classPeriods={classPeriods}
         profile={profile as any}
         districtBranding={{
-          logo_url: (profile as any).districts?.logo_url || null,
-          primary_color: (profile as any).districts?.primary_color || null,
-          secondary_color: (profile as any).districts?.secondary_color || null,
+          logo_url: null,
+          primary_color: null,
+          secondary_color: null,
         }}
         onRefresh={handleRefresh}
       />

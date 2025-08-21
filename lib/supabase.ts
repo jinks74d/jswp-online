@@ -4,76 +4,40 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 
-// Database type placeholder
+// Re-export types for backwards compatibility
+export type {
+  UserRole,
+  UserProfile,
+  District,
+  School,
+  AuthSession,
+  AuthState,
+} from "./auth/types";
+
+// Legacy Database interface for backwards compatibility
 export interface Database {
   public: {
     Tables: {
       user_profiles: {
-        Row: UserProfile;
-        Insert: Partial<UserProfile>;
-        Update: Partial<UserProfile>;
+        Row: any;
+        Insert: any;
+        Update: any;
       };
       [key: string]: any;
     };
   };
 }
 
-// Types for our database
-export type UserRole =
-  | "super_admin"
-  | "district_admin"
-  | "school_admin"
-  | "teacher"
-  | "student";
+// Singleton browser client
+let browserClient: SupabaseClient | null = null;
 
-export interface UserProfile {
-  id: string;
-  district_id: string | null;
-  school_id: string | null;
-  role: UserRole;
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
-  metadata: Record<string, any> | null;
-  created_at: string | null;
-  updated_at: string | null;
-  // Optional expanded relations
-  districts?: District;
-  schools?: School;
-}
-
-export interface District {
-  id: string;
-  name: string;
-  domain: string | null;
-  poc_email: string;
-  settings: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface School {
-  id: string;
-  district_id: string;
-  name: string;
-  address: string | null;
-  primary_color: string | null;
-  secondary_color: string | null;
-  logo_url: string | null;
-  settings: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-}
-
-// PERFORMANCE: Singleton client instance for browser
-let browserClient: SupabaseClient<Database> | null = null;
-
-// Browser client for client components - optimized singleton pattern
-export function createClient(): SupabaseClient<Database> {
-  // Handle server-side rendering gracefully
+/**
+ * Create client for use in Client Components
+ */
+export function createClient(): SupabaseClient {
   if (typeof window === "undefined") {
-    // Return a new client for each SSR request (no shared state)
-    return createBrowserClient<Database>(
+    // Return new client for SSR
+    return createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
@@ -89,36 +53,21 @@ export function createClient(): SupabaseClient<Database> {
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   ) {
-    console.error("Supabase: Missing environment variables");
     throw new Error("Missing Supabase environment variables");
   }
 
   // Create singleton browser client
-  browserClient = createBrowserClient<Database>(
+  browserClient = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false, // Prevent URL parsing issues
-        flowType: "pkce",
-        debug: false,
-        storage: typeof window !== "undefined" ? window.localStorage : undefined,
-        storageKey: "sb-auth-token",
-      },
-      global: {
-        headers: {
-          "X-Client-Info": "jswp-web-client",
-        },
-      },
-    }
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
   return browserClient;
 }
 
-// Server client for server components and API routes
+/**
+ * Create server client for use in Server Components
+ */
 export async function createServerSupabaseClient(cookieStore: any) {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -128,13 +77,11 @@ export async function createServerSupabaseClient(cookieStore: any) {
         async getAll() {
           return cookieStore.getAll();
         },
-        async setAll(
-          cookiesToSet: {
-            name: string;
-            value: string;
-            options?: CookieOptions;
-          }[]
-        ) {
+        async setAll(cookiesToSet: {
+          name: string;
+          value: string;
+          options?: CookieOptions;
+        }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
@@ -150,7 +97,9 @@ export async function createServerSupabaseClient(cookieStore: any) {
   );
 }
 
-// Middleware client
+/**
+ * Create middleware client
+ */
 export function createMiddlewareClient(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -167,17 +116,15 @@ export function createMiddlewareClient(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
           });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
+          response = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
         },
       },
     }
