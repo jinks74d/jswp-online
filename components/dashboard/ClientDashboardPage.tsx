@@ -1,7 +1,7 @@
 // components/dashboard/ClientDashboardPage.tsx
 "use client";
 
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/app/dashboard/auth-provider";
 import DistrictAdminDashboard from "./DistrictAdminDashboard";
 import SchoolAdminDashboard from "./SchoolAdminDashboard";
 import TeacherDashboard from "./TeacherDashboard";

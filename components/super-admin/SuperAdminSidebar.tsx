@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Building2, Users, Settings, LogOut, Home, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/app/dashboard/auth-provider";
 import { UserProfile } from "@/lib/supabase";
 
 interface SuperAdminSidebarProps {

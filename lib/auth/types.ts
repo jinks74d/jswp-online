@@ -18,6 +18,19 @@ export interface UserProfile {
   last_name: string | null;
   created_at: string;
   updated_at: string;
+  // Optional related data that may be populated by joins
+  districts?: {
+    id: string;
+    name: string;
+    domain: string | null;
+    logo_url: string | null;
+    primary_color: string | null;
+    secondary_color: string | null;
+  };
+  schools?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface District {
@@ -75,7 +88,8 @@ export interface RouteConfig {
   redirectTo?: string;
 }
 
-// Session configuration
+// Session configuration defaults (for client-side code that imports types)
+// Actual configuration is in session-config.ts for server-side use
 export const SESSION_CONFIG = {
   maxAge: 60 * 60 * 24, // 24 hours in seconds
   updateAge: 60 * 15, // Update session if older than 15 minutes

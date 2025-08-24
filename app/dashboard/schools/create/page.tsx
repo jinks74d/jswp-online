@@ -12,7 +12,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/app/dashboard/auth-provider";
 
 interface FormData {
   name: string;

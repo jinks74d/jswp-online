@@ -5,7 +5,7 @@ import DistrictAdminDashboard from "@/components/dashboard/DistrictAdminDashboar
 import SchoolAdminDashboard from "@/components/dashboard/SchoolAdminDashboard";
 import TeacherDashboard from "@/components/dashboard/TeacherDashboard";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
-import { ClientDashboardPage } from "@/components/dashboard/ClientDashboardPage";
+import { FallbackDashboard } from "@/components/dashboard/FallbackDashboard";
 import { Suspense } from "react";
 
 // PERFORMANCE: Use dynamic rendering with caching for static parts
@@ -31,8 +31,8 @@ export default async function DashboardPage() {
     const { data: userData, error: userError } = userResult as any;
 
     if (userError || !userData?.user) {
-      // Fail fast and use client-side component
-      return <ClientDashboardPage />;
+      // Fail fast and use fallback component
+      return <FallbackDashboard />;
     }
 
     user = userData.user;
@@ -52,20 +52,20 @@ export default async function DashboardPage() {
     const { data: profileData, error: profileError } = profileResult as any;
 
     if (profileError || !profileData) {
-      // Fail fast and use client-side component
-      return <ClientDashboardPage />;
+      // Fail fast and use fallback component
+      return <FallbackDashboard />;
     }
 
     profile = profileData;
   } catch (error) {
-    console.warn("Dashboard Page: Server auth failed, using client component");
-    // Always fallback to client-side component on any error
-    return <ClientDashboardPage />;
+    console.warn("Dashboard Page: Server auth failed, using fallback component");
+    // Always fallback to fallback component on any error
+    return <FallbackDashboard />;
   }
 
-  // If server-side auth failed, use client-side component
+  // If server-side auth failed, use fallback component
   if (!user || !profile) {
-    return <ClientDashboardPage />;
+    return <FallbackDashboard />;
   }
 
   // Server-side auth succeeded, render role-specific dashboard

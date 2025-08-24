@@ -1,7 +1,7 @@
 // hooks/useSessionTracking.ts
 "use client";
 import { useEffect, useRef, useCallback, useState } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/app/dashboard/auth-provider";
 import { usePathname } from "next/navigation";
 import {
   isLikelyRealPageUnload,

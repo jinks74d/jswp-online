@@ -27,7 +27,11 @@
       "Bash(npx next build --debug)",
       "Bash(mkdir:*)",
       "Bash(npm install)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(timeout 10s npm run build)",
+      "Bash(timeout 15s npm run dev)",
+      "Bash(timeout 30s npm run build)",
+      "Bash(timeout 20s npm run dev)"
     ],
     "deny": []
   }

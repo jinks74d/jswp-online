@@ -24,12 +24,10 @@ export default async function DashboardLayout({
   }
 
   return (
-    <SessionTrackingProvider>
-      <DashboardWrapper 
-        session={session}
-      >
-        {children}
-      </DashboardWrapper>
-    </SessionTrackingProvider>
+    <DashboardWrapper 
+      session={session}
+    >
+      {children}
+    </DashboardWrapper>
   );
 }

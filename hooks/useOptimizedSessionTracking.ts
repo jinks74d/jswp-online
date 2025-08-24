@@ -2,9 +2,38 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState, useMemo } from "react";
-import { useAuth } from "@/components/auth/OptimizedAuthProvider";
+// import { useAuth } from "@/components/auth/OptimizedAuthProvider";
+import { useAuth } from "@/app/dashboard/auth-provider";
 import { usePathname } from "next/navigation";
-import { debounce, throttle } from "lodash-es";
+// import { debounce, throttle } from "lodash-es";
+
+// Simple debounce implementation
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout | null = null;
+  return (...args: any[]) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
+
+// Simple throttle implementation
+const throttle = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout | null = null;
+  let lastExecTime = 0;
+  return (...args: any[]) => {
+    const currentTime = Date.now();
+    if (currentTime - lastExecTime > delay) {
+      func(...args);
+      lastExecTime = currentTime;
+    } else {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+        lastExecTime = Date.now();
+      }, delay - (currentTime - lastExecTime));
+    }
+  };
+};
 
 interface OptimizedSessionTrackingOptions {
   trackPageViews?: boolean;
@@ -68,7 +97,7 @@ class ActivityQueue {
 export function useOptimizedSessionTracking(
   options: OptimizedSessionTrackingOptions = {}
 ) {
-  const { authState } = useAuth();
+  const { user, profile, loading } = useAuth();
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
   
@@ -114,7 +143,7 @@ export function useOptimizedSessionTracking(
 
   // Optimized session management
   const startSession = useCallback(async () => {
-    if (authState.status !== 'authenticated' || sessionIdRef.current) return;
+    if (!user || sessionIdRef.current) return;
 
     try {
       const response = await fetch("/api/analytics/session/start", {
@@ -135,7 +164,7 @@ export function useOptimizedSessionTracking(
     } catch (error) {
       console.warn("Failed to start session:", error);
     }
-  }, [authState.status, config.trackPageViews, trackActivity]);
+  }, [user, config.trackPageViews, trackActivity]);
 
   const endSession = useCallback(async () => {
     if (!sessionIdRef.current) return;
@@ -164,7 +193,7 @@ export function useOptimizedSessionTracking(
 
   // Optimized event handlers with proper cleanup
   useEffect(() => {
-    if (!isClient || authState.status !== 'authenticated') {
+    if (!isClient || !user) {
       return;
     }
 
@@ -220,7 +249,7 @@ export function useOptimizedSessionTracking(
     };
   }, [
     isClient,
-    authState.status,
+    user,
     startSession,
     endSession,
     debouncedTrackActivity,

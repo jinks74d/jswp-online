@@ -2,6 +2,7 @@
 "use client";
 
 import { AuthProvider } from "./auth-provider";
+import { SessionTrackingProvider } from "@/components/analytics/SessionTrackingProvider";
 import type { AuthSession } from "@/lib/auth/types";
 
 interface DashboardWrapperProps {
@@ -12,7 +13,8 @@ interface DashboardWrapperProps {
 export function DashboardWrapper({ session, children }: DashboardWrapperProps) {
   return (
     <AuthProvider initialSession={session}>
-      <div className="min-h-screen bg-gray-50">
+      <SessionTrackingProvider>
+        <div className="min-h-screen bg-gray-50">
         <div className="flex">
           {/* Sidebar */}
           <div className="w-64 bg-white shadow-sm">
@@ -85,6 +87,7 @@ export function DashboardWrapper({ session, children }: DashboardWrapperProps) {
           </div>
         </div>
       </div>
+      </SessionTrackingProvider>
     </AuthProvider>
   );
 }

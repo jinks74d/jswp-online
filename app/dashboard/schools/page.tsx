@@ -1,7 +1,7 @@
 // app/dashboard/schools/page.tsx
 "use client";
 
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/app/dashboard/auth-provider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";

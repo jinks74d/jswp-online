@@ -2,7 +2,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { SESSION_CONFIG } from "./types";
+import { getSessionConfig } from "./session-config";
 
 /**
  * Server-side session utilities
@@ -14,12 +14,13 @@ export class SessionManager {
    */
   static async setSessionCookie(token: string): Promise<void> {
     const cookieStore = await cookies();
+    const config = getSessionConfig();
     
-    cookieStore.set(SESSION_CONFIG.cookieName, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: SESSION_CONFIG.maxAge,
+    cookieStore.set(config.cookieName, token, {
+      httpOnly: config.httpOnly,
+      secure: config.secure || process.env.NODE_ENV === "production",
+      sameSite: config.sameSite,
+      maxAge: config.maxAge,
       path: "/",
     });
   }
@@ -29,8 +30,9 @@ export class SessionManager {
    */
   static async clearSessionCookie(): Promise<void> {
     const cookieStore = await cookies();
+    const config = getSessionConfig();
     
-    cookieStore.delete(SESSION_CONFIG.cookieName);
+    cookieStore.delete(config.cookieName);
   }
 
   /**
@@ -38,7 +40,8 @@ export class SessionManager {
    */
   static async getSessionCookie(): Promise<string | undefined> {
     const cookieStore = await cookies();
-    const cookie = cookieStore.get(SESSION_CONFIG.cookieName);
+    const config = getSessionConfig();
+    const cookie = cookieStore.get(config.cookieName);
     return cookie?.value;
   }
 
@@ -47,6 +50,7 @@ export class SessionManager {
    */
   static shouldRefreshSession(issuedAt: number): boolean {
     const age = Date.now() - issuedAt;
-    return age > SESSION_CONFIG.updateAge * 1000;
+    const config = getSessionConfig();
+    return age > config.updateAge * 1000;
   }
 }

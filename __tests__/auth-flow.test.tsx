@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
-import { AuthProvider, useAuth } from '@/components/auth/AuthProvider';
+import { AuthProvider, useAuth } from '@/app/dashboard/auth-provider';
 import LoginPage from '@/app/page';
 
 // Mock next/navigation
@@ -67,8 +67,8 @@ describe('Authentication Flow Tests', () => {
       );
 
       // Mock the useAuth hook to return authenticated state
-      vi.mock('@/components/auth/AuthProvider', async () => {
-        const actual = await vi.importActual('@/components/auth/AuthProvider');
+      vi.mock('@/app/dashboard/auth-provider', async () => {
+        const actual = await vi.importActual('@/app/dashboard/auth-provider');
         return {
           ...actual,
           useAuth: () => ({
@@ -92,8 +92,8 @@ describe('Authentication Flow Tests', () => {
       const mockUser = { id: '123', email: 'admin@example.com' };
       const mockProfile = { id: '123', role: 'super_admin' };
 
-      vi.mock('@/components/auth/AuthProvider', async () => {
-        const actual = await vi.importActual('@/components/auth/AuthProvider');
+      vi.mock('@/app/dashboard/auth-provider', async () => {
+        const actual = await vi.importActual('@/app/dashboard/auth-provider');
         return {
           ...actual,
           useAuth: () => ({
@@ -121,8 +121,8 @@ describe('Authentication Flow Tests', () => {
   describe('Login Form Tests', () => {
     beforeEach(() => {
       // Reset auth context to unauthenticated state
-      vi.mock('@/components/auth/AuthProvider', async () => {
-        const actual = await vi.importActual('@/components/auth/AuthProvider');
+      vi.mock('@/app/dashboard/auth-provider', async () => {
+        const actual = await vi.importActual('@/app/dashboard/auth-provider');
         return {
           ...actual,
           useAuth: () => ({

@@ -15,5 +15,9 @@ export default function AnalyticsPage() {
     );
   }
 
-  return <AnalyticsDashboard />;
+  return (
+    <AnalyticsDashboard 
+      userRole={profile?.role || "student"}
+    />
+  );
 }

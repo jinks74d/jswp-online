@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/components/auth/OptimizedAuthProvider";
+// import { useAuth } from "@/components/auth/OptimizedAuthProvider";
+import { useAuth } from "@/app/dashboard/auth-provider";
 import { UserProfile, UserRole } from "@/lib/supabase";
 import DistrictLogo from "@/components/ui/DistrictLogo";
 import { LoadingSpinner } from "@/components/ui/LoadingStates";
@@ -230,6 +231,7 @@ const getNavigationItems = (role: UserRole, pathname: string) => {
 // Role display names
 const getRoleDisplayName = (role: UserRole): string => {
   const roleNames: Record<UserRole, string> = {
+    super_admin: "Super Admin",
     district_admin: "District Admin",
     school_admin: "School Admin",
     teacher: "Teacher",

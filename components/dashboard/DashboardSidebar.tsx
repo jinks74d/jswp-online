@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/app/dashboard/auth-provider";
 import { UserProfile, UserRole } from "@/lib/supabase";
 import DistrictLogo from "@/components/ui/DistrictLogo";
 
@@ -204,9 +204,6 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
   // Memoize navigation items to prevent recalculation on every render
   const navigationItems = useMemo(() => getNavigationItems(profile?.role || 'student', pathname), [profile?.role, pathname]);
 
-  // Memoize sign out handler
-  const handleSignOut = useCallback(async () => {
-
   // Add null check for profile before accessing properties
   if (!profile) {
     return (
@@ -221,6 +218,8 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
     );
   }
 
+  // Memoize sign out handler
+  const handleSignOut = useCallback(async () => {
     setSigningOut(true);
     try {
       await signOut();
@@ -350,3 +349,6 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
     </div>
   );
 }
+
+// Memoized export for better performance
+export default memo(DashboardSidebar);

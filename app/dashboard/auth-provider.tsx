@@ -3,11 +3,13 @@
 
 import { createContext, useContext } from "react";
 import type { AuthSession, AuthState } from "@/lib/auth/types";
-import { getUserDisplayName, getRoleDisplayName } from "@/lib/auth/client";
+import { getUserDisplayName, getRoleDisplayName, useSignOut } from "@/lib/auth/client";
 
 interface AuthContextType extends AuthState {
   displayName: string;
   roleDisplayName: string;
+  loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,6 +20,8 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ initialSession, children }: AuthProviderProps) {
+  const signOut = useSignOut();
+  
   // Create read-only auth state from server session
   const authState: AuthState = {
     isAuthenticated: true,
@@ -28,8 +32,10 @@ export function AuthProvider({ initialSession, children }: AuthProviderProps) {
 
   const contextValue: AuthContextType = {
     ...authState,
+    loading: false, // Add explicit loading property
     displayName: getUserDisplayName(authState),
     roleDisplayName: getRoleDisplayName(authState.profile?.role || ""),
+    signOut,
   };
 
   return (

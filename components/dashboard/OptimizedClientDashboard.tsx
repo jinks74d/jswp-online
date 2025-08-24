@@ -1,7 +1,8 @@
 // components/dashboard/OptimizedClientDashboard.tsx
 "use client";
 
-import { useAuth } from "@/components/auth/OptimizedAuthProvider";
+// import { useAuth } from "@/components/auth/OptimizedAuthProvider";
+import { useAuth } from "@/app/dashboard/auth-provider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
@@ -47,7 +48,14 @@ const DashboardError = ({ title, message, onRetry }: {
 );
 
 export const OptimizedClientDashboard = ({ children }: OptimizedClientDashboardProps) => {
-  const { authState } = useAuth();
+  const { user, profile, loading } = useAuth();
+  
+  // Temporary conversion to match expected authState format
+  const authState = {
+    status: loading ? 'loading' : user ? 'authenticated' : 'unauthenticated',
+    profile: profile!,
+    error: null as string | null
+  };
   const router = useRouter();
   const [enrichedProfile, setEnrichedProfile] = useState<UserProfile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -147,7 +155,7 @@ export const OptimizedClientDashboard = ({ children }: OptimizedClientDashboardP
     return (
       <DashboardError
         title="Authentication Error"
-        message={authState.error}
+        message={authState.error || "An authentication error occurred"}
         onRetry={() => window.location.reload()}
       />
     );
