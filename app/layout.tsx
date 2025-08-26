@@ -24,7 +24,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <AuthDebug enabled={process.env.NODE_ENV === "development"} />
-          <AuthFlowMonitor />
+          {/* <AuthFlowMonitor /> */}
         </AuthProvider>
       </body>
     </html>
