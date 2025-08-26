@@ -24,7 +24,11 @@ function ClientDashboard({ children }: ClientDashboardProps) {
 
   // Reset profile state when user changes
   useEffect(() => {
-    if (!user || lastFetchedUserRef.current !== user.id) {
+    if (!user) {
+      setFullProfile(null);
+      lastFetchedUserRef.current = null;
+    } else if (lastFetchedUserRef.current && lastFetchedUserRef.current !== user.id) {
+      // Only reset if we had a different user before
       setFullProfile(null);
       lastFetchedUserRef.current = null;
     }
