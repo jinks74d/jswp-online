@@ -52,9 +52,12 @@ export default function LoginPage() {
     if (!authLoading && user && profile && !redirectAttempted.current) {
       redirectAttempted.current = true;
       
-      // Only redirect regular users automatically
+      // Only redirect regular users automatically - use Next.js router for smoother transitions
       if (profile.role !== "super_admin") {
-        window.location.href = "/dashboard";
+        // Small delay to prevent flashing
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 100);
       }
     }
   }, [authLoading, user, profile]);

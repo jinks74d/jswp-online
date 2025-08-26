@@ -20,7 +20,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
   const mountedRef = useRef(true);
   const profileFetchRef = useRef<AbortController | null>(null);
 
-  // Optimized profile fetching with smart caching
+  // Optimized profile fetching with smart caching - only trigger once per user/profile change
   useEffect(() => {
     if (!user || !profile || fullProfile || profileLoading) {
       return;
@@ -125,42 +125,10 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     }
   }, [user, profile, loading, router]);
 
-  // Only show loading during initial auth check - not for subsequent navigations
-  if (loading && !user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your session...</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Please wait while we verify your authentication
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // If we have a user but no profile, and we're not already loading it, show minimal loading
-  // However, if we have a fullProfile or lastValidProfile already loaded, don't show this loading state
-  if (
-    user &&
-    !profile &&
-    !profileLoading &&
-    !fullProfile &&
-    !lastValidProfile
-  ) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Setting up your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Wait for profile loading to complete before checking district access
-  if (profileLoading) {
+  // Simplified loading state - only show when we truly don't have enough data to render
+  const hasMinimumData = (user && profile) || lastValidProfile;
+  
+  if (loading || (!hasMinimumData && (profileLoading || !user))) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
@@ -219,7 +187,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
   };
 
   return (
-    <div className="min-h-screen" style={gradientStyle}>
+    <div className="min-h-screen transition-opacity duration-300 opacity-100" style={gradientStyle}>
       <DashboardSidebar profile={profileToUse} />
       <div className="pl-64">
         <main className="py-8 px-8">{children}</main>
