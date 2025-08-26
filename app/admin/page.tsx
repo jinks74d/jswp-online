@@ -45,22 +45,18 @@ export default function SuperAdminLoginPage() {
     }
   }, []);
 
-  // Simplified redirect handling using centralized logic
+  // Redirect super admins directly to super-admin dashboard if already logged in
   useEffect(() => {
-    const redirectResult = RedirectHandler.handleAuthenticatedRedirect({
-      user,
-      profile,
-      loading: authLoading || loading,
-      currentPath: "/admin",
-    });
-
-    if (redirectResult.shouldRedirect && redirectResult.targetPath) {
-      RedirectHandler.performRedirect(
-        redirectResult.targetPath,
-        redirectResult.reason
-      );
+    if (!authLoading && user && profile && profile.role === "super_admin") {
+      // Check if we came from login (has just authenticated) or if this is an existing session
+      const hasJustLoggedIn = window.location.search.includes("login=success");
+      
+      if (!hasJustLoggedIn) {
+        // Existing session, redirect to dashboard
+        router.replace("/super-admin");
+      }
     }
-  }, [user, profile, authLoading, loading]);
+  }, [user, profile, authLoading, router]);
 
   // Show loading state while auth is being determined
   if (authLoading) {

@@ -47,15 +47,13 @@ export default function LoginPage() {
     }
   }, []);
 
-  // Auto-redirect authenticated users
+  // Auto-redirect authenticated users (except super admins who can choose)
   useEffect(() => {
     if (!authLoading && user && profile && !redirectAttempted.current) {
       redirectAttempted.current = true;
       
-      // Redirect based on role
-      if (profile.role === "super_admin") {
-        window.location.href = "/super-admin";
-      } else {
+      // Only redirect regular users automatically
+      if (profile.role !== "super_admin") {
         window.location.href = "/dashboard";
       }
     }
@@ -66,39 +64,21 @@ export default function LoginPage() {
     return <LoadingState type="auth" />;
   }
 
-  // Handle role mismatch and redirecting states
-  if (user && profile && !RedirectHandler.isRedirectBlocked()) {
-    const roleMismatchMessage = RedirectHandler.getRoleMismatchMessage(
-      profile,
-      "/"
-    );
-
-    if (roleMismatchMessage) {
+  // Handle authenticated users
+  if (user && profile) {
+    // For super admins, show the login form so they can choose where to go
+    if (profile.role === "super_admin") {
+      // Don't redirect, let them use the form or links
+    } else {
+      // Show redirecting state for regular users while redirect is happening
       return (
-        <RoleMismatchState
-          message={roleMismatchMessage}
-          userRole={profile.role}
-          onRedirect={() =>
-            RedirectHandler.performRedirect("/admin", "role_mismatch_redirect")
-          }
-          onSignOut={async () => {
-            if (supabaseRef.current) {
-              await supabaseRef.current.auth.signOut();
-              window.location.reload();
-            }
-          }}
+        <RedirectingState
+          userType="regular"
+          userName={profile.first_name || profile.email}
+          targetPath="/dashboard"
         />
       );
     }
-
-    // Show redirecting state while redirect is happening
-    return (
-      <RedirectingState
-        userType={profile.role === "super_admin" ? "super_admin" : "regular"}
-        userName={profile.first_name || profile.email}
-        targetPath={profile.role === "super_admin" ? "/super-admin" : "/dashboard"}
-      />
-    );
   }
 
   const handleLogin = async (e: React.FormEvent) => {
