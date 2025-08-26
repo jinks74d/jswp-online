@@ -1,0 +1,5 @@
+student_email,first_name,last_name,grade_level,class_period_ids,teacher_emails
+john.doe@student.edu,John,Doe,9,"class-period-uuid-1,class-period-uuid-2","teacher1@school.edu,teacher2@school.edu"
+jane.smith@student.edu,Jane,Smith,10,"class-period-uuid-3,class-period-uuid-4","teacher3@school.edu,teacher4@school.edu"
+mike.johnson@student.edu,Mike,Johnson,11,"class-period-uuid-1,class-period-uuid-5","teacher1@school.edu,teacher5@school.edu"
+sarah.williams@student.edu,Sarah,Williams,12,"class-period-uuid-6","teacher6@school.edu"

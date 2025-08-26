@@ -93,8 +93,8 @@ class PerformanceMonitor {
 
   private sendToAnalytics(metric: PerformanceMetric): void {
     // Send to your analytics service
-    if (window.gtag) {
-      window.gtag('event', 'performance_metric', {
+    if ((window as any).gtag) {
+      (window as any).gtag('event', 'performance_metric', {
         metric_name: metric.name,
         metric_value: metric.value,
         metric_category: metric.category,

@@ -198,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             profileData = AuthCache.getProfile();
             
             // If no cached profile, try a quick fallback fetch
-            if (!profileData && currentUser.id) {
+            if (!profileData && currentUser.id && supabase) {
               try {
                 const fallbackProfile = await supabase
                   .from("user_profiles")

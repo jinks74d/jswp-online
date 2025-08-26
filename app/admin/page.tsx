@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Shield, Eye, EyeOff, AlertCircle, ArrowLeft } from "lucide-react";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import { RedirectHandler } from "@/lib/redirect-handler";
 import {
   LoadingState,
@@ -174,7 +174,7 @@ export default function SuperAdminLoginPage() {
           .eq("id", authData.user.id)
           .single();
 
-        const profileTimeout = new Promise((_, reject) =>
+        const profileTimeout = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("Profile fetch timeout")), 2000)
         );
 

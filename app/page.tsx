@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 
 import { Eye, EyeOff, AlertCircle, Shield } from "lucide-react";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import { AuthCache } from "@/lib/auth-cache";
 import { RedirectHandler } from "@/lib/redirect-handler";
 import {
@@ -25,42 +25,30 @@ export default function LoginPage() {
   const redirectAttempted = useRef(false);
 
   const { user, profile, loading: authLoading } = useAuth();
+  
+  // Check for error in URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'access_denied') {
+      setError("Access Denied: Please log in to access your dashboard");
+    }
+  }, []);
 
   // Initialize Supabase client only once
   useEffect(() => {
     if (typeof window !== "undefined" && !supabaseRef.current) {
-      supabaseRef.current = createClient();
+      try {
+        console.log("Initializing Supabase client...");
+        supabaseRef.current = createClient();
+        console.log("Supabase client initialized successfully");
+      } catch (error) {
+        console.error("Failed to initialize Supabase client:", error);
+      }
     }
   }, []);
 
-  // Simplified redirect handling using centralized logic
-  useEffect(() => {
-    // Only check redirects when auth is not loading and we have stable state
-    // and we haven't already attempted a redirect
-    if (
-      !authLoading &&
-      !loading &&
-      user &&
-      profile &&
-      !redirectAttempted.current
-    ) {
-      redirectAttempted.current = true;
-
-      const redirectResult = RedirectHandler.handleAuthenticatedRedirect({
-        user,
-        profile,
-        loading: false,
-        currentPath: "/",
-      });
-
-      if (redirectResult.shouldRedirect && redirectResult.targetPath) {
-        RedirectHandler.performRedirect(
-          redirectResult.targetPath,
-          redirectResult.reason
-        );
-      }
-    }
-  }, [user, profile, authLoading, loading]);
+  // Don't auto-redirect - let user manually navigate or sign out if needed
+  // This prevents redirect loops
 
   // Show loading state while auth is being determined
   if (authLoading) {
@@ -106,6 +94,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Login form submitted", { email, passwordLength: password.length });
     setLoading(true);
     setError("");
 
@@ -115,10 +104,12 @@ export default function LoginPage() {
     redirectAttempted.current = false;
 
     if (!supabaseRef.current) {
+      console.error("Supabase client not initialized");
       setError("Authentication service not available");
       setLoading(false);
       return;
     }
+    console.log("Supabase client is ready");
 
     // Increase timeout to 30 seconds for slower connections
     const loginTimeout = setTimeout(() => {
@@ -128,12 +119,20 @@ export default function LoginPage() {
     }, 30000); // 30 second timeout
 
     try {
+      console.log("Attempting to sign in with Supabase...");
       // Authenticate with Supabase
       const { data: authData, error: authError } =
         await supabaseRef.current.auth.signInWithPassword({
           email,
           password,
         });
+
+      console.log("Sign in response:", { 
+        hasData: !!authData, 
+        hasUser: !!authData?.user,
+        hasError: !!authError,
+        errorMessage: authError?.message 
+      });
 
       if (authError) {
         clearTimeout(loginTimeout);
@@ -145,14 +144,18 @@ export default function LoginPage() {
         throw new Error("No user returned from authentication");
       }
 
+      console.log("Login successful, user:", authData.user.email);
       // Clear the timeout since authentication was successful
       clearTimeout(loginTimeout);
 
-      // Let AuthProvider handle profile fetching and redirects
-      // Just set loading to false and let the useEffect handle the redirect
+      // Since you already have a session, just redirect to dashboard
+      // The middleware will handle role-based redirects
+      console.log("Redirecting to dashboard...");
+      window.location.href = "/dashboard";
+      
       setLoading(false);
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Login error details:", error);
       clearTimeout(loginTimeout);
       setError(error.message || "An error occurred during login");
       setLoading(false);
@@ -227,6 +230,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 placeholder="Enter your email"
                 disabled={loading}
@@ -247,6 +251,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10 text-gray-900"
                   placeholder="Enter your password"
                   disabled={loading}
@@ -291,6 +296,78 @@ export default function LoginPage() {
               Use your district-assigned credentials to access assignments and
               tools.
             </p>
+            {/* Debug button - remove in production */}
+            <button
+              type="button"
+              onClick={async () => {
+                console.log("=== Testing Supabase connection ===");
+                console.log("Environment vars:", {
+                  url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+                  hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+                });
+                try {
+                  const client = createClient();
+                  const { data: sessionData, error: sessionError } = await client.auth.getSession();
+                  console.log("Session test:", { 
+                    hasSession: !!sessionData?.session,
+                    user: sessionData?.session?.user?.email,
+                    userId: sessionData?.session?.user?.id,
+                    error: sessionError 
+                  });
+                  
+                  // If we have a session, check the profile
+                  if (sessionData?.session?.user) {
+                    const { data: profileData, error: profileError } = await client
+                      .from("user_profiles")
+                      .select("*")
+                      .eq("id", sessionData.session.user.id)
+                      .single();
+                    
+                    console.log("Profile test:", {
+                      hasProfile: !!profileData,
+                      role: profileData?.role,
+                      email: profileData?.email,
+                      error: profileError
+                    });
+                  }
+                  
+                  // Test direct navigation
+                  console.log("Current location:", window.location.pathname);
+                  console.log("=== End of connection test ===");
+                } catch (err) {
+                  console.error("Connection test failed:", err);
+                }
+              }}
+              className="mt-2 text-xs text-blue-600 hover:text-blue-700 underline"
+            >
+              Test Session & Profile (Debug)
+            </button>
+            
+            {/* Manual navigation button for testing */}
+            <button
+              type="button"
+              onClick={() => {
+                console.log("Manually navigating to dashboard...");
+                window.location.href = "/dashboard";
+              }}
+              className="mt-2 ml-4 text-xs text-green-600 hover:text-green-700 underline"
+            >
+              Go to Dashboard (Manual)
+            </button>
+            
+            {/* Sign out button if already logged in */}
+            <button
+              type="button"
+              onClick={async () => {
+                console.log("Signing out...");
+                const client = createClient();
+                await client.auth.signOut();
+                window.location.reload();
+              }}
+              className="mt-2 ml-4 text-xs text-red-600 hover:text-red-700 underline"
+            >
+              Sign Out (If Logged In)
+            </button>
           </div>
         </div>
 

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import { UserProfile, UserRole } from "@/lib/supabase";
 import DistrictLogo from "@/components/ui/DistrictLogo";
 
@@ -207,20 +207,6 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
   // Memoize sign out handler
   const handleSignOut = useCallback(async () => {
 
-  // Add null check for profile before accessing properties
-  if (!profile) {
-    return (
-      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-sidebar">
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading sidebar...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
     setSigningOut(true);
     try {
       await signOut();
@@ -241,7 +227,21 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
   }, [signOut]);
 
   const navigation = navigationItems;
-  const roleDisplayName = getRoleDisplayName(profile.role);
+  const roleDisplayName = profile?.role ? getRoleDisplayName(profile.role) : "User";
+
+  // Add null check for profile before accessing properties
+  if (!profile) {
+    return (
+      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-sidebar">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading sidebar...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-sidebar">
@@ -255,7 +255,7 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
           />
         </div>
         <p className="text-xs text-gray-600 truncate">
-          {profile.districts?.name || "District Dashboard"}
+          {profile?.districts?.name || "District Dashboard"}
         </p>
       </div>
 
@@ -282,14 +282,14 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
       </nav>
 
       {/* Quick Actions for District/School Admins */}
-      {(profile.role === "district_admin" ||
-        profile.role === "school_admin") && (
+      {(profile?.role === "district_admin" ||
+        profile?.role === "school_admin") && (
         <div className="mt-8 px-4">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Quick Actions
           </h3>
           <div className="space-y-2">
-            {profile.role === "district_admin" && (
+            {profile?.role === "district_admin" && (
               <Link
                 href="/dashboard/schools/create"
                 className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
@@ -312,11 +312,11 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
       {/* District Logo and User info */}
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
         {/* District Logo */}
-        {profile.districts && (
+        {profile?.districts && (
           <div className="flex justify-center mb-4">
             <DistrictLogo
-              districtId={profile.districts.id}
-              districtName={profile.districts.name}
+              districtId={profile?.districts?.id || ""}
+              districtName={profile?.districts?.name || ""}
               size={96}
               className="rounded-lg"
             />
@@ -326,14 +326,14 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
         {/* User info without avatar */}
         <div className="mb-3">
           <p className="text-sm font-medium text-gray-900 truncate text-center">
-            {profile.first_name} {profile.last_name}
+            {profile?.first_name} {profile?.last_name}
           </p>
           <p className="text-xs text-gray-500 truncate text-center">
             {roleDisplayName}
           </p>
-          {profile.schools?.name && (
+          {profile?.schools?.name && (
             <p className="text-xs text-gray-400 truncate text-center">
-              {profile.schools.name}
+              {profile?.schools?.name}
             </p>
           )}
         </div>
@@ -350,3 +350,5 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
     </div>
   );
 }
+
+export default DashboardSidebar;

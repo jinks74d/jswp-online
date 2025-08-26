@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import Papa from "papaparse";
+import * as XLSX from "xlsx";
 
 interface ClassRow {
   subject_name: string;
@@ -19,6 +21,9 @@ interface UploadStats {
   errors: string[];
   warnings: string[];
 }
+
+// Maximum file size: 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const { data: profile, error: profileError } = await supabase
       .from("user_profiles")
-      .select("role, school_id")
+      .select("role, school_id, district_id")
       .eq("id", user.id)
       .single();
 
@@ -77,22 +82,157 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!schoolId || schoolId !== profile.school_id) {
-      return NextResponse.json({ error: "Invalid school" }, { status: 400 });
+    if (!schoolId) {
+      return NextResponse.json({ error: "School ID is required" }, { status: 400 });
     }
 
-    // Read and parse file
-    const fileContent = await file.text();
-    const rows = parseCSV(fileContent);
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        {
+          error: "File too large",
+          message: `File size must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate school access - Fixed for district admins
+    if (profile.role === "school_admin") {
+      if (schoolId !== profile.school_id) {
+        return NextResponse.json(
+          { error: "Invalid school access" },
+          { status: 403 }
+        );
+      }
+    } else if (profile.role === "district_admin") {
+      // For district admins, verify the school belongs to their district
+      const { data: school, error: schoolError } = await supabase
+        .from("schools")
+        .select("district_id")
+        .eq("id", schoolId)
+        .single();
+
+      if (schoolError || !school || school.district_id !== profile.district_id) {
+        return NextResponse.json(
+          { error: "School not in your district" },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Parse file based on type
+    let rows: ClassRow[] = [];
+    const fileName = file.name.toLowerCase();
+    
+    try {
+      if (fileName.endsWith(".csv")) {
+        // Parse CSV with PapaParse
+        const fileContent = await file.text();
+        const parseResult = Papa.parse<ClassRow>(fileContent, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim().toLowerCase().replace(/ /g, "_"),
+        });
+
+        if (parseResult.errors.length > 0) {
+          console.error("CSV parsing errors:", parseResult.errors);
+          return NextResponse.json(
+            {
+              error: "Failed to parse CSV file",
+              message: "Please ensure your CSV file is properly formatted",
+              details: parseResult.errors.slice(0, 5).map(e => e.message),
+            },
+            { status: 400 }
+          );
+        }
+
+        rows = parseResult.data;
+      } else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+        // Parse Excel with xlsx
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: "array" });
+        
+        // Get the first worksheet
+        const sheetName = workbook.SheetNames[0];
+        if (!sheetName) {
+          return NextResponse.json(
+            {
+              error: "Empty Excel file",
+              message: "The Excel file appears to be empty",
+            },
+            { status: 400 }
+          );
+        }
+
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json<any>(worksheet, {
+          raw: false,
+          defval: "",
+        });
+
+        // Transform headers to match expected format with input sanitization
+        rows = jsonData.map((row: any) => {
+          const transformedRow: any = {};
+          Object.keys(row).forEach(key => {
+            const normalizedKey = key.trim().toLowerCase().replace(/ /g, "_");
+            // Sanitize input values to prevent CSV injection and XSS
+            let value = row[key];
+            if (typeof value === 'string') {
+              // Remove potential CSV formula injection characters
+              value = value.replace(/^[@=+\-]/g, '');
+              // Trim and sanitize
+              value = value.trim();
+              // Limit length to prevent DoS
+              value = value.substring(0, 1000);
+            }
+            transformedRow[normalizedKey] = value;
+          });
+          return transformedRow as ClassRow;
+        });
+      } else {
+        return NextResponse.json(
+          {
+            error: "Invalid file type",
+            message: "Please upload a CSV or Excel file (.csv, .xlsx, .xls)",
+          },
+          { status: 400 }
+        );
+      }
+    } catch (parseError) {
+      console.error("File parsing error:", parseError);
+      return NextResponse.json(
+        {
+          error: "Failed to parse file",
+          message: parseError instanceof Error ? parseError.message : "Unknown parsing error",
+        },
+        { status: 400 }
+      );
+    }
 
     if (rows.length === 0) {
       return NextResponse.json(
         {
           error: "No valid data found in file",
+          message: "The file appears to be empty or incorrectly formatted",
         },
         { status: 400 }
       );
     }
+
+    // Check for duplicates within the uploaded file
+    const duplicateCheck = new Map<string, number[]>();
+    rows.forEach((row, index) => {
+      if (row.subject_name && row.class_name && row.period) {
+        const key = `${row.subject_name.trim()}_${row.class_name.trim()}_${row.period.trim()}`;
+        if (!duplicateCheck.has(key)) {
+          duplicateCheck.set(key, []);
+        }
+        duplicateCheck.get(key)!.push(index + 2); // +2 for header and 0-based index
+      }
+    });
 
     // Process the data
     const stats: UploadStats = {
@@ -105,9 +245,24 @@ export async function POST(request: NextRequest) {
       warnings: [],
     };
 
+    // Report duplicates as warnings
+    duplicateCheck.forEach((rowNumbers, key) => {
+      if (rowNumbers.length > 1) {
+        const [subject, className, period] = key.split("_");
+        stats.warnings.push(
+          `Duplicate entry found for "${subject} - ${className} - ${period}" in rows: ${rowNumbers.join(", ")}`
+        );
+      }
+    });
+
     // Track created items to avoid duplicates
-    const createdSubjects = new Map<string, string>(); // name -> id
-    const createdClasses = new Map<string, string>(); // name+subject -> id
+    const createdSubjects = new Map<string, string>();
+    const createdClasses = new Map<string, string>();
+    const processedPeriods = new Set<string>();
+
+    // Process rows with better error handling and transaction-like approach
+    const errors: Array<{ row: number; error: string }> = [];
+    const successful: Array<{ row: number; data: any }> = [];
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -116,14 +271,17 @@ export async function POST(request: NextRequest) {
       try {
         // Validate required fields
         if (!row.subject_name?.trim()) {
+          errors.push({ row: rowNum, error: "Subject name is required" });
           stats.errors.push(`Row ${rowNum}: Subject name is required`);
           continue;
         }
         if (!row.class_name?.trim()) {
+          errors.push({ row: rowNum, error: "Class name is required" });
           stats.errors.push(`Row ${rowNum}: Class name is required`);
           continue;
         }
         if (!row.period?.trim()) {
+          errors.push({ row: rowNum, error: "Period is required" });
           stats.errors.push(`Row ${rowNum}: Period is required`);
           continue;
         }
@@ -134,6 +292,15 @@ export async function POST(request: NextRequest) {
         const teacherEmail = row.teacher_email?.trim();
         const subjectDescription = row.subject_description?.trim();
 
+        // Check if this period was already processed (skip duplicates)
+        const periodKey = `${subjectName}_${className}_${period}`;
+        if (processedPeriods.has(periodKey)) {
+          stats.warnings.push(
+            `Row ${rowNum}: Skipping duplicate entry for "${subjectName} - ${className} - ${period}"`
+          );
+          continue;
+        }
+
         // 1. Create or get subject
         let subjectId = createdSubjects.get(subjectName);
         if (!subjectId) {
@@ -143,11 +310,11 @@ export async function POST(request: NextRequest) {
             .select("id")
             .eq("name", subjectName)
             .eq("school_id", schoolId)
-            .single();
+            .maybeSingle();
 
-          if (existingSubject && existingSubject.id) {
-            subjectId = existingSubject.id;
-            createdSubjects.set(subjectName, subjectId as string);
+          if (existingSubject?.id) {
+            subjectId = existingSubject.id as string;
+            createdSubjects.set(subjectName, subjectId);
           } else {
             // Create new subject
             const { data: newSubject, error: subjectError } = await supabase
@@ -161,14 +328,18 @@ export async function POST(request: NextRequest) {
               .single();
 
             if (subjectError) {
+              errors.push({ 
+                row: rowNum, 
+                error: `Failed to create subject "${subjectName}": ${subjectError.message}` 
+              });
               stats.errors.push(
                 `Row ${rowNum}: Failed to create subject "${subjectName}": ${subjectError.message}`
               );
               continue;
             }
 
-            subjectId = newSubject.id;
-            createdSubjects.set(subjectName, subjectId as string);
+            subjectId = newSubject.id as string;
+            createdSubjects.set(subjectName, subjectId);
             stats.subjectsCreated++;
           }
         }
@@ -183,11 +354,11 @@ export async function POST(request: NextRequest) {
             .select("id")
             .eq("name", className)
             .eq("subject_id", subjectId)
-            .single();
+            .maybeSingle();
 
-          if (existingClass && existingClass.id) {
-            classId = existingClass.id;
-            createdClasses.set(classKey, classId as string);
+          if (existingClass?.id) {
+            classId = existingClass.id as string;
+            createdClasses.set(classKey, classId);
           } else {
             // Create new class
             const { data: newClass, error: classError } = await supabase
@@ -201,14 +372,18 @@ export async function POST(request: NextRequest) {
               .single();
 
             if (classError) {
+              errors.push({ 
+                row: rowNum, 
+                error: `Failed to create class "${className}": ${classError.message}` 
+              });
               stats.errors.push(
                 `Row ${rowNum}: Failed to create class "${className}": ${classError.message}`
               );
               continue;
             }
 
-            classId = newClass.id;
-            createdClasses.set(classKey, classId as string);
+            classId = newClass.id as string;
+            createdClasses.set(classKey, classId);
             stats.classesCreated++;
           }
         }
@@ -220,11 +395,11 @@ export async function POST(request: NextRequest) {
           .select("id")
           .eq("class_id", classId)
           .eq("period", period)
-          .single();
+          .maybeSingle();
 
         let classPeriodId: string;
         if (existingPeriod) {
-          classPeriodId = existingPeriod.id;
+          classPeriodId = existingPeriod.id as string;
           stats.warnings.push(
             `Row ${rowNum}: Class period "${className} - ${period}" already exists`
           );
@@ -242,15 +417,22 @@ export async function POST(request: NextRequest) {
             .single();
 
           if (periodError) {
+            errors.push({ 
+              row: rowNum, 
+              error: `Failed to create class period "${period}": ${periodError.message}` 
+            });
             stats.errors.push(
               `Row ${rowNum}: Failed to create class period "${period}": ${periodError.message}`
             );
             continue;
           }
 
-          classPeriodId = newPeriod.id;
+          classPeriodId = newPeriod.id as string;
           stats.classPeriodsCreated++;
         }
+
+        // Mark this period as processed
+        processedPeriods.add(periodKey);
 
         // 4. Assign teacher if provided
         if (teacherEmail) {
@@ -261,7 +443,7 @@ export async function POST(request: NextRequest) {
             .eq("email", teacherEmail.toLowerCase())
             .eq("role", "teacher")
             .eq("school_id", schoolId)
-            .single();
+            .maybeSingle();
 
           if (teacher) {
             // Check if teacher is already assigned to this class period
@@ -270,7 +452,7 @@ export async function POST(request: NextRequest) {
               .select("id")
               .eq("class_period_id", classPeriodId)
               .eq("teacher_id", teacher.id)
-              .single();
+              .maybeSingle();
 
             if (!existingAssignment) {
               // Assign teacher to class period
@@ -301,13 +483,22 @@ export async function POST(request: NextRequest) {
             );
           }
         }
+
+        // Track successful processing
+        successful.push({
+          row: rowNum,
+          data: {
+            subject: subjectName,
+            class: className,
+            period: period,
+            teacher: teacherEmail,
+          },
+        });
       } catch (error) {
         console.error(`Error processing row ${rowNum}:`, error);
-        stats.errors.push(
-          `Row ${rowNum}: Unexpected error - ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`
-        );
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        errors.push({ row: rowNum, error: errorMessage });
+        stats.errors.push(`Row ${rowNum}: Unexpected error - ${errorMessage}`);
       }
     }
 
@@ -332,56 +523,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function parseCSV(content: string): ClassRow[] {
-  const lines = content
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line);
-  if (lines.length < 2) return [];
-
-  const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""));
-  const rows: ClassRow[] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i]);
-    if (values.length === 0) continue;
-
-    const row: any = {};
-    headers.forEach((header, index) => {
-      if (values[index] !== undefined) {
-        row[header] = values[index].trim();
-      }
-    });
-
-    // Only include rows with at least the required fields
-    if (row.subject_name || row.class_name || row.period) {
-      rows.push(row as ClassRow);
-    }
-  }
-
-  return rows;
-}
-
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      result.push(current);
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  result.push(current);
-  return result.map((val) => val.replace(/"/g, ""));
 }

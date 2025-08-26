@@ -70,6 +70,10 @@ export async function middleware(request: NextRequest) {
 
       session = sessionData;
       user = session?.user;
+      
+      if (user) {
+        console.log("Middleware: User found:", user.email, "for path:", path);
+      }
     } catch (error) {
       console.warn("Middleware: Session check failed, deferring to client");
       return response; // Let client handle auth
@@ -77,65 +81,40 @@ export async function middleware(request: NextRequest) {
 
     // PERFORMANCE: If no user, let client handle the redirect
     if (!user) {
+      console.log("Middleware: No user found for protected route:", path);
+      // For dashboard routes without a user, let the client-side handle it
+      // to prevent redirect loops
       return response;
     }
 
-    // PERFORMANCE: Role-based routing with in-memory caching
-    const cacheKey = `profile_${user.id}`;
-    const cachedProfile = (globalThis as any)?._middlewareCache?.get(cacheKey);
-    const now = Date.now();
-
+    // PERFORMANCE: Simplified profile check without memory-leaking cache
     let profile = null;
 
-    // Use cached profile if available and fresh (30 seconds)
-    if (cachedProfile && (now - cachedProfile.timestamp < 30000)) {
-      profile = cachedProfile.data;
-    } else {
-      // Fetch profile with optimized query and shorter timeout
-      try {
-        const profilePromise = supabase
-          .from("user_profiles")
-          .select("role, district_id") // Only fetch what we need
-          .eq("id", user.id)
-          .maybeSingle(); // Use maybeSingle to avoid errors on missing records
+    try {
+      // Fetch profile with optimized query and timeout
+      const profilePromise = supabase
+        .from("user_profiles")
+        .select("role, district_id") // Only fetch what we need
+        .eq("id", user.id)
+        .maybeSingle(); // Use maybeSingle to avoid errors on missing records
 
-        const profileTimeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Profile timeout")), 1500) // Reduced from 3000ms
-        );
+      const profileTimeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Profile timeout")), 1000) // Reduced timeout
+      );
 
-        const result = await Promise.race([profilePromise, profileTimeoutPromise]);
-        const profileData = (result as any).data;
-        const profileError = (result as any).error;
+      const result = await Promise.race([profilePromise, profileTimeoutPromise]);
+      const profileData = (result as any).data;
+      const profileError = (result as any).error;
 
-        if (profileError || !profileData) {
-          console.warn("Middleware: Profile fetch failed, deferring to client");
-          return response;
-        }
-
-        profile = profileData;
-
-        // Cache the profile result
-        if (!(globalThis as any)._middlewareCache) {
-          (globalThis as any)._middlewareCache = new Map();
-        }
-        (globalThis as any)._middlewareCache.set(cacheKey, {
-          data: profile,
-          timestamp: now
-        });
-
-        // Clean up old cache entries (simple LRU)
-        if ((globalThis as any)._middlewareCache.size > 100) {
-          const entries = Array.from((globalThis as any)._middlewareCache.entries());
-          entries.sort(([,a]: any[], [,b]: any[]) => b.timestamp - a.timestamp);
-          (globalThis as any)._middlewareCache.clear();
-          entries.slice(0, 50).forEach(([key, value]: [string, any]) => {
-            (globalThis as any)._middlewareCache.set(key, value);
-          });
-        }
-      } catch (error) {
+      if (profileError || !profileData) {
         console.warn("Middleware: Profile fetch failed, deferring to client");
         return response;
       }
+
+      profile = profileData;
+    } catch (error) {
+      console.warn("Middleware: Profile fetch failed, deferring to client");
+      return response;
     }
 
     // PERFORMANCE: Fast role-based redirects

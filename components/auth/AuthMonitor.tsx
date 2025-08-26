@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "./OptimizedAuthProvider";
 
 interface AuthEvent {
   timestamp: Date;

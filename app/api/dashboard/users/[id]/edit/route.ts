@@ -4,17 +4,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
-// Admin client with service role key
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+// Admin client with service role key - only create if environment variables are available
+const createSupabaseAdmin = () => {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase environment variables not configured");
   }
-);
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
+};
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -198,31 +203,47 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     // Step 2: Update auth user email if changed
     if (email.trim() !== userToEdit.email) {
       console.log("Updating auth user email...");
-      const { error: emailUpdateError } =
-        await supabaseAdmin.auth.admin.updateUserById(resolvedParams.id, {
-          email: email.trim(),
-        });
+      try {
+        const supabaseAdmin = createSupabaseAdmin();
+        const { error: emailUpdateError } =
+          await supabaseAdmin.auth.admin.updateUserById(resolvedParams.id, {
+            email: email.trim(),
+          });
 
-      if (emailUpdateError) {
-        console.error("Failed to update auth email:", emailUpdateError);
-        // Don't fail the entire operation for email update errors
+        if (emailUpdateError) {
+          console.error("Failed to update auth email:", emailUpdateError);
+          // Don't fail the entire operation for email update errors
+        }
+      } catch (error) {
+        console.error("Failed to create admin client for email update:", error);
       }
     }
 
     // Step 3: Update password if provided
     if (newPassword) {
       console.log("Updating user password...");
-      const { error: passwordUpdateError } =
-        await supabaseAdmin.auth.admin.updateUserById(resolvedParams.id, {
-          password: newPassword,
-        });
+      try {
+        const supabaseAdmin = createSupabaseAdmin();
+        const { error: passwordUpdateError } =
+          await supabaseAdmin.auth.admin.updateUserById(resolvedParams.id, {
+            password: newPassword,
+          });
 
-      console.log("Password update result:", { error: passwordUpdateError });
+        console.log("Password update result:", { error: passwordUpdateError });
 
-      if (passwordUpdateError) {
+        if (passwordUpdateError) {
+          return NextResponse.json(
+            {
+              error: `Failed to update password: ${passwordUpdateError.message}`,
+            },
+            { status: 500 }
+          );
+        }
+      } catch (error) {
+        console.error("Failed to create admin client for password update:", error);
         return NextResponse.json(
           {
-            error: `Failed to update password: ${passwordUpdateError.message}`,
+            error: "Admin operations not configured",
           },
           { status: 500 }
         );

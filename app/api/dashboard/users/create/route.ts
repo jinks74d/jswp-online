@@ -4,17 +4,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
-// Admin client with service role key
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+// Admin client with service role key - only create if environment variables are available
+const createSupabaseAdmin = () => {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase environment variables not configured");
   }
-);
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -168,12 +173,25 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Create user account using admin client
     console.log("Creating user account with admin client...");
-    const { data: authData, error: authCreateError } =
-      await supabaseAdmin.auth.admin.createUser({
+    let authData, authCreateError;
+    try {
+      const supabaseAdmin = createSupabaseAdmin();
+      const result = await supabaseAdmin.auth.admin.createUser({
         email: email.trim(),
         password: password,
         email_confirm: true, // Auto-confirm the email
       });
+      authData = result.data;
+      authCreateError = result.error;
+    } catch (error) {
+      console.error("Failed to create admin client:", error);
+      return NextResponse.json(
+        {
+          error: "Admin operations not configured",
+        },
+        { status: 500 }
+      );
+    }
 
     console.log("User creation result:", {
       userId: authData?.user?.id,
@@ -221,7 +239,12 @@ export async function POST(request: NextRequest) {
     if (profileCreateError) {
       // Clean up auth user on error
       console.log("Cleaning up user due to profile creation error");
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      try {
+        const supabaseAdmin = createSupabaseAdmin();
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      } catch (error) {
+        console.error("Failed to cleanup user:", error);
+      }
       return NextResponse.json(
         {
           error: `Failed to create user profile: ${profileCreateError.message}`,

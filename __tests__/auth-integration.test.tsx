@@ -14,7 +14,10 @@ const mockSupabaseClient = {
   from: vi.fn(() => ({
     select: vi.fn(() => ({
       eq: vi.fn(() => ({
-        single: vi.fn(),
+        single: vi.fn().mockResolvedValue({
+          data: { id: '123', role: 'teacher' },
+          error: null,
+        }),
       })),
     })),
   })),
@@ -89,15 +92,10 @@ describe('Authentication Integration Tests', () => {
   });
 
   it('should handle profile fetching', async () => {
-    mockSupabaseClient.from().select().eq().single.mockResolvedValue({
-      data: { id: '123', role: 'teacher' },
-      error: null,
-    });
-
     const result = await mockSupabaseClient
-      .from('user_profiles')
-      .select('*')
-      .eq('id', '123')
+      .from()
+      .select()
+      .eq()
       .single();
 
     expect(result.data.id).toBe('123');
@@ -105,8 +103,7 @@ describe('Authentication Integration Tests', () => {
   });
 
   it('should handle auth state changes', () => {
-    const callback = vi.fn();
-    const subscription = mockSupabaseClient.auth.onAuthStateChange(callback);
+    const subscription = mockSupabaseClient.auth.onAuthStateChange();
     
     expect(subscription.data.subscription.unsubscribe).toBeDefined();
   });

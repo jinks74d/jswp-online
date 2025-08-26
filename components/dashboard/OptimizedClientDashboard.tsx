@@ -178,15 +178,15 @@ export const OptimizedClientDashboard = ({ children }: OptimizedClientDashboardP
 
   // Memoized gradient style
   const gradientStyle = useMemo(() => {
-    const primaryColor = profileToUse.districts?.primary_color || "#3B82F6";
+    const primaryColor = (profileToUse.districts as any)?.primary_color || "#3B82F6";
     return {
       background: `linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, ${primaryColor} 100%)`,
     };
-  }, [profileToUse.districts?.primary_color]);
+  }, [(profileToUse.districts as any)?.primary_color]);
 
   return (
     <div className="min-h-screen" style={gradientStyle}>
-      <DashboardSidebar profile={profileToUse} />
+      <DashboardSidebar profile={profileToUse as any} />
       <div className="pl-64">
         <main className="py-8 px-8">
           {profileError && (

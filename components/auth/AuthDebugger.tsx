@@ -1,7 +1,7 @@
 // components/auth/AuthDebugger.tsx
 "use client";
 
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "./OptimizedAuthProvider";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 

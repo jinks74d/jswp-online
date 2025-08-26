@@ -1,14 +1,24 @@
 // components/dashboard/ClientDashboardPage.tsx
 "use client";
 
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import DistrictAdminDashboard from "./DistrictAdminDashboard";
 import SchoolAdminDashboard from "./SchoolAdminDashboard";
 import TeacherDashboard from "./TeacherDashboard";
 import StudentDashboard from "./StudentDashboard";
 
 export function ClientDashboardPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, authState } = useAuth();
+  
+  // Debug logging
+  console.log('ClientDashboardPage - Auth State:', {
+    status: authState.status,
+    hasUser: !!user,
+    hasProfile: !!profile,
+    loading,
+    userEmail: user?.email,
+    profileRole: profile?.role
+  });
 
   if (loading) {
     return (
@@ -26,6 +36,7 @@ export function ClientDashboardPage() {
       <div className="text-center py-12">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
         <p className="text-gray-600">Please log in to access your dashboard.</p>
+        <p className="text-sm text-gray-500 mt-2">Auth Status: {authState.status}</p>
       </div>
     );
   }

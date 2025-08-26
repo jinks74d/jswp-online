@@ -1,7 +1,7 @@
 // components/super-admin/ClientSuperAdmin.tsx
 "use client";
 
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import SuperAdminSidebar from "./SuperAdminSidebar";

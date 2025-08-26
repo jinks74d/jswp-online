@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "./OptimizedAuthProvider";
 
 interface RecoveryAttempt {
   timestamp: Date;

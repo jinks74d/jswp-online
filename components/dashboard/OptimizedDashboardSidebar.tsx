@@ -230,6 +230,7 @@ const getNavigationItems = (role: UserRole, pathname: string) => {
 // Role display names
 const getRoleDisplayName = (role: UserRole): string => {
   const roleNames: Record<UserRole, string> = {
+    super_admin: "Super Admin",
     district_admin: "District Admin",
     school_admin: "School Admin",
     teacher: "Teacher",

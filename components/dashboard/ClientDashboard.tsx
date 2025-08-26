@@ -1,7 +1,7 @@
 // components/dashboard/ClientDashboard.tsx
 "use client";
 
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef, memo, useCallback } from "react";
 import { createClient } from "@/lib/supabase";

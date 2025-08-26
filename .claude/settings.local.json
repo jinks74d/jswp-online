@@ -24,7 +24,12 @@
       "Bash(npx kill-port:*)",
       "Bash(git checkout:*)",
       "Bash(timeout 10 npm run dev)",
-      "Bash(npx next build --debug)"
+      "Bash(npx next build --debug)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npm test)",
+      "Bash(powershell:*)",
+      "Bash(cmd /c \"rmdir /s /q .next\")",
+      "Bash(npm run type-check:*)"
     ],
     "deny": []
   }

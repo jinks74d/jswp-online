@@ -20,6 +20,7 @@ import {
 import { createClient } from "@/lib/supabase";
 import Link from "next/link";
 import { UserRole } from "@/lib/supabase";
+import BulkStudentUpload from "./BulkStudentUpload";
 
 interface Student {
   id: string;
@@ -68,6 +69,7 @@ export default function StudentsList({
   const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [addingStudent, setAddingStudent] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const supabase = createClient();
 
@@ -210,13 +212,26 @@ export default function StudentsList({
                 </div>
               </div>
             ) : (
-              <Link
-                href="/dashboard/users/invite"
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                Add Student
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/dashboard/users/invite"
+                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add Student
+                </Link>
+                {["school_admin", "district_admin"].includes(currentUserRole) && currentUserSchool?.id && (
+                  <BulkStudentUpload
+                    schoolId={currentUserSchool.id}
+                    schoolName={currentUserSchool.name}
+                    onUploadComplete={() => {
+                      setRefreshTrigger(prev => prev + 1);
+                      // Refresh the page to show new students
+                      window.location.reload();
+                    }}
+                  />
+                )}
+              </div>
             )}
           </>
         )}

@@ -29,12 +29,18 @@ export default async function StudentsPage() {
     .eq("id", user.id)
     .single();
 
+  // Debug logging
+  console.log("Students page - User:", user?.email);
+  console.log("Students page - Profile:", JSON.stringify(profile, null, 2));
+
   if (!profile || !profile.district_id) {
+    console.log("Students page - Redirecting to / because:", !profile ? "no profile" : "no district_id");
     redirect("/");
   }
 
   // Only district admins, school admins, and teachers can access this page
   if (!["district_admin", "school_admin", "teacher"].includes(profile.role)) {
+    console.log("Students page - Redirecting to /dashboard because role is:", profile.role);
     redirect("/dashboard");
   }
 

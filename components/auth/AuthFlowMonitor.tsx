@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "./OptimizedAuthProvider";
 import { createClient } from "@/lib/supabase";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
 

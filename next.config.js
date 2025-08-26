@@ -10,15 +10,7 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js'],
   },
 
-  // Caching optimizations
-  onDemandEntries: {
-    // Period (in ms) where the server will keep pages in the buffer
-    maxInactiveAge: 60 * 1000,
-    // Number of pages that should be kept simultaneously without being disposed
-    pagesBufferLength: 5,
-  },
-
-  // Bundle optimization handled by Next.js 14+ automatically
+  // Bundle optimization handled by Next.js 15+ automatically
   
   // Image optimization
   images: {
@@ -57,89 +49,21 @@ const nextConfig = {
       "default-src 'self' https://zyivphqxqmbslxcrzbnh.supabase.co; script-src 'none'; sandbox;",
   },
 
-  // Optimized webpack configuration
+  // Simplified webpack configuration to prevent build hangs
   webpack: (config, { dev, isServer }) => {
-    // Production optimizations
+    // Only add essential webpack configurations
     if (!dev) {
-      config.optimization = {
-        ...config.optimization,
-        moduleIds: 'deterministic',
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // Separate Supabase into its own chunk
-            supabase: {
-              name: 'supabase',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/]@supabase[\\/]/,
-              priority: 30,
-            },
-            // React and core libraries
-            react: {
-              name: 'react',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-              priority: 20,
-            },
-            // Other vendor libraries
-            vendor: {
-              name: 'vendor',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/]/,
-              priority: 10,
-            },
-            // Common code across the app
-            common: {
-              name: 'common',
-              chunks: 'all',
-              minChunks: 2,
-              priority: 5,
-            },
-          },
-        },
-      };
+      // Simplified production optimizations
+      config.optimization.moduleIds = 'deterministic';
     }
 
-    // Handle SVG files with optimization
+    // Essential SVG handling (simplified)
     config.module.rules.push({
       test: /\.svg$/,
-      use: [
-        {
-          loader: "@svgr/webpack",
-          options: {
-            svgoConfig: {
-              plugins: [
-                {
-                  name: 'preset-default',
-                  params: {
-                    overrides: {
-                      removeViewBox: false,
-                    },
-                  },
-                },
-              ],
-            },
-          },
-        },
-      ],
+      use: ["@svgr/webpack"],
     });
 
-    // Optimize image handling
-    config.module.rules.push({
-      test: /\.(png|jpe?g|gif|webp|avif)$/i,
-      use: {
-        loader: "file-loader",
-        options: {
-          publicPath: "/_next/static/images/",
-          outputPath: "static/images/",
-          name: "[name].[hash].[ext]",
-        },
-      },
-    });
-
-    // Add bundle analyzer in development
+    // Essential fallbacks for development
     if (!isServer && dev) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
