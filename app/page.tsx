@@ -47,8 +47,19 @@ export default function LoginPage() {
     }
   }, []);
 
-  // Don't auto-redirect - let user manually navigate or sign out if needed
-  // This prevents redirect loops
+  // Auto-redirect authenticated users
+  useEffect(() => {
+    if (!authLoading && user && profile && !redirectAttempted.current) {
+      redirectAttempted.current = true;
+      
+      // Redirect based on role
+      if (profile.role === "super_admin") {
+        window.location.href = "/super-admin";
+      } else {
+        window.location.href = "/dashboard";
+      }
+    }
+  }, [authLoading, user, profile]);
 
   // Show loading state while auth is being determined
   if (authLoading) {
@@ -80,16 +91,14 @@ export default function LoginPage() {
       );
     }
 
-    // Show redirecting state for regular users
-    if (profile.role !== "super_admin") {
-      return (
-        <RedirectingState
-          userType="regular"
-          userName={profile.first_name || profile.email}
-          targetPath="/dashboard"
-        />
-      );
-    }
+    // Show redirecting state while redirect is happening
+    return (
+      <RedirectingState
+        userType={profile.role === "super_admin" ? "super_admin" : "regular"}
+        userName={profile.first_name || profile.email}
+        targetPath={profile.role === "super_admin" ? "/super-admin" : "/dashboard"}
+      />
+    );
   }
 
   const handleLogin = async (e: React.FormEvent) => {
