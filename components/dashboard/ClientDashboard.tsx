@@ -137,27 +137,38 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     });
   }, [loading, user, profile, profileLoading, fullProfile, lastValidProfile]);
 
-  // Simplified loading state - show loading only during initial auth or when we have no data at all
-  const hasMinimumData = (user && profile) || lastValidProfile;
-  
-  if (loading || (!hasMinimumData && profileLoading)) {
+  // Only show loading state when auth is actually loading
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your dashboard...</p>
           <p className="text-xs text-gray-500 mt-2">
-            Auth: {loading ? 'loading' : 'ready'}, Profile: {profileLoading ? 'loading' : 'ready'}
+            Authenticating...
           </p>
         </div>
       </div>
     );
   }
 
-  // If we have no user after auth is complete, redirect to login
-  if (!loading && !user && !lastValidProfile) {
+  // If we have no user after auth is complete, redirect to login immediately
+  if (!user && !lastValidProfile) {
+    console.log('ClientDashboard: No user found, redirecting to login');
     router.replace('/');
     return null;
+  }
+
+  // Show loading only if we're actively fetching profile data
+  if (profileLoading && !profile && !lastValidProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your profile...</p>
+        </div>
+      </div>
+    );
   }
 
   // Ensure user has district access (use fullProfile if available, otherwise fallback to profile, then lastValidProfile)
