@@ -11,8 +11,8 @@ export default function DashboardLayout({
   // The middleware handles the initial authentication check
   // The ClientDashboard component manages the session-aware layout
   return (
-    <SessionTrackingProvider>
+    // <SessionTrackingProvider>
       <ClientDashboard>{children}</ClientDashboard>
-    </SessionTrackingProvider>
+    // </SessionTrackingProvider>
   );
 }
