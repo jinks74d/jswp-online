@@ -4,7 +4,7 @@
 import { FileText, GraduationCap, Users, BookOpen, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { UserProfile } from "@/lib/supabase";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
 
 interface Assignment {
@@ -47,7 +47,8 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [assignmentsWithFeedback, setAssignmentsWithFeedback] = useState<AssignmentProgress[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  // Memoize supabase client to prevent recreating on every render
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -137,7 +138,7 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
     };
 
     fetchStudentData();
-  }, [profile.id, profile.school_id, supabase]);
+  }, [profile.id, profile.school_id]);
 
   const getDaysUntilDue = (dueDate: string) => {
     const due = new Date(dueDate);
