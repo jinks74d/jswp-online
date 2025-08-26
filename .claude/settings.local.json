@@ -29,7 +29,8 @@
       "Bash(npm test)",
       "Bash(powershell:*)",
       "Bash(cmd /c \"rmdir /s /q .next\")",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
