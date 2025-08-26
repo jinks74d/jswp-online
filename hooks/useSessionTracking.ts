@@ -51,6 +51,7 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
         await fetch("/api/analytics/session/activity", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             sessionId: sessionIdRef.current,
             actionType,
@@ -90,6 +91,7 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
         fetch("/api/analytics/session/activity", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(body),
         }).catch((error) => {
           console.warn("Failed to update activity:", error);
@@ -109,6 +111,7 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
       const response = await fetch("/api/analytics/session/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
 
       if (response.ok) {
@@ -136,6 +139,7 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
       await fetch("/api/analytics/session/end", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ sessionId: sessionIdRef.current }),
       });
     } catch (error) {
@@ -195,6 +199,7 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
       await fetch("/api/auth/signout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
     } catch (error) {
       console.warn("Error during signout:", error);
