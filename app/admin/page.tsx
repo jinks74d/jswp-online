@@ -45,42 +45,23 @@ export default function SuperAdminLoginPage() {
     }
   }, []);
 
-  // Redirect super admins directly to super-admin dashboard if already logged in
-  useEffect(() => {
-    if (!authLoading && user && profile && profile.role === "super_admin") {
-      // Check if we came from login (has just authenticated) or if this is an existing session
-      const hasJustLoggedIn = window.location.search.includes("login=success");
-      
-      if (!hasJustLoggedIn) {
-        // Existing session, redirect to dashboard
-        router.replace("/super-admin");
-      }
-    }
-  }, [user, profile, authLoading, router]);
+  // Don't auto-redirect - let super admins access the admin login form
+  // They can manually navigate or sign out if needed
 
   // Show loading state while auth is being determined
   if (authLoading) {
     return <LoadingState type="auth" />;
   }
 
-  // Handle role mismatch and redirecting states
+  // Handle authenticated users
   if (user && profile) {
-    const roleMismatchMessage = RedirectHandler.getRoleMismatchMessage(
-      profile,
-      "/admin"
-    );
-
-    if (roleMismatchMessage) {
+    // For non-super admins, show role mismatch and redirect to regular dashboard  
+    if (profile.role !== "super_admin") {
       return (
         <RoleMismatchState
-          message={roleMismatchMessage}
+          message="This is the administrator portal. Please use the regular login page."
           userRole={profile.role}
-          onRedirect={() =>
-            RedirectHandler.performRedirect(
-              "/dashboard",
-              "role_mismatch_redirect"
-            )
-          }
+          onRedirect={() => router.push("/dashboard")}
           onSignOut={async () => {
             if (supabaseRef.current) {
               await supabaseRef.current.auth.signOut();
@@ -91,15 +72,42 @@ export default function SuperAdminLoginPage() {
       );
     }
 
-    // Show redirecting state
+    // For super admins with existing sessions, show option to continue to dashboard or log out
     return (
-      <RedirectingState
-        userType={profile.role === "super_admin" ? "super_admin" : "regular"}
-        userName={profile.first_name || profile.email}
-        targetPath={
-          profile.role === "super_admin" ? "/super-admin" : "/dashboard"
-        }
-      />
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Shield className="w-8 h-8 text-orange-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Already Signed In
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              You're already signed in as {profile.first_name || profile.email}
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push("/super-admin")}
+                className="block w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-md transition-colors"
+              >
+                Go to Admin Dashboard
+              </button>
+              <button
+                onClick={async () => {
+                  if (supabaseRef.current) {
+                    await supabaseRef.current.auth.signOut();
+                    window.location.reload();
+                  }
+                }}
+                className="block w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Sign Out & Login as Different User
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
