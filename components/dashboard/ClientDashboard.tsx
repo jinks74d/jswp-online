@@ -70,6 +70,12 @@ function ClientDashboard({ children }: ClientDashboardProps) {
             setFullProfile(profile);
           }
         } else {
+          console.log("Full profile fetched with district data:", {
+            hasDistricts: !!data.districts,
+            districtName: data.districts?.name,
+            hasColors: !!(data.districts?.primary_color || data.districts?.secondary_color),
+            hasLogo: !!data.districts?.logo_url
+          });
           setFullProfile(data);
         }
       } catch (error) {
@@ -154,8 +160,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
   }
 
   // Wait for profile loading to complete before checking district access
-  // Only show loading if we're actively loading and don't have valid profile data
-  if (profileLoading && !fullProfile && !lastValidProfile) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">

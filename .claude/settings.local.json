@@ -30,7 +30,9 @@
       "Bash(powershell:*)",
       "Bash(cmd /c \"rmdir /s /q .next\")",
       "Bash(npm run type-check:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
