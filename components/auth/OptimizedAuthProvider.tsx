@@ -99,6 +99,12 @@ export const OptimizedAuthProvider = ({ children }: { children: ReactNode }) => 
     
     authProcessingRef.current = true;
     
+    // Set timeout to force processing flag reset if something goes wrong
+    const processingTimeout = setTimeout(() => {
+      console.warn('Auth processing timeout - forcing reset');
+      authProcessingRef.current = false;
+    }, 10000); // 10 second timeout
+    
     try {
       // Cancel any existing operations
       if (abortControllerRef.current) {
@@ -148,6 +154,7 @@ export const OptimizedAuthProvider = ({ children }: { children: ReactNode }) => 
         }
       }
     } finally {
+      clearTimeout(processingTimeout);
       authProcessingRef.current = false;
       console.log('handleAuthChange completed');
     }

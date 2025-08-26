@@ -125,18 +125,39 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     }
   }, [user, profile, loading, router]);
 
-  // Simplified loading state - only show when we truly don't have enough data to render
+  // Debug logging to help track loading state issues
+  useEffect(() => {
+    console.log('ClientDashboard state:', { 
+      loading, 
+      hasUser: !!user, 
+      hasProfile: !!profile, 
+      profileLoading, 
+      hasFullProfile: !!fullProfile, 
+      hasLastValidProfile: !!lastValidProfile 
+    });
+  }, [loading, user, profile, profileLoading, fullProfile, lastValidProfile]);
+
+  // Simplified loading state - show loading only during initial auth or when we have no data at all
   const hasMinimumData = (user && profile) || lastValidProfile;
   
-  if (loading || (!hasMinimumData && (profileLoading || !user))) {
+  if (loading || (!hasMinimumData && profileLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your dashboard...</p>
+          <p className="text-xs text-gray-500 mt-2">
+            Auth: {loading ? 'loading' : 'ready'}, Profile: {profileLoading ? 'loading' : 'ready'}
+          </p>
         </div>
       </div>
     );
+  }
+
+  // If we have no user after auth is complete, redirect to login
+  if (!loading && !user && !lastValidProfile) {
+    router.replace('/');
+    return null;
   }
 
   // Ensure user has district access (use fullProfile if available, otherwise fallback to profile, then lastValidProfile)
