@@ -5,6 +5,11 @@ import { cookies } from "next/headers";
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
+    
+    // Debug: Log cookies to check if auth cookies are present
+    const allCookies = cookieStore.getAll();
+    console.log("API Route - Available cookies:", allCookies.map(c => c.name));
+    
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,8 +23,9 @@ export async function POST(request: NextRequest) {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
               );
-            } catch {
+            } catch (error) {
               // The `setAll` method was called from a Server Component.
+              console.error("Cookie setAll error:", error);
             }
           },
         },
@@ -32,8 +38,20 @@ export async function POST(request: NextRequest) {
       error: userError,
     } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (userError) {
+      console.error("Auth error in session/start:", userError);
+      return NextResponse.json({ 
+        error: "Authentication error", 
+        details: userError.message 
+      }, { status: 401 });
+    }
+
+    if (!user) {
+      console.log("No user found in session/start - cookies might not be passed");
+      return NextResponse.json({ 
+        error: "No authenticated user found",
+        hint: "Check if cookies are being passed correctly"
+      }, { status: 401 });
     }
 
     // Get user profile with district/school info

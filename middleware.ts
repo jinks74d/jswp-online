@@ -10,6 +10,7 @@ export async function middleware(request: NextRequest) {
     // PERFORMANCE: Early exit for static assets and API routes
     if (
       path.startsWith("/_next/") ||
+      path.startsWith("/api/") ||  // Skip middleware for API routes
       path.startsWith("/favicon.") ||
       path.startsWith("/public/") ||
       path.startsWith("/assets/") ||
