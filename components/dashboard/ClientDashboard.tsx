@@ -17,6 +17,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
   const [fullProfile, setFullProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [lastValidProfile, setLastValidProfile] = useState<any>(null);
+  const [redirectDelay, setRedirectDelay] = useState(true);
   const mountedRef = useRef(true);
   const profileFetchRef = useRef<AbortController | null>(null);
 
@@ -137,7 +138,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     });
   }, [loading, user, profile, profileLoading, fullProfile, lastValidProfile]);
 
-  // Only show loading state when auth is actually loading
+  // Show loading state during initial auth check or while we have some valid data
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -145,16 +146,26 @@ function ClientDashboard({ children }: ClientDashboardProps) {
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your dashboard...</p>
           <p className="text-xs text-gray-500 mt-2">
-            Authenticating...
+            Checking authentication...
           </p>
         </div>
       </div>
     );
   }
 
-  // If we have no user after auth is complete, redirect to login immediately
-  if (!user && !lastValidProfile) {
-    console.log('ClientDashboard: No user found, redirecting to login');
+  // Add delay on initial load to give session time to restore
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setRedirectDelay(false);
+    }, 1000); // Wait 1 second before allowing redirects
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Only redirect if auth is complete AND we have no user AND no cached profile data
+  // AND we've waited long enough for session restoration
+  if (!loading && !user && !profile && !lastValidProfile && !profileLoading && !redirectDelay) {
+    console.log('ClientDashboard: No authentication data found after waiting, redirecting to login');
     router.replace('/');
     return null;
   }

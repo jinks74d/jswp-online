@@ -215,7 +215,7 @@ export const OptimizedAuthProvider = ({ children }: { children: ReactNode }) => 
   useEffect(() => {
     if (!supabase) return;
 
-    // Initial session check with error handling
+    // Initial session check with error handling and retry
     const initAuth = async () => {
       try {
         console.log('OptimizedAuthProvider: Checking initial session...');
@@ -223,12 +223,35 @@ export const OptimizedAuthProvider = ({ children }: { children: ReactNode }) => 
         
         if (error) {
           console.error('OptimizedAuthProvider: Error getting initial session:', error);
+          // Don't immediately set unauthenticated state on error - retry once
+          setTimeout(async () => {
+            try {
+              const { data: { session: retrySession } } = await supabase.auth.getSession();
+              console.log('OptimizedAuthProvider: Retry session check:', !!retrySession, retrySession?.user?.email);
+              if (mountedRef.current) {
+                handleAuthChange('INITIAL_SESSION', retrySession);
+              }
+            } catch (retryError) {
+              console.error('OptimizedAuthProvider: Retry failed:', retryError);
+              if (mountedRef.current) {
+                setAuthState({
+                  status: 'unauthenticated',
+                  user: null,
+                  profile: null
+                });
+              }
+            }
+          }, 500);
         } else {
           console.log('OptimizedAuthProvider: Initial session found:', !!session, session?.user?.email);
-        }
-        
-        if (mountedRef.current) {
-          handleAuthChange('INITIAL_SESSION', session);
+          if (session?.expires_at) {
+            const expiresAt = new Date(session.expires_at * 1000);
+            console.log('OptimizedAuthProvider: Session expires at:', expiresAt);
+          }
+          
+          if (mountedRef.current) {
+            handleAuthChange('INITIAL_SESSION', session);
+          }
         }
       } catch (error) {
         console.error('OptimizedAuthProvider: Failed to get initial session:', error);
