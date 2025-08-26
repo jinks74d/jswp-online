@@ -99,7 +99,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     return () => {
       abortController.abort();
     };
-  }, [user, profile, fullProfile, profileLoading]);
+  }, [user, profile, fullProfile]);
 
   // Track the last valid profile for use during temporary state transitions
   useEffect(() => {
@@ -126,17 +126,6 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     }
   }, [user, profile, loading, router]);
 
-  // Debug logging to help track loading state issues
-  useEffect(() => {
-    console.log('ClientDashboard state:', { 
-      loading, 
-      hasUser: !!user, 
-      hasProfile: !!profile, 
-      profileLoading, 
-      hasFullProfile: !!fullProfile, 
-      hasLastValidProfile: !!lastValidProfile 
-    });
-  }, [loading, user, profile, profileLoading, fullProfile, lastValidProfile]);
 
   // Show loading state during initial auth check or while we have some valid data
   if (loading) {
@@ -156,7 +145,9 @@ function ClientDashboard({ children }: ClientDashboardProps) {
   // Add delay on initial load to give session time to restore
   useEffect(() => {
     const timer = setTimeout(() => {
-      setRedirectDelay(false);
+      if (mountedRef.current) {
+        setRedirectDelay(false);
+      }
     }, 1000); // Wait 1 second before allowing redirects
 
     return () => clearTimeout(timer);
