@@ -1,7 +1,7 @@
 // components/dashboard/StudentDashboard.tsx
 "use client";
 
-import { FileText, GraduationCap, Users, BookOpen, Calendar, Clock, MessageSquare } from "lucide-react";
+import { FileText, GraduationCap, Users, BookOpen, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { UserProfile } from "@/lib/supabase";
 import { useEffect, useState } from "react";
@@ -449,44 +449,6 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
         </div>
       </div>
 
-      {/* Coming Soon Notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-            <BookOpen className="w-4 h-4 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-blue-900">Student Features Coming Soon</h3>
-        </div>
-        <p className="text-blue-800 mb-4">
-          We're building amazing tools for students! The data shown above demonstrates the dashboard design with realistic preview content.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-700">
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            <span>Assignment submission and tracking</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4" />
-            <span>Grade viewing and progress reports</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            <span>Class materials and resources</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            <span>Schedule and calendar integration</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            <span>Teacher communication tools</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            <span>Real-time assignment notifications</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
