@@ -20,16 +20,26 @@ function ClientDashboard({ children }: ClientDashboardProps) {
   const [redirectDelay, setRedirectDelay] = useState(true);
   const mountedRef = useRef(true);
   const profileFetchRef = useRef<AbortController | null>(null);
+  const lastFetchedUserRef = useRef<string | null>(null);
+
+  // Reset profile state when user changes
+  useEffect(() => {
+    if (!user || lastFetchedUserRef.current !== user.id) {
+      setFullProfile(null);
+      lastFetchedUserRef.current = null;
+    }
+  }, [user]);
 
   // Optimized profile fetching with smart caching - only trigger once per user/profile change
   useEffect(() => {
-    if (!user || !profile || fullProfile || profileLoading) {
+    if (!user || !profile || profileLoading || lastFetchedUserRef.current === user.id) {
       return;
     }
 
     // Skip full profile fetch if basic profile has all needed data
     if (profile.district_id && profile.districts) {
       setFullProfile(profile);
+      lastFetchedUserRef.current = user.id;
       return;
     }
 
@@ -78,6 +88,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
             hasLogo: !!data.districts?.logo_url
           });
           setFullProfile(data);
+          lastFetchedUserRef.current = user.id;
         }
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
@@ -86,6 +97,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
         // Fallback to basic profile
         if (profile?.district_id && mountedRef.current) {
           setFullProfile(profile);
+          lastFetchedUserRef.current = user.id;
         }
       } finally {
         if (mountedRef.current) {
@@ -99,7 +111,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     return () => {
       abortController.abort();
     };
-  }, [user, profile, fullProfile]);
+  }, [user, profile]);
 
   // Track the last valid profile for use during temporary state transitions
   useEffect(() => {
