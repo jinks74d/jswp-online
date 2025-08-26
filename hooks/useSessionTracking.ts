@@ -125,9 +125,13 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
         if (config.trackPageViews) {
           setTimeout(() => updateActivity(true), 1000);
         }
+      } else {
+        // Log error but don't block the app
+        console.warn(`Session tracking unavailable: ${response.status}`);
       }
     } catch (error) {
-      console.warn("Failed to start session:", error);
+      // Log error but don't block the app
+      console.warn("Session tracking unavailable:", error);
     }
   }, [user, profile, config.trackPageViews, updateActivity]);
 

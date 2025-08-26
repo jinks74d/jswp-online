@@ -154,7 +154,8 @@ function ClientDashboard({ children }: ClientDashboardProps) {
   }
 
   // Wait for profile loading to complete before checking district access
-  if (profileLoading || (!fullProfile && user && profile && !profileLoading)) {
+  // Only show loading if we're actively loading and don't have valid profile data
+  if (profileLoading && !fullProfile && !lastValidProfile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
