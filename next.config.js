@@ -1,17 +1,21 @@
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Performance Optimizations
   compress: true,
   poweredByHeader: false,
-  
+
   // Experimental optimizations for better performance
   experimental: {
     // Enable optimized package imports
-    optimizePackageImports: ['lucide-react', '@supabase/supabase-js'],
+    optimizePackageImports: ["lucide-react", "@supabase/supabase-js"],
   },
 
   // Bundle optimization handled by Next.js 15+ automatically
-  
+
   // Image optimization
   images: {
     // Enable support for multiple image formats
@@ -20,13 +24,13 @@ const nextConfig = {
     minimumCacheTTL: 60,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    
+
     // Allow external image domains (add your Supabase storage domain)
     domains: [
       "localhost",
       "zyivphqxqmbslxcrzbnh.supabase.co", // Your Supabase project domain
     ],
-    
+
     // Modern remotePatterns configuration for better security
     remotePatterns: [
       {
@@ -42,7 +46,7 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
-    
+
     // Support for various image file extensions
     dangerouslyAllowSVG: true,
     contentSecurityPolicy:
@@ -54,7 +58,7 @@ const nextConfig = {
     // Only add essential webpack configurations
     if (!dev) {
       // Simplified production optimizations
-      config.optimization.moduleIds = 'deterministic';
+      config.optimization.moduleIds = "deterministic";
     }
 
     // Essential SVG handling (simplified)
@@ -77,32 +81,32 @@ const nextConfig = {
   // Headers for performance
   headers: async () => [
     {
-      source: '/(.*)',
+      source: "/(.*)",
       headers: [
         {
-          key: 'X-Content-Type-Options',
-          value: 'nosniff',
+          key: "X-Content-Type-Options",
+          value: "nosniff",
         },
         {
-          key: 'X-Frame-Options',
-          value: 'DENY',
+          key: "X-Frame-Options",
+          value: "DENY",
         },
         {
-          key: 'Referrer-Policy',
-          value: 'strict-origin-when-cross-origin',
+          key: "Referrer-Policy",
+          value: "strict-origin-when-cross-origin",
         },
       ],
     },
     {
-      source: '/dashboard/(.*)',
+      source: "/dashboard/(.*)",
       headers: [
         {
-          key: 'Cache-Control',
-          value: 'no-store, no-cache, must-revalidate',
+          key: "Cache-Control",
+          value: "no-store, no-cache, must-revalidate",
         },
       ],
     },
   ],
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

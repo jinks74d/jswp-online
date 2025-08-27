@@ -5,6 +5,8 @@ import "./globals.css";
 import { OptimizedAuthProvider as AuthProvider } from "@/components/auth/OptimizedAuthProvider";
 import { AuthDebug } from "@/components/auth/AuthDebug";
 import { AuthFlowMonitor } from "@/components/auth/AuthFlowMonitor";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { DevTools } from "@/components/DevTools";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,11 +23,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className} suppressHydrationWarning>
-        <AuthProvider>
-          {children}
-          <AuthDebug enabled={process.env.NODE_ENV === "development"} />
-          {/* <AuthFlowMonitor /> */}
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            {children}
+            <AuthDebug enabled={process.env.NODE_ENV === "development"} />
+            {/* <AuthFlowMonitor /> */}
+            <DevTools enabled={process.env.NODE_ENV === "development"} />
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

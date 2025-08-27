@@ -3,7 +3,7 @@
 
 import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef, memo, useCallback } from "react";
+import { useEffect, useState, useRef, memo, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
 import DashboardSidebar from "./DashboardSidebar";
 
@@ -22,42 +22,37 @@ function ClientDashboard({ children }: ClientDashboardProps) {
   const profileFetchRef = useRef<AbortController | null>(null);
   const lastFetchedUserRef = useRef<string | null>(null);
 
+  // Memoize user ID to prevent unnecessary effects
+  const userId = useMemo(() => user?.id, [user?.id]);
+
   // Reset profile state when user changes
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setFullProfile(null);
       lastFetchedUserRef.current = null;
-    } else if (lastFetchedUserRef.current && lastFetchedUserRef.current !== user.id) {
+    } else if (
+      lastFetchedUserRef.current &&
+      lastFetchedUserRef.current !== userId
+    ) {
       // Only reset if we had a different user before
       setFullProfile(null);
       lastFetchedUserRef.current = null;
     }
-  }, [user]);
+  }, [userId]);
 
-  // Optimized profile fetching with smart caching - only trigger once per user/profile change
-  useEffect(() => {
-    if (!user || !profile || profileLoading || lastFetchedUserRef.current === user.id) {
-      return;
-    }
+  // Memoized profile fetching function to prevent recreation on every render
+  const fetchFullProfile = useCallback(
+    async (userId: string, basicProfile: any) => {
+      // Cancel any existing fetch
+      if (profileFetchRef.current) {
+        profileFetchRef.current.abort();
+      }
 
-    // Skip full profile fetch if basic profile has all needed data
-    if (profile.district_id && profile.districts) {
-      setFullProfile(profile);
-      lastFetchedUserRef.current = user.id;
-      return;
-    }
+      const abortController = new AbortController();
+      profileFetchRef.current = abortController;
 
-    // Cancel any existing fetch
-    if (profileFetchRef.current) {
-      profileFetchRef.current.abort();
-    }
+      setProfileLoading(true);
 
-    const abortController = new AbortController();
-    profileFetchRef.current = abortController;
-
-    setProfileLoading(true);
-
-    const fetchFullProfile = async () => {
       try {
         const supabase = createClient();
 
@@ -66,12 +61,12 @@ function ClientDashboard({ children }: ClientDashboardProps) {
           .from("user_profiles")
           .select(
             `
-            *,
-            districts:district_id(id, name, primary_color, secondary_color, logo_url),
-            schools:school_id(id, name)
-          `
+          *,
+          districts:district_id(id, name, primary_color, secondary_color, logo_url),
+          schools:school_id(id, name)
+        `
           )
-          .eq("id", user.id)
+          .eq("id", userId)
           .abortSignal(abortController.signal)
           .single();
 
@@ -81,41 +76,75 @@ function ClientDashboard({ children }: ClientDashboardProps) {
 
         if (error) {
           // Fallback to basic profile if it has district_id
-          if (profile?.district_id) {
-            setFullProfile(profile);
+          if (basicProfile?.district_id) {
+            setFullProfile(basicProfile);
           }
         } else {
           console.log("Full profile fetched with district data:", {
             hasDistricts: !!data.districts,
             districtName: data.districts?.name,
-            hasColors: !!(data.districts?.primary_color || data.districts?.secondary_color),
-            hasLogo: !!data.districts?.logo_url
+            hasColors: !!(
+              data.districts?.primary_color || data.districts?.secondary_color
+            ),
+            hasLogo: !!data.districts?.logo_url,
           });
           setFullProfile(data);
-          lastFetchedUserRef.current = user.id;
+          lastFetchedUserRef.current = userId;
         }
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
           return;
         }
         // Fallback to basic profile
-        if (profile?.district_id && mountedRef.current) {
-          setFullProfile(profile);
-          lastFetchedUserRef.current = user.id;
+        if (basicProfile?.district_id && mountedRef.current) {
+          setFullProfile(basicProfile);
+          lastFetchedUserRef.current = userId;
         }
       } finally {
         if (mountedRef.current) {
           setProfileLoading(false);
         }
       }
-    };
+    },
+    []
+  );
 
-    fetchFullProfile();
+  // Memoize profile properties to prevent unnecessary effects
+  const profileDistrictId = useMemo(
+    () => profile?.district_id,
+    [profile?.district_id]
+  );
+  const hasProfileDistricts = useMemo(
+    () => !!profile?.districts,
+    [profile?.districts]
+  );
 
-    return () => {
-      abortController.abort();
-    };
-  }, [user, profile]);
+  // Optimized profile fetching with smart caching - only trigger once per user/profile change
+  useEffect(() => {
+    if (
+      !userId ||
+      !profile ||
+      profileLoading ||
+      lastFetchedUserRef.current === userId
+    ) {
+      return;
+    }
+
+    // Skip full profile fetch if basic profile has all needed data
+    if (profileDistrictId && hasProfileDistricts) {
+      setFullProfile(profile);
+      lastFetchedUserRef.current = userId;
+      return;
+    }
+
+    fetchFullProfile(userId, profile);
+  }, [
+    user?.id,
+    profile?.id,
+    profile?.district_id,
+    fetchFullProfile,
+    profileLoading,
+  ]);
 
   // Track the last valid profile for use during temporary state transitions
   useEffect(() => {
@@ -135,13 +164,20 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     };
   }, []);
 
-  // Simplified redirect logic
-  useEffect(() => {
-    if (!loading && user && profile && profile.role === "super_admin") {
+  // Memoize profile role to prevent unnecessary effects
+  const profileRole = useMemo(() => profile?.role, [profile?.role]);
+
+  // Memoized redirect handler to prevent infinite loops
+  const handleSuperAdminRedirect = useCallback(() => {
+    if (!loading && userId && profileRole === "super_admin") {
       router.replace("/super-admin");
     }
-  }, [user, profile, loading, router]);
+  }, [loading, userId, profileRole, router]);
 
+  // Simplified redirect logic with stable dependencies
+  useEffect(() => {
+    handleSuperAdminRedirect();
+  }, [handleSuperAdminRedirect]);
 
   // Show loading state during initial auth check or while we have some valid data
   if (loading) {
@@ -169,11 +205,25 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     return () => clearTimeout(timer);
   }, []);
 
+  // Memoized redirect to login handler
+  const handleLoginRedirect = useCallback(() => {
+    console.log(
+      "ClientDashboard: No authentication data found after waiting, redirecting to login"
+    );
+    router.replace("/");
+  }, [router]);
+
   // Only redirect if auth is complete AND we have no user AND no cached profile data
   // AND we've waited long enough for session restoration
-  if (!loading && !user && !profile && !lastValidProfile && !profileLoading && !redirectDelay) {
-    console.log('ClientDashboard: No authentication data found after waiting, redirecting to login');
-    router.replace('/');
+  if (
+    !loading &&
+    !user &&
+    !profile &&
+    !lastValidProfile &&
+    !profileLoading &&
+    !redirectDelay
+  ) {
+    handleLoginRedirect();
     return null;
   }
 
@@ -201,7 +251,6 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     !profile?.district_id &&
     !lastValidProfile?.district_id
   ) {
-
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
@@ -237,7 +286,10 @@ function ClientDashboard({ children }: ClientDashboardProps) {
   };
 
   return (
-    <div className="min-h-screen transition-opacity duration-300 opacity-100" style={gradientStyle}>
+    <div
+      className="min-h-screen transition-opacity duration-300 opacity-100"
+      style={gradientStyle}
+    >
       <DashboardSidebar profile={profileToUse} />
       <div className="pl-64">
         <main className="py-8 px-8">{children}</main>
