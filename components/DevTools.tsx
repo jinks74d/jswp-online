@@ -27,13 +27,12 @@ export function DevTools({
     // Enable React DevTools features
     if (typeof window !== "undefined") {
       // Enable React concurrent features debugging
-      (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__?.onCommitFiberRoot = (
-        id: any,
-        root: any,
-        priorityLevel: any
-      ) => {
-        console.log("React commit:", { id, priorityLevel });
-      };
+      const hook = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      if (hook) {
+        hook.onCommitFiberRoot = (id: any, root: any, priorityLevel: any) => {
+          console.log("React commit:", { id, priorityLevel });
+        };
+      }
 
       // Add global debugging helpers
       (window as any).debugTools = {
@@ -41,8 +40,8 @@ export function DevTools({
         perf,
         monitoring,
         getLogs: () => logger.getLogs(),
-        getMetrics: () => monitoring.getMetrics(),
-        getAlerts: () => monitoring.getAlerts(),
+        getMetrics: () => monitoring?.getMetrics() || new Map(),
+        getAlerts: () => monitoring?.getAlerts() || [],
         clearLogs: () => logger.clearLogs(),
         exportLogs: () => logger.exportLogs(),
       };
@@ -51,8 +50,8 @@ export function DevTools({
     // Update data periodically
     const interval = setInterval(() => {
       setLogs(logger.getLogs().slice(-50)); // Last 50 logs
-      setMetrics(monitoring.getMetrics());
-      setAlerts(monitoring.getAlerts());
+      setMetrics(monitoring?.getMetrics() || new Map());
+      setAlerts(monitoring?.getAlerts() || []);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -342,10 +341,14 @@ export function PerformanceMonitor({
   name: string;
 }) {
   useEffect(() => {
-    perf.startTimer(`component-${name}`);
-    return () => {
-      perf.endTimer(`component-${name}`);
-    };
+    if (perf) {
+      perf.startTimer(`component-${name}`);
+      return () => {
+        if (perf) {
+          perf.endTimer(`component-${name}`);
+        }
+      };
+    }
   }, [name]);
 
   return <>{children}</>;

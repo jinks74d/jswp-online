@@ -7,7 +7,7 @@ interface RetryConfig {
   baseDelay: number;
   maxDelay: number;
   backoffFactor: number;
-  retryCondition?: (error: Error, attempt: number) => boolean;
+  retryCondition?: (error: ApiError, attempt: number) => boolean;
 }
 
 interface RequestConfig extends RequestInit {
@@ -169,7 +169,7 @@ export class ApiClient {
     const retryConfig = { ...this.defaultRetryConfig, ...options.retry };
     const maxAttempts = options.skipRetry ? 1 : retryConfig.maxRetries + 1;
 
-    let lastError: ApiError;
+    let lastError: ApiError | undefined;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const startTime = performance.now();
@@ -249,7 +249,7 @@ export class ApiClient {
       }
     }
 
-    throw lastError;
+    throw lastError || new Error("Unknown API error");
   }
 
   // Convenience methods

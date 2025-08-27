@@ -101,13 +101,15 @@ export class MonitoringSystem {
       maxMetricsHistory: 1000,
     };
 
-    if (this.config.enabled) {
+    if (this.config.enabled && typeof window !== "undefined") {
       this.startReporting();
       this.initializeMetricCollection();
     }
   }
 
   private initializeMetricCollection() {
+    if (typeof window === "undefined") return;
+
     // Collect error rate metrics
     this.collectErrorRate();
 
@@ -122,6 +124,8 @@ export class MonitoringSystem {
   }
 
   private collectErrorRate() {
+    if (typeof window === "undefined") return;
+
     let errorCount = 0;
     let totalRequests = 0;
 
@@ -174,7 +178,7 @@ export class MonitoringSystem {
           )[0] as PerformanceNavigationTiming;
           if (navigation) {
             const pageLoadTime =
-              navigation.loadEventEnd - navigation.navigationStart;
+              navigation.loadEventEnd - navigation.fetchStart;
             this.recordMetric("page_load_time", pageLoadTime);
           }
         }, 0);
@@ -498,10 +502,11 @@ export class MonitoringSystem {
   }
 }
 
-// Singleton instance
-export const monitoring = MonitoringSystem.getInstance();
+// Singleton instance - only initialize on client side
+export const monitoring =
+  typeof window !== "undefined" ? MonitoringSystem.getInstance() : null;
 
 // React hook for monitoring
 export function useMonitoring() {
-  return monitoring;
+  return monitoring || null;
 }

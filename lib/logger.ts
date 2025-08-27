@@ -250,31 +250,7 @@ class Logger {
 // Singleton instance
 export const logger = new Logger();
 
-// React hook for logging
+// React hook for logging (moved to separate file to avoid JSX in .ts file)
 export function useLogger() {
   return logger;
-}
-
-// Higher-order component for automatic error logging
-export function withErrorLogging<P extends object>(
-  Component: React.ComponentType<P>,
-  componentName?: string
-) {
-  const WrappedComponent = (props: P) => {
-    try {
-      return <Component {...props} />;
-    } catch (error) {
-      logger.error(`Component Error: ${componentName || Component.name}`, {
-        error: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
-        props: process.env.NODE_ENV === "development" ? props : undefined,
-      });
-      throw error; // Re-throw to let error boundary handle it
-    }
-  };
-
-  WrappedComponent.displayName = `withErrorLogging(${
-    componentName || Component.name
-  })`;
-  return WrappedComponent;
 }

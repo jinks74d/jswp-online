@@ -21,6 +21,7 @@ export class PerformanceMonitor {
   private metrics: Map<string, number> = new Map();
   private observers: Map<string, PerformanceObserver> = new Map();
   private isEnabled: boolean = true;
+  private isClient: boolean = false;
 
   static getInstance(): PerformanceMonitor {
     if (!PerformanceMonitor.instance) {
@@ -30,15 +31,22 @@ export class PerformanceMonitor {
   }
 
   constructor() {
-    if (typeof window !== "undefined") {
-      this.initializeObservers();
-      this.startMemoryMonitoring();
+    this.isClient =
+      typeof window !== "undefined" && typeof performance !== "undefined";
+    if (this.isClient) {
+      // Delay initialization to avoid SSR issues
+      setTimeout(() => {
+        this.initializeObservers();
+        this.startMemoryMonitoring();
+      }, 0);
     }
   }
 
   private initializeObservers() {
+    if (!this.isClient) return;
+
     // Observe navigation timing
-    if ("PerformanceObserver" in window) {
+    if (typeof window !== "undefined" && "PerformanceObserver" in window) {
       try {
         const navObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
@@ -135,11 +143,14 @@ export class PerformanceMonitor {
         name: "request-response",
         value: entry.responseEnd - entry.requestStart,
       },
-      { name: "dom-processing", value: entry.domComplete - entry.domLoading },
-      { name: "page-load", value: entry.loadEventEnd - entry.navigationStart },
+      {
+        name: "dom-processing",
+        value: entry.domComplete - entry.domContentLoadedEventStart,
+      },
+      { name: "page-load", value: entry.loadEventEnd - entry.fetchStart },
       {
         name: "dom-content-loaded",
-        value: entry.domContentLoadedEventEnd - entry.navigationStart,
+        value: entry.domContentLoadedEventEnd - entry.fetchStart,
       },
     ];
 
@@ -157,6 +168,8 @@ export class PerformanceMonitor {
   }
 
   private startMemoryMonitoring() {
+    if (!this.isClient || typeof performance === "undefined") return;
+
     if ("memory" in performance) {
       setInterval(() => {
         const memory = (performance as any).memory as MemoryInfo;
@@ -178,8 +191,8 @@ export class PerformanceMonitor {
     }
   }
 
-  private recordMetric(metric: PerformanceMetric) {
-    if (!this.isEnabled) return;
+  public recordMetric(metric: PerformanceMetric) {
+    if (!this.isEnabled || !this.isClient) return;
 
     logger.performanceMetric(metric.name, metric.value, metric.unit);
 
@@ -208,12 +221,14 @@ export class PerformanceMonitor {
 
   // Public API
   startTimer(name: string): void {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled || !this.isClient || typeof performance === "undefined")
+      return;
     this.metrics.set(name, performance.now());
   }
 
   endTimer(name: string): number {
-    if (!this.isEnabled) return 0;
+    if (!this.isEnabled || !this.isClient || typeof performance === "undefined")
+      return 0;
 
     const startTime = this.metrics.get(name);
     if (!startTime) {
@@ -236,14 +251,14 @@ export class PerformanceMonitor {
   }
 
   measureAsync<T>(name: string, fn: () => Promise<T>): Promise<T> {
-    if (!this.isEnabled) return fn();
+    if (!this.isEnabled || !this.isClient) return fn();
 
     this.startTimer(name);
     return fn().finally(() => this.endTimer(name));
   }
 
   measureSync<T>(name: string, fn: () => T): T {
-    if (!this.isEnabled) return fn();
+    if (!this.isEnabled || !this.isClient) return fn();
 
     this.startTimer(name);
     try {
@@ -266,6 +281,10 @@ export class PerformanceMonitor {
     url: string,
     requestFn: () => Promise<Response>
   ): Promise<Response> {
+    if (!this.isClient || typeof window === "undefined") {
+      return requestFn();
+    }
+
     const requestName = `request-${
       new URL(url, window.location.origin).pathname
     }`;
@@ -279,6 +298,10 @@ export class PerformanceMonitor {
     fid?: number;
     cls?: number;
   }> {
+    if (!this.isClient || typeof performance === "undefined") {
+      return Promise.resolve({});
+    }
+
     return new Promise((resolve) => {
       const vitals: any = {};
 
@@ -299,14 +322,22 @@ export class PerformanceMonitor {
 
   // Memory usage snapshot
   getMemoryUsage(): MemoryInfo | null {
-    if ("memory" in performance) {
-      return (performance as any).memory;
+    if (
+      !this.isClient ||
+      typeof performance === "undefined" ||
+      !("memory" in performance)
+    ) {
+      return null;
     }
-    return null;
+    return (performance as any).memory;
   }
 
   // Bundle size estimation
   estimateBundleSize(): number {
+    if (!this.isClient || typeof document === "undefined") {
+      return 0;
+    }
+
     const scripts = Array.from(document.querySelectorAll("script[src]"));
     let totalSize = 0;
 
@@ -338,29 +369,13 @@ export class PerformanceMonitor {
   }
 }
 
-// Singleton instance
-export const perf = PerformanceMonitor.getInstance();
+// Singleton instance - only initialize on client side
+export const perf =
+  typeof window !== "undefined" ? PerformanceMonitor.getInstance() : null;
 
-// React hook for performance monitoring
+// React hook for performance monitoring (moved to separate file to avoid JSX in .ts file)
 export function usePerformanceMonitor() {
-  return perf;
-}
-
-// Higher-order component for automatic render time measurement
-export function withPerformanceMonitoring<P extends object>(
-  Component: React.ComponentType<P>,
-  componentName?: string
-) {
-  const WrappedComponent = (props: P) => {
-    const name = componentName || Component.name || "UnknownComponent";
-
-    return perf.measureRender(name, () => <Component {...props} />);
-  };
-
-  WrappedComponent.displayName = `withPerformanceMonitoring(${
-    componentName || Component.name
-  })`;
-  return WrappedComponent;
+  return perf || null;
 }
 
 // Performance monitoring for API calls
@@ -369,30 +384,37 @@ export class ApiPerformanceMonitor {
     url: string,
     options: RequestInit = {}
   ): Promise<Response> {
-    const startTime = performance.now();
+    const startTime =
+      typeof performance !== "undefined" ? performance.now() : Date.now();
 
     try {
       const response = await fetch(url, options);
-      const duration = performance.now() - startTime;
+      const duration =
+        (typeof performance !== "undefined" ? performance.now() : Date.now()) -
+        startTime;
 
       logger.apiCall(options.method || "GET", url, duration, response.status);
 
-      perf.recordMetric({
-        name: `api-${options.method || "GET"}-${response.status}`,
-        value: duration,
-        unit: "ms",
-        timestamp: Date.now(),
-        category: "api",
-        metadata: {
-          url,
-          status: response.status,
-          ok: response.ok,
-        },
-      });
+      if (perf) {
+        perf.recordMetric({
+          name: `api-${options.method || "GET"}-${response.status}`,
+          value: duration,
+          unit: "ms",
+          timestamp: Date.now(),
+          category: "api",
+          metadata: {
+            url,
+            status: response.status,
+            ok: response.ok,
+          },
+        });
+      }
 
       return response;
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration =
+        (typeof performance !== "undefined" ? performance.now() : Date.now()) -
+        startTime;
 
       logger.error("API Request Failed", {
         url,

@@ -47,6 +47,9 @@ export interface District {
   name: string;
   domain: string | null;
   poc_email: string;
+  primary_color: string | null;
+  secondary_color: string | null;
+  logo_url: string | null;
   settings: Record<string, any>;
   created_at: string;
   updated_at: string;
@@ -104,7 +107,8 @@ export function createClient(): SupabaseClient<Database> {
         detectSessionInUrl: false, // Prevent URL parsing issues
         flowType: "pkce",
         debug: false,
-        storage: typeof window !== "undefined" ? window.localStorage : undefined,
+        storage:
+          typeof window !== "undefined" ? window.localStorage : undefined,
         storageKey: "sb-auth-token",
       },
       global: {

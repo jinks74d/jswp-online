@@ -75,7 +75,13 @@ export const OptimizedAuthProvider = ({
 
         const { data, error } = await supabase
           .from("user_profiles")
-          .select("*")
+          .select(
+            `
+            *,
+            districts:district_id(id, name, primary_color, secondary_color, logo_url),
+            schools:school_id(id, name)
+          `
+          )
           .eq("id", userId)
           .abortSignal(signal)
           .single();
@@ -111,7 +117,9 @@ export const OptimizedAuthProvider = ({
       }
 
       authProcessingRef.current = true;
-      perf.startTimer("auth-change-processing");
+      if (perf) {
+        perf.startTimer("auth-change-processing");
+      }
 
       // Set timeout to force processing flag reset if something goes wrong
       const processingTimeout = setTimeout(() => {
@@ -137,9 +145,11 @@ export const OptimizedAuthProvider = ({
         if (user) {
           try {
             logger.debug("Fetching profile for user", { userId: user.id });
-            const profile = await perf.measureAsync("profile-fetch", () =>
-              fetchProfile(user.id, controller.signal)
-            );
+            const profile = perf
+              ? await perf.measureAsync("profile-fetch", () =>
+                  fetchProfile(user.id, controller.signal)
+                )
+              : await fetchProfile(user.id, controller.signal);
             logger.authEvent("Profile fetched successfully", {
               role: profile?.role,
               email: profile?.email,
@@ -185,7 +195,9 @@ export const OptimizedAuthProvider = ({
       } finally {
         clearTimeout(processingTimeout);
         authProcessingRef.current = false;
-        perf.endTimer("auth-change-processing");
+        if (perf) {
+          perf.endTimer("auth-change-processing");
+        }
         logger.debug("Auth change processing completed");
       }
     },

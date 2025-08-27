@@ -349,7 +349,7 @@ export async function POST(request: NextRequest) {
         nodeVersion: process.version,
         pid: process.pid,
         uptime: process.uptime(),
-        loadAverage: process.loadavg?.() || [],
+        // loadAverage not available on all platforms
         cpuUsage: process.cpuUsage(),
       },
       environment: {
