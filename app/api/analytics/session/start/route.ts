@@ -1,135 +1,192 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { createServerSupabaseClient } from "@/lib/supabase";
+import { AsyncHandler } from "@/lib/async-handler";
+import {
+  AppError,
+  ErrorType,
+  ErrorSeverity,
+  createTableNotFoundError,
+  createAuthError,
+} from "@/lib/errors";
 
 export async function POST(request: NextRequest) {
-  try {
-    const cookieStore = await cookies();
-    
-    // Debug: Log cookies to check if auth cookies are present
-    const allCookies = cookieStore.getAll();
-    console.log("API Route - Available cookies:", allCookies.map(c => c.name));
-    
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch (error) {
-              // The `setAll` method was called from a Server Component.
-              console.error("Cookie setAll error:", error);
-            }
-          },
-        },
+  const result = await AsyncHandler.execute(
+    async () => {
+      const cookieStore = await cookies();
+      const supabase = await createServerSupabaseClient(cookieStore);
+
+      // Get current user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.error("Authentication error:", userError);
+        throw createAuthError("User authentication failed", {
+          metadata: { userError: userError?.message },
+        });
       }
-    );
 
-    // Get current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+      console.log("Session start request for user:", user.email);
 
-    if (userError) {
-      console.error("Auth error in session/start:", userError);
-      return NextResponse.json({ 
-        error: "Authentication error", 
-        details: userError.message 
-      }, { status: 401 });
-    }
+      // Get user profile with district and school info
+      const { data: profile, error: profileError } = await supabase
+        .from("user_profiles")
+        .select(
+          `
+          id,
+          role,
+          district_id,
+          school_id,
+          districts:district_id(id, name),
+          schools:school_id(id, name)
+        `
+        )
+        .eq("id", user.id)
+        .single();
 
-    if (!user) {
-      console.log("No user found in session/start - cookies might not be passed");
-      return NextResponse.json({ 
-        error: "No authenticated user found",
-        hint: "Check if cookies are being passed correctly"
-      }, { status: 401 });
-    }
+      if (profileError || !profile) {
+        console.error("Profile fetch error:", profileError);
+        throw new AppError({
+          type: ErrorType.RESOURCE_NOT_FOUND,
+          message: "Profile not found",
+          severity: ErrorSeverity.HIGH,
+          context: {
+            userId: user.id,
+            metadata: { profileError: profileError?.message },
+          },
+        });
+      }
 
-    // Get user profile with district/school info
-    const { data: profile, error: profileError } = await supabase
-      .from("user_profiles")
-      .select("district_id, school_id, role")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
-
-    // Get client info
-    const userAgent = request.headers.get("user-agent") || "";
-    const clientIP = request.headers.get("x-forwarded-for") || 
-                     request.headers.get("x-real-ip") || 
-                     "unknown";
-
-    // Parse browser/device info
-    const deviceType = userAgent.toLowerCase().includes("mobile") ? "mobile" : 
-                      userAgent.toLowerCase().includes("tablet") ? "tablet" : "desktop";
-
-    // Check for existing active session and end it
-    const { error: updateError } = await supabase
-      .from("user_sessions")
-      .update({
-        session_end: new Date().toISOString(),
-        is_active: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq("user_id", user.id)
-      .eq("is_active", true);
-
-    if (updateError) {
-      console.warn("Error ending previous sessions:", updateError);
-    }
-
-    // Create new session
-    const { data: session, error: sessionError } = await supabase
-      .from("user_sessions")
-      .insert({
-        user_id: user.id,
+      console.log("Profile found:", {
+        role: profile.role,
         district_id: profile.district_id,
         school_id: profile.school_id,
-        session_start: new Date().toISOString(),
-        last_activity: new Date().toISOString(),
-        ip_address: clientIP,
-        user_agent: userAgent,
-        device_type: deviceType,
-        browser_info: {
-          userAgent,
-          language: request.headers.get("accept-language") || "",
-          referrer: request.headers.get("referer") || ""
-        },
-        is_active: true
-      })
-      .select("id")
-      .single();
+      });
 
-    if (sessionError) {
-      console.error("Error creating session:", sessionError);
-      return NextResponse.json({ 
-        error: "Failed to create session",
-        details: sessionError.message 
-      }, { status: 500 });
+      // Get client info
+      const userAgent = request.headers.get("user-agent") || "";
+      const clientIP =
+        request.headers.get("x-forwarded-for") ||
+        request.headers.get("x-real-ip") ||
+        "unknown";
+
+      // Parse browser/device info
+      const deviceType = userAgent.toLowerCase().includes("mobile")
+        ? "mobile"
+        : userAgent.toLowerCase().includes("tablet")
+        ? "tablet"
+        : "desktop";
+
+      // Check for existing active session and end it
+      const { error: updateError } = await supabase
+        .from("user_sessions")
+        .update({
+          session_end: new Date().toISOString(),
+          is_active: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+
+      if (updateError) {
+        console.warn("Error ending previous sessions:", updateError);
+      }
+
+      // Create new session
+      const { data: session, error: sessionError } = await supabase
+        .from("user_sessions")
+        .insert({
+          user_id: user.id,
+          district_id: profile.district_id,
+          school_id: profile.school_id,
+          session_start: new Date().toISOString(),
+          last_activity: new Date().toISOString(),
+          ip_address: clientIP,
+          user_agent: userAgent,
+          device_type: deviceType,
+          browser_info: {
+            userAgent,
+            language: request.headers.get("accept-language") || "",
+            referrer: request.headers.get("referer") || "",
+          },
+          is_active: true,
+        })
+        .select("id")
+        .single();
+
+      if (sessionError) {
+        console.error("Error creating session:", sessionError);
+
+        // Check if it's a table not found error
+        if (
+          sessionError.message?.includes(
+            'relation "user_sessions" does not exist'
+          )
+        ) {
+          throw createTableNotFoundError("user_sessions", {
+            userId: user.id,
+            metadata: { operation: "session_start" },
+          });
+        }
+
+        throw new AppError({
+          type: ErrorType.DATABASE_QUERY_FAILED,
+          message: `Failed to create session: ${sessionError.message}`,
+          severity: ErrorSeverity.HIGH,
+          context: {
+            userId: user.id,
+            metadata: { sessionError: sessionError.message },
+          },
+        });
+      }
+
+      console.log("Session created successfully:", session.id);
+
+      return {
+        success: true,
+        sessionId: session.id,
+        message: "Session started successfully",
+      };
+    },
+    {
+      operationName: "startAnalyticsSession",
+      timeout: 10000,
+      retries: 1,
+      context: { metadata: { endpoint: "/api/analytics/session/start" } },
+    }
+  );
+
+  if (!result.success) {
+    const error = result.error!;
+
+    // Map error types to HTTP status codes
+    let statusCode = 500;
+    if (
+      error.type === ErrorType.AUTHENTICATION_FAILED ||
+      error.type === ErrorType.AUTHORIZATION_DENIED
+    ) {
+      statusCode = 401;
+    } else if (error.type === ErrorType.RESOURCE_NOT_FOUND) {
+      statusCode = 404;
+    } else if (error.type === ErrorType.TABLE_NOT_FOUND) {
+      statusCode = 503;
     }
 
-    return NextResponse.json({ 
-      sessionId: session.id,
-      success: true 
-    }, { status: 201 });
-
-  } catch (error) {
-    console.error("Error in session start API:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      {
+        error: error.userMessage,
+        details: error.technicalMessage,
+        type: error.type,
+        ...(error.type === ErrorType.TABLE_NOT_FOUND && {
+          hint: "Check migrations/create-analytics-schema.sql",
+        }),
+      },
+      { status: statusCode }
     );
   }
+
+  return NextResponse.json(result.data);
 }

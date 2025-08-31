@@ -3,6 +3,8 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import { usePathname } from "next/navigation";
+import { AsyncHandler } from "@/lib/async-handler";
+import { AppError, ErrorType, classifyError } from "@/lib/errors";
 import {
   isLikelyRealPageUnload,
   onNavigationStart,
@@ -107,31 +109,69 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
   const startSession = useCallback(async () => {
     if (!user || !profile || isTrackingRef.current) return;
 
-    try {
-      const response = await fetch("/api/analytics/session/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+    const result = await AsyncHandler.execute(
+      async () => {
+        const response = await fetch("/api/analytics/session/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
 
-      if (response.ok) {
-        const { sessionId } = await response.json();
-        sessionIdRef.current = sessionId;
-        isTrackingRef.current = true;
-        lastActivityRef.current = new Date();
-        pageStartTimeRef.current = new Date();
-
-        // Track initial page view
-        if (config.trackPageViews) {
-          setTimeout(() => updateActivity(true), 1000);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new AppError({
+            type:
+              response.status === 401
+                ? ErrorType.AUTHENTICATION_FAILED
+                : response.status === 503
+                ? ErrorType.TABLE_NOT_FOUND
+                : ErrorType.API_REQUEST_FAILED,
+            message:
+              errorData.details ||
+              `Session start failed with status ${response.status}`,
+            context: {
+              userId: user.id,
+              metadata: {
+                status: response.status,
+                errorData,
+              },
+            },
+          });
         }
-      } else {
-        // Log error but don't block the app
-        console.warn(`Session tracking unavailable: ${response.status}`);
+
+        const data = await response.json();
+        return data;
+      },
+      {
+        operationName: "startSession",
+        timeout: 10000,
+        retries: 1,
+        silent: true, // Don't log errors for analytics - it's not critical
+        context: { userId: user.id },
+        onError: (error) => {
+          if (error.type === ErrorType.TABLE_NOT_FOUND) {
+            console.warn(
+              "Analytics tables not set up - session tracking disabled"
+            );
+          } else if (error.type === ErrorType.AUTHENTICATION_FAILED) {
+            console.warn("Authentication issue - session tracking disabled");
+          } else {
+            console.warn("Session tracking unavailable:", error.userMessage);
+          }
+        },
       }
-    } catch (error) {
-      // Log error but don't block the app
-      console.warn("Session tracking unavailable:", error);
+    );
+
+    if (result.success && result.data) {
+      sessionIdRef.current = result.data.sessionId;
+      isTrackingRef.current = true;
+      lastActivityRef.current = new Date();
+      pageStartTimeRef.current = new Date();
+
+      // Track initial page view
+      if (config.trackPageViews) {
+        setTimeout(() => updateActivity(true), 1000);
+      }
     }
   }, [user, profile, config.trackPageViews, updateActivity]);
 

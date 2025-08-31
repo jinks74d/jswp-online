@@ -1,399 +1,295 @@
 // lib/api-client.ts
+// Centralized API client with comprehensive error handling
+
+import { AsyncHandler } from "./async-handler";
+import { AppError, ErrorType, ErrorSeverity, classifyError } from "./errors";
 import { logger } from "./logger";
-import { perf } from "./performance";
 
-interface RetryConfig {
-  maxRetries: number;
-  baseDelay: number;
-  maxDelay: number;
-  backoffFactor: number;
-  retryCondition?: (error: ApiError, attempt: number) => boolean;
-}
-
-interface RequestConfig extends RequestInit {
+interface ApiRequestOptions {
+  method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+  headers?: Record<string, string>;
+  body?: any;
   timeout?: number;
-  retry?: Partial<RetryConfig>;
-  skipRetry?: boolean;
+  retries?: number;
+  context?: Record<string, any>;
+  silent?: boolean;
 }
 
 interface ApiResponse<T = any> {
-  data: T;
+  data?: T;
+  error?: string;
+  details?: string;
+  type?: string;
   status: number;
-  statusText: string;
   headers: Headers;
 }
 
-interface ApiError extends Error {
-  status?: number;
-  statusText?: string;
-  response?: Response;
-  isNetworkError: boolean;
-  isTimeoutError: boolean;
-  isRetryable: boolean;
-}
-
 export class ApiClient {
-  private static defaultRetryConfig: RetryConfig = {
-    maxRetries: 3,
-    baseDelay: 1000,
-    maxDelay: 10000,
-    backoffFactor: 2,
-    retryCondition: (error: ApiError, attempt: number) => {
-      // Retry on network errors, timeouts, and 5xx status codes
-      if (error.isNetworkError || error.isTimeoutError) return true;
-      if (error.status && error.status >= 500) return true;
-      // Don't retry on 4xx errors (client errors)
-      if (error.status && error.status >= 400 && error.status < 500)
-        return false;
-      return attempt < 3;
-    },
-  };
+  private baseUrl: string;
+  private defaultHeaders: Record<string, string>;
+  private defaultTimeout: number;
 
-  private static createApiError(
-    message: string,
-    response?: Response,
-    originalError?: Error
-  ): ApiError {
-    const error = new Error(message) as ApiError;
-    error.name = "ApiError";
-
-    if (response) {
-      error.status = response.status;
-      error.statusText = response.statusText;
-      error.response = response;
-    }
-
-    // Determine error type
-    error.isNetworkError = !response && !!originalError;
-    error.isTimeoutError =
-      originalError?.name === "AbortError" || message.includes("timeout");
-    error.isRetryable =
-      error.isNetworkError ||
-      error.isTimeoutError ||
-      (error.status ? error.status >= 500 : false);
-
-    return error;
+  constructor(baseUrl = "", defaultTimeout = 30000) {
+    this.baseUrl = baseUrl;
+    this.defaultTimeout = defaultTimeout;
+    this.defaultHeaders = {
+      "Content-Type": "application/json",
+    };
   }
 
-  private static async delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+  /**
+   * Make an API request with comprehensive error handling
+   */
+  async request<T = any>(
+    endpoint: string,
+    options: ApiRequestOptions = {}
+  ): Promise<T> {
+    const {
+      method = "GET",
+      headers = {},
+      body,
+      timeout = this.defaultTimeout,
+      retries = 1,
+      context = {},
+      silent = false,
+    } = options;
 
-  private static calculateDelay(attempt: number, config: RetryConfig): number {
-    const delay = Math.min(
-      config.baseDelay * Math.pow(config.backoffFactor, attempt - 1),
-      config.maxDelay
-    );
+    const result = await AsyncHandler.execute(
+      async () => {
+        const url = `${this.baseUrl}${endpoint}`;
+        const requestHeaders = { ...this.defaultHeaders, ...headers };
 
-    // Add jitter to prevent thundering herd
-    const jitter = delay * 0.1 * Math.random();
-    return delay + jitter;
-  }
+        const requestInit: RequestInit = {
+          method,
+          headers: requestHeaders,
+          credentials: "include", // Include cookies for auth
+        };
 
-  private static async fetchWithTimeout(
-    url: string,
-    options: RequestConfig
-  ): Promise<Response> {
-    const { timeout = 10000, ...fetchOptions } = options;
+        if (body && method !== "GET") {
+          if (typeof body === "object" && !(body instanceof FormData)) {
+            requestInit.body = JSON.stringify(body);
+          } else {
+            requestInit.body = body;
+          }
+        }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    try {
-      const response = await fetch(url, {
-        ...fetchOptions,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
-    }
-  }
-
-  private static logRequest(
-    url: string,
-    options: RequestConfig,
-    attempt: number = 1
-  ) {
-    logger.debug("API Request", {
-      url,
-      method: options.method || "GET",
-      attempt,
-      timeout: options.timeout,
-      hasRetry: !!options.retry,
-    });
-  }
-
-  private static logResponse(
-    url: string,
-    response: Response,
-    duration: number,
-    attempt: number = 1
-  ) {
-    const logLevel = response.ok ? "debug" : "warn";
-    logger[logLevel]("API Response", {
-      url,
-      status: response.status,
-      statusText: response.statusText,
-      duration: `${duration}ms`,
-      attempt,
-      ok: response.ok,
-    });
-  }
-
-  private static logError(
-    url: string,
-    error: ApiError,
-    duration: number,
-    attempt: number = 1
-  ) {
-    logger.error("API Request Failed", {
-      url,
-      error: error.message,
-      status: error.status,
-      isNetworkError: error.isNetworkError,
-      isTimeoutError: error.isTimeoutError,
-      isRetryable: error.isRetryable,
-      duration: `${duration}ms`,
-      attempt,
-    });
-  }
-
-  static async request<T = any>(
-    url: string,
-    options: RequestConfig = {}
-  ): Promise<ApiResponse<T>> {
-    const retryConfig = { ...this.defaultRetryConfig, ...options.retry };
-    const maxAttempts = options.skipRetry ? 1 : retryConfig.maxRetries + 1;
-
-    let lastError: ApiError | undefined;
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const startTime = performance.now();
-
-      try {
-        this.logRequest(url, options, attempt);
-
-        const response = await this.fetchWithTimeout(url, options);
-        const duration = performance.now() - startTime;
-
-        this.logResponse(url, response, duration, attempt);
+        const response = await fetch(url, requestInit);
+        const responseData = await this.parseResponse<T>(response);
 
         if (!response.ok) {
-          const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-          const apiError = this.createApiError(errorMessage, response);
-
-          // Check if we should retry
-          if (
-            attempt < maxAttempts &&
-            retryConfig.retryCondition?.(apiError, attempt)
-          ) {
-            this.logError(url, apiError, duration, attempt);
-            const delay = this.calculateDelay(attempt, retryConfig);
-            logger.info(`Retrying request in ${delay}ms`, { url, attempt });
-            await this.delay(delay);
-            continue;
-          }
-
-          throw apiError;
+          throw this.createApiError(response, responseData, {
+            endpoint,
+            method,
+            context,
+          });
         }
 
-        // Parse response
-        let data: T;
-        const contentType = response.headers.get("content-type");
-
-        if (contentType?.includes("application/json")) {
-          data = await response.json();
-        } else if (contentType?.includes("text/")) {
-          data = (await response.text()) as unknown as T;
-        } else {
-          data = (await response.blob()) as unknown as T;
-        }
-
-        return {
-          data,
-          status: response.status,
-          statusText: response.statusText,
-          headers: response.headers,
-        };
-      } catch (error) {
-        const duration = performance.now() - startTime;
-
-        if (error instanceof Error && error.name === "ApiError") {
-          lastError = error as ApiError;
-        } else {
-          lastError = this.createApiError(
-            error instanceof Error ? error.message : "Unknown error",
-            undefined,
-            error instanceof Error ? error : undefined
-          );
-        }
-
-        this.logError(url, lastError, duration, attempt);
-
-        // Check if we should retry
-        if (
-          attempt < maxAttempts &&
-          retryConfig.retryCondition?.(lastError, attempt)
-        ) {
-          const delay = this.calculateDelay(attempt, retryConfig);
-          logger.info(`Retrying request in ${delay}ms`, { url, attempt });
-          await this.delay(delay);
-          continue;
-        }
-
-        break;
+        // Return the data if it exists, otherwise return the whole response as T
+        return (responseData.data ?? responseData) as T;
+      },
+      {
+        operationName: `API ${method} ${endpoint}`,
+        timeout,
+        retries,
+        context: { endpoint, method, ...context },
+        silent,
       }
+    );
+
+    if (!result.success) {
+      throw result.error;
     }
 
-    throw lastError || new Error("Unknown API error");
-  }
+    if (result.data === undefined) {
+      throw new AppError({
+        type: ErrorType.API_REQUEST_FAILED,
+        message: "API request succeeded but returned no data",
+        context: { metadata: { endpoint, method } },
+      });
+    }
 
-  // Convenience methods
-  static async get<T = any>(
-    url: string,
-    options: Omit<RequestConfig, "method"> = {}
-  ): Promise<ApiResponse<T>> {
-    return this.request<T>(url, { ...options, method: "GET" });
-  }
+    return result.data;
+  } /**
 
-  static async post<T = any>(
-    url: string,
-    data?: any,
-    options: Omit<RequestConfig, "method" | "body"> = {}
-  ): Promise<ApiResponse<T>> {
-    return this.request<T>(url, {
-      ...options,
-      method: "POST",
-      body: data ? JSON.stringify(data) : undefined,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-  }
+   * Parse response and handle different content types
+   */
+  private async parseResponse<T>(response: Response): Promise<ApiResponse<T>> {
+    const contentType = response.headers.get("content-type");
+    let data: any;
 
-  static async put<T = any>(
-    url: string,
-    data?: any,
-    options: Omit<RequestConfig, "method" | "body"> = {}
-  ): Promise<ApiResponse<T>> {
-    return this.request<T>(url, {
-      ...options,
-      method: "PUT",
-      body: data ? JSON.stringify(data) : undefined,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-  }
-
-  static async patch<T = any>(
-    url: string,
-    data?: any,
-    options: Omit<RequestConfig, "method" | "body"> = {}
-  ): Promise<ApiResponse<T>> {
-    return this.request<T>(url, {
-      ...options,
-      method: "PATCH",
-      body: data ? JSON.stringify(data) : undefined,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-  }
-
-  static async delete<T = any>(
-    url: string,
-    options: Omit<RequestConfig, "method"> = {}
-  ): Promise<ApiResponse<T>> {
-    return this.request<T>(url, { ...options, method: "DELETE" });
-  }
-
-  // Supabase-specific methods
-  static async supabaseRequest<T = any>(
-    url: string,
-    options: RequestConfig = {}
-  ): Promise<ApiResponse<T>> {
-    // Add Supabase-specific headers and error handling
-    const supabaseOptions: RequestConfig = {
-      ...options,
-      headers: {
-        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-        Authorization: `Bearer ${
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-        }`,
-        "Content-Type": "application/json",
-        Prefer: "return=representation",
-        ...options.headers,
-      },
-      retry: {
-        maxRetries: 2, // Fewer retries for Supabase
-        baseDelay: 500,
-        retryCondition: (error: ApiError) => {
-          // Don't retry auth errors or RLS policy violations
-          if (error.status === 401 || error.status === 403) return false;
-          return error.isRetryable;
-        },
-        ...options.retry,
-      },
-    };
-
-    return this.request<T>(url, supabaseOptions);
-  }
-
-  // Health check method
-  static async healthCheck(url: string = "/api/health"): Promise<boolean> {
     try {
-      const response = await this.get(url, {
-        timeout: 5000,
-        skipRetry: true,
-      });
-      return response.status === 200;
+      if (contentType?.includes("application/json")) {
+        data = await response.json();
+      } else if (contentType?.includes("text/")) {
+        data = await response.text();
+      } else {
+        data = await response.blob();
+      }
     } catch (error) {
-      logger.warn("Health check failed", { url, error });
-      return false;
+      // If parsing fails, create a generic response
+      data = {
+        error: "Failed to parse response",
+        details: `Response parsing failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+      };
+    }
+
+    return {
+      ...data,
+      status: response.status,
+      headers: response.headers,
+    };
+  }
+
+  /**
+   * Create appropriate AppError based on response
+   */
+  private createApiError(
+    response: Response,
+    responseData: any,
+    context: Record<string, any>
+  ): AppError {
+    const { status } = response;
+    const errorMessage =
+      responseData?.details ||
+      responseData?.error ||
+      `Request failed with status ${status}`;
+
+    let errorType: ErrorType;
+    let severity: ErrorSeverity;
+
+    // Map HTTP status codes to error types
+    switch (status) {
+      case 400:
+        errorType = ErrorType.VALIDATION_FAILED;
+        severity = ErrorSeverity.LOW;
+        break;
+      case 401:
+        errorType = ErrorType.AUTHENTICATION_FAILED;
+        severity = ErrorSeverity.HIGH;
+        break;
+      case 403:
+        errorType = ErrorType.AUTHORIZATION_DENIED;
+        severity = ErrorSeverity.MEDIUM;
+        break;
+      case 404:
+        errorType = ErrorType.RESOURCE_NOT_FOUND;
+        severity = ErrorSeverity.MEDIUM;
+        break;
+      case 408:
+        errorType = ErrorType.API_TIMEOUT;
+        severity = ErrorSeverity.MEDIUM;
+        break;
+      case 429:
+        errorType = ErrorType.API_RATE_LIMITED;
+        severity = ErrorSeverity.MEDIUM;
+        break;
+      case 500:
+        errorType = ErrorType.INTERNAL_SERVER_ERROR;
+        severity = ErrorSeverity.HIGH;
+        break;
+      case 503:
+        errorType =
+          responseData?.type === "TABLE_NOT_FOUND"
+            ? ErrorType.TABLE_NOT_FOUND
+            : ErrorType.SERVICE_UNAVAILABLE;
+        severity = ErrorSeverity.HIGH;
+        break;
+      default:
+        errorType = ErrorType.API_REQUEST_FAILED;
+        severity = status >= 500 ? ErrorSeverity.HIGH : ErrorSeverity.MEDIUM;
+    }
+
+    return new AppError({
+      type: errorType,
+      message: errorMessage,
+      severity,
+      context: {
+        metadata: {
+          ...context,
+          status,
+          responseData,
+          url: response.url,
+        },
+      },
+      recovery: this.getRecoveryStrategy(errorType, status),
+    });
+  }
+
+  /**
+   * Get appropriate recovery strategy based on error type
+   */
+  private getRecoveryStrategy(errorType: ErrorType, status: number) {
+    switch (errorType) {
+      case ErrorType.AUTHENTICATION_FAILED:
+        return { type: "redirect" as const, redirectUrl: "/login" };
+
+      case ErrorType.API_TIMEOUT:
+      case ErrorType.NETWORK_ERROR:
+        return { type: "retry" as const, maxRetries: 2, retryDelay: 2000 };
+
+      case ErrorType.API_RATE_LIMITED:
+        return { type: "retry" as const, maxRetries: 1, retryDelay: 5000 };
+
+      case ErrorType.TABLE_NOT_FOUND:
+        return {
+          type: "manual" as const,
+          message: "Database setup required - contact administrator",
+        };
+
+      case ErrorType.SERVICE_UNAVAILABLE:
+        return { type: "retry" as const, maxRetries: 1, retryDelay: 3000 };
+
+      default:
+        return { type: "manual" as const };
     }
   }
 
-  // Batch requests
-  static async batch<T = any>(
-    requests: Array<{ url: string; options?: RequestConfig }>,
-    options: { concurrency?: number; failFast?: boolean } = {}
-  ): Promise<Array<ApiResponse<T> | ApiError>> {
-    const { concurrency = 5, failFast = false } = options;
-    const results: Array<ApiResponse<T> | ApiError> = [];
+  // Convenience methods for common HTTP methods
+  async get<T = any>(
+    endpoint: string,
+    options?: Omit<ApiRequestOptions, "method">
+  ) {
+    return this.request<T>(endpoint, { ...options, method: "GET" });
+  }
 
-    // Process requests in batches
-    for (let i = 0; i < requests.length; i += concurrency) {
-      const batch = requests.slice(i, i + concurrency);
+  async post<T = any>(
+    endpoint: string,
+    body?: any,
+    options?: Omit<ApiRequestOptions, "method" | "body">
+  ) {
+    return this.request<T>(endpoint, { ...options, method: "POST", body });
+  }
 
-      const batchPromises = batch.map(async ({ url, options }) => {
-        try {
-          return await this.request<T>(url, options);
-        } catch (error) {
-          if (failFast) throw error;
-          return error as ApiError;
-        }
-      });
+  async put<T = any>(
+    endpoint: string,
+    body?: any,
+    options?: Omit<ApiRequestOptions, "method" | "body">
+  ) {
+    return this.request<T>(endpoint, { ...options, method: "PUT", body });
+  }
 
-      const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
+  async patch<T = any>(
+    endpoint: string,
+    body?: any,
+    options?: Omit<ApiRequestOptions, "method" | "body">
+  ) {
+    return this.request<T>(endpoint, { ...options, method: "PATCH", body });
+  }
 
-      // Check for failures in fail-fast mode
-      if (failFast && batchResults.some((result) => result instanceof Error)) {
-        break;
-      }
-    }
-
-    return results;
+  async delete<T = any>(
+    endpoint: string,
+    options?: Omit<ApiRequestOptions, "method">
+  ) {
+    return this.request<T>(endpoint, { ...options, method: "DELETE" });
   }
 }
 
-// Export convenience functions
-export const api = ApiClient;
+// Default API client instance
+export const apiClient = new ApiClient();
+
+// Hook for using API client in React components
+export function useApiClient() {
+  return apiClient;
+}

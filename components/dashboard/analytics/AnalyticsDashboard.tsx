@@ -10,7 +10,13 @@ import {
   Monitor,
   Smartphone,
   Tablet,
+  BarChart3,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
+import { useErrorHandler } from "@/components/error/ErrorProvider";
+import { useAsyncHandler } from "@/lib/async-handler";
+import { AppError, ErrorType } from "@/lib/errors";
 
 interface AnalyticsData {
   summary: {
@@ -65,6 +71,7 @@ interface AnalyticsData {
     districtId: string | null;
     schoolId: string | null;
   };
+  tablesMissing?: boolean;
 }
 
 interface AnalyticsDashboardProps {
@@ -107,10 +114,8 @@ export default function AnalyticsDashboard({
 
   // District branding
   // School branding with district fallback
-  const schoolSecondaryColor = 
-    schoolBranding?.secondary_color || 
-    secondary_color || 
-    "#0B2559";
+  const schoolSecondaryColor =
+    schoolBranding?.secondary_color || secondary_color || "#0B2559";
 
   // Main analytics fetch
   useEffect(() => {
@@ -129,81 +134,166 @@ export default function AnalyticsDashboard({
     return () => clearInterval(interval);
   }, [level, districtId, schoolId]);
 
+  const { execute } = useAsyncHandler();
+  const { reportError } = useErrorHandler();
+
   const fetchAnalytics = async () => {
     setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        range: timeRange,
-        level: level,
-      });
 
-      // Always pass district_id if available
-      if (districtId) {
-        params.append("district_id", districtId);
-      }
+    const result = await execute(
+      async () => {
+        const params = new URLSearchParams({
+          range: timeRange,
+          level: level,
+        });
 
-      // Always pass school_id for school admins, or when level is school
-      if (
-        (userRole === "school_admin" && schoolId) ||
-        (level === "school" && schoolId)
-      ) {
-        params.append("school_id", schoolId);
-      }
+        // Always pass district_id if available
+        if (districtId) {
+          params.append("district_id", districtId);
+        }
 
-      const response = await fetch(`/api/analytics/dashboard?${params}`);
-      if (response.ok) {
+        // Always pass school_id for school admins, or when level is school
+        if (
+          (userRole === "school_admin" && schoolId) ||
+          (level === "school" && schoolId)
+        ) {
+          params.append("school_id", schoolId);
+        }
+
+        const response = await fetch(`/api/analytics/dashboard?${params}`);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new AppError({
+            type:
+              response.status === 401
+                ? ErrorType.AUTHENTICATION_FAILED
+                : response.status === 403
+                ? ErrorType.AUTHORIZATION_DENIED
+                : response.status === 503
+                ? ErrorType.TABLE_NOT_FOUND
+                : ErrorType.API_REQUEST_FAILED,
+            message:
+              errorData.details ||
+              `Analytics request failed with status ${response.status}`,
+            context: {
+              metadata: {
+                status: response.status,
+                params: params.toString(),
+                errorData,
+              },
+            },
+          });
+        }
+
         const data = await response.json();
-        setAnalytics(data.data);
-      } else {
-        console.error("Failed to fetch analytics");
+        return data.data;
+      },
+      {
+        operationName: "fetchAnalytics",
+        timeout: 15000,
+        retries: 1,
+        context: { timeRange, level, districtId, schoolId },
+        onError: (error) => {
+          if (error.type === ErrorType.TABLE_NOT_FOUND) {
+            // For missing tables, set empty analytics but don't show error toast
+            setAnalytics({
+              summary: {
+                totalSessions: 0,
+                uniqueUsers: 0,
+                currentActiveUsers: 0,
+                averageSessionMinutes: 0,
+                totalHours: 0,
+                totalPageViews: 0,
+                totalActions: 0,
+                timeRange,
+                dateRange: {
+                  start: new Date().toISOString(),
+                  end: new Date().toISOString(),
+                },
+              },
+              breakdown: { roles: {}, devices: {} },
+              daily: [],
+              scope: {
+                level: "school",
+                districtId: districtId || null,
+                schoolId: schoolId || null,
+              },
+              tablesMissing: true,
+            });
+          } else {
+            // For other errors, show error toast
+            reportError(error);
+          }
+        },
       }
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-    } finally {
-      setLoading(false);
+    );
+
+    if (result.success && result.data) {
+      setAnalytics(result.data);
     }
+
+    setLoading(false);
   };
 
   const fetchActiveUsers = async () => {
-    try {
-      const params = new URLSearchParams({
-        range: "1d", // Only need current active users
-        level: level,
-      });
+    const result = await execute(
+      async () => {
+        const params = new URLSearchParams({
+          range: "1d", // Only need current active users
+          level: level,
+        });
 
-      // Always pass district_id if available
-      if (districtId) {
-        params.append("district_id", districtId);
-      }
-
-      // Always pass school_id for school admins, or when level is school
-      if (
-        (userRole === "school_admin" && schoolId) ||
-        (level === "school" && schoolId)
-      ) {
-        params.append("school_id", schoolId);
-      }
-
-      const response = await fetch(`/api/analytics/dashboard?${params}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (analytics && data.data) {
-          // Only update the active users count, keep the rest of the data
-          setAnalytics((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  summary: {
-                    ...prev.summary,
-                    currentActiveUsers: data.data.summary.currentActiveUsers,
-                  },
-                }
-              : data.data
-          );
+        // Always pass district_id if available
+        if (districtId) {
+          params.append("district_id", districtId);
         }
+
+        // Always pass school_id for school admins, or when level is school
+        if (
+          (userRole === "school_admin" && schoolId) ||
+          (level === "school" && schoolId)
+        ) {
+          params.append("school_id", schoolId);
+        }
+
+        const response = await fetch(`/api/analytics/dashboard?${params}`);
+
+        if (!response.ok) {
+          throw new AppError({
+            type: ErrorType.API_REQUEST_FAILED,
+            message: `Failed to fetch active users: ${response.status}`,
+            context: {
+              metadata: { status: response.status, params: params.toString() },
+            },
+          });
+        }
+
+        const data = await response.json();
+        return data.data;
+      },
+      {
+        operationName: "fetchActiveUsers",
+        timeout: 10000,
+        retries: 1,
+        silent: true, // Don't show errors for background updates
+        context: { level, districtId, schoolId },
       }
-    } catch (error) {
-      console.warn("Failed to fetch active users:", error);
+    );
+
+    if (result.success && result.data && analytics) {
+      // Only update the active users count, keep the rest of the data
+      setAnalytics((prev) =>
+        prev
+          ? {
+              ...prev,
+              summary: {
+                ...prev.summary,
+                currentActiveUsers: result.data.summary.currentActiveUsers,
+              },
+            }
+          : result.data
+      );
     }
   };
 
@@ -246,7 +336,34 @@ export default function AnalyticsDashboard({
   if (!analytics) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">No analytics data available</p>
+        <div className="max-w-md mx-auto">
+          <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <BarChart3 className="w-8 h-8 text-yellow-600" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Analytics Setup Required
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Analytics tables need to be created in the database to start
+            tracking user activity.
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+            <h4 className="font-medium text-blue-900 mb-2">
+              Setup Instructions:
+            </h4>
+            <ol className="text-sm text-blue-800 space-y-1">
+              <li>1. Go to your Supabase project dashboard</li>
+              <li>2. Open the SQL Editor</li>
+              <li>
+                3. Run the migration:{" "}
+                <code className="bg-blue-100 px-1 rounded">
+                  migrations/create-analytics-schema.sql
+                </code>
+              </li>
+              <li>4. Refresh this page</li>
+            </ol>
+          </div>
+        </div>
       </div>
     );
   }
