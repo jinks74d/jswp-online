@@ -108,6 +108,12 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
   // Start a new session
   const startSession = useCallback(async () => {
     if (!user || !profile || isTrackingRef.current) return;
+    
+    // Additional validation to ensure user is fully authenticated
+    if (!user.id || !user.email || !profile.id) {
+      console.warn("Incomplete user/profile data - session start delayed");
+      return;
+    }
 
     const result = await AsyncHandler.execute(
       async () => {
@@ -297,8 +303,12 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
       return;
     }
 
-    // Start session
-    startSession();
+    // Add delay to ensure auth is fully established before starting session
+    const authCheckTimeout = setTimeout(() => {
+      if (user && profile && !isTrackingRef.current) {
+        startSession();
+      }
+    }, 1000); // 1 second delay to allow auth to stabilize
 
     // Set up activity tracking interval
     const activityInterval = setInterval(() => {
@@ -357,6 +367,9 @@ export function useSessionTracking(options: SessionTrackingOptions = {}) {
     // Cleanup function
     return () => {
       mountedRef.current = false;
+
+      // Clear the auth check timeout
+      clearTimeout(authCheckTimeout);
 
       // Clean up all resources
       cleanup();

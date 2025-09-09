@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { OptimizedAuthProvider as AuthProvider } from "@/components/auth/OptimizedAuthProvider";
-import { AuthDebug } from "@/components/auth/AuthDebug";
 import { AuthFlowMonitor } from "@/components/auth/AuthFlowMonitor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorProvider } from "@/components/error/ErrorProvider";
@@ -28,7 +27,6 @@ export default function RootLayout({
           <ErrorBoundary>
             <AuthProvider>
               {children}
-              <AuthDebug enabled={process.env.NODE_ENV === "development"} />
               {/* <AuthFlowMonitor /> */}
               <DevTools enabled={process.env.NODE_ENV === "development"} />
             </AuthProvider>

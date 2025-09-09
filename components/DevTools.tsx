@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { logger } from "@/lib/logger";
 import { perf } from "@/lib/performance";
 import { monitoring } from "@/lib/monitoring";
-import { ErrorTest } from "./error/ErrorTest";
 
 interface DevToolsProps {
   enabled?: boolean;
@@ -99,7 +98,6 @@ export function DevTools({
 
   return (
     <>
-      <ErrorTest />
       {/* Toggle Button */}
       <button
         onClick={toggleDevTools}

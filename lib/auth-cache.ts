@@ -287,8 +287,8 @@ export class AuthCache {
       const session = this.getSession();
       const authState = this.getAuthState();
 
-      // Basic consistency checks
-      if (profile && authState) {
+      // Basic consistency checks with null guards
+      if (profile && authState && typeof profile === 'object' && typeof authState === 'object') {
         return (
           profile.email === authState.userEmail &&
           profile.role === authState.userRole
@@ -323,12 +323,17 @@ export class AuthCache {
     const sessionCached = !!sessionStorage.getItem(SESSION_CACHE_KEY);
     const authStateCached = !!sessionStorage.getItem(AUTH_STATE_KEY);
 
-    // Calculate approximate storage size
-    Object.keys(sessionStorage).forEach((key) => {
-      if (key.startsWith("jswp-")) {
-        totalSize += (sessionStorage.getItem(key) || "").length;
-      }
-    });
+    // Calculate approximate storage size with null guard
+    try {
+      Object.keys(sessionStorage || {}).forEach((key) => {
+        if (key && key.startsWith("jswp-")) {
+          const item = sessionStorage.getItem(key);
+          totalSize += (item || "").length;
+        }
+      });
+    } catch (error) {
+      console.warn("Failed to calculate cache size:", error);
+    }
 
     return {
       profileCached,

@@ -16,16 +16,21 @@ export async function POST(request: NextRequest) {
       const cookieStore = await cookies();
       const supabase = await createServerSupabaseClient(cookieStore);
 
-      // Get current user
+      // Get current user with enhanced validation
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError || !user) {
-        console.error("Authentication error:", userError);
+      if (userError || !user || !user.id || !user.email) {
+        console.error("Authentication error:", userError || "Incomplete user data");
         throw createAuthError("User authentication failed", {
-          metadata: { userError: userError?.message },
+          metadata: { 
+            userError: userError?.message || "User data incomplete",
+            hasUser: !!user,
+            hasUserId: !!(user?.id),
+            hasUserEmail: !!(user?.email)
+          },
         });
       }
 

@@ -298,13 +298,6 @@ function DashboardSidebar({ profile }: DashboardSidebarProps) {
                 Add School
               </Link>
             )}
-            <Link
-              href="/dashboard/users/invite"
-              className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <UserPlus className="w-4 h-4" />
-              Invite User
-            </Link>
           </div>
         </div>
       )}

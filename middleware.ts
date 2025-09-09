@@ -85,6 +85,11 @@ export async function middleware(request: NextRequest) {
       console.log("Middleware: No user found for protected route:", path);
       // For dashboard routes without a user, let the client-side handle it
       // to prevent redirect loops
+      // TEMPORARY FIX: Allow teachers and students pages to proceed to client-side auth
+      if (path.startsWith("/dashboard/teachers") || path.startsWith("/dashboard/students")) {
+        console.log("Middleware: Allowing teachers/students page to proceed to client-side auth");
+        return response;
+      }
       return response;
     }
 
