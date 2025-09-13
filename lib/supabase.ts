@@ -96,7 +96,7 @@ export function createClient(): SupabaseClient<Database> {
     throw new Error("Missing Supabase environment variables");
   }
 
-  // Create singleton browser client
+  // Create singleton browser client with proper storage
   browserClient = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -109,7 +109,8 @@ export function createClient(): SupabaseClient<Database> {
         debug: false,
         storage:
           typeof window !== "undefined" ? window.localStorage : undefined,
-        storageKey: "sb-auth-token",
+        // Use default Supabase naming for consistency
+        // This will create: sb-{project-ref}-auth-token in both localStorage and cookies
       },
       global: {
         headers: {
@@ -154,7 +155,7 @@ export async function createServerSupabaseClient(cookieStore: any) {
   );
 }
 
-// Middleware client
+// Middleware client with proper cookie handling
 export function createMiddlewareClient(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -168,20 +169,31 @@ export function createMiddlewareClient(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll();
+          const cookies = request.cookies.getAll();
+          return cookies;
         },
         setAll(cookiesToSet) {
+          // Update request cookies
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
+
+          // Create new response with updated cookies
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
+
+          // Set cookies on response
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, {
+              ...options,
+              httpOnly: false, // Allow client-side access
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+            });
+          });
         },
       },
     }

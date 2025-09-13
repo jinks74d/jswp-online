@@ -79,17 +79,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return cachedProfile;
         }
 
-
         // PERFORMANCE: Optimized profile fetch with selective fields and shorter timeout
         const fetchPromise = supabase
           .from("user_profiles")
-          .select("id, role, district_id, school_id, first_name, last_name, email, created_at, updated_at, districts:district_id(id, name, domain, primary_color, secondary_color, logo_url), schools:school_id(id, name)")
+          .select(
+            "id, role, district_id, school_id, first_name, last_name, email, created_at, updated_at, districts:district_id(id, name, domain, primary_color, secondary_color, logo_url), schools:school_id(id, name)"
+          )
           .eq("id", userId)
           .abortSignal(abortController.signal)
           .maybeSingle(); // Use maybeSingle to avoid errors on missing records
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Database query timeout")), 3000) // Reduced from 5000ms
+        const timeoutPromise = new Promise(
+          (_, reject) =>
+            setTimeout(() => reject(new Error("Database query timeout")), 3000) // Reduced from 5000ms
         );
 
         const result = await Promise.race([fetchPromise, timeoutPromise]);
@@ -173,7 +175,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authProcessingRef.current = true;
 
       try {
-
         const currentUser = session?.user || null;
         setUser(currentUser);
 
@@ -183,20 +184,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             AuthCache.setSession(session);
           }
 
-
           // PERFORMANCE: Optimized profile fetch with reduced timeout and better error handling
           let profileData: UserProfile | null = null;
           try {
             const profilePromise = fetchProfile(currentUser.id);
-            const timeoutPromise = new Promise<UserProfile | null>((_, reject) =>
-              setTimeout(() => reject(new Error("Profile fetch timeout")), 2000) // Reduced from 3000ms
+            const timeoutPromise = new Promise<UserProfile | null>(
+              (_, reject) =>
+                setTimeout(
+                  () => reject(new Error("Profile fetch timeout")),
+                  2000
+                ) // Reduced from 3000ms
             );
-            
+
             profileData = await Promise.race([profilePromise, timeoutPromise]);
           } catch (error) {
-            console.warn("AuthProvider: Profile fetch failed, using cache:", error);
+            console.warn(
+              "AuthProvider: Profile fetch failed, using cache:",
+              error
+            );
             profileData = AuthCache.getProfile();
-            
+
             // If no cached profile, try a quick fallback fetch
             if (!profileData && currentUser.id && supabase) {
               try {
@@ -212,7 +219,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
           }
-
 
           if (mountedRef.current) {
             setProfile(profileData);
@@ -263,7 +269,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Simplified network error handling
   const handleNetworkError = useCallback(() => {
-
     // Show recovery modal after shorter grace period (30 seconds)
     const timeout = setTimeout(() => {
       if (mountedRef.current) {
@@ -315,7 +320,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Optimized initial session check with cache
     const checkInitialSession = async () => {
       try {
-
         // Quick check for cached auth state first
         const cachedAuthState = AuthCache.getAuthState();
         if (
@@ -370,7 +374,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Enhanced sign out function with security measures
   const signOut = useCallback(async () => {
     try {
-
       // Broadcast security logout to all tabs
       if (sessionSecurityRef.current) {
         sessionSecurityRef.current.broadcastSecurityLogout();

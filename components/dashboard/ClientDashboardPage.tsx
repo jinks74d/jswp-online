@@ -9,15 +9,15 @@ import StudentDashboard from "./StudentDashboard";
 
 export function ClientDashboardPage() {
   const { user, profile, loading, authState } = useAuth();
-  
+
   // Debug logging
-  console.log('ClientDashboardPage - Auth State:', {
+  console.log("ClientDashboardPage - Auth State:", {
     status: authState.status,
     hasUser: !!user,
     hasProfile: !!profile,
     loading,
     userEmail: user?.email,
-    profileRole: profile?.role
+    profileRole: profile?.role,
   });
 
   if (loading) {
@@ -32,11 +32,23 @@ export function ClientDashboardPage() {
   }
 
   if (!user) {
+    console.log(
+      "ClientDashboardPage: No user found, auth state:",
+      authState.status
+    );
     return (
       <div className="text-center py-12">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
         <p className="text-gray-600">Please log in to access your dashboard.</p>
-        <p className="text-sm text-gray-500 mt-2">Auth Status: {authState.status}</p>
+        <p className="text-sm text-gray-500 mt-2">
+          Auth Status: {authState.status}
+        </p>
+        <button
+          onClick={() => (window.location.href = "/")}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Go to Login
+        </button>
       </div>
     );
   }

@@ -261,6 +261,46 @@ export const OptimizedAuthProvider = ({
     }
   }, [authState, fetchProfile]);
 
+  // Helper functions to sync session with server cookies
+  const syncSessionWithServer = useCallback(async (session: any) => {
+    try {
+      const response = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ session }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Failed to sync session with server:",
+          response.statusText
+        );
+      } else {
+        console.log("Session synced with server successfully");
+      }
+    } catch (error) {
+      console.error("Error syncing session with server:", error);
+    }
+  }, []);
+
+  const clearServerSession = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auth/session", {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        console.error("Failed to clear server session:", response.statusText);
+      } else {
+        console.log("Server session cleared successfully");
+      }
+    } catch (error) {
+      console.error("Error clearing server session:", error);
+    }
+  }, []);
+
   // Single effect for auth setup
   useEffect(() => {
     if (!supabase) return;
@@ -268,7 +308,6 @@ export const OptimizedAuthProvider = ({
     // Initial session check with error handling and retry
     const initAuth = async () => {
       try {
-        console.log("OptimizedAuthProvider: Checking initial session...");
         const {
           data: { session },
           error,
@@ -279,45 +318,15 @@ export const OptimizedAuthProvider = ({
             "OptimizedAuthProvider: Error getting initial session:",
             error
           );
-          // Don't immediately set unauthenticated state on error - retry once
-          setTimeout(async () => {
-            try {
-              const {
-                data: { session: retrySession },
-              } = await supabase.auth.getSession();
-              console.log(
-                "OptimizedAuthProvider: Retry session check:",
-                !!retrySession,
-                retrySession?.user?.email
-              );
-              if (mountedRef.current) {
-                handleAuthChange("INITIAL_SESSION", retrySession);
-              }
-            } catch (retryError) {
-              console.error("OptimizedAuthProvider: Retry failed:", retryError);
-              if (mountedRef.current) {
-                setAuthState({
-                  status: "unauthenticated",
-                  user: null,
-                  profile: null,
-                });
-              }
-            }
-          }, 500);
-        } else {
-          console.log(
-            "OptimizedAuthProvider: Initial session found:",
-            !!session,
-            session?.user?.email
-          );
-          if (session?.expires_at) {
-            const expiresAt = new Date(session.expires_at * 1000);
-            console.log(
-              "OptimizedAuthProvider: Session expires at:",
-              expiresAt
-            );
+          // Set unauthenticated state on error
+          if (mountedRef.current) {
+            setAuthState({
+              status: "unauthenticated",
+              user: null,
+              profile: null,
+            });
           }
-
+        } else {
           if (mountedRef.current) {
             handleAuthChange("INITIAL_SESSION", session);
           }
@@ -341,11 +350,34 @@ export const OptimizedAuthProvider = ({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(
-        "OptimizedAuthProvider: Auth state changed:",
-        event,
-        !!session
-      );
+      // Handle token refresh gracefully without disrupting user experience
+      if (event === "TOKEN_REFRESHED") {
+        // Update session without changing loading state
+        if (session && authState.status === "authenticated") {
+          setAuthState({
+            status: "authenticated",
+            user: session.user,
+            profile: authState.profile,
+          });
+
+          // Sync refreshed session with server cookies
+          syncSessionWithServer(session);
+        }
+        return;
+      }
+
+      // Sync session with server for SIGNED_IN events
+      if (event === "SIGNED_IN" && session) {
+        console.log("OptimizedAuthProvider: Syncing session with server");
+        syncSessionWithServer(session);
+      }
+
+      // Clear server session for SIGNED_OUT events
+      if (event === "SIGNED_OUT") {
+        console.log("OptimizedAuthProvider: Clearing server session");
+        clearServerSession();
+      }
+
       handleAuthChange(event, session);
     });
 
@@ -355,7 +387,7 @@ export const OptimizedAuthProvider = ({
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, handleAuthChange]);
+  }, [supabase, handleAuthChange, syncSessionWithServer, clearServerSession]);
 
   // Cleanup effect
   useEffect(() => {

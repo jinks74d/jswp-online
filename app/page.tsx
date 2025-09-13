@@ -25,11 +25,11 @@ export default function LoginPage() {
   const redirectAttempted = useRef(false);
 
   const { user, profile, loading: authLoading } = useAuth();
-  
+
   // Check for error in URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('error') === 'access_denied') {
+    if (urlParams.get("error") === "access_denied") {
       setError("Access Denied: Please log in to access your dashboard");
     }
   }, []);
@@ -38,20 +38,18 @@ export default function LoginPage() {
   useEffect(() => {
     if (typeof window !== "undefined" && !supabaseRef.current) {
       try {
-        console.log("Initializing Supabase client...");
         supabaseRef.current = createClient();
-        console.log("Supabase client initialized successfully");
       } catch (error) {
         console.error("Failed to initialize Supabase client:", error);
       }
     }
   }, []);
 
-  // Auto-redirect authenticated users (except super admins who can choose)
+  // Auto-redirect authenticated users to their appropriate dashboard
   useEffect(() => {
     if (!authLoading && user && profile && !redirectAttempted.current) {
       redirectAttempted.current = true;
-      
+
       // Only redirect regular users automatically - use Next.js router for smoother transitions
       if (profile.role !== "super_admin") {
         // Small delay to prevent flashing
@@ -71,7 +69,8 @@ export default function LoginPage() {
   if (user && profile) {
     // For super admins, show the login form so they can choose where to go
     if (profile.role === "super_admin") {
-      // Don't redirect, let them use the form or links
+      // Don't redirect super admins automatically, let them use the login form
+      // Fall through to show the login form below
     } else {
       // Show redirecting state for regular users while redirect is happening
       return (
@@ -86,7 +85,6 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login form submitted", { email, passwordLength: password.length });
     setLoading(true);
     setError("");
 
@@ -96,35 +94,24 @@ export default function LoginPage() {
     redirectAttempted.current = false;
 
     if (!supabaseRef.current) {
-      console.error("Supabase client not initialized");
       setError("Authentication service not available");
       setLoading(false);
       return;
     }
-    console.log("Supabase client is ready");
 
     // Increase timeout to 30 seconds for slower connections
     const loginTimeout = setTimeout(() => {
-      console.error("Login timeout - resetting state");
       setLoading(false);
       setError("Login timed out. Please try again.");
     }, 30000); // 30 second timeout
 
     try {
-      console.log("Attempting to sign in with Supabase...");
       // Authenticate with Supabase
       const { data: authData, error: authError } =
         await supabaseRef.current.auth.signInWithPassword({
           email,
           password,
         });
-
-      console.log("Sign in response:", { 
-        hasData: !!authData, 
-        hasUser: !!authData?.user,
-        hasError: !!authError,
-        errorMessage: authError?.message 
-      });
 
       if (authError) {
         clearTimeout(loginTimeout);
@@ -136,15 +123,13 @@ export default function LoginPage() {
         throw new Error("No user returned from authentication");
       }
 
-      console.log("Login successful, user:", authData.user.email);
       // Clear the timeout since authentication was successful
       clearTimeout(loginTimeout);
 
       // Since you already have a session, just redirect to dashboard
       // The middleware will handle role-based redirects
-      console.log("Redirecting to dashboard...");
       window.location.href = "/dashboard";
-      
+
       setLoading(false);
     } catch (error: any) {
       console.error("Login error details:", error);
@@ -295,34 +280,36 @@ export default function LoginPage() {
                 console.log("=== Testing Supabase connection ===");
                 console.log("Environment vars:", {
                   url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-                  hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+                  hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
                 });
                 try {
                   const client = createClient();
-                  const { data: sessionData, error: sessionError } = await client.auth.getSession();
-                  console.log("Session test:", { 
+                  const { data: sessionData, error: sessionError } =
+                    await client.auth.getSession();
+                  console.log("Session test:", {
                     hasSession: !!sessionData?.session,
                     user: sessionData?.session?.user?.email,
                     userId: sessionData?.session?.user?.id,
-                    error: sessionError 
+                    error: sessionError,
                   });
-                  
+
                   // If we have a session, check the profile
                   if (sessionData?.session?.user) {
-                    const { data: profileData, error: profileError } = await client
-                      .from("user_profiles")
-                      .select("*")
-                      .eq("id", sessionData.session.user.id)
-                      .single();
-                    
+                    const { data: profileData, error: profileError } =
+                      await client
+                        .from("user_profiles")
+                        .select("*")
+                        .eq("id", sessionData.session.user.id)
+                        .single();
+
                     console.log("Profile test:", {
                       hasProfile: !!profileData,
                       role: profileData?.role,
                       email: profileData?.email,
-                      error: profileError
+                      error: profileError,
                     });
                   }
-                  
+
                   // Test direct navigation
                   console.log("Current location:", window.location.pathname);
                   console.log("=== End of connection test ===");
@@ -334,7 +321,7 @@ export default function LoginPage() {
             >
               Test Session & Profile (Debug)
             </button>
-            
+
             {/* Manual navigation button for testing */}
             <button
               type="button"
@@ -346,7 +333,7 @@ export default function LoginPage() {
             >
               Go to Dashboard (Manual)
             </button>
-            
+
             {/* Sign out button if already logged in */}
             <button
               type="button"

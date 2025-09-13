@@ -24,17 +24,19 @@ async function fetchDashboardData() {
       { count: userCount },
       { count: schoolCount },
       { count: assignmentCount },
-      { data: recentDistricts }
+      { data: recentDistricts },
     ] = await Promise.all([
       supabase.from("districts").select("*", { count: "exact", head: true }),
-      supabase.from("user_profiles").select("*", { count: "exact", head: true }),
+      supabase
+        .from("user_profiles")
+        .select("*", { count: "exact", head: true }),
       supabase.from("schools").select("*", { count: "exact", head: true }),
       supabase.from("assignments").select("*", { count: "exact", head: true }),
       supabase
         .from("districts")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(5)
+        .limit(5),
     ]);
 
     const stats: Stats = {
@@ -48,8 +50,13 @@ async function fetchDashboardData() {
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
     return {
-      stats: { totalDistricts: 0, totalUsers: 0, totalSchools: 0, totalAssignments: 0 },
-      recentDistricts: []
+      stats: {
+        totalDistricts: 0,
+        totalUsers: 0,
+        totalSchools: 0,
+        totalAssignments: 0,
+      },
+      recentDistricts: [],
     };
   }
 }
@@ -58,24 +65,24 @@ export default async function SuperAdminDashboard() {
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
 
-  // Verify authentication and permissions
+  // Check authentication
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
 
-  if (error || !user) {
+  if (!user) {
     redirect("/");
   }
 
-  const { data: profile, error: profileError } = await supabase
+  // Get user profile and verify super admin role
+  const { data: profile } = await supabase
     .from("user_profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  if (profileError || !profile || profile.role !== "super_admin") {
-    redirect("/");
+  if (!profile || profile.role !== "super_admin") {
+    redirect("/dashboard");
   }
 
   // Fetch dashboard data

@@ -44,7 +44,7 @@ function ClientDashboard({ children }: ClientDashboardProps) {
       if (mountedRef.current) {
         setRedirectDelay(false);
       }
-    }, 1000); // Wait 1 second before allowing redirects
+    }, 2000); // Wait 2 seconds before allowing redirects
 
     return () => clearTimeout(timer);
   }, []);

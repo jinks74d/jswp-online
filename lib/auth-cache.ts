@@ -288,7 +288,12 @@ export class AuthCache {
       const authState = this.getAuthState();
 
       // Basic consistency checks with null guards
-      if (profile && authState && typeof profile === 'object' && typeof authState === 'object') {
+      if (
+        profile &&
+        authState &&
+        typeof profile === "object" &&
+        typeof authState === "object"
+      ) {
         return (
           profile.email === authState.userEmail &&
           profile.role === authState.userRole
