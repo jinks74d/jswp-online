@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { UserProfile } from "@/lib/supabase";
+import SchoolAnalyticsSummary from "./SchoolAnalyticsSummary";
 
 interface SchoolStats {
   totalTeachers: number;
@@ -446,48 +447,12 @@ export default function SchoolAdminDashboard({
       </div>
 
       {/* Analytics Summary */}
-      <div
-        className="bg-white rounded-lg shadow-sm p-6"
-        style={{ border: `2px solid ${schoolSecondaryColor}` }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">
-            School Analytics
-          </h2>
-          <Link
-            href="/dashboard/analytics"
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-          >
-            <TrendingUp className="w-4 h-4" />
-            View Full Analytics
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <Clock className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="font-medium text-gray-900 mb-1">Daily Usage</h3>
-            <p className="text-sm text-gray-600">Track engagement</p>
-          </div>
-
-          <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <TrendingUp className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="font-medium text-gray-900 mb-1">Performance</h3>
-            <p className="text-sm text-gray-600">Monitor progress</p>
-          </div>
-
-          <div className="text-center">
-            <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <Users className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="font-medium text-gray-900 mb-1">Active Users</h3>
-            <p className="text-sm text-gray-600">Real-time activity</p>
-          </div>
-        </div>
-      </div>
+      <SchoolAnalyticsSummary
+        districtId={profile?.district_id || undefined}
+        schoolId={profile?.school_id || undefined}
+        userRole={profile?.role || "school_admin"}
+        borderColor={schoolSecondaryColor}
+      />
 
       {/* School Overview */}
       <div

@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 
 import { Eye, EyeOff, AlertCircle, Shield } from "lucide-react";
+import Image from "next/image";
 import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import { AuthCache } from "@/lib/auth-cache";
 import { RedirectHandler } from "@/lib/redirect-handler";
@@ -149,29 +150,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">JSWP Online</h1>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/assets/logos/JSWPOnlineLogo-p-500.png"
+              alt="JSWP Online"
+              width={400}
+              height={160}
+              priority
+            />
+          </div>
           <p className="text-gray-600">
             Sign in to access your assignments and tools
           </p>
         </div>
 
-        {/* Admin Login Link */}
-        <div className="flex items-center justify-center">
-          <Link
-            href="/admin"
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <Shield className="w-4 h-4" />
-            Administrator Login
-          </Link>
-        </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-lg shadow-xl p-8">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               User Login
@@ -264,101 +263,23 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo credentials info */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-md">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">
-              User Access
-            </h4>
-            <p className="text-xs text-gray-600">
-              Use your district-assigned credentials to access assignments and
-              tools.
-            </p>
-            {/* Debug button - remove in production */}
-            <button
-              type="button"
-              onClick={async () => {
-                console.log("=== Testing Supabase connection ===");
-                console.log("Environment vars:", {
-                  url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-                  hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-                });
-                try {
-                  const client = createClient();
-                  const { data: sessionData, error: sessionError } =
-                    await client.auth.getSession();
-                  console.log("Session test:", {
-                    hasSession: !!sessionData?.session,
-                    user: sessionData?.session?.user?.email,
-                    userId: sessionData?.session?.user?.id,
-                    error: sessionError,
-                  });
-
-                  // If we have a session, check the profile
-                  if (sessionData?.session?.user) {
-                    const { data: profileData, error: profileError } =
-                      await client
-                        .from("user_profiles")
-                        .select("*")
-                        .eq("id", sessionData.session.user.id)
-                        .single();
-
-                    console.log("Profile test:", {
-                      hasProfile: !!profileData,
-                      role: profileData?.role,
-                      email: profileData?.email,
-                      error: profileError,
-                    });
-                  }
-
-                  // Test direct navigation
-                  console.log("Current location:", window.location.pathname);
-                  console.log("=== End of connection test ===");
-                } catch (err) {
-                  console.error("Connection test failed:", err);
-                }
-              }}
-              className="mt-2 text-xs text-blue-600 hover:text-blue-700 underline"
-            >
-              Test Session & Profile (Debug)
-            </button>
-
-            {/* Manual navigation button for testing */}
-            <button
-              type="button"
-              onClick={() => {
-                console.log("Manually navigating to dashboard...");
-                window.location.href = "/dashboard";
-              }}
-              className="mt-2 ml-4 text-xs text-green-600 hover:text-green-700 underline"
-            >
-              Go to Dashboard (Manual)
-            </button>
-
-            {/* Sign out button if already logged in */}
-            <button
-              type="button"
-              onClick={async () => {
-                console.log("Signing out...");
-                const client = createClient();
-                await client.auth.signOut();
-                window.location.reload();
-              }}
-              className="mt-2 ml-4 text-xs text-red-600 hover:text-red-700 underline"
-            >
-              Sign Out (If Logged In)
-            </button>
-          </div>
         </div>
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
           <p>Need help? Contact your district administrator</p>
-          <p className="mt-2">
-            <Link href="/admin" className="text-blue-600 hover:text-blue-700">
-              System Administrator? Use the admin portal
-            </Link>
-          </p>
         </div>
+      </div>
+      
+      {/* Administrator Login - positioned at lower right */}
+      <div className="fixed bottom-4 right-4">
+        <Link
+          href="/admin"
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors bg-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg"
+        >
+          <Shield className="w-4 h-4" />
+          Administrator Login
+        </Link>
       </div>
     </div>
   );

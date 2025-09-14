@@ -3,7 +3,7 @@
 import { useAuth } from "@/components/auth/OptimizedAuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import AnalyticsDashboard from "@/components/dashboard/analytics/AnalyticsDashboard";
+import EnhancedAnalyticsDashboard from "@/components/dashboard/analytics/EnhancedAnalyticsDashboard";
 
 export default function AnalyticsPage() {
   const { user, profile, loading } = useAuth();
@@ -50,7 +50,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <AnalyticsDashboard
+      <EnhancedAnalyticsDashboard
         userRole={profile.role}
         districtId={profile.district_id || undefined}
         schoolId={profile.school_id || undefined}
