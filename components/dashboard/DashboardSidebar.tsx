@@ -167,12 +167,13 @@ const getNavigationItems = (role: UserRole, pathname: string) => {
           icon: BookOpen,
           current: pathname.startsWith("/dashboard/classes"),
         },
-        {
-          name: "My Grades",
-          href: "/dashboard/grades",
-          icon: GraduationCap,
-          current: pathname.startsWith("/dashboard/grades"),
-        },
+        // Temporarily hidden - no grades functionality yet
+        // {
+        //   name: "My Grades",
+        //   href: "/dashboard/grades",
+        //   icon: GraduationCap,
+        //   current: pathname.startsWith("/dashboard/grades"),
+        // },
       ];
 
     default:

@@ -270,6 +270,8 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
             </div>
           </Link>
 
+          {/* Temporarily hidden - no grades functionality yet */}
+          {/* 
           <Link
             href="/dashboard/grades"
             className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -282,6 +284,7 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
               <p className="text-sm text-gray-600">View grades and feedback</p>
             </div>
           </Link>
+          */}
         </div>
       </div>
 
@@ -353,99 +356,96 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
           </div>
         </div>
 
-        {/* Grades and Feedback */}
+        {/* Recent Feedback */}
         <div className="bg-white rounded-lg shadow-sm" style={{ border: `2px solid ${districtSecondaryColor}` }}>
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Grades & Feedback</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Recent Teacher Feedback</h2>
           </div>
           <div className="p-6">
-            <div className="space-y-4">
-              {/* Teacher Feedback Items */}
-              {!loading && assignmentsWithFeedback.length > 0 && (
-                <>
-                  {assignmentsWithFeedback.slice(0, 2).map((progress) => {
-                    const feedbackCount = Object.keys(progress.teacher_feedback || {}).length;
-                    return (
-                      <Link
-                        key={progress.id}
-                        href={`/dashboard/assignments/${progress.assignment_id}`}
-                        className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <MessageSquare className="w-4 h-4 text-orange-600" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-gray-900">
-                              {progress.assignments?.title || 'Assignment'}
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                              New teacher feedback available
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-orange-600">
-                            {feedbackCount} step{feedbackCount > 1 ? 's' : ''}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(progress.updated_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </Link>
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Loading feedback...</p>
+              </div>
+            ) : assignmentsWithFeedback.length > 0 ? (
+              <div className="space-y-4">
+                {assignmentsWithFeedback.slice(0, 3).map((progress) => {
+                  const feedbackCount = Object.keys(progress.teacher_feedback || {}).length;
+                  const teacherName = progress.assignments?.user_profiles ? 
+                    `${progress.assignments.user_profiles.first_name} ${progress.assignments.user_profiles.last_name}` : 
+                    'Teacher';
+                  
+                  // Determine status from feedback
+                  const hasGrade = progress.teacher_feedback && 
+                    Object.keys(progress.teacher_feedback).some(key => 
+                      key.toLowerCase().includes('grade') || key.toLowerCase().includes('score')
                     );
-                  })}
-                </>
-              )}
-
-              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <GraduationCap className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">Math Quiz - Chapter 4</h3>
-                    <p className="text-sm text-gray-600">Great work on problem solving!</p>
-                  </div>
-                </div>
-                <span className="text-lg font-bold text-green-600">A-</span>
+                  const hasFeedback = feedbackCount > 0;
+                  
+                  // Get status color based on assignment status
+                  const getStatusInfo = () => {
+                    if (hasGrade) {
+                      return { color: 'green', bg: 'bg-green-50', border: 'border-green-200', icon: GraduationCap };
+                    } else if (hasFeedback) {
+                      return { color: 'blue', bg: 'bg-blue-50', border: 'border-blue-200', icon: FileText };
+                    } else {
+                      return { color: 'orange', bg: 'bg-orange-50', border: 'border-orange-200', icon: MessageSquare };
+                    }
+                  };
+                  
+                  const statusInfo = getStatusInfo();
+                  const StatusIcon = statusInfo.icon;
+                  
+                  return (
+                    <Link
+                      key={progress.id}
+                      href={`/dashboard/assignments/${progress.assignment_id}`}
+                      className={`flex items-center justify-between p-3 ${statusInfo.bg} ${statusInfo.border} rounded-lg hover:opacity-80 transition-all`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 bg-${statusInfo.color}-100 rounded-lg flex items-center justify-center`}>
+                          <StatusIcon className={`w-4 h-4 text-${statusInfo.color}-600`} />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            {progress.assignments?.title || 'Assignment'}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {feedbackCount > 0 ? `Feedback from ${teacherName}` : `Teacher: ${teacherName}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm font-medium text-${statusInfo.color}-600`}>
+                          {hasGrade ? 'Completed' : 
+                           hasFeedback ? `${feedbackCount} comment${feedbackCount > 1 ? 's' : ''}` : 
+                           'In Progress'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(progress.updated_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
-
-              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">Science Lab Report</h3>
-                    <p className="text-sm text-gray-600">Excellent observations and analysis</p>
-                  </div>
-                </div>
-                <span className="text-lg font-bold text-blue-600">B+</span>
+            ) : (
+              <div className="text-center py-8">
+                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500">No teacher feedback yet</p>
+                <p className="text-sm text-gray-400">Complete assignments to receive feedback from your teachers</p>
               </div>
-
-              <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">History Essay</h3>
-                    <p className="text-sm text-gray-600">Good research, work on conclusion</p>
-                  </div>
-                </div>
-                <span className="text-lg font-bold text-purple-600">B</span>
-              </div>
-            </div>
+            )}
             
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <Link
-                href="/dashboard/grades"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                View all grades and feedback →
-              </Link>
-            </div>
+            {assignmentsWithFeedback.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <Link
+                  href="/dashboard/assignments"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  View all assignments and feedback →
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
