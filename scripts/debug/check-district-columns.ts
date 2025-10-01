@@ -3,8 +3,8 @@
  * This uses the existing database types to check column availability
  */
 
-import { createClient } from "../lib/supabase";
-import type { Tables } from "../lib/database.types";
+import { createClient } from "../../lib/supabase";
+import type { Tables } from "../../lib/database.types";
 
 type District = Tables<"districts">;
 
