@@ -1,11 +1,8 @@
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import ShapingSheetForm from "@/components/dashboard/assignments/ShapingSheetForm";
-import ExpositoryShapingSheetForm from "@/components/dashboard/assignments/ExpositoryShapingSheetForm";
-import ArgumentationShapingSheetForm from "@/components/dashboard/assignments/ArgumentationShapingSheetForm";
-import NarrativeShapingSheetForm from "@/components/dashboard/assignments/NarrativeShapingSheetForm";
-import UnifiedSingleSheetForm from "@/components/dashboard/assignments/unified/UnifiedSingleSheetForm";
+import NarrativeShapingSheet1Form from "@/components/dashboard/assignments/NarrativeShapingSheet1Form";
+import UnifiedNarrativeShapingSequence from "@/components/dashboard/assignments/unified/UnifiedNarrativeShapingSequence";
 
 interface PageProps {
   params: Promise<{
@@ -13,7 +10,7 @@ interface PageProps {
   }>;
 }
 
-export default async function ShapingPage({ params }: PageProps) {
+export default async function ShapingSheet1Page({ params }: PageProps) {
   const { id } = await params;
   const cookieStore = await cookies();
   const supabase = await createServerSupabaseClient(cookieStore);
@@ -71,47 +68,22 @@ export default async function ShapingPage({ params }: PageProps) {
     redirect("/dashboard/assignments");
   }
 
-  // Check if we should use the unified form
-  const useUnifiedForm = process.env.USE_UNIFIED_SINGLE_SHAPING_FORM === 'true';
+  // Check if we should use the unified sequence component
+  const useUnifiedSequence = process.env.USE_UNIFIED_NARRATIVE_SHAPING_SEQUENCE === 'true';
   
-  if (useUnifiedForm) {
-    // Use unified form for argumentation, expository, and literary
-    if (['argumentation', 'expository', 'literary'].includes(assignment.writing_style)) {
-      return <UnifiedSingleSheetForm assignment={assignment} studentProfile={userProfile} />;
-    }
-  }
-
-  // Render the appropriate shaping sheet based on writing style
-  if (assignment.writing_style === "expository") {
+  if (useUnifiedSequence) {
     return (
-      <ExpositoryShapingSheetForm 
+      <UnifiedNarrativeShapingSequence 
         assignment={assignment} 
         studentProfile={userProfile} 
+        sheetNumber={1}
       />
     );
   }
 
-  if (assignment.writing_style === "argumentation") {
-    return (
-      <ArgumentationShapingSheetForm 
-        assignment={assignment} 
-        studentProfile={userProfile} 
-      />
-    );
-  }
-
-  if (assignment.writing_style === "narrative") {
-    return (
-      <NarrativeShapingSheetForm 
-        assignment={assignment} 
-        studentProfile={userProfile} 
-      />
-    );
-  }
-
-  // Default to Literary shaping sheet
+  // Legacy fallback
   return (
-    <ShapingSheetForm 
+    <NarrativeShapingSheet1Form 
       assignment={assignment} 
       studentProfile={userProfile} 
     />

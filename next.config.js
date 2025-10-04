@@ -4,6 +4,10 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Get Supabase domain from environment variable
+  env: {
+    NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN: process.env.NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN || '',
+  },
   // Performance Optimizations
   compress: true,
   poweredByHeader: false,
@@ -11,7 +15,12 @@ const nextConfig = {
   // Experimental optimizations for better performance
   experimental: {
     // Enable optimized package imports
-    optimizePackageImports: ["lucide-react", "@supabase/supabase-js"],
+    optimizePackageImports: [
+      "lucide-react", 
+      "@supabase/supabase-js",
+      "lodash",
+      "lodash-es"
+    ],
   },
   
   // Disable ESLint during build to avoid configuration issues
@@ -33,20 +42,20 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
 
-    // Allow external image domains (add your Supabase storage domain)
+    // Allow external image domains
     domains: [
       "localhost",
-      "zyivphqxqmbslxcrzbnh.supabase.co", // Your Supabase project domain
+      ...(process.env.NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN ? [process.env.NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN] : []),
     ],
 
     // Modern remotePatterns configuration for better security
     remotePatterns: [
-      {
+      ...(process.env.NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN ? [{
         protocol: "https",
-        hostname: "zyivphqxqmbslxcrzbnh.supabase.co",
+        hostname: process.env.NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN,
         port: "",
         pathname: "/storage/v1/object/public/**",
-      },
+      }] : []),
       {
         protocol: "http",
         hostname: "localhost",
@@ -57,8 +66,9 @@ const nextConfig = {
 
     // Support for various image file extensions
     dangerouslyAllowSVG: true,
-    contentSecurityPolicy:
-      "default-src 'self' https://zyivphqxqmbslxcrzbnh.supabase.co; script-src 'none'; sandbox;",
+    contentSecurityPolicy: process.env.NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN 
+      ? `default-src 'self' https://${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN}; script-src 'none'; sandbox;`
+      : "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   // Simplified webpack configuration to prevent build hangs
@@ -67,6 +77,33 @@ const nextConfig = {
     if (!dev) {
       // Simplified production optimizations
       config.optimization.moduleIds = "deterministic";
+      
+      // Better code splitting for production
+      if (!isServer) {
+        config.optimization.splitChunks = {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Vendor chunk
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /node_modules/,
+              priority: 20,
+            },
+            // Common components chunk
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 10,
+              reuseExistingChunk: true,
+              enforce: true,
+            },
+          },
+        };
+      }
     }
 
     // Essential SVG handling (simplified)

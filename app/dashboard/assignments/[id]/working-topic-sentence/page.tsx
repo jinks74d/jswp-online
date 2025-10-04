@@ -3,6 +3,8 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import ArgumentationWorkingTSForm from "@/components/dashboard/assignments/ArgumentationWorkingTSForm";
+import ExpositoryWorkingTopicSentenceForm from "@/components/dashboard/assignments/ExpositoryWorkingTopicSentenceForm";
+import UnifiedWorkingTopicSentenceForm from "@/components/dashboard/assignments/unified/UnifiedWorkingTopicSentenceForm";
 
 interface PageProps {
   params: Promise<{
@@ -68,15 +70,40 @@ export default async function WorkingTopicSentencePage({ params }: PageProps) {
     redirect("/dashboard/assignments");
   }
 
-  // Verify this is an argumentation assignment
-  if (assignment.writing_style !== "argumentation") {
-    redirect(`/dashboard/assignments/${id}`);
+  // Check feature flag for unified form
+  const useUnifiedForm = process.env.USE_UNIFIED_WORKING_TS_FORM === 'true';
+
+  if (useUnifiedForm) {
+    // Use unified form for both argumentation and expository
+    if (assignment.writing_style === "argumentation" || assignment.writing_style === "expository") {
+      return (
+        <UnifiedWorkingTopicSentenceForm
+          assignment={assignment}
+          studentProfile={userProfile}
+        />
+      );
+    }
   }
 
-  return (
-    <ArgumentationWorkingTSForm
-      assignment={assignment}
-      studentProfile={userProfile}
-    />
-  );
+  // Legacy fallback - render style-specific forms
+  if (assignment.writing_style === "argumentation") {
+    return (
+      <ArgumentationWorkingTSForm
+        assignment={assignment}
+        studentProfile={userProfile}
+      />
+    );
+  }
+
+  if (assignment.writing_style === "expository") {
+    return (
+      <ExpositoryWorkingTopicSentenceForm
+        assignment={assignment}
+        studentProfile={userProfile}
+      />
+    );
+  }
+
+  // This step doesn't exist for narrative/literary
+  redirect("/dashboard/assignments");
 }

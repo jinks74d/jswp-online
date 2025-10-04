@@ -5,6 +5,7 @@ import GatheringCdsForm from "@/components/dashboard/assignments/GatheringCdsFor
 import ExpositoryGatheringCdsForm from "@/components/dashboard/assignments/ExpositoryGatheringCdsForm";
 import ArgumentationGatheringCdsForm from "@/components/dashboard/assignments/ArgumentationGatheringCdsForm";
 import NarrativeGatheringCdsForm from "@/components/dashboard/assignments/NarrativeGatheringCdsForm";
+import UnifiedGatheringCDsForm from "@/components/dashboard/assignments/unified/UnifiedGatheringCDsForm";
 
 interface PageProps {
   params: Promise<{
@@ -70,39 +71,53 @@ export default async function GatheringCdsPage({ params }: PageProps) {
     redirect("/dashboard/assignments");
   }
 
+  // Feature flag: Use unified form or legacy style-specific forms
+  const useUnifiedForm = process.env.USE_UNIFIED_GATHERING_CDS_FORM === 'true';
+
+  if (useUnifiedForm) {
+    // NEW: Single unified component for all writing styles
+    return (
+      <UnifiedGatheringCDsForm
+        assignment={assignment}
+        studentProfile={userProfile}
+      />
+    );
+  }
+
+  // LEGACY: Style-specific components (fallback for safety)
   // Render the appropriate form based on writing style
   if (assignment.writing_style === "expository") {
     return (
-      <ExpositoryGatheringCdsForm 
-        assignment={assignment} 
-        studentProfile={userProfile} 
+      <ExpositoryGatheringCdsForm
+        assignment={assignment}
+        studentProfile={userProfile}
       />
     );
   }
 
   if (assignment.writing_style === "argumentation") {
     return (
-      <ArgumentationGatheringCdsForm 
-        assignment={assignment} 
-        studentProfile={userProfile} 
+      <ArgumentationGatheringCdsForm
+        assignment={assignment}
+        studentProfile={userProfile}
       />
     );
   }
 
   if (assignment.writing_style === "narrative") {
     return (
-      <NarrativeGatheringCdsForm 
-        assignment={assignment} 
-        studentProfile={userProfile} 
+      <NarrativeGatheringCdsForm
+        assignment={assignment}
+        studentProfile={userProfile}
       />
     );
   }
 
   // Default to literary form for other writing styles
   return (
-    <GatheringCdsForm 
-      assignment={assignment} 
-      studentProfile={userProfile} 
+    <GatheringCdsForm
+      assignment={assignment}
+      studentProfile={userProfile}
     />
   );
 }

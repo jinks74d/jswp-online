@@ -38,13 +38,13 @@ function ClientDashboard({ children }: ClientDashboardProps) {
     }
   }, [loading, user, profile, router]);
 
-  // Add delay on initial load to give session time to restore
+  // Add minimal delay on initial load to give session time to restore
   useEffect(() => {
     const timer = setTimeout(() => {
       if (mountedRef.current) {
         setRedirectDelay(false);
       }
-    }, 2000); // Wait 2 seconds before allowing redirects
+    }, 100); // Reduced from 2000ms to 100ms for faster load
 
     return () => clearTimeout(timer);
   }, []);
