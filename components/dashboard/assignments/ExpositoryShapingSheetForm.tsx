@@ -473,7 +473,7 @@ export default function ExpositoryShapingSheetForm({
               {/* TS Header - Pentagon/Trapezoid Shape */}
               <div className="relative">
                 <div
-                  className="bg-[#8bb3ff] text-white px-8 py-3 font-bold text-lg"
+                  className="bg-blue-600 text-white px-8 py-3 font-bold text-lg"
                   style={{
                     clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
                     minWidth: "120px",
@@ -483,7 +483,7 @@ export default function ExpositoryShapingSheetForm({
                   TS
                 </div>
               </div>
-              <div className="p-6 border-2 border-[#8bb3ff] rounded-b-lg bg-blue-50 min-w-[600px]">
+              <div className="p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
                 <textarea
                   value={shapingData.topicSentence}
                   onChange={(e) =>
@@ -504,9 +504,9 @@ export default function ExpositoryShapingSheetForm({
           <div className="text-center">
             <div className="inline-block">
               <div className="bg-[#b3172c] text-white px-8 py-3 rounded-t-lg font-bold text-lg">
-                CDs
+                CD
               </div>
-              <div className="p-6 border-2 border-[#b3172c] rounded-b-lg bg-red-50 min-w-[600px]">
+              <div className="p-6 border-2 border-[#b3172c] bg-red-50 min-w-[600px] border-t-0">
                 <textarea
                   value={shapingData.chunk1CD}
                   onChange={(e) =>
@@ -526,7 +526,7 @@ export default function ExpositoryShapingSheetForm({
           {/* Concrete Detail 2 */}
           <div className="text-center">
             <div className="inline-block">
-              <div className="p-6 border-2 border-[#b3172c] rounded-lg bg-red-50 min-w-[600px]">
+              <div className="p-6 border-2 border-[#b3172c] bg-red-50 min-w-[600px] border-t-0">
                 <textarea
                   value={shapingData.chunk2CD}
                   onChange={(e) =>
@@ -582,7 +582,7 @@ export default function ExpositoryShapingSheetForm({
               {/* CS Header - Pentagon/Trapezoid Shape */}
               <div className="relative">
                 <div
-                  className="bg-[#8bb3ff] text-white px-8 py-3 font-bold text-lg"
+                  className="bg-blue-600 text-white px-8 py-3 font-bold text-lg"
                   style={{
                     clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
                     minWidth: "120px",
@@ -592,7 +592,7 @@ export default function ExpositoryShapingSheetForm({
                   CS
                 </div>
               </div>
-              <div className="p-6 border-2 border-[#8bb3ff] rounded-b-lg bg-blue-50 min-w-[600px]">
+              <div className="p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
                 <textarea
                   value={shapingData.concludingSentence}
                   onChange={(e) =>

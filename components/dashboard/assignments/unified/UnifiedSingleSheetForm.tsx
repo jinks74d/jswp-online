@@ -223,14 +223,133 @@ export default function UnifiedSingleSheetForm({
     }
   };
 
+  // Get field styling based on field type and key
+  const getFieldStyling = (field: ShapingField) => {
+    const key = field.key;
+    
+    // TS fields (Topic Sentence)
+    if (key === 'topicSentence') {
+      return {
+        headerStyle: {
+          clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
+          backgroundColor: "#2563eb",
+          color: "white",
+          padding: "12px 32px",
+          fontWeight: "bold",
+          fontSize: "18px",
+          minWidth: "120px",
+          textAlign: "center" as const,
+        },
+        containerClass: "text-center",
+        wrapperClass: "inline-block",
+        contentClass: "p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]",
+        textareaClass: "w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none text-base",
+        label: "TS"
+      };
+    }
+    
+    // CD fields (Concrete Details)
+    if (key.includes('CD') || key.includes('concreteDetails')) {
+      return {
+        headerClass: "bg-[#b3172c] text-white px-8 py-3 rounded-t-lg font-bold text-lg",
+        containerClass: "text-center",
+        wrapperClass: "inline-block",
+        contentClass: "p-6 border-2 border-[#b3172c] bg-red-50 min-w-[600px] border-t-0",
+        textareaClass: "w-full px-3 py-2 border-0 focus:outline-none text-red-800 bg-transparent resize-none text-base",
+        label: "CD"
+      };
+    }
+    
+    // CM fields (Commentary)
+    if (key.includes('CM') || key.includes('commentary')) {
+      return {
+        headerStyle: {
+          borderRadius: "50px",
+          backgroundColor: "#16a34a",
+          color: "white",
+          padding: "16px 48px",
+          fontWeight: "bold",
+          fontSize: "18px",
+          minWidth: "120px",
+          textAlign: "center" as const,
+        },
+        containerClass: "text-center",
+        wrapperClass: "relative mb-4",
+        outerWrapperClass: "mx-auto",
+        contentClass: "p-6 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]",
+        textareaClass: "w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none text-base",
+        label: "CM"
+      };
+    }
+    
+    // CS fields (Concluding Sentence)
+    if (key === 'concludingSentence') {
+      return {
+        headerStyle: {
+          clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
+          backgroundColor: "#2563eb",
+          color: "white",
+          padding: "12px 32px",
+          fontWeight: "bold",
+          fontSize: "18px",
+          minWidth: "120px",
+          textAlign: "center" as const,
+        },
+        containerClass: "text-center",
+        wrapperClass: "inline-block",
+        contentClass: "p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]",
+        textareaClass: "w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none text-base",
+        label: "CS"
+      };
+    }
+    
+    // Default styling for other fields
+    return null;
+  };
+
   // Field renderer
   const renderField = (field: ShapingField) => {
     if (!shouldShowField(field)) return null;
 
     const value = formData[field.key] || '';
+    const styling = getFieldStyling(field);
 
     switch (field.type) {
       case 'textarea':
+        // Use styled component if styling is defined
+        if (styling) {
+          return (
+            <div key={field.key} className="mb-6">
+              <div className={styling.containerClass}>
+                <div className={styling.wrapperClass}>
+                  {styling.headerStyle ? (
+                    <div className="relative">
+                      <div style={styling.headerStyle}>
+                        {styling.label}
+                      </div>
+                    </div>
+                  ) : styling.headerClass ? (
+                    <div className={styling.headerClass}>
+                      {styling.label}
+                    </div>
+                  ) : null}
+                  <div className={styling.contentClass}>
+                    <textarea
+                      value={value}
+                      onChange={(e) => setFormData(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      placeholder={field.placeholder}
+                      rows={field.rows || 3}
+                      disabled={field.readonly}
+                      className={styling.textareaClass}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        // Default textarea styling
         return (
           <div key={field.key} className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -243,7 +362,7 @@ export default function UnifiedSingleSheetForm({
               placeholder={field.placeholder}
               rows={field.rows || 3}
               disabled={field.readonly}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-base ${
                 field.readonly ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
               }`}
             />
@@ -263,7 +382,7 @@ export default function UnifiedSingleSheetForm({
               onChange={(e) => setFormData(prev => ({ ...prev, [field.key]: e.target.value }))}
               placeholder={field.placeholder}
               disabled={field.readonly}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-base ${
                 field.readonly ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
               }`}
             />
@@ -274,22 +393,26 @@ export default function UnifiedSingleSheetForm({
         const cds = Array.isArray(value) ? value : [];
         return (
           <div key={field.key} className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {field.label}
-            </label>
-            <div className="bg-gray-50 rounded-lg p-4">
-              {cds.length > 0 ? (
-                <ul className="space-y-2">
-                  {cds.map((cd: string, index: number) => (
-                    <li key={index} className="flex items-start">
-                      <span className="text-blue-600 mr-2">{index + 1}.</span>
-                      <span className="text-gray-700">{cd}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500 italic">No concrete details available</p>
-              )}
+            <div className="text-center">
+              <div className="inline-block">
+                <div className="bg-[#b3172c] text-white px-8 py-3 rounded-t-lg font-bold text-lg">
+                  CD
+                </div>
+                <div className="p-6 border-2 border-[#b3172c] bg-red-50 min-w-[600px] border-t-0">
+                  {cds.length > 0 ? (
+                    <ul className="space-y-2">
+                      {cds.map((cd: string, index: number) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-red-600 font-semibold mr-2">{index + 1}.</span>
+                          <span className="text-gray-700">{cd}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 italic">No concrete details available</p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         );

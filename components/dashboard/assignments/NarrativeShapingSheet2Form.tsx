@@ -399,35 +399,48 @@ export default function NarrativeShapingSheet2Form({
           {/* Left Side - Form */}
           <div className="space-y-6">
             {/* Topic Sentence */}
-            <div>
-              <div className="bg-blue-600 text-white px-4 py-2 rounded-t-lg font-bold text-sm">
-                TS
-              </div>
-              <div className="border-2 border-blue-600 rounded-b-lg p-4 bg-blue-50">
-                <textarea
-                  value={shapingData.topicSentence}
-                  onChange={(e) =>
-                    setShapingData((prev) => ({
-                      ...prev,
-                      topicSentence: e.target.value,
-                    }))
-                  }
-                  rows={2}
-                  className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none"
-                  placeholder="Topic sentence from T-Chart 2..."
-                />
+            <div className="text-center">
+              <div className="inline-block">
+                {/* TS Header - Pentagon/Trapezoid Shape */}
+                <div className="relative">
+                  <div
+                    className="bg-blue-600 text-white px-8 py-3 font-bold text-lg"
+                    style={{
+                      clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
+                      minWidth: "120px",
+                      textAlign: "center",
+                    }}
+                  >
+                    TS
+                  </div>
+                </div>
+                <div className="p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
+                  <textarea
+                    value={shapingData.topicSentence}
+                    onChange={(e) =>
+                      setShapingData((prev) => ({
+                        ...prev,
+                        topicSentence: e.target.value,
+                      }))
+                    }
+                    rows={2}
+                    className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none text-base"
+                    placeholder="Topic sentence from T-Chart 2..."
+                  />
+                </div>
               </div>
             </div>
 
             {/* Concrete Details */}
-            <div>
-              <div className="bg-[#b3172c] text-white px-4 py-2 rounded-t-lg font-bold text-sm">
-                CDs
-              </div>
+            <div className="text-center">
+              <div className="inline-block">
+                <div className="bg-[#b3172c] text-white px-8 py-3 rounded-t-lg font-bold text-lg">
+                  CDs
+                </div>
               {shapingData.concreteDetails.map((cd, index) => (
                 <div
                   key={index}
-                  className="border-2 border-[#b3172c] bg-red-50 p-4 border-t-0"
+                  className="p-6 border-2 border-[#b3172c] bg-red-50 min-w-[600px] border-t-0"
                 >
                   <textarea
                     value={cd}
@@ -440,59 +453,84 @@ export default function NarrativeShapingSheet2Form({
                       }));
                     }}
                     rows={2}
-                    className="w-full px-3 py-2 border-0 focus:outline-none text-red-800 bg-transparent resize-none"
+                    className="w-full px-3 py-2 border-0 focus:outline-none text-red-800 bg-transparent resize-none text-base"
                     placeholder={`Concrete detail ${index + 1}...`}
                   />
                 </div>
               ))}
               {shapingData.concreteDetails.length === 0 && (
-                <div className="border-2 border-[#b3172c] rounded-b-lg bg-red-50 p-4 border-t-0">
+                <div className="p-6 border-2 border-[#b3172c] rounded-b-lg bg-red-50 min-w-[600px] border-t-0">
                   <div className="text-red-600 text-center">
                     No concrete details loaded from T-Chart 2
                   </div>
                 </div>
               )}
+              </div>
             </div>
 
             {/* Commentary */}
-            <div>
-              <div className="bg-green-600 text-white px-4 py-2 rounded-t-lg font-bold text-sm">
-                CMs
-              </div>
-              <div className="border-2 border-green-600 rounded-b-lg p-4 bg-green-50">
-                <textarea
-                  value={shapingData.commentary}
-                  onChange={(e) =>
-                    setShapingData((prev) => ({
-                      ...prev,
-                      commentary: e.target.value,
-                    }))
-                  }
-                  rows={3}
-                  className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none"
-                  placeholder="Commentary from T-Chart 2..."
-                />
+            <div className="text-center">
+              <div className="inline-block">
+                {/* CM Header - Oval Shape */}
+                <div className="relative mb-4">
+                  <div
+                    className="bg-green-600 text-white px-12 py-4 font-bold text-lg mx-auto"
+                    style={{
+                      borderRadius: "50px",
+                      minWidth: "120px",
+                      textAlign: "center",
+                    }}
+                  >
+                    CM
+                  </div>
+                </div>
+                <div className="p-6 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
+                  <textarea
+                    value={shapingData.commentary}
+                    onChange={(e) =>
+                      setShapingData((prev) => ({
+                        ...prev,
+                        commentary: e.target.value,
+                      }))
+                    }
+                    rows={3}
+                    className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none text-base"
+                    placeholder="Commentary from T-Chart 2..."
+                  />
+                </div>
               </div>
             </div>
 
             {/* Concluding Sentence */}
-            <div>
-              <div className="bg-blue-600 text-white px-4 py-2 rounded-t-lg font-bold text-sm">
-                CS
-              </div>
-              <div className="border-2 border-blue-600 rounded-b-lg p-4 bg-blue-50">
-                <textarea
-                  value={shapingData.concludingSentence}
-                  onChange={(e) =>
-                    setShapingData((prev) => ({
-                      ...prev,
-                      concludingSentence: e.target.value,
-                    }))
-                  }
-                  rows={2}
-                  className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none"
-                  placeholder="Concluding sentence for body paragraph 2..."
-                />
+            <div className="text-center">
+              <div className="inline-block">
+                {/* CS Header - Pentagon/Trapezoid Shape */}
+                <div className="relative">
+                  <div
+                    className="bg-blue-600 text-white px-8 py-3 font-bold text-lg"
+                    style={{
+                      clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
+                      minWidth: "120px",
+                      textAlign: "center",
+                    }}
+                  >
+                    CS
+                  </div>
+                </div>
+                <div className="p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
+                  <textarea
+                    value={shapingData.concludingSentence}
+                    onChange={(e) =>
+                      setShapingData((prev) => ({
+                        ...prev,
+                        concludingSentence: e.target.value,
+                      }))
+                    }
+                    rows={2}
+                    className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none text-base"
+                    placeholder="Concluding sentence for body paragraph 2..."
+                  />
+                </div>
               </div>
             </div>
           </div>

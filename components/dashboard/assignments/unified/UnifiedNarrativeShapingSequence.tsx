@@ -357,68 +357,117 @@ export default function UnifiedNarrativeShapingSequence({
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
             {/* Topic Sentence */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Topic Sentence
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <textarea
-                value={formData.topicSentence}
-                onChange={(e) => setFormData(prev => ({ ...prev, topicSentence: e.target.value }))}
-                placeholder="Enter your topic sentence..."
-                rows={3}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
+              <div className="text-center">
+                <div className="inline-block">
+                  {/* TS Header - Pentagon/Trapezoid Shape */}
+                  <div className="relative">
+                    <div
+                      className="bg-blue-600 text-white px-8 py-3 font-bold text-lg"
+                      style={{
+                        clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
+                        minWidth: "120px",
+                        textAlign: "center",
+                      }}
+                    >
+                      TS
+                    </div>
+                  </div>
+                  <div className="p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
+                    <textarea
+                      value={formData.topicSentence}
+                      onChange={(e) => setFormData(prev => ({ ...prev, topicSentence: e.target.value }))}
+                      placeholder="Enter your topic sentence..."
+                      rows={3}
+                      className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none text-base"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Concrete Details */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Concrete Details
-              </label>
-              <div className="bg-gray-50 rounded-lg p-4">
-                {formData.concreteDetails.length > 0 ? (
-                  <ul className="space-y-2">
-                    {formData.concreteDetails.map((cd, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-red-600 font-semibold mr-2">{index + 1}.</span>
-                        <span className="text-gray-700">{cd}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500 italic">No concrete details loaded from T-Chart</p>
-                )}
+              <div className="text-center">
+                <div className="inline-block">
+                  <div className="bg-[#b3172c] text-white px-8 py-3 rounded-t-lg font-bold text-lg">
+                    CD
+                  </div>
+                  <div className="p-6 border-2 border-[#b3172c] bg-red-50 min-w-[600px] border-t-0">
+                    {formData.concreteDetails.length > 0 ? (
+                      <ul className="space-y-2">
+                        {formData.concreteDetails.map((cd, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="text-red-600 font-semibold mr-2">{index + 1}.</span>
+                            <span className="text-gray-700">{cd}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500 italic">No concrete details loaded from T-Chart</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Commentary */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Commentary
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <textarea
-                value={formData.commentary}
-                onChange={(e) => setFormData(prev => ({ ...prev, commentary: e.target.value }))}
-                placeholder="Add your commentary..."
-                rows={3}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
+              <div className="text-center">
+                <div className="inline-block">
+                  {/* CM Header - Oval Shape */}
+                  <div className="relative mb-4">
+                    <div
+                      className="bg-green-600 text-white px-12 py-4 font-bold text-lg mx-auto"
+                      style={{
+                        borderRadius: "50px",
+                        minWidth: "120px",
+                        textAlign: "center",
+                      }}
+                    >
+                      CM
+                    </div>
+                  </div>
+                  <div className="p-6 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
+                    <textarea
+                      value={formData.commentary}
+                      onChange={(e) => setFormData(prev => ({ ...prev, commentary: e.target.value }))}
+                      placeholder="Add your commentary..."
+                      rows={3}
+                      className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none text-base"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Concluding Sentence */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Concluding Sentence
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <textarea
-                value={formData.concludingSentence}
-                onChange={(e) => setFormData(prev => ({ ...prev, concludingSentence: e.target.value }))}
-                placeholder="Enter your concluding sentence..."
-                rows={3}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
+              <div className="text-center">
+                <div className="inline-block">
+                  {/* CS Header - Pentagon/Trapezoid Shape */}
+                  <div className="relative">
+                    <div
+                      className="bg-blue-600 text-white px-8 py-3 font-bold text-lg"
+                      style={{
+                        clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
+                        minWidth: "120px",
+                        textAlign: "center",
+                      }}
+                    >
+                      CS
+                    </div>
+                  </div>
+                  <div className="p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
+                    <textarea
+                      value={formData.concludingSentence}
+                      onChange={(e) => setFormData(prev => ({ ...prev, concludingSentence: e.target.value }))}
+                      placeholder="Enter your concluding sentence..."
+                      rows={3}
+                      className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none text-base"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Assembled Paragraph Preview */}

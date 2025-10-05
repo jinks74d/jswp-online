@@ -452,10 +452,20 @@ export default function ShapingSheetForm({
           {/* Topic Sentence */}
           <div className="text-center">
             <div className="inline-block">
-              <div className="bg-blue-600 text-white px-6 py-2 rounded-t-lg font-bold">
-                TS
+              {/* TS Header - Pentagon/Trapezoid Shape */}
+              <div className="relative">
+                <div
+                  className="bg-blue-600 text-white px-8 py-3 font-bold text-lg"
+                  style={{
+                    clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
+                    minWidth: "120px",
+                    textAlign: "center",
+                  }}
+                >
+                  TS
+                </div>
               </div>
-              <div className="p-4 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
+              <div className="p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
                 <textarea
                   value={shapingData.topicSentence}
                   onChange={(e) =>
@@ -465,7 +475,7 @@ export default function ShapingSheetForm({
                     }))
                   }
                   rows={3}
-                  className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none"
+                  className="w-full px-3 py-2 border-0 focus:outline-none text-blue-800 bg-transparent resize-none text-base"
                   placeholder="Enter your topic sentence here..."
                 />
               </div>
@@ -477,10 +487,10 @@ export default function ShapingSheetForm({
             {/* CD 1 */}
             <div className="text-center">
               <div className="inline-block">
-                <div className="bg-red-600 text-white px-6 py-2 rounded-t-lg font-bold">
+                <div className="bg-[#b3172c] text-white px-8 py-3 rounded-t-lg font-bold text-lg">
                   CD
                 </div>
-                <div className="p-4 border-2 border-red-600 rounded-b-lg bg-red-50 min-w-[600px]">
+                <div className="p-6 border-2 border-[#b3172c] rounded-b-lg bg-red-50 min-w-[600px]">
                   <textarea
                     value={shapingData.chunk1CD}
                     onChange={(e) =>
@@ -490,7 +500,7 @@ export default function ShapingSheetForm({
                       }))
                     }
                     rows={2}
-                    className="w-full px-3 py-2 border-0 focus:outline-none text-red-800 bg-transparent resize-none"
+                    className="w-full px-3 py-2 border-0 focus:outline-none text-red-800 bg-transparent resize-none text-base"
                     placeholder="Enter your concrete detail here..."
                   />
                 </div>
@@ -500,10 +510,20 @@ export default function ShapingSheetForm({
             {/* CM 1 */}
             <div className="text-center">
               <div className="inline-block">
-                <div className="bg-green-600 text-white px-8 py-3 rounded-full font-bold">
-                  CM
+                {/* CM Header - Oval Shape */}
+                <div className="relative mb-4">
+                  <div
+                    className="bg-green-600 text-white px-12 py-4 font-bold text-lg mx-auto"
+                    style={{
+                      borderRadius: "50px",
+                      minWidth: "120px",
+                      textAlign: "center",
+                    }}
+                  >
+                    CM
+                  </div>
                 </div>
-                <div className="mt-2 p-4 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
+                <div className="p-6 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
                   <textarea
                     value={shapingData.chunk1CM1}
                     onChange={(e) =>
@@ -513,7 +533,7 @@ export default function ShapingSheetForm({
                       }))
                     }
                     rows={2}
-                    className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none"
+                    className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none text-base"
                     placeholder="Enter your first commentary here..."
                   />
                 </div>
@@ -523,10 +543,20 @@ export default function ShapingSheetForm({
             {/* CM 2 */}
             <div className="text-center">
               <div className="inline-block">
-                <div className="bg-green-600 text-white px-8 py-3 rounded-full font-bold">
-                  CM
+                {/* CM Header - Oval Shape */}
+                <div className="relative mb-4">
+                  <div
+                    className="bg-green-600 text-white px-12 py-4 font-bold text-lg mx-auto"
+                    style={{
+                      borderRadius: "50px",
+                      minWidth: "120px",
+                      textAlign: "center",
+                    }}
+                  >
+                    CM
+                  </div>
                 </div>
-                <div className="mt-2 p-4 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
+                <div className="p-6 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
                   <textarea
                     value={shapingData.chunk1CM2}
                     onChange={(e) =>
@@ -536,7 +566,7 @@ export default function ShapingSheetForm({
                       }))
                     }
                     rows={2}
-                    className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none"
+                    className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none text-base"
                     placeholder="Enter your second commentary here..."
                   />
                 </div>
@@ -550,10 +580,10 @@ export default function ShapingSheetForm({
               {/* CD 2 */}
               <div className="text-center">
                 <div className="inline-block">
-                  <div className="bg-red-600 text-white px-6 py-2 rounded-t-lg font-bold">
+                  <div className="bg-[#b3172c] text-white px-8 py-3 rounded-t-lg font-bold text-lg">
                     CD
                   </div>
-                  <div className="p-4 border-2 border-red-600 rounded-b-lg bg-red-50 min-w-[600px]">
+                  <div className="p-6 border-2 border-[#b3172c] rounded-b-lg bg-red-50 min-w-[600px]">
                     <textarea
                       value={shapingData.chunk2CD}
                       onChange={(e) =>
@@ -563,7 +593,7 @@ export default function ShapingSheetForm({
                         }))
                       }
                       rows={2}
-                      className="w-full px-3 py-2 border-0 focus:outline-none text-red-800 bg-transparent resize-none"
+                      className="w-full px-3 py-2 border-0 focus:outline-none text-red-800 bg-transparent resize-none text-base"
                       placeholder="Enter your second concrete detail here..."
                     />
                   </div>
@@ -573,10 +603,20 @@ export default function ShapingSheetForm({
               {/* CM 3 */}
               <div className="text-center">
                 <div className="inline-block">
-                  <div className="bg-green-600 text-white px-8 py-3 rounded-full font-bold">
-                    CM
+                  {/* CM Header - Oval Shape */}
+                  <div className="relative mb-4">
+                    <div
+                      className="bg-green-600 text-white px-12 py-4 font-bold text-lg mx-auto"
+                      style={{
+                        borderRadius: "50px",
+                        minWidth: "120px",
+                        textAlign: "center",
+                      }}
+                    >
+                      CM
+                    </div>
                   </div>
-                  <div className="mt-2 p-4 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
+                  <div className="p-6 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
                     <textarea
                       value={shapingData.chunk2CM1}
                       onChange={(e) =>
@@ -586,7 +626,7 @@ export default function ShapingSheetForm({
                         }))
                       }
                       rows={2}
-                      className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none"
+                      className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none text-base"
                       placeholder="Enter your third commentary here..."
                     />
                   </div>
@@ -596,10 +636,20 @@ export default function ShapingSheetForm({
               {/* CM 4 */}
               <div className="text-center">
                 <div className="inline-block">
-                  <div className="bg-green-600 text-white px-8 py-3 rounded-full font-bold">
-                    CM
+                  {/* CM Header - Oval Shape */}
+                  <div className="relative mb-4">
+                    <div
+                      className="bg-green-600 text-white px-12 py-4 font-bold text-lg mx-auto"
+                      style={{
+                        borderRadius: "50px",
+                        minWidth: "120px",
+                        textAlign: "center",
+                      }}
+                    >
+                      CM
+                    </div>
                   </div>
-                  <div className="mt-2 p-4 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
+                  <div className="p-6 border-2 border-green-600 rounded-lg bg-green-50 min-w-[600px]">
                     <textarea
                       value={shapingData.chunk2CM2}
                       onChange={(e) =>
@@ -609,7 +659,7 @@ export default function ShapingSheetForm({
                         }))
                       }
                       rows={2}
-                      className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none"
+                      className="w-full px-3 py-2 border-0 focus:outline-none text-green-800 bg-transparent resize-none text-base"
                       placeholder="Enter your fourth commentary here..."
                     />
                   </div>
@@ -621,11 +671,20 @@ export default function ShapingSheetForm({
           {/* Concluding Sentence */}
           <div className="text-center">
             <div className="inline-block">
-              <div className="bg-blue-600 text-white px-6 py-2 rounded-t-lg font-bold transform rotate-0">
-                <div className="w-0 h-0 border-l-[20px] border-r-[20px] border-b-[20px] border-l-transparent border-r-transparent border-b-blue-600 mx-auto mb-2"></div>
-                CS
+              {/* CS Header - Pentagon/Trapezoid Shape */}
+              <div className="relative">
+                <div
+                  className="bg-blue-600 text-white px-8 py-3 font-bold text-lg"
+                  style={{
+                    clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
+                    minWidth: "120px",
+                    textAlign: "center",
+                  }}
+                >
+                  CS
+                </div>
               </div>
-              <div className="p-4 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
+              <div className="p-6 border-2 border-blue-600 rounded-b-lg bg-blue-50 min-w-[600px]">
                 <textarea
                   value={shapingData.concludingSentence}
                   onChange={(e) =>
