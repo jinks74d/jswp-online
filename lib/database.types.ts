@@ -1,921 +1,618 @@
+/**
+ * JSWP Online — Database Types
+ * ─────────────────────────────────────────────────────────────────────────
+ * Hand-written to match the schema in migrations/0001_init_jswp_schema.sql.
+ *
+ * Once a live Supabase project is provisioned, regenerate via:
+ *   npx supabase gen types typescript --project-id <id> --schema public \
+ *     > lib/database.types.ts
+ *
+ * The generated file will be functionally identical to this one. We commit
+ * the hand-written version so app code can compile before the project is
+ * provisioned.
+ */
+
 export type Json =
   | string
   | number
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
-export type Database = {
+/* ─── Helpers ────────────────────────────────────────────────────────── */
+
+type Timestamps = {
+  created_at: string;
+  updated_at: string;
+};
+
+type InsertOf<R, Required extends keyof R = never> = Partial<R> & Pick<R, Required>;
+type UpdateOf<R> = Partial<R>;
+
+/* ─── Database root ──────────────────────────────────────────────────── */
+
+export interface Database {
   public: {
     Tables: {
-      assignment_submissions: {
-        Row: {
-          assignment_id: string
-          created_at: string | null
-          district_id: string
-          feedback: string | null
-          grade: Json | null
-          graded_at: string | null
-          id: string
-          responses: Json | null
-          status: Database["public"]["Enums"]["submission_status"] | null
-          student_id: string
-          submitted_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          assignment_id: string
-          created_at?: string | null
-          district_id: string
-          feedback?: string | null
-          grade?: Json | null
-          graded_at?: string | null
-          id?: string
-          responses?: Json | null
-          status?: Database["public"]["Enums"]["submission_status"] | null
-          student_id: string
-          submitted_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          assignment_id?: string
-          created_at?: string | null
-          district_id?: string
-          feedback?: string | null
-          grade?: Json | null
-          graded_at?: string | null
-          id?: string
-          responses?: Json | null
-          status?: Database["public"]["Enums"]["submission_status"] | null
-          student_id?: string
-          submitted_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "assignment_submissions_assignment_id_fkey"
-            columns: ["assignment_id"]
-            isOneToOne: false
-            referencedRelation: "assignments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignment_submissions_district_id_fkey"
-            columns: ["district_id"]
-            isOneToOne: false
-            referencedRelation: "districts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignment_submissions_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignment_submissions_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      assignments: {
-        Row: {
-          class_period_id: string | null
-          created_at: string | null
-          description: string | null
-          district_id: string
-          due_date: string | null
-          form_structure: Json | null
-          id: string
-          prompt: string | null
-          school_id: string
-          status: Database["public"]["Enums"]["assignment_status"] | null
-          teacher_id: string
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          class_period_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          district_id: string
-          due_date?: string | null
-          form_structure?: Json | null
-          id?: string
-          prompt?: string | null
-          school_id: string
-          status?: Database["public"]["Enums"]["assignment_status"] | null
-          teacher_id: string
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          class_period_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          district_id?: string
-          due_date?: string | null
-          form_structure?: Json | null
-          id?: string
-          prompt?: string | null
-          school_id?: string
-          status?: Database["public"]["Enums"]["assignment_status"] | null
-          teacher_id?: string
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "assignments_class_period_id_fkey"
-            columns: ["class_period_id"]
-            isOneToOne: false
-            referencedRelation: "class_periods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignments_district_id_fkey"
-            columns: ["district_id"]
-            isOneToOne: false
-            referencedRelation: "districts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignments_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignments_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignments_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      class_periods: {
-        Row: {
-          class_id: string
-          created_at: string | null
-          created_by: string
-          id: string
-          period: string
-          school_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          class_id: string
-          created_at?: string | null
-          created_by: string
-          id?: string
-          period: string
-          school_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          class_id?: string
-          created_at?: string | null
-          created_by?: string
-          id?: string
-          period?: string
-          school_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "class_periods_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "classes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_periods_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_periods_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_periods_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      class_student_enrollments: {
-        Row: {
-          class_period_id: string
-          created_at: string | null
-          enrolled_by: string
-          id: string
-          school_id: string
-          student_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          class_period_id: string
-          created_at?: string | null
-          enrolled_by: string
-          id?: string
-          school_id: string
-          student_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          class_period_id?: string
-          created_at?: string | null
-          enrolled_by?: string
-          id?: string
-          school_id?: string
-          student_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "class_student_enrollments_class_period_id_fkey"
-            columns: ["class_period_id"]
-            isOneToOne: false
-            referencedRelation: "class_periods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_student_enrollments_enrolled_by_fkey"
-            columns: ["enrolled_by"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_student_enrollments_enrolled_by_fkey"
-            columns: ["enrolled_by"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_student_enrollments_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_student_enrollments_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_student_enrollments_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      class_teacher_assignments: {
-        Row: {
-          assigned_by: string
-          class_period_id: string
-          created_at: string | null
-          id: string
-          school_id: string
-          teacher_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          assigned_by: string
-          class_period_id: string
-          created_at?: string | null
-          id?: string
-          school_id: string
-          teacher_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          assigned_by?: string
-          class_period_id?: string
-          created_at?: string | null
-          id?: string
-          school_id?: string
-          teacher_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "class_teacher_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_teacher_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_teacher_assignments_class_period_id_fkey"
-            columns: ["class_period_id"]
-            isOneToOne: false
-            referencedRelation: "class_periods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_teacher_assignments_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_teacher_assignments_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "class_teacher_assignments_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      classes: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          school_id: string
-          subject_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          school_id: string
-          subject_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          school_id?: string
-          subject_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "classes_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "classes_subject_id_fkey"
-            columns: ["subject_id"]
-            isOneToOne: false
-            referencedRelation: "subjects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       districts: {
-        Row: {
-          created_at: string | null
-          domain: string | null
-          id: string
-          logo_url: string | null
-          name: string
-          poc_email: string
-          primary_color: string | null
-          secondary_color: string | null
-          settings: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          domain?: string | null
-          id?: string
-          logo_url?: string | null
-          name: string
-          poc_email: string
-          primary_color?: string | null
-          secondary_color?: string | null
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          domain?: string | null
-          id?: string
-          logo_url?: string | null
-          name?: string
-          poc_email?: string
-          primary_color?: string | null
-          secondary_color?: string | null
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+        Row: Districts;
+        Insert: InsertOf<Districts, "name">;
+        Update: UpdateOf<Districts>;
+        Relationships: [];
+      };
       schools: {
-        Row: {
-          address: string | null
-          created_at: string | null
-          district_id: string
-          id: string
-          name: string
-          settings: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string | null
-          district_id: string
-          id?: string
-          name: string
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          address?: string | null
-          created_at?: string | null
-          district_id?: string
-          id?: string
-          name?: string
-          settings?: Json | null
-          updated_at?: string | null
-        }
+        Row: Schools;
+        Insert: InsertOf<Schools, "district_id" | "name">;
+        Update: UpdateOf<Schools>;
         Relationships: [
           {
-            foreignKeyName: "schools_district_id_fkey"
-            columns: ["district_id"]
-            isOneToOne: false
-            referencedRelation: "districts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      student_assignment_progress: {
-        Row: {
-          assignment_id: string
-          concrete_details: string | null
-          created_at: string | null
-          id: string
-          last_saved: string | null
-          notes: string | null
-          paragraph_name: string | null
-          progress_percentage: number | null
-          selected_chunks: number | null
-          status: string | null
-          student_id: string
-          submitted_at: string | null
-          updated_at: string | null
-          working_on: string | null
-        }
-        Insert: {
-          assignment_id: string
-          concrete_details?: string | null
-          created_at?: string | null
-          id?: string
-          last_saved?: string | null
-          notes?: string | null
-          paragraph_name?: string | null
-          progress_percentage?: number | null
-          selected_chunks?: number | null
-          status?: string | null
-          student_id: string
-          submitted_at?: string | null
-          updated_at?: string | null
-          working_on?: string | null
-        }
-        Update: {
-          assignment_id?: string
-          concrete_details?: string | null
-          created_at?: string | null
-          id?: string
-          last_saved?: string | null
-          notes?: string | null
-          paragraph_name?: string | null
-          progress_percentage?: number | null
-          selected_chunks?: number | null
-          status?: string | null
-          student_id?: string
-          submitted_at?: string | null
-          updated_at?: string | null
-          working_on?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_assignment_progress_assignment_id_fkey"
-            columns: ["assignment_id"]
-            isOneToOne: false
-            referencedRelation: "assignments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "student_assignment_progress_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "student_assignment_progress_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      subjects: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          name: string
-          school_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name: string
-          school_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name?: string
-          school_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subjects_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      teacher_student_assignments: {
-        Row: {
-          assigned_by: string | null
-          assigned_date: string | null
-          created_at: string | null
-          id: string
-          notes: string | null
-          status: string | null
-          student_id: string
-          subject: string | null
-          teacher_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          assigned_by?: string | null
-          assigned_date?: string | null
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          status?: string | null
-          student_id: string
-          subject?: string | null
-          teacher_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          assigned_by?: string | null
-          assigned_date?: string | null
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          status?: string | null
-          student_id?: string
-          subject?: string | null
-          teacher_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "teacher_student_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_student_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_student_assignments_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_student_assignments_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_student_assignments_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_student_assignments_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+            foreignKeyName: "schools_district_id_fkey";
+            columns: ["district_id"];
+            referencedRelation: "districts";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       user_profiles: {
-        Row: {
-          created_at: string | null
-          district_id: string | null
-          email: string
-          first_name: string | null
-          id: string
-          last_name: string | null
-          metadata: Json | null
-          role: Database["public"]["Enums"]["user_role"]
-          school_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          district_id?: string | null
-          email: string
-          first_name?: string | null
-          id: string
-          last_name?: string | null
-          metadata?: Json | null
-          role: Database["public"]["Enums"]["user_role"]
-          school_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          district_id?: string | null
-          email?: string
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          metadata?: Json | null
-          role?: Database["public"]["Enums"]["user_role"]
-          school_id?: string | null
-          updated_at?: string | null
-        }
+        Row: UserProfiles;
+        Insert: InsertOf<UserProfiles, "id" | "district_id" | "role">;
+        Update: UpdateOf<UserProfiles>;
         Relationships: [
           {
-            foreignKeyName: "fk_user_profiles_school"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
+            foreignKeyName: "user_profiles_district_id_fkey";
+            columns: ["district_id"];
+            referencedRelation: "districts";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "user_profiles_district_id_fkey"
-            columns: ["district_id"]
-            isOneToOne: false
-            referencedRelation: "districts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-    }
-    Views: {
-      user_details: {
-        Row: {
-          created_at: string | null
-          district_id: string | null
-          district_name: string | null
-          email: string | null
-          first_name: string | null
-          id: string | null
-          last_name: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-          school_id: string | null
-          school_name: string | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_user_profiles_school"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_profiles_district_id_fkey"
-            columns: ["district_id"]
-            isOneToOne: false
-            referencedRelation: "districts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-    }
+            foreignKeyName: "user_profiles_school_id_fkey";
+            columns: ["school_id"];
+            referencedRelation: "schools";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      subjects: {
+        Row: Subjects;
+        Insert: InsertOf<Subjects, "school_id" | "name">;
+        Update: UpdateOf<Subjects>;
+        Relationships: [];
+      };
+      classes: {
+        Row: Classes;
+        Insert: InsertOf<Classes, "subject_id" | "school_id" | "name">;
+        Update: UpdateOf<Classes>;
+        Relationships: [];
+      };
+      class_periods: {
+        Row: ClassPeriods;
+        Insert: InsertOf<ClassPeriods, "class_id" | "school_id" | "period_label">;
+        Update: UpdateOf<ClassPeriods>;
+        Relationships: [];
+      };
+      class_teacher_assignments: {
+        Row: ClassTeacherAssignments;
+        Insert: InsertOf<ClassTeacherAssignments, "class_period_id" | "teacher_id">;
+        Update: UpdateOf<ClassTeacherAssignments>;
+        Relationships: [];
+      };
+      class_student_enrollments: {
+        Row: ClassStudentEnrollments;
+        Insert: InsertOf<ClassStudentEnrollments, "class_period_id" | "student_id">;
+        Update: UpdateOf<ClassStudentEnrollments>;
+        Relationships: [];
+      };
+      assignments: {
+        Row: Assignments;
+        Insert: InsertOf<
+          Assignments,
+          | "teacher_id"
+          | "district_id"
+          | "school_id"
+          | "title"
+          | "prompt"
+          | "mode"
+          | "default_chunk_ratio"
+        >;
+        Update: UpdateOf<Assignments>;
+        Relationships: [];
+      };
+      student_writings: {
+        Row: StudentWritings;
+        Insert: InsertOf<
+          StudentWritings,
+          "assignment_id" | "student_id" | "chunk_ratio"
+        >;
+        Update: UpdateOf<StudentWritings>;
+        Relationships: [];
+      };
+      prompt_decodings: {
+        Row: PromptDecodings;
+        Insert: InsertOf<PromptDecodings, "student_writing_id">;
+        Update: UpdateOf<PromptDecodings>;
+        Relationships: [];
+      };
+      text_annotations: {
+        Row: TextAnnotations;
+        Insert: InsertOf<
+          TextAnnotations,
+          "student_writing_id" | "range_start" | "range_end" | "selected_text" | "kind"
+        >;
+        Update: UpdateOf<TextAnnotations>;
+        Relationships: [];
+      };
+      gathering_cds_sheets: {
+        Row: GatheringCdsSheets;
+        Insert: InsertOf<
+          GatheringCdsSheets,
+          "student_writing_id" | "body_paragraph_position"
+        >;
+        Update: UpdateOf<GatheringCdsSheets>;
+        Relationships: [];
+      };
+      candidate_cds: {
+        Row: CandidateCds;
+        Insert: InsertOf<CandidateCds, "gathering_sheet_id" | "position" | "text">;
+        Update: UpdateOf<CandidateCds>;
+        Relationships: [];
+      };
+      body_paragraphs: {
+        Row: BodyParagraphs;
+        Insert: InsertOf<BodyParagraphs, "student_writing_id" | "position">;
+        Update: UpdateOf<BodyParagraphs>;
+        Relationships: [];
+      };
+      t_charts: {
+        Row: TCharts;
+        Insert: InsertOf<TCharts, "body_paragraph_id">;
+        Update: UpdateOf<TCharts>;
+        Relationships: [];
+      };
+      chunks: {
+        Row: Chunks;
+        Insert: InsertOf<Chunks, "body_paragraph_id" | "position" | "ratio">;
+        Update: UpdateOf<Chunks>;
+        Relationships: [];
+      };
+      concrete_details: {
+        Row: ConcreteDetails;
+        Insert: InsertOf<ConcreteDetails, "chunk_id" | "position" | "text">;
+        Update: UpdateOf<ConcreteDetails>;
+        Relationships: [];
+      };
+      commentary_items: {
+        Row: CommentaryItems;
+        Insert: InsertOf<CommentaryItems, "chunk_id" | "position" | "text" | "kind">;
+        Update: UpdateOf<CommentaryItems>;
+        Relationships: [];
+      };
+      shaping_sheets: {
+        Row: ShapingSheets;
+        Insert: InsertOf<ShapingSheets, "body_paragraph_id">;
+        Update: UpdateOf<ShapingSheets>;
+        Relationships: [];
+      };
+      shaping_chunk_outputs: {
+        Row: ShapingChunkOutputs;
+        Insert: InsertOf<ShapingChunkOutputs, "shaping_sheet_id" | "chunk_id">;
+        Update: UpdateOf<ShapingChunkOutputs>;
+        Relationships: [];
+      };
+      essay_parts: {
+        Row: EssayParts;
+        Insert: InsertOf<EssayParts, "student_writing_id">;
+        Update: UpdateOf<EssayParts>;
+        Relationships: [];
+      };
+      paragraph_forms: {
+        Row: ParagraphForms;
+        Insert: InsertOf<ParagraphForms, "body_paragraph_id" | "final_text">;
+        Update: UpdateOf<ParagraphForms>;
+        Relationships: [];
+      };
+      final_drafts: {
+        Row: FinalDrafts;
+        Insert: InsertOf<FinalDrafts, "student_writing_id" | "full_text">;
+        Update: UpdateOf<FinalDrafts>;
+        Relationships: [];
+      };
+      step_progress: {
+        Row: StepProgress;
+        Insert: InsertOf<StepProgress, "student_writing_id" | "step_key">;
+        Update: UpdateOf<StepProgress>;
+        Relationships: [];
+      };
+      teacher_feedback: {
+        Row: TeacherFeedback;
+        Insert: InsertOf<
+          TeacherFeedback,
+          "student_writing_id" | "teacher_id" | "target_kind" | "target_id" | "body"
+        >;
+        Update: UpdateOf<TeacherFeedback>;
+        Relationships: [];
+      };
+    };
+    Views: Record<string, never>;
     Functions: {
-      get_user_district_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: Database["public"]["Enums"]["user_role"]
-      }
-      get_user_school_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-    }
+      auth_user_role: {
+        Args: Record<string, never>;
+        Returns: Database["public"]["Enums"]["jswp_role"] | null;
+      };
+      auth_user_district_id: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
+      auth_user_school_id: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
+      auth_user_teaches_class_period: {
+        Args: { cp_id: string };
+        Returns: boolean;
+      };
+      auth_user_enrolled_in_class_period: {
+        Args: { cp_id: string };
+        Returns: boolean;
+      };
+      auth_user_is_admin_for_district: {
+        Args: { d_id: string };
+        Returns: boolean;
+      };
+      auth_user_is_admin_for_school: {
+        Args: { s_id: string };
+        Returns: boolean;
+      };
+      auth_user_can_read_writing: {
+        Args: { w_id: string };
+        Returns: boolean;
+      };
+      auth_user_can_write_writing: {
+        Args: { w_id: string };
+        Returns: boolean;
+      };
+    };
     Enums: {
-      assignment_status: "draft" | "published" | "archived"
-      submission_status: "draft" | "submitted" | "graded"
-      user_role:
+      jswp_mode: "expository" | "argumentation" | "literary" | "narrative";
+      jswp_role:
         | "super_admin"
         | "district_admin"
         | "school_admin"
         | "teacher"
-        | "student"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+        | "student";
+      jswp_writing_status:
+        | "draft"
+        | "in_progress"
+        | "submitted"
+        | "returned"
+        | "graded";
+      jswp_chunk_ratio:
+        | "two_plus_to_one"
+        | "one_to_two_plus"
+        | "three_plus_to_zero";
+      jswp_narrative_kind: "personal" | "fictional";
+      jswp_narrative_subject: "event" | "person" | "place" | "thing";
+      jswp_thesis_frame:
+        | "open"
+        | "framed_but"
+        | "framed_although"
+        | "three_pronged";
+      jswp_cm_kind: "word" | "phrase" | "sentence";
+      jswp_annotation_kind: "cd" | "cm" | "transition" | "note";
+      jswp_feedback_target:
+        | "student_writing"
+        | "prompt_decoding"
+        | "gathering_sheet"
+        | "candidate_cd"
+        | "body_paragraph"
+        | "t_chart"
+        | "chunk"
+        | "concrete_detail"
+        | "commentary_item"
+        | "shaping_sheet"
+        | "paragraph_form"
+        | "essay_parts"
+        | "final_draft";
+    };
+  };
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+/* ─── Row types ─────────────────────────────────────────────────────── */
 
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
+export type Districts = {
+  id: string;
+  name: string;
+  subdomain: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  contact_email: string | null;
+  active: boolean;
+} & Timestamps;
 
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
+export type Schools = {
+  id: string;
+  district_id: string;
+  name: string;
+  level: string | null;
+  active: boolean;
+} & Timestamps;
 
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
+export type UserProfiles = {
+  id: string;
+  district_id: string;
+  school_id: string | null;
+  role: Database["public"]["Enums"]["jswp_role"];
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  student_id_external: string | null;
+  grade_level: string | null;
+  active: boolean;
+} & Timestamps;
 
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+export type Subjects = {
+  id: string;
+  school_id: string;
+  name: string;
+  description: string | null;
+} & Timestamps;
 
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+export type Classes = {
+  id: string;
+  subject_id: string;
+  school_id: string;
+  name: string;
+} & Timestamps;
 
-export const Constants = {
-  public: {
-    Enums: {
-      assignment_status: ["draft", "published", "archived"],
-      submission_status: ["draft", "submitted", "graded"],
-      user_role: [
-        "super_admin",
-        "district_admin",
-        "school_admin",
-        "teacher",
-        "student",
-      ],
-    },
-  },
-} as const
+export type ClassPeriods = {
+  id: string;
+  class_id: string;
+  school_id: string;
+  period_label: string;
+  academic_year: string | null;
+  created_by: string | null;
+} & Timestamps;
+
+export type ClassTeacherAssignments = {
+  class_period_id: string;
+  teacher_id: string;
+  is_primary: boolean;
+  assigned_by: string | null;
+  assigned_at: string;
+};
+
+export type ClassStudentEnrollments = {
+  class_period_id: string;
+  student_id: string;
+  enrolled_at: string;
+  unenrolled_at: string | null;
+};
+
+export type Assignments = {
+  id: string;
+  teacher_id: string;
+  class_period_id: string | null;
+  district_id: string;
+  school_id: string;
+
+  title: string;
+  prompt: string;
+  mode: Database["public"]["Enums"]["jswp_mode"];
+
+  is_essay: boolean;
+  num_body_paragraphs: number;
+  default_chunk_ratio: Database["public"]["Enums"]["jswp_chunk_ratio"];
+  default_chunks_per_bp: number;
+  has_counterargument: boolean;
+
+  source_text: string | null;
+  source_title: string | null;
+  source_author: string | null;
+  source_citation: string | null;
+  source_url: string | null;
+
+  due_at: string | null;
+  allow_multiple_drafts: boolean;
+  max_drafts: number | null;
+  released_at: string | null;
+  closed_at: string | null;
+
+  rubric: Json | null;
+} & Timestamps;
+
+export type StudentWritings = {
+  id: string;
+  assignment_id: string;
+  student_id: string;
+  draft_number: number;
+  status: Database["public"]["Enums"]["jswp_writing_status"];
+  current_step: string | null;
+  chunk_ratio: Database["public"]["Enums"]["jswp_chunk_ratio"];
+  submitted_at: string | null;
+  returned_at: string | null;
+  graded_at: string | null;
+  total_score: number | null;
+} & Timestamps;
+
+export type PromptDecodings = {
+  id: string;
+  student_writing_id: string;
+  task: string | null;
+  form: string | null;
+  ratio_identified: Database["public"]["Enums"]["jswp_chunk_ratio"] | null;
+  key_verbs: string[] | null;
+  focus_terms: string[] | null;
+  notes: string | null;
+} & Timestamps;
+
+export type TextAnnotations = {
+  id: string;
+  student_writing_id: string;
+  range_start: number;
+  range_end: number;
+  selected_text: string;
+  kind: Database["public"]["Enums"]["jswp_annotation_kind"];
+  note: string | null;
+  created_at: string;
+};
+
+export type GatheringCdsSheets = {
+  id: string;
+  student_writing_id: string;
+  body_paragraph_position: number;
+  task_portion: string | null;
+} & Timestamps;
+
+export type CandidateCds = {
+  id: string;
+  gathering_sheet_id: string;
+  position: number;
+  text: string;
+  is_selected: boolean;
+  selection_order: number | null;
+  argumentation_side: "pro" | "con" | "neutral" | null;
+} & Timestamps;
+
+export type BodyParagraphs = {
+  id: string;
+  student_writing_id: string;
+  position: number;
+  label: string | null;
+  num_chunks: number;
+  has_counterargument: boolean;
+} & Timestamps;
+
+export type TCharts = {
+  id: string;
+  body_paragraph_id: string;
+  working_topic_sentence: string | null;
+  revised_topic_sentence: string | null;
+  concluding_sentence: string | null;
+  concession: string | null;
+  counterargument: string | null;
+  refutation: string | null;
+  narrative_kind: Database["public"]["Enums"]["jswp_narrative_kind"] | null;
+  narrative_subject: Database["public"]["Enums"]["jswp_narrative_subject"] | null;
+  narrative_key_word: string | null;
+  narrative_general_ideas: string[] | null;
+  narrative_concrete_example: string | null;
+  narrative_when: string | null;
+  narrative_where: string | null;
+  narrative_who: string | null;
+  narrative_what_happened: string | null;
+  narrative_dialogue: string | null;
+  narrative_feeling: string | null;
+  narrative_thinking: string | null;
+} & Timestamps;
+
+export type Chunks = {
+  id: string;
+  body_paragraph_id: string;
+  position: number;
+  ratio: Database["public"]["Enums"]["jswp_chunk_ratio"];
+} & Timestamps;
+
+export type ConcreteDetails = {
+  id: string;
+  chunk_id: string;
+  position: number;
+  text: string;
+  is_quotation: boolean;
+  transitional_lead_in: string | null;
+  source_citation: string | null;
+  candidate_cd_id: string | null;
+} & Timestamps;
+
+export type CommentaryItems = {
+  id: string;
+  chunk_id: string;
+  parent_cd_id: string | null;
+  position: number;
+  text: string;
+  kind: Database["public"]["Enums"]["jswp_cm_kind"];
+  used_in_topic_sentence: boolean;
+  used_in_cm_sentence: boolean;
+  used_in_concluding_sentence: boolean;
+  is_best_word_for_ts: boolean;
+  is_best_word_for_chunk: boolean;
+} & Timestamps;
+
+export type ShapingSheets = {
+  id: string;
+  body_paragraph_id: string;
+  final_topic_sentence: string | null;
+  final_concession: string | null;
+  final_counterargument: string | null;
+  final_refutation: string | null;
+  final_concluding_sentence: string | null;
+  rules_applied: string[] | null;
+  notes: string | null;
+} & Timestamps;
+
+export type ShapingChunkOutputs = {
+  id: string;
+  shaping_sheet_id: string;
+  chunk_id: string;
+  cd_sentences: string[] | null;
+  cm_sentences: string[] | null;
+} & Timestamps;
+
+export type EssayParts = {
+  id: string;
+  student_writing_id: string;
+  thesis_text: string | null;
+  thesis_frame: Database["public"]["Enums"]["jswp_thesis_frame"] | null;
+  introduction_text: string | null;
+  introduction_hook_kind: string | null;
+  conclusion_text: string | null;
+} & Timestamps;
+
+export type ParagraphForms = {
+  id: string;
+  body_paragraph_id: string;
+  final_text: string;
+  word_count: number | null;
+} & Timestamps;
+
+export type FinalDrafts = {
+  id: string;
+  student_writing_id: string;
+  title: string | null;
+  full_text: string;
+  word_count: number | null;
+} & Timestamps;
+
+export type StepProgress = {
+  id: string;
+  student_writing_id: string;
+  step_key: string;
+  started_at: string | null;
+  completed_at: string | null;
+  time_spent_seconds: number;
+} & Timestamps;
+
+export type TeacherFeedback = {
+  id: string;
+  student_writing_id: string;
+  teacher_id: string;
+  target_kind: Database["public"]["Enums"]["jswp_feedback_target"];
+  target_id: string;
+  body: string;
+  rubric_score: number | null;
+  is_resolved: boolean;
+} & Timestamps;
+
+/* ─── Convenience aliases for consumers ──────────────────────────────── */
+
+export type Tables<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Row"];
+
+export type TablesInsert<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Insert"];
+
+export type TablesUpdate<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Update"];
+
+export type Enums<T extends keyof Database["public"]["Enums"]> =
+  Database["public"]["Enums"][T];
