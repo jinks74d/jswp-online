@@ -32,7 +32,9 @@
       "Bash(npm run type-check:*)",
       "Bash(git push:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cd \"/c/Users/Raymond Jenkins/Desktop/CODE/jswp-online\" && npm install next@latest 2>&1)",
+      "Bash(cd \"/c/Users/Raymond Jenkins/Desktop/CODE/jswp-online\" && npm install next@15 2>&1)"
     ],
     "deny": []
   }
