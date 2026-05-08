@@ -127,13 +127,14 @@ export function canAccessDistrict(
 export function getRedirectPath(userRole: JswpRole): string {
   switch (userRole) {
     case "super_admin":
-      return "/super-admin";
-    case "student":
-      return "/student";
     case "district_admin":
     case "school_admin":
+      return "/admin";
+    // TODO(phase-3): teachers land at /dashboard once the v2 dashboard ships.
+    // TODO(phase-4): students land at /student once the writing flow ships.
     case "teacher":
-      return "/dashboard";
+    case "student":
+      return "/welcome";
     default:
       return "/";
   }
