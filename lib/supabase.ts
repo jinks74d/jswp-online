@@ -1,24 +1,43 @@
 // lib/supabase.ts
+// ─────────────────────────────────────────────────────────────────────────
+// Backward-compatibility shim. New code should import from:
+//   ./supabase/server   — createServerClient()
+//   ./supabase/client   — createBrowserClient()
+//   ./supabase/middleware — createMiddlewareClient()
+//
+// This file re-exports legacy names so existing imports keep compiling.
+// Will be removed once the codebase fully migrates off the v1 schema.
+// ─────────────────────────────────────────────────────────────────────────
+
 import { createBrowserClient } from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
-// Database type placeholder
+// ─── Legacy Database type ───────────────────────────────────────────────
+// The old Database type had `[key: string]: any` on Tables, allowing
+// arbitrary table access without errors. We preserve that for legacy code.
+// New code should use the strict types from lib/database.types.ts.
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface Database {
   public: {
     Tables: {
-      user_profiles: {
-        Row: UserProfile;
-        Insert: Partial<UserProfile>;
-        Update: Partial<UserProfile>;
+      // Legacy permissive table map — accepts any table name
+      [key: string]: {
+        Row: Record<string, any>;
+        Insert: Record<string, any>;
+        Update: Record<string, any>;
       };
-      [key: string]: any;
     };
+    Views: Record<string, any>;
+    Functions: Record<string, any>;
+    Enums: Record<string, any>;
   };
 }
 
-// Types for our database
+// ─── Legacy type aliases ────────────────────────────────────────────────
+
 export type UserRole =
   | "super_admin"
   | "district_admin"
@@ -37,7 +56,6 @@ export interface UserProfile {
   metadata: Record<string, any> | null;
   created_at: string | null;
   updated_at: string | null;
-  // Optional expanded relations
   districts?: District;
   schools?: School;
 }
@@ -68,64 +86,31 @@ export interface School {
   updated_at: string;
 }
 
-// PERFORMANCE: Singleton client instance for browser
+// ─── Browser client (legacy name: createClient) ─────────────────────────
+
 let browserClient: SupabaseClient<Database> | null = null;
 
-// Browser client for client components - optimized singleton pattern
 export function createClient(): SupabaseClient<Database> {
-  // Handle server-side rendering gracefully
   if (typeof window === "undefined") {
-    // Return a new client for each SSR request (no shared state)
     return createBrowserClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
   }
 
-  // Return existing singleton for browser
-  if (browserClient) {
-    return browserClient;
-  }
+  if (browserClient) return browserClient;
 
-  // Validate environment variables
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    console.error("Supabase: Missing environment variables");
-    throw new Error("Missing Supabase environment variables");
-  }
-
-  // Create singleton browser client with proper storage
   browserClient = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false, // Prevent URL parsing issues
-        flowType: "pkce",
-        debug: false,
-        storage:
-          typeof window !== "undefined" ? window.localStorage : undefined,
-        // Use default Supabase naming for consistency
-        // This will create: sb-{project-ref}-auth-token in both localStorage and cookies
-      },
-      global: {
-        headers: {
-          "X-Client-Info": "jswp-web-client",
-        },
-      },
-    }
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
-
   return browserClient;
 }
 
-// Server client for server components and API routes
+// ─── Server client (legacy name: createServerSupabaseClient) ────────────
+
 export async function createServerSupabaseClient(cookieStore: any) {
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -145,9 +130,7 @@ export async function createServerSupabaseClient(cookieStore: any) {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // setAll called from a Server Component — safe to ignore.
           }
         },
       },
@@ -155,44 +138,30 @@ export async function createServerSupabaseClient(cookieStore: any) {
   );
 }
 
-// Middleware client with proper cookie handling
+// ─── Middleware client (unchanged signature) ────────────────────────────
+
 export function createMiddlewareClient(request: NextRequest) {
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   });
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
-          const cookies = request.cookies.getAll();
-          return cookies;
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // Update request cookies
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-
-          // Create new response with updated cookies
           response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
+            request: { headers: request.headers },
           });
-
-          // Set cookies on response
           cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, {
-              ...options,
-              httpOnly: false, // Allow client-side access
-              secure: process.env.NODE_ENV === "production",
-              sameSite: "lax",
-            });
+            response.cookies.set(name, value, { ...options });
           });
         },
       },

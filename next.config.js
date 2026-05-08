@@ -123,6 +123,15 @@ const nextConfig = {
     return config;
   },
 
+  // Legacy route redirects
+  async redirects() {
+    return [
+      // /admin used to host a separate super-admin login. Super admins now
+      // sign in at /login like everyone else; getRedirectPath routes them.
+      { source: "/admin", destination: "/login", permanent: false },
+    ];
+  },
+
   // Headers for performance
   headers: async () => [
     {
