@@ -1,14 +1,16 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { signInAction, type AuthFormState } from "@/lib/actions/auth";
 
 const initialState: AuthFormState = {};
 
 export function LoginForm() {
-  const [state, formAction] = useFormState(signInAction, initialState);
+  const [state, formAction, isPending] = useActionState(
+    signInAction,
+    initialState
+  );
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -76,13 +78,12 @@ export function LoginForm() {
         </div>
       </div>
 
-      <SubmitButton />
+      <SubmitButton pending={isPending} />
     </form>
   );
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <button
       type="submit"

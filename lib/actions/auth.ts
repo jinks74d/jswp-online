@@ -72,13 +72,11 @@ export async function signInAction(
     .single();
 
   if (profileError || !profile) {
-    // Auth succeeded but no profile exists — likely an unverified or
-    // un-provisioned user. Sign them back out and surface a message.
-    await supabase.auth.signOut();
-    return {
-      error:
-        "Your account has not been provisioned yet. Please contact your district administrator.",
-    };
+    // Auth succeeded but no profile exists — they're either still pending
+    // admin approval or were denied. Land them on /pending which reads
+    // their signup_requests row and shows status. The user stays logged
+    // in so a freshly-approved profile is visible after a refresh.
+    redirect("/pending");
   }
 
   // Subdomain mismatch check (prod only — in dev the middleware always
@@ -118,6 +116,13 @@ export async function signUpAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
+  const firstName = String(formData.get("first_name") ?? "").trim();
+  const lastName = String(formData.get("last_name") ?? "").trim();
+  const requestedRole = String(formData.get("requested_role") ?? "teacher");
+  const requestedSchoolIdRaw = String(formData.get("requested_school_id") ?? "");
+  const requestedSchoolId =
+    requestedSchoolIdRaw === "" ? null : requestedSchoolIdRaw;
+  const message = String(formData.get("message") ?? "").trim() || null;
 
   const fieldErrors: AuthFormState["fieldErrors"] = {};
 
@@ -131,14 +136,31 @@ export async function signUpAction(
   if (password !== confirmPassword)
     fieldErrors.confirmPassword = "Passwords do not match.";
 
-  if (Object.keys(fieldErrors).length > 0) {
-    return { fieldErrors };
+  if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
+
+  if (!firstName || !lastName) {
+    return { error: "First and last name are required." };
   }
+
+  if (
+    requestedRole !== "teacher" &&
+    requestedRole !== "school_admin" &&
+    requestedRole !== "district_admin"
+  ) {
+    return { error: "Pick a valid role." };
+  }
+
+  // Resolve district from middleware-set header (apex signups have no
+  // district; super_admin reviews those).
+  const h = await headers();
+  const requestedDistrictIdRaw = h.get("x-jswp-district-id");
+  const requestedDistrictId = requestedDistrictIdRaw || null;
 
   const supabase = await createServerClient();
   const siteUrl = await getSiteUrl();
 
-  const { error } = await supabase.auth.signUp({
+  // Create the auth.users row + send Supabase's email-confirmation link.
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -146,13 +168,41 @@ export async function signUpAction(
     },
   });
 
-  if (error) {
-    return { error: error.message };
+  if (signUpError) return { error: signUpError.message };
+
+  const newUserId = signUpData.user?.id;
+  if (!newUserId) {
+    return {
+      error:
+        "Account created, but we couldn't queue your application. Please contact support.",
+    };
+  }
+
+  // Insert the signup_request via the admin client (no INSERT policy for
+  // authenticated). Same partial-failure cleanup pattern as roster-import:
+  // if this fails, delete the orphan auth user.
+  const admin = createAdminClient();
+  const { error: insertError } = await admin.from("signup_requests").insert({
+    auth_user_id: newUserId,
+    email,
+    first_name: firstName,
+    last_name: lastName,
+    requested_role: requestedRole as "teacher" | "school_admin" | "district_admin",
+    requested_district_id: requestedDistrictId,
+    requested_school_id: requestedSchoolId,
+    message,
+  });
+
+  if (insertError) {
+    await admin.auth.admin.deleteUser(newUserId).catch(() => {
+      /* swallow — surfaced via insertError */
+    });
+    return { error: `Couldn't queue your application: ${insertError.message}` };
   }
 
   return {
     success:
-      "Check your email for a confirmation link. Once confirmed, an administrator will need to assign you to a district before you can sign in.",
+      "Check your email for a confirmation link. Once you confirm and an administrator approves your account, you'll be able to sign in.",
   };
 }
 

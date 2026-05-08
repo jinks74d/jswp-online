@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { requestResetAction, type AuthFormState } from "@/lib/actions/auth";
 
@@ -8,7 +8,10 @@ export function RequestForm({ initialError }: { initialError?: string }) {
   const initialState: AuthFormState = initialError
     ? { error: initialError }
     : {};
-  const [state, formAction] = useFormState(requestResetAction, initialState);
+  const [state, formAction, isPending] = useActionState(
+    requestResetAction,
+    initialState
+  );
 
   if (state.success) {
     return (
@@ -68,13 +71,12 @@ export function RequestForm({ initialError }: { initialError?: string }) {
         )}
       </div>
 
-      <SubmitButton />
+      <SubmitButton pending={isPending} />
     </form>
   );
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <button
       type="submit"

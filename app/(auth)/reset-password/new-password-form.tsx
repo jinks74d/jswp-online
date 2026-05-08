@@ -1,7 +1,6 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import {
   updatePasswordAction,
@@ -11,7 +10,10 @@ import {
 const initialState: AuthFormState = {};
 
 export function NewPasswordForm() {
-  const [state, formAction] = useFormState(updatePasswordAction, initialState);
+  const [state, formAction, isPending] = useActionState(
+    updatePasswordAction,
+    initialState
+  );
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -55,7 +57,7 @@ export function NewPasswordForm() {
         error={state.fieldErrors?.confirmPassword}
       />
 
-      <SubmitButton />
+      <SubmitButton pending={isPending} />
     </form>
   );
 }
@@ -114,8 +116,7 @@ function PasswordField({
   );
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <button
       type="submit"
