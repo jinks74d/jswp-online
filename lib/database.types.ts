@@ -232,6 +232,21 @@ export interface Database {
         Update: UpdateOf<TeacherFeedback>;
         Relationships: [];
       };
+      audit_log: {
+        Row: AuditLog;
+        Insert: InsertOf<AuditLog, "actor_id" | "action">;
+        Update: UpdateOf<AuditLog>;
+        Relationships: [];
+      };
+      signup_requests: {
+        Row: SignupRequests;
+        Insert: InsertOf<
+          SignupRequests,
+          "auth_user_id" | "email" | "first_name" | "last_name"
+        >;
+        Update: UpdateOf<SignupRequests>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -299,6 +314,7 @@ export interface Database {
         | "three_pronged";
       jswp_cm_kind: "word" | "phrase" | "sentence";
       jswp_annotation_kind: "cd" | "cm" | "transition" | "note";
+      jswp_signup_status: "pending" | "approved" | "denied";
       jswp_feedback_target:
         | "student_writing"
         | "prompt_decoding"
@@ -601,6 +617,34 @@ export type TeacherFeedback = {
   body: string;
   rubric_score: number | null;
   is_resolved: boolean;
+} & Timestamps;
+
+export type AuditLog = {
+  id: string;
+  actor_id: string;
+  action: string;
+  target_scope: Json | null;
+  metadata: Json | null;
+  district_id: string | null;
+  school_id: string | null;
+  created_at: string;
+};
+
+export type SignupRequests = {
+  id: string;
+  auth_user_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  requested_role: Database["public"]["Enums"]["jswp_role"];
+  requested_district_id: string | null;
+  requested_school_id: string | null;
+  message: string | null;
+  status: Database["public"]["Enums"]["jswp_signup_status"];
+  decided_by: string | null;
+  decided_at: string | null;
+  decision_notes: string | null;
+  denial_reason: string | null;
 } & Timestamps;
 
 /* ─── Convenience aliases for consumers ──────────────────────────────── */
