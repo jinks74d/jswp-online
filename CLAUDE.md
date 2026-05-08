@@ -46,8 +46,16 @@ Each step is its own screen, its own database table, and its own teaching moment
 | RLS | `migrations/0002_rls_policies.sql` | Drafted. ~25 policies covering every table. |
 | Storage | `migrations/0003_storage_buckets.sql` | Drafted. `district-logos` (public) + `assignment-sources` (private). |
 | Seed | `migrations/0004_seed.sql` | Drafted. Demo district + school + classes + one assignment per mode. |
+| Audit log | `migrations/0005_audit_log.sql` | Append-only privileged-action log. Service-role-only INSERT. First writer is roster import. |
 | Step engine | `lib/jswp-modes.ts` | Drafted. Mode/step config drives the UI. Strict-TS clean. |
-| Types | `lib/database.types.ts` | Hand-written to match schema. Regenerate via `supabase gen types` once project exists. |
+| Types | `lib/database.types.ts` | Hand-written to match schema (incl. `audit_log`). Regenerate via `supabase gen types` once project exists. |
+| Auth actions | `lib/actions/auth.ts` | Server actions: `signIn`, `signUp`, `requestReset`, `updatePassword`, `signOut`. `useActionState`-compatible. |
+| Roster import | `lib/actions/roster-import.ts` | Server actions: `parseRosterFile` (papaparse + xlsx, two-stage UX) and `importRoster` (admin client, idempotent). |
+| Subdomain + branding | `middleware.ts` | Subdomain → district resolution with 60s cache. Sets 5 branding headers (request-side). |
+| Branding helpers | `lib/branding-headers.ts` | `server-only`. Reads district headers, hex-validates, emits CSS vars on `<html>`. |
+| Auth UI | `app/(auth)/login/`, `signup/`, `reset-password/`, `app/auth/callback/`, `app/logout/` | Login + signup + reset + logout, all on `@supabase/ssr`. |
+| Admin area | `app/admin/` | `/admin` (super/district/school) with `requireRole` gate. `/admin/import/students` lives here. |
+| Placeholder portals | `app/welcome/`, `app/forbidden/` | Teacher/student post-login landing until Phase 3/4. Polite role-mismatch landing. |
 | Plan | `docs/DEV_PLAN.md` | 8-phase plan with definitions of done. |
 
 ### What's not done (work remaining in Phase 1)
@@ -168,16 +176,22 @@ The exact step list with metadata is `lib/jswp-modes.ts`. The UI step engine rea
 ├── middleware.ts                  ← subdomain → district resolver (Phase 2)
 │
 ├── app/                           ← Next.js App Router routes
-│   ├── (auth)/                    ← login / signup / reset
+│   ├── (auth)/                    ← login / signup / reset-password
 │   ├── (marketing)/               ← public pages
-│   ├── dashboard/                 ← teacher + admin areas
+│   ├── dashboard/                 ← teacher area (Phase 3 rebuild)
 │   │   ├── classes/
 │   │   ├── students/
-│   │   ├── assignments/
-│   │   └── admin/
-│   ├── student/                   ← student writing flow
+│   │   └── assignments/
+│   ├── admin/                     ← admin area: super, district, school admins
+│   │   ├── import/
+│   │   ├── districts/             (Phase 6)
+│   │   └── users/                 (Phase 6)
+│   ├── student/                   ← student writing flow (Phase 4)
 │   │   ├── assignments/[id]/
 │   │   └── writings/[id]/[slug]/
+│   ├── welcome/                   ← placeholder until Phase 3/4 portals exist
+│   ├── forbidden/                 ← role-mismatch landing
+│   ├── auth/callback/             ← Supabase email-confirm code exchange
 │   ├── api/                       ← only when an RPC won't do
 │   ├── layout.tsx
 │   ├── page.tsx
@@ -221,6 +235,8 @@ The exact step list with metadata is `lib/jswp-modes.ts`. The UI step engine rea
 │
 └── public/                        ← static assets
 ```
+
+Admin and teacher dashboard are different mental models with different sidebars, so they live as siblings rather than nested.
 
 ### Naming
 
