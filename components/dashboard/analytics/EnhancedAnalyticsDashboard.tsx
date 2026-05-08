@@ -1,4 +1,6 @@
 // components/dashboard/analytics/EnhancedAnalyticsDashboard.tsx
+// TODO(phase-6): useErrorHandler removed during layout cleanup.
+// This whole component is being rewritten under v2 schema.
 "use client";
 
 import { useState, useEffect } from "react";
