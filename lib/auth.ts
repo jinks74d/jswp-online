@@ -128,10 +128,11 @@ export function getRedirectPath(userRole: JswpRole): string {
   switch (userRole) {
     case "super_admin":
       return "/super-admin";
+    case "student":
+      return "/student";
     case "district_admin":
     case "school_admin":
     case "teacher":
-    case "student":
       return "/dashboard";
     default:
       return "/";
