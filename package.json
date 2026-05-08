@@ -21,7 +21,9 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "health-check": "curl -f http://localhost:3000/api/health || exit 1",
-    "performance-audit": "lighthouse http://localhost:3000 --output=json --output-path=./lighthouse-report.json"
+    "performance-audit": "lighthouse http://localhost:3000 --output=json --output-path=./lighthouse-report.json",
+    "seed:auth": "tsx scripts/seed-auth.ts",
+    "test:rls": "vitest run --config __tests__/schema/vitest.config.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
@@ -44,6 +46,7 @@
     "react-colorful": "^5.6.1",
     "react-dom": "^18.3.1",
     "react-to-print": "^3.1.1",
+    "server-only": "^0.0.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
@@ -60,6 +63,7 @@
     "jsdom": "^26.1.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.21.0",
     "typescript": "^5.6.3",
     "vitest": "^3.2.4"
   }
