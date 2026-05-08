@@ -44,3 +44,4 @@ next-env.d.ts
 # database setup files - allow migrations folder
 *.sql
 !migrations/*.sql
+.claude/settings.local.json
