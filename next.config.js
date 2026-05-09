@@ -71,39 +71,12 @@ const nextConfig = {
       : "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // Simplified webpack configuration to prevent build hangs
+  // Webpack tweaks. Custom splitChunks removed in favor of Next.js
+  // App Router defaults — the previous chunks:'all' override pulled
+  // dynamic imports (unpdf) into the vendor bundle on every page.
   webpack: (config, { dev, isServer }) => {
-    // Only add essential webpack configurations
     if (!dev) {
-      // Simplified production optimizations
       config.optimization.moduleIds = "deterministic";
-      
-      // Better code splitting for production
-      if (!isServer) {
-        config.optimization.splitChunks = {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // Vendor chunk
-            vendor: {
-              name: 'vendor',
-              chunks: 'all',
-              test: /node_modules/,
-              priority: 20,
-            },
-            // Common components chunk
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 10,
-              reuseExistingChunk: true,
-              enforce: true,
-            },
-          },
-        };
-      }
     }
 
     // Essential SVG handling (simplified)
