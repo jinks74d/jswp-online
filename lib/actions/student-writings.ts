@@ -230,3 +230,54 @@ export async function advanceCurrentStep(
   revalidatePath(`/student/writings/${writingId}`, "layout");
   redirect(`/student/writings/${writingId}/${next.slug}`);
 }
+
+/**
+ * [Continue] handler for steps whose only completion side-effect is
+ * marking step_progress + advancing — annotate-text and any future
+ * step that has its own per-action save flow but no on-Continue
+ * payload to persist. Real steps that need to save form fields on
+ * Continue (decode-prompt) call savePromptDecoding + markStepComplete
+ * directly instead.
+ */
+export async function completeStepAndAdvance(
+  writingId: string,
+  stepKey: string
+): Promise<void> {
+  await requireRole("student");
+  await markStepComplete(writingId, stepKey);
+
+  const supabase = await createServerClient();
+  const { data: writing } = await supabase
+    .from("student_writings")
+    .select(
+      `assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )`
+    )
+    .eq("id", writingId)
+    .maybeSingle();
+
+  const a = (writing as unknown as {
+    assignment: {
+      mode: JswpMode;
+      is_essay: boolean;
+      has_counterargument: boolean;
+      source_text: string | null;
+    };
+  } | null)?.assignment;
+
+  if (!a) {
+    throw new Error(`Could not resolve writing mode for ${writingId}`);
+  }
+
+  const visible = MODES[a.mode].steps.filter((s) => {
+    if (s.essayOnly && !a.is_essay) return false;
+    if (s.requiresCounterargument && !a.has_counterargument) return false;
+    if (s.requiresSourceText && !a.source_text) return false;
+    return true;
+  });
+
+  const next = getNextStep(stepKey, visible);
+  const target = next ?? visible.find((s) => s.key === stepKey);
+  if (!target) return;
+
+  redirect(`/student/writings/${writingId}/${target.slug}`);
+}

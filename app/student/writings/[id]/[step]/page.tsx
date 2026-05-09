@@ -16,6 +16,7 @@ import { getPromptDecoding } from "@/lib/queries/prompt-decoding";
 import { MODES, type JswpMode } from "@/lib/jswp-modes";
 import { DecodePromptStep } from "../_steps/decode-prompt-step";
 import { PlaceholderStep } from "../_steps/placeholder-step";
+import { AnnotateTextStep } from "../_steps/annotate-text-step";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +56,8 @@ export default async function StepDispatcher({
     notFound();
   }
 
-  // Real step UI: decode_prompt. Everything else is a placeholder.
+  // Real step UIs: decode_prompt, annotate_text. Others render the
+  // placeholder shim until their chunks land (4.4-4.6).
   if (target.groupOrigin === "decode_prompt") {
     const decoding = await getPromptDecoding(id);
     return (
@@ -72,6 +74,20 @@ export default async function StepDispatcher({
           focus_terms: decoding?.focus_terms ?? [],
           notes: decoding?.notes ?? "",
         }}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "annotate_text") {
+    return (
+      <AnnotateTextStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+        sourceText={a.source_text}
+        sourceTitle={a.source_title}
+        sourceAuthor={a.source_author}
       />
     );
   }
