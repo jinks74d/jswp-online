@@ -1,83 +1,79 @@
-// app/dashboard/assignments/[id]/page.tsx
-import { cookies } from "next/headers";
-import { createServerSupabaseClient } from "@/lib/supabase";
-import { redirect } from "next/navigation";
-import AssignmentDetail from "@/components/dashboard/assignments/AssignmentDetail";
+/**
+ * /dashboard/assignments/[id] — load the draft (or published) assignment
+ * and render the same shared form pre-filled. notFound() if the
+ * assignment isn't theirs (RLS returns null).
+ */
 
-interface AssignmentDetailPageProps {
-  params: Promise<{ id: string }>;
-}
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
+import { requireRole } from "@/lib/auth";
+import {
+  getAssignmentForTeacher,
+  getTeacherClassPeriodsForPicker,
+  isPublished,
+} from "@/lib/queries/assignments";
+import { AssignmentForm } from "../assignment-form";
 
-export default async function AssignmentDetailPage({ params }: AssignmentDetailPageProps) {
+export const dynamic = "force-dynamic";
+
+type Params = Promise<{ id: string }>;
+
+export default async function AssignmentDetailPage({
+  params,
+}: {
+  params: Params;
+}) {
+  const profile = await requireRole(["teacher"]);
   const { id } = await params;
-  const cookieStore = await cookies();
-  const supabase = await createServerSupabaseClient(cookieStore);
 
-  // Get current user and verify permissions
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const assignment = await getAssignmentForTeacher(id, profile.id);
+  if (!assignment) notFound();
 
-  if (!user) {
-    redirect("/");
-  }
-
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select(
-      `
-      *,
-      districts:district_id(id, name),
-      schools:school_id(id, name)
-    `
-    )
-    .eq("id", user.id)
-    .single();
-
-  if (!profile) {
-    redirect("/");
-  }
-
-  // Fetch the assignment details
-  const { data: assignment, error } = await supabase
-    .from("assignments")
-    .select(`
-      *,
-      user_profiles!assignments_teacher_id_fkey(
-        first_name,
-        last_name,
-        email
-      )
-    `)
-    .eq("id", id)
-    .single();
-
-  if (error || !assignment) {
-    console.error("Error fetching assignment:", error);
-    redirect("/dashboard/assignments");
-  }
-
-  // Check if user has permission to view this assignment
-  if (profile.role === "student") {
-    // Students can only view assignments from their school (temporary until class enrollment is implemented)
-    if (assignment.school_id !== profile.school_id) {
-      redirect("/dashboard/assignments");
-    }
-  } else if (profile.role === "teacher") {
-    // Teachers can only view their own assignments
-    if (assignment.teacher_id !== user.id) {
-      redirect("/dashboard/assignments");
-    }
-  }
-  // School and district admins can view all assignments in their scope
+  const classPeriods = await getTeacherClassPeriodsForPicker(profile.id);
+  const published = isPublished(assignment);
 
   return (
-    <AssignmentDetail
-      assignment={assignment}
-      currentUserRole={profile.role}
-      currentUserId={user.id}
-      currentUserSchool={profile.schools}
-      districtName={profile.districts?.name || "District"}
-    />
+    <div className="space-y-6">
+      <Link
+        href="/dashboard/assignments"
+        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        Back to My Assignments
+      </Link>
+
+      <header>
+        <div className="flex items-center gap-3 mb-2">
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              published
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-700"
+            }`}
+          >
+            {published ? "Published" : "Draft"}
+          </span>
+          <span className="text-xs uppercase tracking-wide text-gray-500">
+            {assignment.mode}
+          </span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {assignment.title || "(untitled)"}
+        </h1>
+        {published && assignment.released_at && (
+          <p className="text-xs text-gray-500 mt-1">
+            Published {new Date(assignment.released_at).toLocaleString()}
+          </p>
+        )}
+      </header>
+
+      <AssignmentForm
+        formMode="edit"
+        mode={assignment.mode}
+        initial={assignment}
+        classPeriods={classPeriods}
+      />
+    </div>
   );
 }
