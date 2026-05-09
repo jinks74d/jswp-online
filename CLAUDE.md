@@ -38,6 +38,8 @@ Each step is its own screen, its own database table, and its own teaching moment
 
 ## 2. Current status
 
+> Deferred work and Phase 7 cleanup items live in [`docs/BACKLOG.md`](docs/BACKLOG.md). When you finish a chunk, scan it for new entries (and close any you resolved).
+
 ### What's done (as of this brief)
 
 | Layer | File | Status |
