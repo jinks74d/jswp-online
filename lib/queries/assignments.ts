@@ -10,7 +10,7 @@
 
 import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/database.types";
+import type { Database, Json } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -39,6 +39,12 @@ export interface AssignmentForEdit {
   default_chunk_ratio: ChunkRatio;
   default_chunks_per_bp: number;
   has_counterargument: boolean;
+  source_text: string | null;
+  source_title: string | null;
+  source_author: string | null;
+  source_citation: string | null;
+  source_url: string | null;
+  rubric: Json | null;
   due_at: string | null;
   class_period_id: string | null;
   released_at: string | null;
@@ -123,7 +129,8 @@ export async function getAssignmentForTeacher(
     .select(
       `id, title, prompt, mode, is_essay, num_body_paragraphs,
        default_chunk_ratio, default_chunks_per_bp, has_counterargument,
-       due_at, class_period_id, released_at, created_at, updated_at`
+       source_text, source_title, source_author, source_citation, source_url,
+       rubric, due_at, class_period_id, released_at, created_at, updated_at`
     )
     .eq("id", assignmentId)
     .eq("teacher_id", teacherId)

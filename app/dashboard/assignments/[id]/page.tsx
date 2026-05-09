@@ -73,6 +73,7 @@ export default async function AssignmentDetailPage({
         mode={assignment.mode}
         initial={assignment}
         classPeriods={classPeriods}
+        schoolId={profile.school_id!}
       />
     </div>
   );

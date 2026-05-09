@@ -14,7 +14,7 @@
  * After publish, structural fields lock; only title/prompt/due_at/class_period_id stay editable.
  */
 
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import {
   createDraftAssignment,
@@ -22,6 +22,10 @@ import {
   publishAssignment,
   type AssignmentFormState,
 } from "@/lib/actions/assignments";
+import { createBrowserClient } from "@/lib/supabase/client";
+import { loadRubric, type Rubric } from "@/lib/rubric";
+import { SourceTextFields } from "@/components/assignments/source-text-fields";
+import { RubricEditor } from "@/components/assignments/rubric-editor";
 
 type Mode = "expository" | "argumentation" | "literary" | "narrative";
 type ChunkRatio = "two_plus_to_one" | "one_to_two_plus" | "three_plus_to_zero";
@@ -37,6 +41,12 @@ export type AssignmentInitial = {
   default_chunk_ratio: ChunkRatio;
   default_chunks_per_bp: number;
   has_counterargument: boolean;
+  source_text: string | null;
+  source_title: string | null;
+  source_author: string | null;
+  source_citation: string | null;
+  source_url: string | null;
+  rubric: unknown;
   due_at: string | null;
   class_period_id: string | null;
   released_at: string | null;
@@ -49,15 +59,18 @@ export function AssignmentForm({
   mode,
   initial,
   classPeriods,
+  schoolId,
 }: {
   formMode: "create" | "edit";
   mode: Mode;
   initial?: AssignmentInitial;
   classPeriods: ClassPeriodOption[];
+  schoolId: string;
 }) {
   const isPublished = initial?.released_at != null;
   const isLiterary = mode === "literary";
   const isArgumentation = mode === "argumentation";
+  const showSourceText = mode !== "narrative";
 
   const [isEssay, setIsEssay] = useState<boolean>(initial?.is_essay ?? false);
   const [numBP, setNumBP] = useState<number>(
@@ -73,6 +86,12 @@ export function AssignmentForm({
   const [hasCounter, setHasCounter] = useState<boolean>(
     initial?.has_counterargument ?? false
   );
+  const [rubric, setRubric] = useState<Rubric>(() =>
+    loadRubric(initial?.rubric ?? null)
+  );
+
+  // Browser supabase client for the storage upload — created once.
+  const supabase = useMemo(() => createBrowserClient(), []);
 
   const [createState, createAction, creating] = useActionState(
     createDraftAssignment,
@@ -249,6 +268,36 @@ export function AssignmentForm({
               </span>
             </label>
           </div>
+        )}
+
+        {showSourceText && (
+          <SourceTextFields
+            initial={
+              initial
+                ? {
+                    source_text: initial.source_text,
+                    source_title: initial.source_title,
+                    source_author: initial.source_author,
+                    source_citation: initial.source_citation,
+                    source_url: initial.source_url,
+                  }
+                : undefined
+            }
+            disabled={isPublished}
+            schoolId={schoolId}
+            assignmentId={initial?.id}
+            supabase={supabase}
+          />
+        )}
+
+        <RubricEditor
+          value={rubric}
+          onChange={setRubric}
+          disabled={isPublished}
+        />
+        <input type="hidden" name="rubric" value={JSON.stringify(rubric)} />
+        {state.fieldErrors?.rubric && (
+          <p className="text-sm text-red-600">{state.fieldErrors.rubric}</p>
         )}
 
         <Field label="Due date (optional)" htmlFor="due_at">

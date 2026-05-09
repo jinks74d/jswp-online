@@ -17,7 +17,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/database.types";
+import { validateRubric, emptyRubric } from "@/lib/rubric";
+import type { Database, Json } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -41,6 +42,7 @@ export type AssignmentFormState = {
     prompt?: string;
     num_body_paragraphs?: string;
     default_chunks_per_bp?: string;
+    rubric?: string;
   };
   success?: string;
 };
@@ -52,6 +54,11 @@ function parseTimestamp(raw: string): string | null {
   const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return null;
   return d.toISOString();
+}
+
+function emptyToNull(s: string): string | null {
+  const v = s.trim();
+  return v === "" ? null : v;
 }
 
 function parseCommonFields(formData: FormData) {
@@ -77,6 +84,17 @@ function parseCommonFields(formData: FormData) {
   const classPeriodIdRaw = String(formData.get("class_period_id") ?? "");
   const classPeriodId = classPeriodIdRaw === "" ? null : classPeriodIdRaw;
 
+  // Source text fields — Narrative mode form omits them entirely; the
+  // action coerces missing/empty values to null. Explicit empty-to-null
+  // conversion so accidental whitespace doesn't pollute the column.
+  const sourceText = emptyToNull(String(formData.get("source_text") ?? ""));
+  const sourceTitle = emptyToNull(String(formData.get("source_title") ?? ""));
+  const sourceAuthor = emptyToNull(String(formData.get("source_author") ?? ""));
+  const sourceCitation = emptyToNull(
+    String(formData.get("source_citation") ?? "")
+  );
+  const sourceUrl = emptyToNull(String(formData.get("source_url") ?? ""));
+
   return {
     title,
     prompt,
@@ -87,7 +105,41 @@ function parseCommonFields(formData: FormData) {
     hasCounterargument,
     dueAt,
     classPeriodId,
+    sourceText,
+    sourceTitle,
+    sourceAuthor,
+    sourceCitation,
+    sourceUrl,
   };
+}
+
+/**
+ * Parse the rubric hidden input. Always returns a Rubric — never null —
+ * matching the "treat null and { criteria: [] } identically" rule. On
+ * shape failure returns a validation error in form-state shape.
+ */
+function parseAndValidateRubric(formData: FormData): {
+  ok: true;
+  rubric: ReturnType<typeof emptyRubric>;
+} | {
+  ok: false;
+  state: AssignmentFormState;
+} {
+  const raw = formData.get("rubric");
+  if (raw == null || raw === "") {
+    return { ok: true, rubric: emptyRubric() };
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(raw));
+  } catch {
+    return { ok: false, state: { fieldErrors: { rubric: "Rubric is malformed JSON." } } };
+  }
+  const result = validateRubric(parsed);
+  if (!result.ok) {
+    return { ok: false, state: { fieldErrors: { rubric: result.error } } };
+  }
+  return { ok: true, rubric: result.value };
 }
 
 function validateCommon(
@@ -191,6 +243,13 @@ export async function createDraftAssignment(
   const v = validateCommon(f, mode);
   if (!v.ok) return v.state;
 
+  const r = parseAndValidateRubric(formData);
+  if (!r.ok) return r.state;
+
+  // Narrative mode has no source text — coerce all source_* to null
+  // even if the form somehow sent values (defense in depth).
+  const isNarrative = mode === "narrative";
+
   const supabase = await createServerClient();
   const { data, error } = await supabase
     .from("assignments")
@@ -206,6 +265,12 @@ export async function createDraftAssignment(
       default_chunk_ratio: v.chunkRatio,
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
+      source_text: isNarrative ? null : f.sourceText,
+      source_title: isNarrative ? null : f.sourceTitle,
+      source_author: isNarrative ? null : f.sourceAuthor,
+      source_citation: isNarrative ? null : f.sourceCitation,
+      source_url: isNarrative ? null : f.sourceUrl,
+      rubric: r.rubric as unknown as Json,
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,
     })
@@ -252,8 +317,11 @@ export async function updateDraftAssignment(
 
   let update: Record<string, unknown>;
   if (isPublished) {
-    // Locked: structural fields. Mutable: title, prompt, due_at,
-    // class_period_id only.
+    // Locked after publish: mode, is_essay, num_body_paragraphs,
+    // default_chunks_per_bp, default_chunk_ratio, has_counterargument,
+    // source_text, source_title, source_author, source_citation,
+    // source_url, rubric. Only title/prompt/due_at/class_period_id stay
+    // editable.
     update = {
       title: f.title,
       prompt: f.prompt,
@@ -264,6 +332,11 @@ export async function updateDraftAssignment(
     const v = validateCommon(f, existing.mode);
     if (!v.ok) return v.state;
 
+    const r = parseAndValidateRubric(formData);
+    if (!r.ok) return r.state;
+
+    const isNarrative = existing.mode === "narrative";
+
     update = {
       title: f.title,
       prompt: f.prompt,
@@ -272,6 +345,12 @@ export async function updateDraftAssignment(
       default_chunk_ratio: v.chunkRatio,
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
+      source_text: isNarrative ? null : f.sourceText,
+      source_title: isNarrative ? null : f.sourceTitle,
+      source_author: isNarrative ? null : f.sourceAuthor,
+      source_citation: isNarrative ? null : f.sourceCitation,
+      source_url: isNarrative ? null : f.sourceUrl,
+      rubric: r.rubric as unknown as Json,
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,
     };

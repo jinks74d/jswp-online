@@ -83,6 +83,7 @@ export default async function NewAssignmentPage({
         formMode="create"
         mode={mode}
         classPeriods={classPeriods}
+        schoolId={profile.school_id!}
       />
     </div>
   );
