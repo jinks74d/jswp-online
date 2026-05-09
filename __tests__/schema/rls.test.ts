@@ -55,6 +55,7 @@ const TEST = {
   teacher2: "11111111-0000-0000-0000-000000000200",
   teacher2Email: "teacher2-rls-test@demo.test",
   unreleased: "11111111-0000-0000-0000-000000004000",
+  unreleasedNull: "11111111-0000-0000-0000-000000004001",
   alexWriting: "22222222-0000-0000-0000-000000000001",
   baileyWriting: "22222222-0000-0000-0000-000000000002",
 } as const;
@@ -143,6 +144,27 @@ beforeAll(async () => {
     })
     .throwOnError();
 
+  // 4b. Unreleased assignment with released_at = NULL (regression guard for
+  // migration 0008: NULL must mean hidden, not "released by default").
+  await svc
+    .from("assignments")
+    .upsert({
+      id: TEST.unreleasedNull,
+      teacher_id: IDS.teacher,
+      class_period_id: IDS.classPeriod,
+      district_id: IDS.district,
+      school_id: IDS.school,
+      title: "RLS Test — Null Release",
+      prompt: "released_at NULL — should be hidden from students.",
+      mode: "expository",
+      is_essay: false,
+      num_body_paragraphs: 1,
+      default_chunk_ratio: "two_plus_to_one",
+      default_chunks_per_bp: 1,
+      released_at: null,
+    })
+    .throwOnError();
+
   // 5. Student writings for Alex and Bailey on the expository assignment
   await svc
     .from("student_writings")
@@ -183,7 +205,10 @@ afterAll(async () => {
     .from("student_writings")
     .delete()
     .in("id", [TEST.alexWriting, TEST.baileyWriting]);
-  await svc.from("assignments").delete().eq("id", TEST.unreleased);
+  await svc
+    .from("assignments")
+    .delete()
+    .in("id", [TEST.unreleased, TEST.unreleasedNull]);
   await svc.from("user_profiles").delete().eq("id", TEST.teacher2);
   await svc.from("schools").delete().eq("id", TEST.school2);
   await svc.from("districts").delete().eq("id", TEST.district2);
@@ -286,6 +311,44 @@ describe("Student access to assignments", () => {
 
     expect(error).toBeNull();
     expect(data).toEqual([]);
+  });
+
+  // Regression guard for migration 0008: NULL released_at must mean hidden.
+  // Previously the policy treated NULL as released-by-default, contradicting
+  // the publish/unpublish contract.
+  it("Alex cannot read assignments with released_at = NULL", async () => {
+    const { data, error } = await alexClient
+      .from("assignments")
+      .select("id")
+      .eq("id", TEST.unreleasedNull);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("Alex CAN read once released_at is set to past", async () => {
+    // Flip released_at from NULL → past; then revert in finally.
+    await svc
+      .from("assignments")
+      .update({ released_at: new Date(Date.now() - 60_000).toISOString() })
+      .eq("id", TEST.unreleasedNull)
+      .throwOnError();
+
+    try {
+      const { data, error } = await alexClient
+        .from("assignments")
+        .select("id")
+        .eq("id", TEST.unreleasedNull);
+
+      expect(error).toBeNull();
+      expect(data).not.toBeNull();
+      expect(data!.length).toBe(1);
+    } finally {
+      await svc
+        .from("assignments")
+        .update({ released_at: null })
+        .eq("id", TEST.unreleasedNull);
+    }
   });
 });
 
