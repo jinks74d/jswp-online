@@ -1,39 +1,29 @@
 "use client";
 
 /**
- * T-chart step orchestrator. Lays out:
+ * Gather-CDs orchestrator. Per-BP tabs + reference panel (when source
+ * text exists) + Continue gate.
  *
- *   Desktop: [tabs (BP1, BP2, ...)]   [reference panel]
- *            [active BP form]           [...]
+ * Continue gate: each BP's sheet must have ≥1 is_selected=true. The
+ * tooltip names the offending BP. Same per-BP gating shape as 4.4's
+ * t-chart so students learn one mental model.
  *
- *   Mobile:  reference panel collapses to <details> at the top, tabs
- *            scroll horizontally, form below.
- *
- * Picks CdCmTChart vs NarrativeTChart based on writing.mode and
- * computes the per-BP Continue gate from the current data prop. Data
- * stays in props (not local state) so revalidatePath after each
- * mutation flows fresh state down without manual sync.
+ * No optimistic UI — server actions revalidate, fresh data flows
+ * down through the bodyParagraphSheets prop.
  */
 
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
-import { CdCmTChart } from "./cd-cm-t-chart";
-import { NarrativeTChart } from "./narrative-t-chart";
+import { SheetEditor } from "./sheet-editor";
 import { ReferencePanel } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
-import type { BodyParagraphData } from "@/lib/queries/t-charts";
+import type { GatheringSheetData } from "@/lib/queries/candidate-cds";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
-import type { Database } from "@/lib/database.types";
-
-type Mode = Database["public"]["Enums"]["jswp_mode"];
-type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
 
 interface Props {
   writingId: string;
   stepKey: string;
-  mode: Mode;
-  writingChunkRatio: ChunkRatio;
-  bodyParagraphs: readonly BodyParagraphData[];
+  sheets: readonly GatheringSheetData[];
   // Reference panel data (only present when assignment has source text)
   sourceText: string | null;
   sourceTitle: string | null;
@@ -46,41 +36,23 @@ interface GateResult {
   blockerPosition: number | null;
 }
 
-function computeGate(
-  mode: Mode,
-  bps: readonly BodyParagraphData[]
-): GateResult {
-  const isNarrative = mode === "narrative";
-  for (const bp of bps) {
-    const tc = bp.t_chart;
-    if (isNarrative) {
-      const hasContent = !!(
-        (tc?.narrative_when && tc.narrative_when.trim()) ||
-        (tc?.narrative_where && tc.narrative_where.trim()) ||
-        (tc?.narrative_who && tc.narrative_who.trim()) ||
-        (tc?.narrative_what_happened && tc.narrative_what_happened.trim())
-      );
-      if (!hasContent) {
-        return { canContinue: false, blockerPosition: bp.position };
-      }
-    } else {
-      const hasCD = bp.chunks.some((c) =>
-        c.concrete_details.some((cd) => cd.text.trim().length > 0)
-      );
-      if (!hasCD) {
-        return { canContinue: false, blockerPosition: bp.position };
-      }
+function computeGate(sheets: readonly GatheringSheetData[]): GateResult {
+  for (const sheet of sheets) {
+    const hasSelected = sheet.candidates.some((c) => c.is_selected);
+    if (!hasSelected) {
+      return {
+        canContinue: false,
+        blockerPosition: sheet.body_paragraph_position,
+      };
     }
   }
   return { canContinue: true, blockerPosition: null };
 }
 
-export function TChartClient({
+export function GatherCdsClient({
   writingId,
   stepKey,
-  mode,
-  writingChunkRatio,
-  bodyParagraphs,
+  sheets,
   sourceText,
   sourceTitle,
   sourceAuthor,
@@ -90,9 +62,8 @@ export function TChartClient({
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const gate = computeGate(mode, bodyParagraphs);
-  const activeBp = bodyParagraphs[activeIdx] ?? bodyParagraphs[0];
-  const isNarrative = mode === "narrative";
+  const gate = computeGate(sheets);
+  const activeSheet = sheets[activeIdx] ?? sheets[0];
   const showReference = sourceText !== null;
 
   const onContinue = () => {
@@ -110,17 +81,17 @@ export function TChartClient({
 
   const formColumn = (
     <div className="space-y-4 min-w-0">
-      {bodyParagraphs.length > 1 && (
+      {sheets.length > 1 && (
         <div
           role="tablist"
           aria-label="Body paragraphs"
           className="flex gap-1 border-b border-gray-200 overflow-x-auto"
         >
-          {bodyParagraphs.map((bp, i) => {
+          {sheets.map((sheet, i) => {
             const active = i === activeIdx;
             return (
               <button
-                key={bp.id}
+                key={sheet.id}
                 type="button"
                 role="tab"
                 aria-selected={active}
@@ -136,27 +107,18 @@ export function TChartClient({
                     : undefined
                 }
               >
-                Body {bp.position}
+                Body {sheet.body_paragraph_position}
               </button>
             );
           })}
         </div>
       )}
 
-      {activeBp ? (
-        isNarrative ? (
-          <NarrativeTChart writingId={writingId} bp={activeBp} />
-        ) : (
-          <CdCmTChart
-            writingId={writingId}
-            bp={activeBp}
-            mode={mode}
-            writingChunkRatio={writingChunkRatio}
-          />
-        )
+      {activeSheet ? (
+        <SheetEditor writingId={writingId} sheet={activeSheet} />
       ) : (
         <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-          No body paragraphs yet. Reload to bootstrap.
+          No gathering sheets yet. Reload to bootstrap.
         </div>
       )}
     </div>
@@ -210,12 +172,8 @@ export function TChartClient({
       <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
         <div className="text-xs text-gray-500">
           {gate.canContinue
-            ? `${bodyParagraphs.length} body paragraph${
-                bodyParagraphs.length === 1 ? "" : "s"
-              } ready`
-            : isNarrative
-              ? `Body paragraph ${gate.blockerPosition} needs at least one WOW detail (when, where, who, or what happened).`
-              : `Body paragraph ${gate.blockerPosition} needs at least one concrete detail.`}
+            ? "Each body paragraph has at least one selected candidate."
+            : `Body paragraph ${gate.blockerPosition} needs at least one selected concrete detail.`}
         </div>
         <div className="flex items-center gap-3">
           {error && (

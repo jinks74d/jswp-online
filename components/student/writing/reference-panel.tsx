@@ -3,20 +3,22 @@
 /**
  * Read-only side panel: source text with the student's annotations
  * highlighted, plus a compact list of annotations grouped by kind.
- * Used by the T-chart step as the bridge from chunk 4.3 (annotate).
+ * Shared by the t-chart, gather-cds, and any future step that wants
+ * to keep the source text + annotations visible while the student
+ * works downstream artifacts.
  *
- * Shares SourceTextViewer in readOnly mode — selection and mark-click
- * handlers are disabled. Kind filter is local; click-an-entry scrolls
- * the viewer to that annotation.
+ * Reuses SourceTextViewer in readOnly mode (selection + mark-click
+ * disabled). Kind filter is local; click-an-entry scrolls the viewer
+ * to that annotation.
  */
 
 import { useState } from "react";
-import { SourceTextViewer } from "../source-text-viewer";
+import { SourceTextViewer } from "./source-text-viewer";
 import {
   ANNOTATION_KINDS,
   ANNOTATION_KIND_ORDER,
   type AnnotationKind,
-} from "../annotation-kind-config";
+} from "./annotation-kind-config";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 
 interface Props {

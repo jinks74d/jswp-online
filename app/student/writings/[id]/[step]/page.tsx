@@ -18,6 +18,7 @@ import { DecodePromptStep } from "../_steps/decode-prompt-step";
 import { PlaceholderStep } from "../_steps/placeholder-step";
 import { AnnotateTextStep } from "../_steps/annotate-text-step";
 import { TChartStep } from "../_steps/t-chart-step";
+import { GatherCdsStep } from "../_steps/gather-cds-step";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,20 @@ export default async function StepDispatcher({
   if (target.groupOrigin === "annotate_text") {
     return (
       <AnnotateTextStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+        sourceText={a.source_text}
+        sourceTitle={a.source_title}
+        sourceAuthor={a.source_author}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "gathering_cds") {
+    return (
+      <GatherCdsStep
         writingId={id}
         stepKey={target.key}
         stepLabel={target.label}

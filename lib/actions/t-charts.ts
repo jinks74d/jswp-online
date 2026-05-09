@@ -146,12 +146,22 @@ export async function bootstrapTCharts(writingId: string): Promise<void> {
     return;
   }
 
-  // 6. For CD/CM modes: figure out which (bp, position) chunk pairs
-  // are missing, INSERT them, then create starter CD + auto-CMs for
-  // the chunks we just inserted.
+  // 6. Pre-fetch the writing's gathering sheets + selected candidates.
+  // We need this for two reasons:
+  //   (a) Decide whether to create a starter CD for newly-inserted
+  //       chunks. If the BP's sheet has selected candidates, the
+  //       promotion step will fill the chunk — skip the empty starter.
+  //   (b) The promotion step itself runs after chunks are settled.
+  // Empty array if the student hasn't visited gather-cds yet — that's
+  // a no-op for promotion, and starter CDs get created normally.
+  const sheetsByPosition = await fetchSheetsForPromotion(supabase, writingId);
+
+  // 7. Figure out which (bp, position) chunk pairs are missing, INSERT
+  // them, and merge the result with existingChunks for use by step 8
+  // (starter-CD decision) and step 9 (promotion).
   const { data: existingChunks, error: ecErr } = await supabase
     .from("chunks")
-    .select("body_paragraph_id, position")
+    .select("id, body_paragraph_id, position")
     .in(
       "body_paragraph_id",
       bps.map((bp) => bp.id)
@@ -180,44 +190,56 @@ export async function bootstrapTCharts(writingId: string): Promise<void> {
     }
   }
 
-  if (missingChunks.length === 0) {
-    revalidatePath(`/student/writings/${writingId}`, "layout");
-    return;
-  }
+  let insertedChunks: Array<{
+    id: string;
+    body_paragraph_id: string;
+    position: number;
+  }> = [];
 
-  const { data: insertedChunks, error: chunkInsErr } = await supabase
-    .from("chunks")
-    .insert(missingChunks)
-    .select("id");
-  if (chunkInsErr || !insertedChunks) {
-    // Race: another tab created chunks. Fine — leave it alone.
-    if (chunkInsErr?.code === "23505") {
-      revalidatePath(`/student/writings/${writingId}`, "layout");
-      return;
+  if (missingChunks.length > 0) {
+    const { data, error: chunkInsErr } = await supabase
+      .from("chunks")
+      .insert(missingChunks)
+      .select("id, body_paragraph_id, position");
+    if (chunkInsErr) {
+      // Race: another tab created chunks. Fall through to promotion;
+      // the chunks must exist by now.
+      if (chunkInsErr.code !== "23505") {
+        throw new Error(`bootstrapTCharts chunk insert: ${chunkInsErr.message}`);
+      }
+    } else {
+      insertedChunks = data ?? [];
     }
-    throw new Error(
-      `bootstrapTCharts chunk insert: ${chunkInsErr?.message ?? "no rows"}`
-    );
   }
 
-  // 7. Starter CD + auto-CMs for each NEWLY inserted chunk.
+  // 8. For each newly-inserted chunk, decide whether to create starter
+  // content. If the BP's sheet has selected candidates, the promotion
+  // step will fill the chunk — don't add an empty starter that the
+  // student would just delete. Otherwise create starter CD + auto-CMs
+  // (chunk 4.4 behavior).
+  const bpById = new Map(bps.map((bp) => [bp.id, bp.position]));
   const cmCount = ctx.mode === "literary" ? 2 : 1;
   for (const chunk of insertedChunks) {
+    const bpPosition = bpById.get(chunk.body_paragraph_id);
+    if (bpPosition === undefined) continue;
+
+    const sheet = sheetsByPosition.get(bpPosition);
+    const hasSelectedCandidates =
+      sheet?.candidates.some((c) => c.is_selected) ?? false;
+    if (hasSelectedCandidates) {
+      // Promotion will fill this chunk; skip starter CD.
+      continue;
+    }
+
     const { data: cd, error: cdErr } = await supabase
       .from("concrete_details")
-      .insert({
-        chunk_id: chunk.id,
-        position: 1,
-        text: "",
-      })
+      .insert({ chunk_id: chunk.id, position: 1, text: "" })
       .select("id")
       .single();
-
     if (cdErr || !cd) {
       console.error("bootstrap starter CD:", cdErr);
       continue;
     }
-
     const cmRows = Array.from({ length: cmCount }, (_, i) => ({
       chunk_id: chunk.id,
       parent_cd_id: cd.id,
@@ -233,7 +255,148 @@ export async function bootstrapTCharts(writingId: string): Promise<void> {
     }
   }
 
+  // 9. Promote is_selected candidates into concrete_details. Idempotent:
+  // already-promoted candidates (matching candidate_cd_id on an existing
+  // CD) are skipped. Runs on every bootstrap call so newly-selected
+  // candidates from later gather-cds visits get picked up.
+  const allChunks = [
+    ...(existingChunks ?? []),
+    ...insertedChunks,
+  ];
+  await promoteSelectedCandidates(
+    supabase,
+    bps,
+    allChunks,
+    sheetsByPosition,
+    ctx.mode
+  );
+
   revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
+/* ─── Promotion helpers (chunk 4.5 bridge) ─────────────────────────── */
+
+interface SheetForPromotion {
+  body_paragraph_position: number;
+  candidates: Array<{
+    id: string;
+    position: number;
+    text: string;
+    is_selected: boolean;
+    selection_order: number | null;
+  }>;
+}
+
+async function fetchSheetsForPromotion(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  writingId: string
+): Promise<Map<number, SheetForPromotion>> {
+  const { data, error } = await supabase
+    .from("gathering_cds_sheets")
+    .select(
+      `
+      body_paragraph_position,
+      candidates:candidate_cds (
+        id, position, text, is_selected, selection_order
+      )
+      `
+    )
+    .eq("student_writing_id", writingId);
+  if (error) {
+    console.error("fetchSheetsForPromotion:", error);
+    return new Map();
+  }
+  const map = new Map<number, SheetForPromotion>();
+  for (const sheet of (data ?? []) as unknown as SheetForPromotion[]) {
+    map.set(sheet.body_paragraph_position, sheet);
+  }
+  return map;
+}
+
+async function promoteSelectedCandidates(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  bps: Array<{ id: string; position: number }>,
+  allChunks: Array<{ id: string; body_paragraph_id: string; position: number }>,
+  sheets: Map<number, SheetForPromotion>,
+  mode: Mode
+): Promise<void> {
+  if (sheets.size === 0) return;
+
+  const cmCount = mode === "literary" ? 2 : 1;
+
+  for (const bp of bps) {
+    const sheet = sheets.get(bp.position);
+    if (!sheet) continue;
+
+    const selected = sheet.candidates
+      .filter((c) => c.is_selected)
+      .sort(
+        (a, b) =>
+          (a.selection_order ?? Number.MAX_SAFE_INTEGER) -
+            (b.selection_order ?? Number.MAX_SAFE_INTEGER) ||
+          a.position - b.position
+      );
+    if (selected.length === 0) continue;
+
+    // Promote into BP's chunk 1 (most common case: 1 chunk per BP).
+    // Multi-chunk distribution is a polish concern; for now everything
+    // lands in chunk 1 and the student rearranges via the t-chart UI.
+    const firstChunk = allChunks
+      .filter((c) => c.body_paragraph_id === bp.id)
+      .sort((a, b) => a.position - b.position)[0];
+    if (!firstChunk) continue;
+
+    // Already-promoted candidate ids in this chunk.
+    const { data: existingCds, error: ecdErr } = await supabase
+      .from("concrete_details")
+      .select("candidate_cd_id, position")
+      .eq("chunk_id", firstChunk.id);
+    if (ecdErr) {
+      console.error("promoteSelectedCandidates fetch:", ecdErr);
+      continue;
+    }
+    const promotedIds = new Set(
+      (existingCds ?? [])
+        .map((c) => c.candidate_cd_id)
+        .filter((v): v is string => v !== null)
+    );
+    let nextPos =
+      Math.max(0, ...((existingCds ?? []).map((c) => c.position))) + 1;
+
+    for (const cand of selected) {
+      if (promotedIds.has(cand.id)) continue;
+
+      const { data: newCd, error: cdErr } = await supabase
+        .from("concrete_details")
+        .insert({
+          chunk_id: firstChunk.id,
+          position: nextPos++,
+          text: cand.text,
+          candidate_cd_id: cand.id,
+        })
+        .select("id")
+        .single();
+      if (cdErr || !newCd) {
+        // 23505 race or other error — log and continue.
+        console.error("promote insert:", cdErr);
+        continue;
+      }
+
+      const cmRows = Array.from({ length: cmCount }, (_, i) => ({
+        chunk_id: firstChunk.id,
+        parent_cd_id: newCd.id,
+        position: i + 1,
+        text: "",
+        kind: "sentence" as CmKind,
+      }));
+      const { error: cmErr } = await supabase
+        .from("commentary_items")
+        .insert(cmRows);
+      if (cmErr) {
+        console.error("promote starter CMs:", cmErr);
+      }
+    }
+  }
 }
 
 /* ─── t_charts updates (TS, CS, narrative_*) ───────────────────────── */
