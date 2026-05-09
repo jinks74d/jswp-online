@@ -4,7 +4,7 @@
  */
 
 import Link from "next/link";
-import { ChevronRight, Users } from "lucide-react";
+import { BookOpen, ChevronRight, Users } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { getTeacherClassPeriods } from "@/lib/queries/classes";
 
@@ -66,10 +66,12 @@ export default async function ClassesPage() {
 function EmptyState() {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-      <div className="text-gray-900 font-medium">No classes yet</div>
-      <p className="text-sm text-gray-600 mt-2">
-        You don&apos;t teach any class periods yet — ask your district
-        administrator to assign you to a class period.
+      <BookOpen className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+      <h2 className="text-lg font-semibold text-gray-900">No classes yet</h2>
+      <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+        You aren&apos;t assigned to any class periods yet. Ask your district
+        administrator to add you to a class — your students and rosters will
+        appear here once that&apos;s done.
       </p>
     </div>
   );

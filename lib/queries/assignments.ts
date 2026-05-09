@@ -146,6 +146,24 @@ export async function getAssignmentForTeacher(
 }
 
 /**
+ * Count of student_writings rows attached to an assignment. Used by the
+ * mutations chunk to decide whether delete/unpublish are allowed —
+ * non-zero count blocks both. RLS-scoped: a teacher who can't read
+ * the writings will get 0, which is the safe answer (the action's own
+ * gate also re-checks ownership).
+ */
+export async function getStudentWritingCount(
+  assignmentId: string
+): Promise<number> {
+  const supabase = await createServerClient();
+  const { count } = await supabase
+    .from("student_writings")
+    .select("*", { count: "exact", head: true })
+    .eq("assignment_id", assignmentId);
+  return count ?? 0;
+}
+
+/**
  * Class period options scoped to the teacher's assignments. Used to
  * populate the class_period dropdown on the assignment form. Single
  * round-trip; no embedded subjects or schools (we just need a label).

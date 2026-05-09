@@ -15,11 +15,13 @@
  */
 
 import { useActionState, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, Trash2, Undo2 } from "lucide-react";
 import {
   createDraftAssignment,
   updateDraftAssignment,
   publishAssignment,
+  deleteAssignment,
+  unpublishAssignment,
   type AssignmentFormState,
 } from "@/lib/actions/assignments";
 import { createBrowserClient } from "@/lib/supabase/client";
@@ -60,12 +62,14 @@ export function AssignmentForm({
   initial,
   classPeriods,
   schoolId,
+  studentWritingCount = 0,
 }: {
   formMode: "create" | "edit";
   mode: Mode;
   initial?: AssignmentInitial;
   classPeriods: ClassPeriodOption[];
   schoolId: string;
+  studentWritingCount?: number;
 }) {
   const isPublished = initial?.released_at != null;
   const isLiterary = mode === "literary";
@@ -352,9 +356,133 @@ export function AssignmentForm({
         </button>
       </form>
 
-      {formMode === "edit" && initial && !isPublished && (
-        <PublishForm assignmentId={initial.id} />
+      {formMode === "edit" && initial && (
+        <DangerZone
+          assignmentId={initial.id}
+          isPublished={isPublished}
+          studentWritingCount={studentWritingCount}
+        />
       )}
+    </div>
+  );
+}
+
+/* ─── Danger zone (publish / unpublish / delete) ─────────────────────── */
+
+function DangerZone({
+  assignmentId,
+  isPublished,
+  studentWritingCount,
+}: {
+  assignmentId: string;
+  isPublished: boolean;
+  studentWritingCount: number;
+}) {
+  const hasWritings = studentWritingCount > 0;
+
+  return (
+    <div className="space-y-2">
+      {!isPublished && !hasWritings && <PublishForm assignmentId={assignmentId} />}
+      {!isPublished && !hasWritings && <DeleteForm assignmentId={assignmentId} />}
+      {isPublished && !hasWritings && <UnpublishForm assignmentId={assignmentId} />}
+
+      {hasWritings && (
+        <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+          {studentWritingCount} student
+          {studentWritingCount === 1 ? " has" : "s have"} started writing on
+          this assignment. Delete and unpublish are disabled to protect their
+          work.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DeleteForm({ assignmentId }: { assignmentId: string }) {
+  const [state, action, pending] = useActionState(
+    deleteAssignment,
+    initialState
+  );
+
+  return (
+    <div className="space-y-2">
+      {state.error && <Banner kind="error">{state.error}</Banner>}
+      <form
+        action={action}
+        onSubmit={(e) => {
+          if (
+            !window.confirm(
+              "Delete this draft? This cannot be undone."
+            )
+          ) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <input type="hidden" name="assignment_id" value={assignmentId} />
+        <button
+          type="submit"
+          disabled={pending}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-red-300 bg-white text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+        >
+          {pending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Deleting…
+            </>
+          ) : (
+            <>
+              <Trash2 className="w-4 h-4" />
+              Delete draft
+            </>
+          )}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function UnpublishForm({ assignmentId }: { assignmentId: string }) {
+  const [state, action, pending] = useActionState(
+    unpublishAssignment,
+    initialState
+  );
+
+  return (
+    <div className="space-y-2">
+      {state.error && <Banner kind="error">{state.error}</Banner>}
+      {state.success && <Banner kind="success">{state.success}</Banner>}
+      <form
+        action={action}
+        onSubmit={(e) => {
+          if (
+            !window.confirm(
+              "Unpublish this assignment? Students won't see it until you publish again."
+            )
+          ) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <input type="hidden" name="assignment_id" value={assignmentId} />
+        <button
+          type="submit"
+          disabled={pending}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        >
+          {pending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Unpublishing…
+            </>
+          ) : (
+            <>
+              <Undo2 className="w-4 h-4" />
+              Unpublish
+            </>
+          )}
+        </button>
+      </form>
     </div>
   );
 }

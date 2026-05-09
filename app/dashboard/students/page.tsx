@@ -5,6 +5,7 @@
  */
 
 import Link from "next/link";
+import { GraduationCap } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import {
   getStudentsForTeacher,
@@ -106,11 +107,19 @@ export default async function StudentsPage() {
 function EmptyState() {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-      <div className="text-gray-900 font-medium">No students yet</div>
-      <p className="text-sm text-gray-600 mt-2">
-        Your students will appear here once you&apos;re assigned to a class
-        period with enrolled students.
+      <GraduationCap className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+      <h2 className="text-lg font-semibold text-gray-900">No students yet</h2>
+      <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+        Once you&apos;re assigned to a class period and students are enrolled
+        in it, they&apos;ll show up here. Ask your district admin if you
+        believe this is an error.
       </p>
+      <Link
+        href="/dashboard/classes"
+        className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 hover:text-blue-800"
+      >
+        View My Classes
+      </Link>
     </div>
   );
 }

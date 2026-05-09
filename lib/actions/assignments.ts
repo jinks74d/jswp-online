@@ -368,6 +368,125 @@ export async function updateDraftAssignment(
   return { success: "Saved." };
 }
 
+/* ─── Delete + unpublish ─────────────────────────────────────────────── */
+
+/**
+ * Mutation safety model — both DB-level and app-level guards in play:
+ *
+ *   1. DB constraint (migration 0007_assignment_cascade_safety.sql):
+ *      student_writings.assignment_id is ON DELETE RESTRICT, so any
+ *      attempt to drop an assignment with attached writings raises a
+ *      foreign-key violation at the Postgres layer. This is the real
+ *      safety net — it protects against raw SQL, third-party admin
+ *      tools, or any code path that bypasses these actions.
+ *
+ *   2. Application count check (the `count` query below):
+ *      We count student_writings before issuing the DELETE/UPDATE so
+ *      we can surface a friendly error message instead of a raw FK
+ *      violation. Same logic for unpublish — we don't want students
+ *      to lose access mid-writing.
+ *
+ * Future-Claude / future-Raymond at 3am: if you're tempted to remove
+ * the count query because "RESTRICT will catch it anyway" — DON'T.
+ * The check is for UX, not security. The migration is the security.
+ */
+
+async function countStudentWritings(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  assignmentId: string
+): Promise<number> {
+  const { count } = await supabase
+    .from("student_writings")
+    .select("*", { count: "exact", head: true })
+    .eq("assignment_id", assignmentId);
+  return count ?? 0;
+}
+
+export async function deleteAssignment(
+  _prev: AssignmentFormState,
+  formData: FormData
+): Promise<AssignmentFormState> {
+  const profile = await requireRole(["teacher"]);
+
+  const assignmentId = String(formData.get("assignment_id") ?? "");
+  if (!assignmentId) return { error: "Missing assignment id." };
+
+  const supabase = await createServerClient();
+  const { data: existing } = await supabase
+    .from("assignments")
+    .select("released_at")
+    .eq("id", assignmentId)
+    .eq("teacher_id", profile.id)
+    .maybeSingle();
+
+  if (!existing) return { error: "Assignment not found." };
+  if (existing.released_at !== null) {
+    return {
+      error: "Cannot delete a published assignment. Unpublish it first.",
+    };
+  }
+
+  const writingCount = await countStudentWritings(supabase, assignmentId);
+  if (writingCount > 0) {
+    return {
+      error:
+        "Cannot delete this assignment — students have already started writing. Unpublish it instead to prevent further work, or contact your admin to remove this assignment along with the existing student writings.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("assignments")
+    .delete()
+    .eq("id", assignmentId)
+    .eq("teacher_id", profile.id);
+
+  if (error) return { error: error.message };
+
+  redirect("/dashboard/assignments");
+}
+
+export async function unpublishAssignment(
+  _prev: AssignmentFormState,
+  formData: FormData
+): Promise<AssignmentFormState> {
+  const profile = await requireRole(["teacher"]);
+
+  const assignmentId = String(formData.get("assignment_id") ?? "");
+  if (!assignmentId) return { error: "Missing assignment id." };
+
+  const supabase = await createServerClient();
+  const { data: existing } = await supabase
+    .from("assignments")
+    .select("released_at")
+    .eq("id", assignmentId)
+    .eq("teacher_id", profile.id)
+    .maybeSingle();
+
+  if (!existing) return { error: "Assignment not found." };
+  if (existing.released_at === null) {
+    return { error: "This assignment is already a draft." };
+  }
+
+  const writingCount = await countStudentWritings(supabase, assignmentId);
+  if (writingCount > 0) {
+    return {
+      error:
+        "Cannot unpublish — students have already started writing and would lose access to their work.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("assignments")
+    .update({ released_at: null })
+    .eq("id", assignmentId)
+    .eq("teacher_id", profile.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/dashboard/assignments/${assignmentId}`);
+  return { success: "Unpublished. You can edit and re-publish." };
+}
+
 /* ─── Publish ────────────────────────────────────────────────────────── */
 
 export async function publishAssignment(

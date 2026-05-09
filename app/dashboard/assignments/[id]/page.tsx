@@ -10,6 +10,7 @@ import { ChevronLeft } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import {
   getAssignmentForTeacher,
+  getStudentWritingCount,
   getTeacherClassPeriodsForPicker,
   isPublished,
 } from "@/lib/queries/assignments";
@@ -31,6 +32,7 @@ export default async function AssignmentDetailPage({
   if (!assignment) notFound();
 
   const classPeriods = await getTeacherClassPeriodsForPicker(profile.id);
+  const studentWritingCount = await getStudentWritingCount(assignment.id);
   const published = isPublished(assignment);
 
   return (
@@ -74,6 +76,7 @@ export default async function AssignmentDetailPage({
         initial={assignment}
         classPeriods={classPeriods}
         schoolId={profile.school_id!}
+        studentWritingCount={studentWritingCount}
       />
     </div>
   );

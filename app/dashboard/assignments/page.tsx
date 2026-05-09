@@ -4,7 +4,7 @@
  */
 
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import {
   getTeacherAssignments,
@@ -116,13 +116,18 @@ export default async function AssignmentsPage() {
 function EmptyState() {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-      <div className="text-gray-900 font-medium">No assignments yet</div>
-      <p className="text-sm text-gray-600 mt-2">
-        Create your first assignment to get started.
+      <FileText className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+      <h2 className="text-lg font-semibold text-gray-900">
+        No assignments yet
+      </h2>
+      <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+        Create your first assignment to get started. The mode picker walks
+        you through Expository, Argumentation, Literary, or Narrative — each
+        with the right structural defaults from the JSWP guides.
       </p>
       <Link
         href="/dashboard/assignments/new"
-        className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+        className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
       >
         <Plus className="w-4 h-4" />
         New assignment
