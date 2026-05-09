@@ -19,6 +19,7 @@ import { PlaceholderStep } from "../_steps/placeholder-step";
 import { AnnotateTextStep } from "../_steps/annotate-text-step";
 import { TChartStep } from "../_steps/t-chart-step";
 import { GatherCdsStep } from "../_steps/gather-cds-step";
+import { TopicSentenceDevStep } from "../_steps/topic-sentence-dev-step";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +93,28 @@ export default async function StepDispatcher({
         sourceAuthor={a.source_author}
       />
     );
+  }
+
+  if (target.groupOrigin === "topic_sentence_dev") {
+    // Argumentation's topic-sentence-development (chunk 4.5a) and
+    // Narrative's topic-sentences (chunk 4.5c) share this groupOrigin
+    // but render different UIs. Disambiguate by mode.
+    if (mode === "argumentation") {
+      return (
+        <TopicSentenceDevStep
+          writingId={id}
+          stepKey={target.key}
+          stepLabel={target.label}
+          pedagogyHint={target.pedagogyHint ?? null}
+          sourceText={a.source_text}
+          sourceTitle={a.source_title}
+          sourceAuthor={a.source_author}
+        />
+      );
+    }
+    // TODO(chunk-4.5c): replace this placeholder with the
+    // narrative.topic_sentences UI (writes t_charts.working_topic_sentence
+    // per BP). For now, fall through to the placeholder below.
   }
 
   if (target.groupOrigin === "gathering_cds") {

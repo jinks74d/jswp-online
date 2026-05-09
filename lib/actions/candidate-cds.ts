@@ -190,6 +190,33 @@ export async function setCandidateSelected(
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }
 
+/**
+ * Tag a candidate's argumentation side for the topic-sentence-development
+ * step (chunk 4.5a). Argumentation-only column; no schema enforcement
+ * that callers be on argumentation assignments — RLS scopes to the
+ * student's own writing, and the column has CHECK constraints on the
+ * enum values + NULL.
+ *
+ * Pass null to clear the tag.
+ */
+export async function setCandidateSide(
+  writingId: string,
+  candidateId: string,
+  side: "pro" | "con" | "neutral" | null
+): Promise<void> {
+  await requireRole("student");
+  const supabase = await createServerClient();
+
+  const { error } = await supabase
+    .from("candidate_cds")
+    .update({ argumentation_side: side })
+    .eq("id", candidateId);
+  if (error) {
+    throw new Error(`setCandidateSide: ${error.message}`);
+  }
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
 export async function deleteCandidate(
   writingId: string,
   candidateId: string
