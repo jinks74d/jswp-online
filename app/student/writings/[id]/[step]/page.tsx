@@ -17,6 +17,7 @@ import { MODES, type JswpMode } from "@/lib/jswp-modes";
 import { DecodePromptStep } from "../_steps/decode-prompt-step";
 import { PlaceholderStep } from "../_steps/placeholder-step";
 import { AnnotateTextStep } from "../_steps/annotate-text-step";
+import { TChartStep } from "../_steps/t-chart-step";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,22 @@ export default async function StepDispatcher({
         stepKey={target.key}
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
+        sourceText={a.source_text}
+        sourceTitle={a.source_title}
+        sourceAuthor={a.source_author}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "t_chart") {
+    return (
+      <TChartStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+        mode={mode}
+        chunkRatio={writing.chunk_ratio}
         sourceText={a.source_text}
         sourceTitle={a.source_title}
         sourceAuthor={a.source_author}

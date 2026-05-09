@@ -43,9 +43,15 @@ interface Props {
   visibleKinds: ReadonlySet<AnnotationKind>;
   /** Annotation id to scroll into view; cleared by parent after use. */
   scrollToAnnotationId: string | null;
-  onSelection: (payload: SelectionPayload) => void;
-  onClearSelection: () => void;
-  onAnnotationClick: (annotation: TextAnnotationRow) => void;
+  onSelection?: (payload: SelectionPayload) => void;
+  onClearSelection?: () => void;
+  onAnnotationClick?: (annotation: TextAnnotationRow) => void;
+  /**
+   * Read-only mode: render the highlights but disable selection
+   * detection (no popover) and the <mark> click handler. Used by the
+   * T-chart reference panel from chunk 4.4 onward.
+   */
+  readOnly?: boolean;
 }
 
 interface PlainSegment {
@@ -126,6 +132,7 @@ export function SourceTextViewer({
   onSelection,
   onClearSelection,
   onAnnotationClick,
+  readOnly = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -139,9 +146,11 @@ export function SourceTextViewer({
   }, [scrollToAnnotationId]);
 
   const handleMouseUp = () => {
+    if (readOnly) return;
+
     const sel = typeof window !== "undefined" ? window.getSelection() : null;
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
-      onClearSelection();
+      onClearSelection?.();
       return;
     }
 
@@ -161,7 +170,7 @@ export function SourceTextViewer({
     );
     if (startOffset < 0 || endOffset < 0) {
       // Selection escapes the container.
-      onClearSelection();
+      onClearSelection?.();
       return;
     }
     const [s, e] =
@@ -169,14 +178,14 @@ export function SourceTextViewer({
         ? [startOffset, endOffset]
         : [endOffset, startOffset];
     if (e - s < 1) {
-      onClearSelection();
+      onClearSelection?.();
       return;
     }
 
     const text = sourceText.slice(s, e);
     const rect = range.getBoundingClientRect();
 
-    onSelection({
+    onSelection?.({
       rangeStart: s,
       rangeEnd: e,
       selectedText: text,
@@ -209,10 +218,11 @@ export function SourceTextViewer({
           <mark
             key={`a-${seg.annotation.id}-${i}`}
             data-annotation-id={seg.annotation.id}
-            className={`${cfg.highlightBg} rounded px-0.5 cursor-pointer text-inherit`}
+            className={`${cfg.highlightBg} rounded px-0.5 ${readOnly ? "" : "cursor-pointer"} text-inherit`}
             onClick={(e) => {
+              if (readOnly) return;
               e.stopPropagation();
-              onAnnotationClick(seg.annotation);
+              onAnnotationClick?.(seg.annotation);
             }}
             title={cfg.label}
           >
