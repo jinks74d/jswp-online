@@ -130,9 +130,9 @@ export function getRedirectPath(userRole: JswpRole): string {
     case "district_admin":
     case "school_admin":
       return "/admin";
-    // TODO(phase-3): teachers land at /dashboard once the v2 dashboard ships.
-    // TODO(phase-4): students land at /student once the writing flow ships.
     case "teacher":
+      return "/dashboard";
+    // TODO(phase-4): students land at /student once the writing flow ships.
     case "student":
       return "/welcome";
     default:
