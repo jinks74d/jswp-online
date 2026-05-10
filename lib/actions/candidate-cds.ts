@@ -100,28 +100,36 @@ export async function createCandidate(
   await requireRole("student");
   const supabase = await createServerClient();
 
-  // Next position on this sheet.
-  const { data: existing, error: exErr } = await supabase
-    .from("candidate_cds")
-    .select("position")
-    .eq("gathering_sheet_id", sheetId)
-    .order("position", { ascending: false })
-    .limit(1);
-  if (exErr) {
-    throw new Error(`createCandidate fetch: ${exErr.message}`);
-  }
-  const nextPos = (existing?.[0]?.position ?? 0) + 1;
+  // Concurrent [Add candidate] clicks can both read the same max(position)
+  // and one INSERT will trip the UNIQUE (gathering_sheet_id, position)
+  // constraint with 23505. On that error, refetch and retry.
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const { data: existing, error: exErr } = await supabase
+      .from("candidate_cds")
+      .select("position")
+      .eq("gathering_sheet_id", sheetId)
+      .order("position", { ascending: false })
+      .limit(1);
+    if (exErr) {
+      throw new Error(`createCandidate fetch: ${exErr.message}`);
+    }
+    const nextPos = (existing?.[0]?.position ?? 0) + 1;
 
-  const { error } = await supabase.from("candidate_cds").insert({
-    gathering_sheet_id: sheetId,
-    position: nextPos,
-    text: "",
-    is_selected: false,
-  });
-  if (error) {
-    throw new Error(`createCandidate: ${error.message}`);
+    const { error } = await supabase.from("candidate_cds").insert({
+      gathering_sheet_id: sheetId,
+      position: nextPos,
+      text: "",
+      is_selected: false,
+    });
+    if (!error) {
+      revalidatePath(`/student/writings/${writingId}`, "layout");
+      return;
+    }
+    if (error.code !== "23505" || attempt === MAX_ATTEMPTS) {
+      throw new Error(`createCandidate: ${error.message}`);
+    }
   }
-  revalidatePath(`/student/writings/${writingId}`, "layout");
 }
 
 export async function updateCandidateText(
