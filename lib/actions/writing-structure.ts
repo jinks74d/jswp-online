@@ -24,6 +24,14 @@
  * Two concurrent tabs racing into cm-dev or t-chart for the same
  * Literary CD see the same 5 slots, never 10.
  *
+ * No revalidatePath: this function is called from RSC render in
+ * t-chart-step.tsx and cm-dev-step.tsx (both dynamic = "force-dynamic").
+ * Calling revalidatePath during render is unsupported in Next.js 15.5+
+ * — it throws. Caller pages re-fetch on every render anyway, so
+ * there's no cache to invalidate. Mutations triggered from form
+ * actions (createWordCm, addChunk, etc.) handle revalidation in
+ * their own files.
+ *
  * NOTE: Pedagogically, gathering-CDs precedes t-chart and cm-dev.
  * Selected candidate_cds are promoted into concrete_details with
  * candidate_cd_id set; manually-typed CDs (no candidate) leave it
@@ -31,7 +39,6 @@
  */
 
 import "server-only";
-import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
@@ -185,7 +192,6 @@ export async function bootstrapWritingStructure(
 
   // 5. Narrative writings have no chunks — done.
   if (!CD_CM_MODES.has(ctx.mode)) {
-    revalidatePath(`/student/writings/${writingId}`, "layout");
     return;
   }
 
@@ -291,8 +297,6 @@ export async function bootstrapWritingStructure(
     sheetsByPosition,
     ctx.mode
   );
-
-  revalidatePath(`/student/writings/${writingId}`, "layout");
 }
 
 /* ─── Promotion helpers ───────────────────────────────────────────── */
