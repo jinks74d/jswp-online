@@ -28,6 +28,10 @@ import { TopicSentencesStep } from "../_steps/topic-sentences-step";
 import { ShapingSheetStep } from "../_steps/shaping-sheet-step";
 import { CounterargumentStep } from "../_steps/counterargument-step";
 import { ParagraphFormStep } from "../_steps/paragraph-form-step";
+import { ThesisStep } from "../_steps/thesis-step";
+import { IntroductionStep } from "../_steps/introduction-step";
+import { ConclusionStep } from "../_steps/conclusion-step";
+import { FinalDraftStep } from "../_steps/final-draft-step";
 
 export const dynamic = "force-dynamic";
 
@@ -253,6 +257,52 @@ export default async function StepDispatcher({
         pedagogyHint={target.pedagogyHint ?? null}
         mode={mode}
         hasCounterargument={a.has_counterargument}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "thesis") {
+    return (
+      <ThesisStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "introduction") {
+    return (
+      <IntroductionStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+        mode={mode}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "conclusion") {
+    return (
+      <ConclusionStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+        mode={mode}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "final_draft") {
+    return (
+      <FinalDraftStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
       />
     );
   }
