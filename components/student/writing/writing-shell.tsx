@@ -12,6 +12,8 @@
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Award, MessageSquare } from "lucide-react";
 import { StepSidebar } from "./step-sidebar";
+import { FeedbackPanel } from "@/components/dashboard/writing-review/feedback-panel";
+import type { FeedbackItemRow } from "@/lib/queries/teacher-feedback";
 import type { StepConfig } from "@/lib/jswp-modes";
 import type { Database } from "@/lib/database.types";
 
@@ -26,6 +28,7 @@ const MODE_LABELS = {
 
 export function WritingShell({
   writingId,
+  currentUserId,
   assignment,
   steps,
   currentStepKey,
@@ -34,10 +37,11 @@ export function WritingShell({
   submittedAt,
   gradedAt,
   totalScore,
-  feedbackCount,
+  feedback,
   children,
 }: {
   writingId: string;
+  currentUserId: string;
   assignment: {
     id: string;
     title: string;
@@ -50,9 +54,20 @@ export function WritingShell({
   submittedAt: string | null;
   gradedAt: string | null;
   totalScore: number | null;
-  feedbackCount: number;
+  feedback: readonly FeedbackItemRow[];
   children: React.ReactNode;
 }) {
+  const unresolvedCount = feedback.filter((f) => !f.is_resolved).length;
+  // Show feedback panel only when there's any feedback at all on a
+  // returned writing. Resolved-only state still surfaces (collapsed
+  // section); pure-empty doesn't render the column.
+  const showFeedbackColumn =
+    status === "returned" && feedback.length > 0;
+
+  const gridClass = showFeedbackColumn
+    ? "grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)_22rem]"
+    : "grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)]";
+
   return (
     <div className="space-y-4">
       <Link
@@ -75,10 +90,10 @@ export function WritingShell({
         submittedAt={submittedAt}
         gradedAt={gradedAt}
         totalScore={totalScore}
-        feedbackCount={feedbackCount}
+        unresolvedCount={unresolvedCount}
       />
 
-      <div className="grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)]">
+      <div className={gridClass}>
         <StepSidebar
           writingId={writingId}
           steps={steps}
@@ -87,6 +102,17 @@ export function WritingShell({
         />
 
         <div className="min-w-0">{children}</div>
+
+        {showFeedbackColumn && (
+          <div className="md:sticky md:top-20 md:self-start">
+            <FeedbackPanel
+              writingId={writingId}
+              feedback={feedback}
+              mode="student"
+              currentUserId={currentUserId}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -97,13 +123,13 @@ function StatusBanner({
   submittedAt,
   gradedAt,
   totalScore,
-  feedbackCount,
+  unresolvedCount,
 }: {
   status: WritingStatus;
   submittedAt: string | null;
   gradedAt: string | null;
   totalScore: number | null;
-  feedbackCount: number;
+  unresolvedCount: number;
 }) {
   if (status === "draft" || status === "in_progress") {
     return null;
@@ -150,9 +176,11 @@ function StatusBanner({
         <span className="font-medium">Returned for revision</span>
         <span className="text-blue-800">
           {" · "}
-          {feedbackCount === 1
-            ? "1 feedback item to review"
-            : `${feedbackCount} feedback items to review`}
+          {unresolvedCount === 0
+            ? "All feedback addressed — re-submit when ready"
+            : unresolvedCount === 1
+              ? "1 feedback item to review"
+              : `${unresolvedCount} feedback items to review`}
         </span>
       </div>
     </div>

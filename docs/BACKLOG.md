@@ -4,7 +4,7 @@ Consolidated list of deferred work that isn't part of a current chunk. Most item
 
 When you finish an item, move it to **Closed** with the commit hash. Don't delete — the closed list is the audit trail.
 
-Last reviewed: chunk 4.7a.
+Last reviewed: chunk 4.7b.
 
 ---
 
@@ -79,9 +79,19 @@ When teacher returns a submission, clone all artifacts (`body_paragraphs`, `t_ch
 - **Priority:** Phase 5+; not load-bearing for the basic submit/revise loop
 
 ### Inline-anchored teacher feedback
-`teacher_feedback.target_kind` enum supports 13 target types (`student_writing`, `prompt_decoding`, `gathering_sheet`, `candidate_cd`, `body_paragraph`, `t_chart`, `chunk`, `concrete_detail`, `commentary_item`, `shaping_sheet`, `paragraph_form`, `essay_parts`, `final_draft`). Chunk 4.7b will implement only `target_kind='student_writing'` (whole-writing). Inline anchoring would let teachers click a specific artifact (e.g., a CD or a thesis) and leave a comment scoped to it. UX work: click-to-anchor on each artifact type, popover composer, persistent comment indicators on the read-only review surface, student-side surfacing on the matching step pages. Schema is ready; UX is the lift.
+`teacher_feedback.target_kind` enum supports 13 target types (`student_writing`, `prompt_decoding`, `gathering_sheet`, `candidate_cd`, `body_paragraph`, `t_chart`, `chunk`, `concrete_detail`, `commentary_item`, `shaping_sheet`, `paragraph_form`, `essay_parts`, `final_draft`). Chunk 4.7b implemented only `target_kind='student_writing'` (whole-writing). Inline anchoring would let teachers click a specific artifact (e.g., a CD or a thesis) and leave a comment scoped to it. UX work: click-to-anchor on each artifact type, popover composer, persistent comment indicators on the read-only review surface, student-side surfacing on the matching step pages. Schema is ready; UX is the lift.
 - **Identified:** chunk 4.7a (commit `fe41809`)
 - **Priority:** Phase 5+ territory
+
+### Combined view refetches annotations 3x per page render
+The teacher review combined view (chunk 4.7b) reuses the student step components verbatim (Option A composition). Several of those components fetch `text_annotations` independently — `decode-prompt`, `gather-cds`, and `t-chart` each call `getAnnotations(writingId)` during their server render. Negligible at typical class scale (small array, RLS-cached). If profiling shows it as a hot path, extract presentational components and a unified `getWritingForReview()` query that fetches annotations once and threads through.
+- **Identified:** chunk 4.7b
+- **Priority:** Phase 7 perf pass; not blocking
+
+### Mobile teacher review surface
+Currently the combined view + feedback panel are desktop-first (`md:` breakpoint with a 22rem sticky right rail). On narrow viewports the layout stacks but the feedback panel ends up at the bottom — far from where the teacher is reading. A drawer-based mobile experience (toggle button to open/close the feedback panel as an overlay) plus a condensed action bar would make grading on a tablet pleasant. Polish ticket; not blocking.
+- **Identified:** chunk 4.7b
+- **Priority:** Phase 7 polish
 
 ---
 

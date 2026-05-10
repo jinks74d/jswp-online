@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, Inbox } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import {
   getAssignmentForTeacher,
@@ -14,6 +14,7 @@ import {
   getTeacherClassPeriodsForPicker,
   isPublished,
 } from "@/lib/queries/assignments";
+import { countAssignmentWritingsByStatus } from "@/lib/queries/teacher-writings";
 import { AssignmentForm } from "../assignment-form";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,14 @@ export default async function AssignmentDetailPage({
 
   const classPeriods = await getTeacherClassPeriodsForPicker(profile.id);
   const studentWritingCount = await getStudentWritingCount(assignment.id);
+  const writingCounts = await countAssignmentWritingsByStatus(assignment.id);
   const published = isPublished(assignment);
+  const totalWritings =
+    writingCounts.draft +
+    writingCounts.in_progress +
+    writingCounts.submitted +
+    writingCounts.returned +
+    writingCounts.graded;
 
   return (
     <div className="space-y-6">
@@ -70,6 +78,26 @@ export default async function AssignmentDetailPage({
         )}
       </header>
 
+      {published && (
+        <Link
+          href={`/dashboard/assignments/${assignment.id}/writings`}
+          className="flex items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 hover:border-gray-400 transition-colors"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <Inbox className="w-5 h-5 text-gray-700 flex-shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-gray-900">
+                Submissions
+              </div>
+              <div className="text-xs text-gray-600 mt-0.5">
+                {submissionsBlurb(writingCounts, totalWritings)}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        </Link>
+      )}
+
       <AssignmentForm
         formMode="edit"
         mode={assignment.mode}
@@ -80,4 +108,21 @@ export default async function AssignmentDetailPage({
       />
     </div>
   );
+}
+
+function submissionsBlurb(
+  counts: Awaited<ReturnType<typeof countAssignmentWritingsByStatus>>,
+  total: number
+): string {
+  if (total === 0) return "No student writings yet.";
+  const parts: string[] = [];
+  if (counts.submitted > 0) parts.push(`${counts.submitted} submitted`);
+  if (counts.returned > 0) parts.push(`${counts.returned} returned`);
+  if (counts.graded > 0) parts.push(`${counts.graded} graded`);
+  if (counts.in_progress > 0)
+    parts.push(`${counts.in_progress} in progress`);
+  if (counts.draft > 0) parts.push(`${counts.draft} draft`);
+  return parts.length > 0
+    ? parts.join(" · ")
+    : `${total} writing${total === 1 ? "" : "s"}`;
 }

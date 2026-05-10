@@ -13,7 +13,7 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { getWriting, getCompletedStepKeys } from "@/lib/queries/student-writings";
-import { countTeacherFeedback } from "@/lib/queries/teacher-feedback";
+import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { MODES, type JswpMode } from "@/lib/jswp-modes";
 import { WritingShell } from "@/components/student/writing/writing-shell";
 import { WritingModeProvider } from "@/components/student/writing/writing-mode-provider";
@@ -27,7 +27,7 @@ export default async function WritingLayout({
   params: Promise<{ id: string }>;
   children: React.ReactNode;
 }) {
-  await requireRole("student");
+  const profile = await requireRole("student");
   const { id } = await params;
 
   const writing = await getWriting(id);
@@ -46,17 +46,20 @@ export default async function WritingLayout({
   const isReadOnly =
     writing.status === "submitted" || writing.status === "graded";
 
-  const [completedKeys, feedbackCount] = await Promise.all([
+  // Fetch feedback for any returned writing so we can render the panel
+  // and a banner count. Other statuses don't need it (no panel shown).
+  const [completedKeys, feedback] = await Promise.all([
     getCompletedStepKeys(id),
     writing.status === "returned"
-      ? countTeacherFeedback(id)
-      : Promise.resolve(0),
+      ? listFeedback(id)
+      : Promise.resolve([] as Awaited<ReturnType<typeof listFeedback>>),
   ]);
 
   return (
     <WritingModeProvider isReadOnly={isReadOnly}>
       <WritingShell
         writingId={id}
+        currentUserId={profile.id}
         assignment={{
           id: a.id,
           title: a.title,
@@ -69,7 +72,7 @@ export default async function WritingLayout({
         submittedAt={writing.submitted_at}
         gradedAt={writing.graded_at}
         totalScore={writing.total_score}
-        feedbackCount={feedbackCount}
+        feedback={feedback}
       >
         {children}
       </WritingShell>

@@ -3,14 +3,31 @@
  * the caller sees only feedback on writings they can read (per the
  * teacher_feedback_read policy in 0002 — gated by
  * auth_user_can_read_writing).
- *
- * 4.7a only needs unresolved-count for the returned-state banner +
- * the assignments list "feedback waiting" annotation. 4.7b will
- * extend this file with listFeedback and friends.
  */
 
 import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/database.types";
+
+type FeedbackTarget = Database["public"]["Enums"]["jswp_feedback_target"];
+
+export interface FeedbackItemRow {
+  id: string;
+  student_writing_id: string;
+  teacher_id: string;
+  target_kind: FeedbackTarget;
+  target_id: string;
+  body: string;
+  rubric_score: number | null;
+  is_resolved: boolean;
+  created_at: string;
+  updated_at: string;
+  author: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
+}
 
 /**
  * Counts unresolved teacher_feedback rows on a single writing.
@@ -30,6 +47,37 @@ export async function countTeacherFeedback(writingId: string): Promise<number> {
     return 0;
   }
   return count ?? 0;
+}
+
+/**
+ * Lists every teacher_feedback row on a writing, joined with the
+ * author's user_profiles snippet for display. Ordered by created_at
+ * desc (newest first — matches the panel's conversational UX).
+ *
+ * For 4.7b, only target_kind='student_writing' is created by the UI.
+ * The query returns all rows regardless of target_kind so a future
+ * inline-anchored extension surfaces older comments correctly.
+ */
+export async function listFeedback(
+  writingId: string
+): Promise<FeedbackItemRow[]> {
+  const supabase = await createServerClient();
+  const { data, error } = await supabase
+    .from("teacher_feedback")
+    .select(
+      `
+      id, student_writing_id, teacher_id, target_kind, target_id,
+      body, rubric_score, is_resolved, created_at, updated_at,
+      author:teacher_id ( id, first_name, last_name )
+      `
+    )
+    .eq("student_writing_id", writingId)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("listFeedback:", error);
+    return [];
+  }
+  return (data ?? []) as unknown as FeedbackItemRow[];
 }
 
 /**
