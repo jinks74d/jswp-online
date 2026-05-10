@@ -104,8 +104,13 @@ function CdRow({
   mode: Mode;
   canDelete: boolean;
 }) {
+  // Filter to kind='sentence' only. Literary mode has word and phrase
+  // CMs from cm_dev / decisions / elaboration that shouldn't pollute
+  // the t-chart's CM list — those steps own their own UIs. Other modes
+  // only ever produce sentence-kind CMs, so this filter is a no-op
+  // there.
   const childCms = chunk.commentary_items.filter(
-    (c) => c.parent_cd_id === cd.id
+    (c) => c.parent_cd_id === cd.id && c.kind === "sentence"
   );
 
   return (
