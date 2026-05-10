@@ -4,7 +4,7 @@ Consolidated list of deferred work that isn't part of a current chunk. Most item
 
 When you finish an item, move it to **Closed** with the commit hash. Don't delete — the closed list is the audit trail.
 
-Last reviewed: chunk 4.5b2.
+Last reviewed: chunk 4.5c.
 
 ---
 
@@ -64,10 +64,7 @@ Literary's elaboration step (chunk 4.5b2) pools phrase CMs per CD via `parent_cd
 
 ## Deferred chunk work
 
-### Refactor `narrative-t-chart.tsx` Discovery section out
-When chunk 4.5c implements the `narrative.discovery` step's UI, also refactor `components/student/writing/t-chart/narrative-t-chart.tsx` to remove its Discovery section. The 5 narrative_* fields exposed there (`narrative_kind`, `narrative_subject`, `narrative_key_word`, `narrative_general_ideas`, `narrative_concrete_example`) move ownership to the discovery step. Data migration is zero — fields stay on `t_charts` rows; only the UI surface relocates.
-- **Identified:** chunk 4.5 audit
-- **Priority:** **deferred to chunk 4.5c**, not Phase 7. Tracking here so the refactor isn't forgotten when the discovery step lands.
+_(none currently)_
 
 ---
 
@@ -76,3 +73,7 @@ When chunk 4.5c implements the `narrative.discovery` step's UI, also refactor `c
 ### Vendor chunk bloat from `splitChunks: 'all'`
 Custom webpack `splitChunks` config in `next.config.js` was producing oversized vendor bundles. Restoring Next.js's default code-splitting reduced first-load JS substantially.
 - **Closed:** commit `38b0530` (`perf(phase-2): restore Next.js default code-splitting`)
+
+### Refactor `narrative-t-chart.tsx` Discovery section out
+The 5 narrative_* fields (kind, subject, key_word, general_ideas, concrete_example) moved from t-chart's Discovery section to the new `narrative.discovery` step UI. Data stayed on `t_charts` — only UI surface relocated. T-chart now shows a read-only "From your discovery" header above the WOW section.
+- **Closed:** chunk 4.5c

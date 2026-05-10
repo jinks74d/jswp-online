@@ -23,6 +23,8 @@ import { TopicSentenceDevStep } from "../_steps/topic-sentence-dev-step";
 import { CmDevStep } from "../_steps/cm-dev-step";
 import { DecisionsStep } from "../_steps/decisions-step";
 import { ElaborationStep } from "../_steps/elaboration-step";
+import { DiscoveryStep } from "../_steps/discovery-step";
+import { TopicSentencesStep } from "../_steps/topic-sentences-step";
 
 export const dynamic = "force-dynamic";
 
@@ -115,9 +117,30 @@ export default async function StepDispatcher({
         />
       );
     }
-    // TODO(chunk-4.5c): replace this placeholder with the
-    // narrative.topic_sentences UI (writes t_charts.working_topic_sentence
-    // per BP). For now, fall through to the placeholder below.
+    if (mode === "narrative") {
+      return (
+        <TopicSentencesStep
+          writingId={id}
+          stepKey={target.key}
+          stepLabel={target.label}
+          pedagogyHint={target.pedagogyHint ?? null}
+        />
+      );
+    }
+    // Other modes don't have a topic_sentence_dev step in their
+    // step list, so this branch shouldn't be reachable. Fall through
+    // to placeholder defensively.
+  }
+
+  if (target.groupOrigin === "narrative_discovery") {
+    return (
+      <DiscoveryStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+      />
+    );
   }
 
   if (target.groupOrigin === "literary_cm_dev") {

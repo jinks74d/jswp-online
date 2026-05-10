@@ -1,27 +1,21 @@
 "use client";
 
 /**
- * Narrative T-chart form. The schema's t_charts row has 11
- * narrative_* columns; this UI exposes them all directly. No
- * chunks, no CD/CM rows.
+ * Narrative T-chart form. Shows ONLY the WOW Brainstorm section now;
+ * the Discovery section moved to its own step in chunk 4.5c
+ * (components/student/writing/discovery/). The 5 narrative_* fields
+ * (kind, subject, key_word, general_ideas, concrete_example) still
+ * live on t_charts — only the UI surface relocated.
  *
- * Layout follows the printed Narrative guide's WOW (Web Off the
- * Word) brainstorm:
- *
- *   Discovery: kind / subject / key word / general ideas /
- *              concrete example
- *   WOW:       when / where / who / what happened / dialogue /
- *              feeling / thinking
+ * Adds a read-only "From your discovery" header above WOW so the
+ * student stays anchored to what they discovered while filling in
+ * the senses-and-action details. Empty discovery → informational
+ * fallback copy (no back button — step sidebar handles navigation).
  */
 
-import { useState } from "react";
 import { AutoSaveInput } from "./auto-save-input";
 import { updateTChart } from "@/lib/actions/t-charts";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
-import type { Database } from "@/lib/database.types";
-
-type NarrativeKind = Database["public"]["Enums"]["jswp_narrative_kind"];
-type NarrativeSubject = Database["public"]["Enums"]["jswp_narrative_subject"];
 
 export function NarrativeTChart({
   writingId,
@@ -42,61 +36,10 @@ export function NarrativeTChart({
 
   return (
     <div className="space-y-6">
-      <Section title="Discovery">
-        <div className="grid gap-4 md:grid-cols-2">
-          <KindSelect
-            initialValue={tc.narrative_kind}
-            onSave={async (v) => {
-              await updateTChart(writingId, tc.id, { narrative_kind: v });
-            }}
-          />
-          <SubjectSelect
-            initialValue={tc.narrative_subject}
-            onSave={async (v) => {
-              await updateTChart(writingId, tc.id, { narrative_subject: v });
-            }}
-          />
-        </div>
-
-        <Field label="Key word" help="One word that captures the moment.">
-          <AutoSaveInput
-            initialValue={tc.narrative_key_word ?? ""}
-            placeholder="e.g. courage, betrayal, joy"
-            onSave={async (narrative_key_word) => {
-              await updateTChart(writingId, tc.id, { narrative_key_word });
-            }}
-          />
-        </Field>
-
-        <Field
-          label="General ideas"
-          help="Brainstorm associated ideas. Separate with commas."
-        >
-          <GeneralIdeasInput
-            initialValue={tc.narrative_general_ideas ?? []}
-            onSave={async (narrative_general_ideas) => {
-              await updateTChart(writingId, tc.id, { narrative_general_ideas });
-            }}
-          />
-        </Field>
-
-        <Field
-          label="Concrete example"
-          help="A specific moment that brings the key word to life."
-        >
-          <AutoSaveInput
-            multiline
-            rows={2}
-            initialValue={tc.narrative_concrete_example ?? ""}
-            placeholder="The moment when…"
-            onSave={async (narrative_concrete_example) => {
-              await updateTChart(writingId, tc.id, {
-                narrative_concrete_example,
-              });
-            }}
-          />
-        </Field>
-      </Section>
+      <DiscoveryContextHeader
+        keyWord={tc.narrative_key_word ?? ""}
+        concreteExample={tc.narrative_concrete_example ?? ""}
+      />
 
       <Section title="WOW Brainstorm">
         <p className="text-xs text-gray-500 -mt-1">
@@ -187,6 +130,40 @@ export function NarrativeTChart({
 
 /* ─── Helpers ─────────────────────────────────────────────────────── */
 
+function DiscoveryContextHeader({
+  keyWord,
+  concreteExample,
+}: {
+  keyWord: string;
+  concreteExample: string;
+}) {
+  const kw = keyWord.trim();
+  const ex = concreteExample.trim();
+  const hasContext = kw.length > 0 || ex.length > 0;
+
+  if (!hasContext) {
+    return (
+      <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-900">
+        Add a key word and concrete example on the Discovering step to
+        anchor this BP.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
+      <div className="text-xs uppercase tracking-wide text-amber-900 mb-0.5">
+        From your discovery
+      </div>
+      <div className="text-sm text-gray-900">
+        {kw && <span className="font-semibold">{kw}</span>}
+        {kw && ex && <span className="text-gray-500"> — </span>}
+        {ex && <span className="line-clamp-2">{ex}</span>}
+      </div>
+    </div>
+  );
+}
+
 function Section({
   title,
   children,
@@ -219,83 +196,5 @@ function Field({
       {help && <div className="text-xs text-gray-500 mt-0.5">{help}</div>}
       <div className="mt-1.5">{children}</div>
     </label>
-  );
-}
-
-function KindSelect({
-  initialValue,
-  onSave,
-}: {
-  initialValue: NarrativeKind | null;
-  onSave: (v: NarrativeKind | null) => Promise<void>;
-}) {
-  const [value, setValue] = useState<string>(initialValue ?? "");
-  return (
-    <Field label="Kind" help="Personal narrative or fictional?">
-      <select
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={async () => {
-          const v = (value || null) as NarrativeKind | null;
-          await onSave(v);
-        }}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
-      >
-        <option value="">— Select —</option>
-        <option value="personal">Personal</option>
-        <option value="fictional">Fictional</option>
-      </select>
-    </Field>
-  );
-}
-
-function SubjectSelect({
-  initialValue,
-  onSave,
-}: {
-  initialValue: NarrativeSubject | null;
-  onSave: (v: NarrativeSubject | null) => Promise<void>;
-}) {
-  const [value, setValue] = useState<string>(initialValue ?? "");
-  return (
-    <Field label="Subject" help="What is the narrative centered on?">
-      <select
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={async () => {
-          const v = (value || null) as NarrativeSubject | null;
-          await onSave(v);
-        }}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
-      >
-        <option value="">— Select —</option>
-        <option value="event">Event</option>
-        <option value="person">Person</option>
-        <option value="place">Place</option>
-        <option value="thing">Thing</option>
-      </select>
-    </Field>
-  );
-}
-
-function GeneralIdeasInput({
-  initialValue,
-  onSave,
-}: {
-  initialValue: readonly string[];
-  onSave: (v: string[] | null) => Promise<void>;
-}) {
-  return (
-    <AutoSaveInput
-      initialValue={initialValue.join(", ")}
-      placeholder="freedom, fear, growing up"
-      onSave={async (raw) => {
-        const arr = raw
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-        await onSave(arr.length > 0 ? arr : null);
-      }}
-    />
   );
 }
