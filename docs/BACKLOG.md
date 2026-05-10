@@ -109,7 +109,7 @@ Deleted `auth-basic`, `auth-flow`, `auth-integration` tests + their `tsconfig.js
 
 ### RLS hardening: `assignments_teacher_own`
 Tightened the policy via migration `0009` to also require `district_id = auth_user_district_id()` and `school_id = auth_user_school_id()`. Added a defense-in-depth test case in `__tests__/schema/rls.test.ts` that probes a service-role-inserted row where `teacher_id` matches but tenancy diverges.
-- **Closed:** commit `83aac84` (`feat(phase-7.1): tighten assignments_teacher_own RLS`)
+- **Closed:** commit `a677724` (`feat(phase-7.1): tighten assignments_teacher_own RLS`)
 
 ### `createCandidate` race on `(gathering_sheet_id, position)`
 Wrapped the SELECT-max-then-INSERT in a 3-attempt retry loop catching `error.code === '23505'`. On collision, refetches `max(position)` and retries.
