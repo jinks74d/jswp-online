@@ -60,6 +60,11 @@ Literary's elaboration step (chunk 4.5b2) pools phrase CMs per CD via `parent_cd
 - **Identified:** chunk 4.5b2 audit
 - **Priority:** polish; before production cutover (Phase 7)
 
+### Consolidate live-count textarea pattern
+Extend `AutoSaveInput` with an optional `onChange` callback prop, OR extract a shared `<LiveCountTextarea>` helper. Currently chunk 4.6b's CD/CM and Narrative paragraph-form panes inline ~40 lines of AutoSaveInput-shaped code each to support live word-count display (which needs `onChange` access). Chunk 4.6c's final-draft surface will likely want the same. Consolidating reduces duplication.
+- **Identified:** chunk 4.6b
+- **Priority:** polish; before production cutover (Phase 7)
+
 ### Implement Dr. Louis's 15 Grammar Rules
 Cross-cutting JSWP pedagogy per CLAUDE.md §1. The `shaping_sheets.rules_applied TEXT[]` column already exists in the schema for tracking which rules a student applied during shaping. Three deliverables:
 1. **Content** — rule titles, descriptions, examples per rule, sourced from the printed guides (2024 Expository pp. 36–72, 2019 Argumentation pp. 22–72, 2018 P&F Narrative pp. 26–110, RTL Quick Start v4). Per CLAUDE.md §15, requires explicit user approval before invention.

@@ -27,6 +27,7 @@ import { DiscoveryStep } from "../_steps/discovery-step";
 import { TopicSentencesStep } from "../_steps/topic-sentences-step";
 import { ShapingSheetStep } from "../_steps/shaping-sheet-step";
 import { CounterargumentStep } from "../_steps/counterargument-step";
+import { ParagraphFormStep } from "../_steps/paragraph-form-step";
 
 export const dynamic = "force-dynamic";
 
@@ -233,6 +234,19 @@ export default async function StepDispatcher({
   if (target.groupOrigin === "shaping_sheet") {
     return (
       <ShapingSheetStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+        mode={mode}
+        hasCounterargument={a.has_counterargument}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "paragraph_form") {
+    return (
+      <ParagraphFormStep
         writingId={id}
         stepKey={target.key}
         stepLabel={target.label}
