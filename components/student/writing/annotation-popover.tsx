@@ -9,6 +9,7 @@
 
 import { useEffect, useRef } from "react";
 import { Highlighter } from "lucide-react";
+import { useWritingMode } from "./use-writing-mode";
 
 interface Props {
   /** Viewport-relative rect of the selection — used to position above. */
@@ -20,6 +21,7 @@ interface Props {
 const POPOVER_WIDTH = 132; // matches the px-3 + button content width
 
 export function AnnotationPopover({ rect, onAnnotate, onDismiss }: Props) {
+  const { isReadOnly } = useWritingMode();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,6 +40,8 @@ export function AnnotationPopover({ rect, onAnnotate, onDismiss }: Props) {
       document.removeEventListener("keydown", onKey);
     };
   }, [onDismiss]);
+
+  if (isReadOnly) return null;
 
   // Center the popover horizontally on the selection. Position it just
   // above; if there's no room above, drop it below the selection.

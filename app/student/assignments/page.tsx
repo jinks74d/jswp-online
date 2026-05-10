@@ -12,6 +12,7 @@ import {
   groupByStatus,
   type DerivedStatus,
 } from "@/lib/queries/student-assignments";
+import { countTeacherFeedbackByWriting } from "@/lib/queries/teacher-feedback";
 import { AssignmentCard } from "@/components/student/assignment-card";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +45,14 @@ export default async function StudentAssignmentsList({
   const { status: statusParam } = await searchParams;
 
   const items = await getStudentAssignmentsList(profile.id);
+
+  // Batch-load feedback counts for the returned cards' "Feedback waiting"
+  // annotation. RLS scopes; an empty list is the safe answer.
+  const returnedWritingIds = items
+    .filter((it) => it.status === "returned" && it.writing)
+    .map((it) => it.writing!.id);
+  const feedbackCounts = await countTeacherFeedbackByWriting(returnedWritingIds);
+
   const groups = groupByStatus(items);
   const counts: Record<DerivedStatus | "all", number> = {
     all: items.length,
@@ -106,7 +115,13 @@ export default async function StudentAssignmentsList({
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {filtered.map((item) => (
-            <AssignmentCard key={item.id} item={item} />
+            <AssignmentCard
+              key={item.id}
+              item={item}
+              feedbackCount={
+                item.writing ? feedbackCounts.get(item.writing.id) ?? 0 : 0
+              }
+            />
           ))}
         </div>
       )}

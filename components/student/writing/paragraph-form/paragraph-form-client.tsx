@@ -14,6 +14,7 @@ import { Loader2 } from "lucide-react";
 import { CdCmParagraphFormBpPane } from "./cd-cm-paragraph-form-bp-pane";
 import { NarrativeParagraphFormBpPane } from "./narrative-paragraph-form-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useWritingMode } from "../use-writing-mode";
 import type { ParagraphFormBpData } from "@/lib/queries/paragraph-form";
 import type { Database } from "@/lib/database.types";
 
@@ -22,6 +23,7 @@ type Mode = Database["public"]["Enums"]["jswp_mode"];
 interface Props {
   writingId: string;
   stepKey: string;
+  isTerminal: boolean;
   mode: Mode;
   hasCounterargument: boolean;
   bps: readonly ParagraphFormBpData[];
@@ -45,10 +47,12 @@ function computeGate(bps: readonly ParagraphFormBpData[]): GateResult {
 export function ParagraphFormClient({
   writingId,
   stepKey,
+  isTerminal,
   mode,
   hasCounterargument,
   bps,
 }: Props) {
+  const { isReadOnly } = useWritingMode();
   const [activeIdx, setActiveIdx] = useState(0);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +61,14 @@ export function ParagraphFormClient({
   const activeBp = bps[activeIdx] ?? bps[0];
   const isNarrative = mode === "narrative";
 
-  const onContinue = () => {
+  const onClick = () => {
     setError(null);
+    if (isTerminal) {
+      const ok = window.confirm(
+        "Submit your writing for review? You won't be able to edit until it's returned."
+      );
+      if (!ok) return;
+    }
     start(async () => {
       try {
         await completeStepAndAdvance(writingId, stepKey);
@@ -69,6 +79,9 @@ export function ParagraphFormClient({
       }
     });
   };
+
+  const buttonLabel = isTerminal ? "Submit" : "Continue";
+  const pendingLabel = isTerminal ? "Submitting…" : "Saving…";
 
   return (
     <div className="space-y-4">
@@ -121,30 +134,34 @@ export function ParagraphFormClient({
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-        <div className="text-xs text-gray-500">
-          {gate.canContinue
-            ? "Each body paragraph has a polished paragraph."
-            : `Body paragraph ${gate.blockerPosition} needs at least one character of polished paragraph text.`}
+      {!isReadOnly && (
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
+          <div className="text-xs text-gray-500">
+            {gate.canContinue
+              ? isTerminal
+                ? "All body paragraphs ready to submit."
+                : "Each body paragraph has a polished paragraph."
+              : `Body paragraph ${gate.blockerPosition} needs at least one character of polished paragraph text.`}
+          </div>
+          <div className="flex items-center gap-3">
+            {error && (
+              <div className="text-sm text-red-700" role="alert">
+                {error}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onClick}
+              disabled={!gate.canContinue || pending}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "var(--district-primary)" }}
+            >
+              {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {pending ? pendingLabel : buttonLabel}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {error && (
-            <div className="text-sm text-red-700" role="alert">
-              {error}
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={onContinue}
-            disabled={!gate.canContinue || pending}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "var(--district-primary)" }}
-          >
-            {pending && <Loader2 className="w-4 h-4 animate-spin" />}
-            {pending ? "Saving…" : "Continue"}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

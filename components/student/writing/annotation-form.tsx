@@ -27,6 +27,7 @@ import {
   updateAnnotation,
   deleteAnnotation,
 } from "@/lib/actions/text-annotations";
+import { useWritingMode } from "./use-writing-mode";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 
 export type AnnotationFormPayload =
@@ -49,6 +50,7 @@ interface Props {
 }
 
 export function AnnotationForm({ payload, onClose }: Props) {
+  const { isReadOnly } = useWritingMode();
   const initialKind: AnnotationKind =
     payload.mode === "edit" ? payload.annotation.kind : "cd";
   const initialNote =
@@ -153,8 +155,8 @@ export function AnnotationForm({ payload, onClose }: Props) {
             <select
               value={kind}
               onChange={(e) => setKind(e.target.value as AnnotationKind)}
-              disabled={busy}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+              disabled={busy || isReadOnly}
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
             >
               {ANNOTATION_KIND_ORDER.map((k) => {
                 const cfg = ANNOTATION_KINDS[k];
@@ -175,8 +177,8 @@ export function AnnotationForm({ payload, onClose }: Props) {
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              disabled={busy}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              disabled={busy || isReadOnly}
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-50"
               placeholder="What did you notice about this passage?"
             />
           </label>
@@ -190,7 +192,7 @@ export function AnnotationForm({ payload, onClose }: Props) {
 
         <footer className="flex items-center justify-between gap-3 px-5 py-3 border-t border-gray-200 bg-gray-50 rounded-b-lg">
           <div>
-            {!isCreate && (
+            {!isCreate && !isReadOnly && (
               <button
                 type="button"
                 onClick={onDelete}
@@ -213,18 +215,20 @@ export function AnnotationForm({ payload, onClose }: Props) {
               disabled={busy}
               className="px-3 py-1.5 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
-              Cancel
+              {isReadOnly ? "Close" : "Cancel"}
             </button>
-            <button
-              type="button"
-              onClick={onSave}
-              disabled={busy}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-              style={{ backgroundColor: "var(--district-primary)" }}
-            >
-              {pending && <Loader2 className="w-4 h-4 animate-spin" />}
-              {pending ? "Saving…" : "Save"}
-            </button>
+            {!isReadOnly && (
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={busy}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+                style={{ backgroundColor: "var(--district-primary)" }}
+              >
+                {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+                {pending ? "Saving…" : "Save"}
+              </button>
+            )}
           </div>
         </footer>
       </div>

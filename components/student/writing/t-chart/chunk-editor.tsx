@@ -18,6 +18,7 @@ import {
   deleteCommentaryItem,
   createCommentaryItem,
 } from "@/lib/actions/t-charts";
+import { useWritingMode } from "../use-writing-mode";
 import type {
   ChunkData,
   CommentaryItemData,
@@ -48,6 +49,7 @@ export function ChunkEditor({
   totalChunks: number;
   onRemove: () => void;
 }) {
+  const { isReadOnly } = useWritingMode();
   return (
     <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <header className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
@@ -59,7 +61,7 @@ export function ChunkEditor({
             ratio {RATIO_LABELS[chunk.ratio]}
           </span>
         </div>
-        {totalChunks > 1 && (
+        {!isReadOnly && totalChunks > 1 && (
           <button
             type="button"
             onClick={onRemove}
@@ -83,7 +85,9 @@ export function ChunkEditor({
           />
         ))}
 
-        <AddCdButton writingId={writingId} chunkId={chunk.id} mode={mode} />
+        {!isReadOnly && (
+          <AddCdButton writingId={writingId} chunkId={chunk.id} mode={mode} />
+        )}
       </div>
     </section>
   );
@@ -104,6 +108,7 @@ function CdRow({
   mode: Mode;
   canDelete: boolean;
 }) {
+  const { isReadOnly } = useWritingMode();
   // Filter to kind='sentence' only. Literary mode has word and phrase
   // CMs from cm_dev / decisions / elaboration that shouldn't pollute
   // the t-chart's CM list — those steps own their own UIs. Other modes
@@ -125,12 +130,13 @@ function CdRow({
             rows={2}
             initialValue={cd.text}
             placeholder="Write a concrete detail from the text or your knowledge…"
+            disabled={isReadOnly}
             onSave={async (text) => {
               await updateConcreteDetail(writingId, cd.id, text);
             }}
           />
         </div>
-        {canDelete && (
+        {!isReadOnly && canDelete && (
           <DeleteCdButton writingId={writingId} cdId={cd.id} />
         )}
       </div>
@@ -143,11 +149,13 @@ function CdRow({
             cm={cm}
           />
         ))}
-        <AddCmButton
-          writingId={writingId}
-          chunkId={chunk.id}
-          parentCdId={cd.id}
-        />
+        {!isReadOnly && (
+          <AddCmButton
+            writingId={writingId}
+            chunkId={chunk.id}
+            parentCdId={cd.id}
+          />
+        )}
       </div>
     </div>
   );
@@ -160,6 +168,7 @@ function CmRow({
   writingId: string;
   cm: CommentaryItemData;
 }) {
+  const { isReadOnly } = useWritingMode();
   return (
     <div className="flex items-start gap-2">
       <span className="mt-2 text-xs font-semibold text-green-700 uppercase">
@@ -171,12 +180,13 @@ function CmRow({
           rows={2}
           initialValue={cm.text}
           placeholder="Why is this important? What does it mean?"
+          disabled={isReadOnly}
           onSave={async (text) => {
             await updateCommentaryItem(writingId, cm.id, text);
           }}
         />
       </div>
-      <DeleteCmButton writingId={writingId} cmId={cm.id} />
+      {!isReadOnly && <DeleteCmButton writingId={writingId} cmId={cm.id} />}
     </div>
   );
 }

@@ -32,6 +32,19 @@ export async function bootstrapParagraphForms(
   await requireRole("student");
   const supabase = await createServerClient();
 
+  // Read-only states: skip bootstrap. RLS would reject the upserts.
+  const { data: writing } = await supabase
+    .from("student_writings")
+    .select("status")
+    .eq("id", writingId)
+    .maybeSingle();
+  if (
+    writing &&
+    (writing.status === "submitted" || writing.status === "graded")
+  ) {
+    return;
+  }
+
   // Fetch BPs for this writing.
   const { data: bps, error: bpErr } = await supabase
     .from("body_paragraphs")

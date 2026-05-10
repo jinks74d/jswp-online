@@ -16,6 +16,7 @@ import {
   createCandidate,
   updateSheetTaskPortion,
 } from "@/lib/actions/candidate-cds";
+import { useWritingMode } from "../use-writing-mode";
 import type { GatheringSheetData } from "@/lib/queries/candidate-cds";
 
 export function SheetEditor({
@@ -25,6 +26,7 @@ export function SheetEditor({
   writingId: string;
   sheet: GatheringSheetData;
 }) {
+  const { isReadOnly } = useWritingMode();
   const selectedCount = sheet.candidates.filter((c) => c.is_selected).length;
 
   return (
@@ -41,6 +43,7 @@ export function SheetEditor({
           rows={2}
           initialValue={sheet.task_portion ?? ""}
           placeholder="e.g. 'the causes' or 'the effect on the speaker'"
+          disabled={isReadOnly}
           onSave={async (taskPortion) => {
             await updateSheetTaskPortion(writingId, sheet.id, taskPortion);
           }}
@@ -78,7 +81,9 @@ export function SheetEditor({
             ))
           )}
 
-          <AddCandidateButton writingId={writingId} sheetId={sheet.id} />
+          {!isReadOnly && (
+            <AddCandidateButton writingId={writingId} sheetId={sheet.id} />
+          )}
         </div>
       </div>
     </div>

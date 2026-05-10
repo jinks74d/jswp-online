@@ -20,6 +20,7 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useWritingMode } from "../use-writing-mode";
 
 export interface SelectOption {
   value: string;
@@ -60,6 +61,7 @@ export function EssayPartForm<T extends string = string>({
   thesisContext,
   onTextSave,
 }: Props<T>) {
+  const { isReadOnly } = useWritingMode();
   const [text, setText] = useState(initialText);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +114,7 @@ export function EssayPartForm<T extends string = string>({
             multiline
             rows={textareaRows}
             initialValue={initialText}
+            disabled={isReadOnly}
             onSave={async (next) => {
               setText(next);
               await onTextSave(next);
@@ -120,28 +123,30 @@ export function EssayPartForm<T extends string = string>({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-        <div className="text-xs text-gray-500">
-          {canContinue ? "Ready to continue." : "Write at least a sentence to continue."}
+      {!isReadOnly && (
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
+          <div className="text-xs text-gray-500">
+            {canContinue ? "Ready to continue." : "Write at least a sentence to continue."}
+          </div>
+          <div className="flex items-center gap-3">
+            {error && (
+              <div className="text-sm text-red-700" role="alert">
+                {error}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onContinue}
+              disabled={!canContinue || pending}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "var(--district-primary)" }}
+            >
+              {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {pending ? "Saving…" : "Continue"}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {error && (
-            <div className="text-sm text-red-700" role="alert">
-              {error}
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={onContinue}
-            disabled={!canContinue || pending}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "var(--district-primary)" }}
-          >
-            {pending && <Loader2 className="w-4 h-4 animate-spin" />}
-            {pending ? "Saving…" : "Continue"}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -151,6 +156,7 @@ function KindSelect<T extends string>({
 }: {
   config: KindSelectConfig<T>;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [value, setValue] = useState<string>(config.initialValue ?? "");
   const selected = config.options.find((o) => o.value === value);
 
@@ -162,12 +168,13 @@ function KindSelect<T extends string>({
       )}
       <select
         value={value}
+        disabled={isReadOnly}
         onChange={(e) => setValue(e.target.value)}
         onBlur={async () => {
           const v = (value || null) as T | null;
           await config.onSave(v);
         }}
-        className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+        className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
       >
         <option value="">— Select —</option>
         {config.options.map((opt) => (

@@ -20,6 +20,7 @@ interface Props {
   stepKey: string;
   stepLabel: string;
   pedagogyHint: string | null;
+  isTerminal: boolean;
   mode: Mode;
   hasCounterargument: boolean;
 }
@@ -29,6 +30,7 @@ export async function ParagraphFormStep({
   stepKey,
   stepLabel,
   pedagogyHint,
+  isTerminal,
   mode,
   hasCounterargument,
 }: Props) {
@@ -50,6 +52,7 @@ export async function ParagraphFormStep({
       <ParagraphFormClient
         writingId={writingId}
         stepKey={stepKey}
+        isTerminal={isTerminal}
         mode={mode}
         hasCounterargument={hasCounterargument}
         bps={bps}

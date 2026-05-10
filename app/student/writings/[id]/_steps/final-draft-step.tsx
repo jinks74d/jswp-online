@@ -16,6 +16,7 @@ interface Props {
   stepKey: string;
   stepLabel: string;
   pedagogyHint: string | null;
+  isTerminal: boolean;
 }
 
 export async function FinalDraftStep({
@@ -23,6 +24,7 @@ export async function FinalDraftStep({
   stepKey,
   stepLabel,
   pedagogyHint,
+  isTerminal,
 }: Props) {
   await bootstrapFinalDraft(writingId);
   const { final_draft, assembly } = await getFinalDraftData(writingId);
@@ -42,6 +44,7 @@ export async function FinalDraftStep({
       <FinalDraftClient
         writingId={writingId}
         stepKey={stepKey}
+        isTerminal={isTerminal}
         finalDraft={final_draft}
         assembly={assembly}
       />

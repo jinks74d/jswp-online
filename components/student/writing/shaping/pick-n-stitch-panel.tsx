@@ -22,6 +22,7 @@ import {
   setCmFlag,
   type PickNStitchFlag,
 } from "@/lib/actions/shaping";
+import { useWritingMode } from "../use-writing-mode";
 import type { ShapingCmData } from "@/lib/queries/shaping";
 
 const FLAGS: ReadonlyArray<{ key: PickNStitchFlag; short: string; long: string }> = [
@@ -151,6 +152,7 @@ function FlagToggle({
   long: string;
   active: boolean;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
   return (
     <button
@@ -160,7 +162,7 @@ function FlagToggle({
           await setCmFlag(writingId, cmId, flag, !active);
         })
       }
-      disabled={pending}
+      disabled={pending || isReadOnly}
       title={`Mark as used in ${long}`}
       aria-pressed={active}
       className={`inline-flex items-center justify-center w-7 h-7 rounded-md border text-[10px] font-semibold transition-colors disabled:opacity-50 ${

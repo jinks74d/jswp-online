@@ -5,6 +5,7 @@
  */
 
 import Link from "next/link";
+import { MessageSquare } from "lucide-react";
 import { StatusBadge } from "./status-badge";
 import type { StudentAssignmentListItem } from "@/lib/queries/student-assignments";
 
@@ -67,7 +68,13 @@ function formatShortDate(iso: string): string {
   });
 }
 
-export function AssignmentCard({ item }: { item: StudentAssignmentListItem }) {
+export function AssignmentCard({
+  item,
+  feedbackCount = 0,
+}: {
+  item: StudentAssignmentListItem;
+  feedbackCount?: number;
+}) {
   const due = dueCopy(item);
 
   const dueClass =
@@ -76,6 +83,8 @@ export function AssignmentCard({ item }: { item: StudentAssignmentListItem }) {
       : due?.tone === "warning"
         ? "text-amber-800 font-medium"
         : "text-gray-600";
+
+  const showFeedbackHint = item.status === "returned";
 
   return (
     <Link
@@ -92,6 +101,16 @@ export function AssignmentCard({ item }: { item: StudentAssignmentListItem }) {
           </h3>
           {due && (
             <div className={`mt-1 text-sm ${dueClass}`}>{due.text}</div>
+          )}
+          {showFeedbackHint && (
+            <div className="mt-1.5 inline-flex items-center gap-1 text-xs text-blue-700">
+              <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+              {feedbackCount > 0
+                ? `${feedbackCount} feedback ${
+                    feedbackCount === 1 ? "item" : "items"
+                  } waiting`
+                : "Feedback waiting"}
+            </div>
           )}
         </div>
         <StatusBadge status={item.status} />

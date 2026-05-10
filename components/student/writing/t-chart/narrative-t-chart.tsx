@@ -15,6 +15,7 @@
 
 import { AutoSaveInput } from "./auto-save-input";
 import { updateTChart } from "@/lib/actions/t-charts";
+import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 
 export function NarrativeTChart({
@@ -24,6 +25,7 @@ export function NarrativeTChart({
   writingId: string;
   bp: BodyParagraphData;
 }) {
+  const { isReadOnly } = useWritingMode();
   if (!bp.t_chart) {
     return (
       <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
@@ -51,6 +53,7 @@ export function NarrativeTChart({
           <Field label="When" help="Time of day, season, age, era.">
             <AutoSaveInput
               initialValue={tc.narrative_when ?? ""}
+              disabled={isReadOnly}
               onSave={async (narrative_when) => {
                 await updateTChart(writingId, tc.id, { narrative_when });
               }}
@@ -59,6 +62,7 @@ export function NarrativeTChart({
           <Field label="Where" help="Place, sensory details.">
             <AutoSaveInput
               initialValue={tc.narrative_where ?? ""}
+              disabled={isReadOnly}
               onSave={async (narrative_where) => {
                 await updateTChart(writingId, tc.id, { narrative_where });
               }}
@@ -67,6 +71,7 @@ export function NarrativeTChart({
           <Field label="Who" help="People in the moment.">
             <AutoSaveInput
               initialValue={tc.narrative_who ?? ""}
+              disabled={isReadOnly}
               onSave={async (narrative_who) => {
                 await updateTChart(writingId, tc.id, { narrative_who });
               }}
@@ -77,6 +82,7 @@ export function NarrativeTChart({
               multiline
               rows={2}
               initialValue={tc.narrative_what_happened ?? ""}
+              disabled={isReadOnly}
               onSave={async (narrative_what_happened) => {
                 await updateTChart(writingId, tc.id, {
                   narrative_what_happened,
@@ -95,6 +101,7 @@ export function NarrativeTChart({
             rows={2}
             initialValue={tc.narrative_dialogue ?? ""}
             placeholder={`"Where do you think you're going?" she asked.`}
+            disabled={isReadOnly}
             onSave={async (narrative_dialogue) => {
               await updateTChart(writingId, tc.id, { narrative_dialogue });
             }}
@@ -107,6 +114,7 @@ export function NarrativeTChart({
               multiline
               rows={2}
               initialValue={tc.narrative_feeling ?? ""}
+              disabled={isReadOnly}
               onSave={async (narrative_feeling) => {
                 await updateTChart(writingId, tc.id, { narrative_feeling });
               }}
@@ -117,6 +125,7 @@ export function NarrativeTChart({
               multiline
               rows={2}
               initialValue={tc.narrative_thinking ?? ""}
+              disabled={isReadOnly}
               onSave={async (narrative_thinking) => {
                 await updateTChart(writingId, tc.id, { narrative_thinking });
               }}

@@ -42,6 +42,20 @@ export async function bootstrapEssayParts(writingId: string): Promise<void> {
   await requireRole("student");
   const supabase = await createServerClient();
 
+  // Read-only states: skip bootstrap. RLS would reject the upsert
+  // anyway; failing fast keeps step pages from surfacing 500s.
+  const { data: writing } = await supabase
+    .from("student_writings")
+    .select("status")
+    .eq("id", writingId)
+    .maybeSingle();
+  if (
+    writing &&
+    (writing.status === "submitted" || writing.status === "graded")
+  ) {
+    return;
+  }
+
   const { error } = await supabase
     .from("essay_parts")
     .upsert(

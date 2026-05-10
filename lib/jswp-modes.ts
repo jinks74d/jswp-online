@@ -685,6 +685,20 @@ export function getPreviousStep(
 }
 
 /**
+ * Is the given step the LAST visible step for this mode + assignment
+ * context? Wraps `getNextStep(...) === null` for readability at call
+ * sites. Used to swap [Continue] for [Submit] on the final step.
+ */
+export function isTerminalStep(
+  stepKey: string,
+  mode: JswpMode,
+  ctx: StepResolutionContext
+): boolean {
+  const visible = getSteps(mode, ctx);
+  return getNextStep(stepKey, visible) === null;
+}
+
+/**
  * Compute completion percentage given completed step keys.
  * Used for student progress bars and teacher dashboards.
  */

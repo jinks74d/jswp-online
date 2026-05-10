@@ -20,10 +20,13 @@ import {
 
 /**
  * Click handler for the [Start Writing] / [Continue Writing] /
- * [Continue Revision] CTA on the assignment detail page.
+ * [Continue Revision] / [Review Submission] CTA on the assignment
+ * detail page.
  *
- * Routes the student into the step engine. For submitted/graded
- * writings the action is a no-op — read-only review is chunk 4.6.
+ * For draft/in_progress/returned: routes to current_step.
+ * For submitted/graded: routes to current_step (or first step) —
+ *   the layout reads writing.status and renders read-only via the
+ *   WritingModeProvider context. Same URL, different mode.
  */
 export async function startWriting(assignmentId: string): Promise<void> {
   const profile = await requireRole("student");
@@ -34,12 +37,6 @@ export async function startWriting(assignmentId: string): Promise<void> {
   }
 
   const { writing } = result;
-
-  // Submitted / graded writings are locked. Read-only review lands later.
-  if (writing.status === "submitted" || writing.status === "graded") {
-    return;
-  }
-
   const mode = result.assignment.mode as JswpMode;
   const resolvedKey = writing.current_step ?? MODES[mode].steps[0]?.key;
   const step = resolvedKey ? getStepByKey(resolvedKey) : undefined;
@@ -137,17 +134,64 @@ export async function markStepComplete(
   }
 
   // Promote draft → in_progress on first completion.
+  // Also returned → in_progress on first save during a revision (so
+  // the teacher's view reflects "student picked up the feedback").
   const { error: statusErr } = await supabase
     .from("student_writings")
     .update({ status: "in_progress" })
     .eq("id", writingId)
-    .eq("status", "draft");
+    .in("status", ["draft", "returned"]);
   if (statusErr) {
     // Non-fatal: leave a log line but don't break the flow.
     console.error("markStepComplete status promote:", statusErr);
   }
 
   revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
+/**
+ * Submit a writing for teacher review. Called from the terminal step's
+ * [Submit] button (final-draft for essays, paragraph-form for non-essays).
+ *
+ * Allowed source states: draft, in_progress, returned (per the
+ * student_writings_student_update RLS policy). Any other state is a
+ * no-op — RLS will reject the update and we'll fall through silently.
+ *
+ * On success, redirects to the assignment detail page where the CTA
+ * now reads "Review Submission".
+ */
+export async function submitWriting(writingId: string): Promise<void> {
+  await requireRole("student");
+  const supabase = await createServerClient();
+
+  const { data: writing, error: wErr } = await supabase
+    .from("student_writings")
+    .select("id, assignment_id, status")
+    .eq("id", writingId)
+    .maybeSingle();
+
+  if (wErr || !writing) {
+    throw new Error(`Could not load writing ${writingId}`);
+  }
+
+  const { error: uErr } = await supabase
+    .from("student_writings")
+    .update({
+      status: "submitted",
+      submitted_at: new Date().toISOString(),
+    })
+    .eq("id", writingId)
+    .in("status", ["draft", "in_progress", "returned"]);
+
+  if (uErr) {
+    throw new Error(`Could not submit writing: ${uErr.message}`);
+  }
+
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+  revalidatePath(`/student/assignments/${writing.assignment_id}`);
+  revalidatePath(`/student/assignments`);
+
+  redirect(`/student/assignments/${writing.assignment_id}`);
 }
 
 /**
@@ -276,8 +320,15 @@ export async function completeStepAndAdvance(
   });
 
   const next = getNextStep(stepKey, visible);
-  const target = next ?? visible.find((s) => s.key === stepKey);
-  if (!target) return;
+  if (!next) {
+    // Terminal step → submit the writing. submitWriting redirects to
+    // /student/assignments/${assignmentId}. If the writing is already
+    // in a non-submittable state (e.g. submitted/graded due to a stale
+    // tab), the RLS-guarded UPDATE will no-op and the redirect lands
+    // on the assignment page anyway.
+    await submitWriting(writingId);
+    return;
+  }
 
-  redirect(`/student/writings/${writingId}/${target.slug}`);
+  redirect(`/student/writings/${writingId}/${next.slug}`);
 }

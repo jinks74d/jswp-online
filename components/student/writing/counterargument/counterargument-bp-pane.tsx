@@ -15,6 +15,7 @@
 
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { updateTChart } from "@/lib/actions/t-charts";
+import { useWritingMode } from "../use-writing-mode";
 
 export interface CounterargumentBpData {
   id: string;
@@ -34,6 +35,7 @@ export function CounterargumentBpPane({
   writingId: string;
   bp: CounterargumentBpData;
 }) {
+  const { isReadOnly } = useWritingMode();
   const tc = bp.t_chart;
   if (!tc) {
     return (
@@ -62,6 +64,7 @@ export function CounterargumentBpPane({
           rows={2}
           initialValue={tc.concession ?? ""}
           placeholder="Some might argue that…"
+          disabled={isReadOnly}
           onSave={async (concession) => {
             await updateTChart(writingId, tc.id, { concession });
           }}
@@ -78,6 +81,7 @@ export function CounterargumentBpPane({
           rows={2}
           initialValue={tc.counterargument ?? ""}
           placeholder="Critics claim that…"
+          disabled={isReadOnly}
           onSave={async (counterargument) => {
             await updateTChart(writingId, tc.id, { counterargument });
           }}
@@ -94,6 +98,7 @@ export function CounterargumentBpPane({
           rows={3}
           initialValue={tc.refutation ?? ""}
           placeholder="However, this overlooks…"
+          disabled={isReadOnly}
           onSave={async (refutation) => {
             await updateTChart(writingId, tc.id, { refutation });
           }}

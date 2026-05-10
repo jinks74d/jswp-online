@@ -25,6 +25,7 @@ import {
   completePromptDecoding,
   type PromptDecodingFields,
 } from "@/lib/actions/prompt-decoding";
+import { useWritingMode } from "@/components/student/writing/use-writing-mode";
 import type { Database } from "@/lib/database.types";
 
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -101,6 +102,7 @@ export function DecodePromptStep({
   pedagogyHint: string | null;
   initial: InitialFields;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [form, setForm] = useState<FormState>(initialToState(initial));
   const [savedFlash, setSavedFlash] = useState<"idle" | "saving" | "saved">(
     "idle"
@@ -177,7 +179,8 @@ export function DecodePromptStep({
             value={form.task}
             onChange={update("task")}
             onBlur={handleBlur}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
             placeholder="The prompt is asking me to..."
           />
         </Field>
@@ -191,7 +194,8 @@ export function DecodePromptStep({
             value={form.form}
             onChange={update("form")}
             onBlur={handleBlur}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
           >
             <option value="">— Select —</option>
             {Object.entries(FORM_LABELS).map(([v, label]) => (
@@ -211,7 +215,8 @@ export function DecodePromptStep({
             value={form.ratio_identified}
             onChange={update("ratio_identified")}
             onBlur={handleBlur}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
           >
             <option value="">— Select —</option>
             {(Object.keys(RATIO_LABELS) as ChunkRatio[]).map((v) => (
@@ -232,7 +237,8 @@ export function DecodePromptStep({
             value={form.key_verbs}
             onChange={update("key_verbs")}
             onBlur={handleBlur}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="discuss, analyze"
           />
         </Field>
@@ -247,7 +253,8 @@ export function DecodePromptStep({
             value={form.focus_terms}
             onChange={update("focus_terms")}
             onBlur={handleBlur}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="industrial revolution, child labor"
           />
         </Field>
@@ -262,35 +269,38 @@ export function DecodePromptStep({
             value={form.notes}
             onChange={update("notes")}
             onBlur={handleBlur}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
           />
         </Field>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-xs text-gray-500" aria-live="polite">
-          {savedFlash === "saving" && "Saving…"}
-          {savedFlash === "saved" && "Saved"}
-        </div>
+      {!isReadOnly && (
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-xs text-gray-500" aria-live="polite">
+            {savedFlash === "saving" && "Saving…"}
+            {savedFlash === "saved" && "Saved"}
+          </div>
 
-        <div className="flex items-center gap-3">
-          {error && (
-            <div className="text-sm text-red-700" role="alert">
-              {error}
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={handleContinue}
-            disabled={!canContinue || isContinuing}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "var(--district-primary)" }}
-          >
-            {isContinuing && <Loader2 className="w-4 h-4 animate-spin" />}
-            {isContinuing ? "Saving…" : "Continue"}
-          </button>
+          <div className="flex items-center gap-3">
+            {error && (
+              <div className="text-sm text-red-700" role="alert">
+                {error}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={handleContinue}
+              disabled={!canContinue || isContinuing}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "var(--district-primary)" }}
+            >
+              {isContinuing && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isContinuing ? "Saving…" : "Continue"}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

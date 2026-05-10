@@ -20,6 +20,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { updateFinalText } from "@/lib/actions/paragraph-form";
+import { useWritingMode } from "../use-writing-mode";
 import type { ParagraphFormBpData } from "@/lib/queries/paragraph-form";
 
 export function NarrativeParagraphFormBpPane({
@@ -81,6 +82,7 @@ function Editor({
   paragraphFormId: string;
   initialValue: string;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [value, setValue] = useState(initialValue);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
     "idle"
@@ -132,9 +134,10 @@ function Editor({
             isFocusedRef.current = true;
           }}
           onBlur={handleBlur}
+          disabled={isReadOnly}
           rows={14}
           placeholder="Write the polished narrative paragraph here…"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
         />
         <span
           className="absolute right-2 top-2 text-xs text-gray-500 pointer-events-none"

@@ -24,6 +24,7 @@ import {
   addChunk,
   removeChunk,
 } from "@/lib/actions/t-charts";
+import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 import type { Database } from "@/lib/database.types";
 
@@ -41,6 +42,7 @@ export function CdCmTChart({
   mode: Mode;
   writingChunkRatio: ChunkRatio;
 }) {
+  const { isReadOnly } = useWritingMode();
   if (!bp.t_chart) {
     return (
       <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
@@ -67,6 +69,7 @@ export function CdCmTChart({
           rows={2}
           initialValue={tc.working_topic_sentence ?? ""}
           placeholder="Write the topic sentence for this paragraph…"
+          disabled={isReadOnly}
           onSave={async (working_topic_sentence) => {
             await updateTChart(writingId, tc.id, { working_topic_sentence });
           }}
@@ -93,12 +96,14 @@ export function CdCmTChart({
             }}
           />
         ))}
-        <AddChunkButton
-          writingId={writingId}
-          bodyParagraphId={bp.id}
-          mode={mode}
-          ratio={writingChunkRatio}
-        />
+        {!isReadOnly && (
+          <AddChunkButton
+            writingId={writingId}
+            bodyParagraphId={bp.id}
+            mode={mode}
+            ratio={writingChunkRatio}
+          />
+        )}
       </div>
 
       {/* Concluding sentence */}
@@ -114,6 +119,7 @@ export function CdCmTChart({
           rows={2}
           initialValue={tc.concluding_sentence ?? ""}
           placeholder="Write the concluding sentence…"
+          disabled={isReadOnly}
           onSave={async (concluding_sentence) => {
             await updateTChart(writingId, tc.id, { concluding_sentence });
           }}

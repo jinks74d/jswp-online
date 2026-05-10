@@ -15,6 +15,7 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { DiscoveryBpPane } from "./discovery-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 
 interface Props {
@@ -43,6 +44,7 @@ function computeGate(bps: readonly BodyParagraphData[]): GateResult {
 }
 
 export function DiscoveryClient({ writingId, stepKey, bps }: Props) {
+  const { isReadOnly } = useWritingMode();
   const [activeIdx, setActiveIdx] = useState(0);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -106,30 +108,32 @@ export function DiscoveryClient({ writingId, stepKey, bps }: Props) {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-        <div className="text-xs text-gray-500">
-          {gate.canContinue
-            ? "Each body paragraph has a key word or concrete example."
-            : `Body paragraph ${gate.blockerPosition} needs a key word or concrete example.`}
+      {!isReadOnly && (
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
+          <div className="text-xs text-gray-500">
+            {gate.canContinue
+              ? "Each body paragraph has a key word or concrete example."
+              : `Body paragraph ${gate.blockerPosition} needs a key word or concrete example.`}
+          </div>
+          <div className="flex items-center gap-3">
+            {error && (
+              <div className="text-sm text-red-700" role="alert">
+                {error}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onContinue}
+              disabled={!gate.canContinue || pending}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "var(--district-primary)" }}
+            >
+              {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {pending ? "Saving…" : "Continue"}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {error && (
-            <div className="text-sm text-red-700" role="alert">
-              {error}
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={onContinue}
-            disabled={!gate.canContinue || pending}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "var(--district-primary)" }}
-          >
-            {pending && <Loader2 className="w-4 h-4 animate-spin" />}
-            {pending ? "Saving…" : "Continue"}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

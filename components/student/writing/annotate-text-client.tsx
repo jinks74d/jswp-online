@@ -30,6 +30,7 @@ import {
 } from "./annotation-kind-config";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useWritingMode } from "./use-writing-mode";
 
 interface Props {
   writingId: string;
@@ -48,6 +49,7 @@ export function AnnotateTextClient({
   sourceAuthor,
   initialAnnotations,
 }: Props) {
+  const { isReadOnly } = useWritingMode();
   const [selection, setSelection] = useState<SelectionPayload | null>(null);
   const [openForm, setOpenForm] = useState<AnnotationFormPayload | null>(null);
   const [visibleKinds, setVisibleKinds] = useState<ReadonlySet<AnnotationKind>>(
@@ -130,7 +132,7 @@ export function AnnotateTextClient({
             annotations={initialAnnotations}
             visibleKinds={visibleKinds}
             scrollToAnnotationId={scrollTargetId}
-            onSelection={setSelection}
+            onSelection={isReadOnly ? () => {} : setSelection}
             onClearSelection={() => setSelection(null)}
             onAnnotationClick={onAnnotationClick}
           />
@@ -146,7 +148,7 @@ export function AnnotateTextClient({
         </aside>
       </div>
 
-      {selection && !openForm && (
+      {selection && !openForm && !isReadOnly && (
         <AnnotationPopover
           rect={selection.rect}
           onAnnotate={onAnnotateClick}
@@ -161,30 +163,32 @@ export function AnnotateTextClient({
         />
       )}
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-xs text-gray-500">
-          {canContinue
-            ? `${initialAnnotations.length} annotation${initialAnnotations.length === 1 ? "" : "s"} saved`
-            : "Add at least one annotation to continue."}
+      {!isReadOnly && (
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-xs text-gray-500">
+            {canContinue
+              ? `${initialAnnotations.length} annotation${initialAnnotations.length === 1 ? "" : "s"} saved`
+              : "Add at least one annotation to continue."}
+          </div>
+          <div className="flex items-center gap-3">
+            {continueError && (
+              <div className="text-sm text-red-700" role="alert">
+                {continueError}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onContinue}
+              disabled={!canContinue || continuing}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "var(--district-primary)" }}
+            >
+              {continuing && <Loader2 className="w-4 h-4 animate-spin" />}
+              {continuing ? "Saving…" : "Continue"}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {continueError && (
-            <div className="text-sm text-red-700" role="alert">
-              {continueError}
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={onContinue}
-            disabled={!canContinue || continuing}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "var(--district-primary)" }}
-          >
-            {continuing && <Loader2 className="w-4 h-4 animate-spin" />}
-            {continuing ? "Saving…" : "Continue"}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

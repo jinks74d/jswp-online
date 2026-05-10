@@ -10,6 +10,7 @@
 import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { advanceCurrentStep } from "@/lib/actions/student-writings";
+import { useWritingMode } from "@/components/student/writing/use-writing-mode";
 
 export function SkipStepButton({
   writingId,
@@ -18,6 +19,7 @@ export function SkipStepButton({
   writingId: string;
   stepKey: string;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, startTransition] = useTransition();
 
   const onClick = () => {
@@ -31,6 +33,8 @@ export function SkipStepButton({
       }
     });
   };
+
+  if (isReadOnly) return null;
 
   return (
     <button

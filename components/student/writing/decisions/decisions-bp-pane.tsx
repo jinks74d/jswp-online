@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { Loader2, Star } from "lucide-react";
 import { setBestForTs, setBestForChunk } from "@/lib/actions/commentary";
+import { useWritingMode } from "../use-writing-mode";
 import type {
   CommentaryBpData,
   CommentaryItemData,
@@ -164,6 +165,7 @@ function BestForTsToggle({
   word: CommentaryItemData;
   disabled: boolean;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
   const active = word.is_best_word_for_ts;
   return (
@@ -174,7 +176,7 @@ function BestForTsToggle({
           await setBestForTs(writingId, word.id, !active);
         })
       }
-      disabled={disabled || pending}
+      disabled={disabled || pending || isReadOnly}
       title={active ? "Remove TS pick" : "Pick as best word for TS"}
       aria-pressed={active}
       className="inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -210,6 +212,7 @@ function BestForChunkToggle({
   word: CommentaryItemData;
   disabled: boolean;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
   const active = word.is_best_word_for_chunk;
   return (
@@ -220,7 +223,7 @@ function BestForChunkToggle({
           await setBestForChunk(writingId, word.id, !active);
         })
       }
-      disabled={disabled || pending}
+      disabled={disabled || pending || isReadOnly}
       title={active ? "Remove chunk pick" : "Pick as best word for chunk"}
       aria-pressed={active}
       className="inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"

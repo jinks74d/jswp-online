@@ -118,7 +118,7 @@ export async function bootstrapWritingStructure(
     .from("student_writings")
     .select(
       `
-      id, chunk_ratio,
+      id, chunk_ratio, status,
       assignment:assignment_id (
         mode, num_body_paragraphs, default_chunks_per_bp, has_counterargument
       )
@@ -131,6 +131,7 @@ export async function bootstrapWritingStructure(
   }
 
   const a = writing as unknown as {
+    status: "draft" | "in_progress" | "submitted" | "returned" | "graded";
     chunk_ratio: ChunkRatio;
     assignment: {
       mode: Mode;
@@ -139,6 +140,12 @@ export async function bootstrapWritingStructure(
       has_counterargument: boolean;
     };
   };
+
+  // Read-only states: skip bootstrap. RLS would reject the upserts
+  // anyway; failing fast here keeps step pages from surfacing 500s.
+  if (a.status === "submitted" || a.status === "graded") {
+    return;
+  }
 
   const ctx: BootstrapContext = {
     writingId,

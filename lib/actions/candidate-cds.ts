@@ -30,15 +30,22 @@ export async function bootstrapGatheringSheets(
 
   const { data: writing, error: wErr } = await supabase
     .from("student_writings")
-    .select(`assignment:assignment_id ( num_body_paragraphs )`)
+    .select(`status, assignment:assignment_id ( num_body_paragraphs )`)
     .eq("id", writingId)
     .maybeSingle();
   if (wErr || !writing) {
     throw new Error(`Could not load writing ${writingId}`);
   }
-  const num = (
-    writing as unknown as { assignment: { num_body_paragraphs: number } }
-  ).assignment.num_body_paragraphs;
+  const w = writing as unknown as {
+    status: "draft" | "in_progress" | "submitted" | "returned" | "graded";
+    assignment: { num_body_paragraphs: number };
+  };
+
+  // Read-only states: skip bootstrap. RLS would reject the upserts.
+  if (w.status === "submitted" || w.status === "graded") {
+    return;
+  }
+  const num = w.assignment.num_body_paragraphs;
 
   const rows = Array.from({ length: num }, (_, i) => ({
     student_writing_id: writingId,

@@ -46,15 +46,22 @@ export async function bootstrapShapingSheets(writingId: string): Promise<void> {
   // Fetch BPs + their chunks + the writing's mode (to skip chunks for narrative).
   const { data: writing, error: wErr } = await supabase
     .from("student_writings")
-    .select(`assignment:assignment_id ( mode )`)
+    .select(`status, assignment:assignment_id ( mode )`)
     .eq("id", writingId)
     .maybeSingle();
   if (wErr || !writing) {
     throw new Error(`bootstrapShapingSheets: cannot load writing ${writingId}`);
   }
-  const mode = (
-    writing as unknown as { assignment: { mode: string } }
-  ).assignment.mode;
+  const w = writing as unknown as {
+    status: "draft" | "in_progress" | "submitted" | "returned" | "graded";
+    assignment: { mode: string };
+  };
+
+  // Read-only states: skip bootstrap. RLS would reject the upserts.
+  if (w.status === "submitted" || w.status === "graded") {
+    return;
+  }
+  const mode = w.assignment.mode;
 
   const { data: bps, error: bpErr } = await supabase
     .from("body_paragraphs")

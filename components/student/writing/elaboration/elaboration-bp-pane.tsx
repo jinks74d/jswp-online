@@ -22,6 +22,7 @@ import {
   updateCmText,
   deleteCm,
 } from "@/lib/actions/commentary";
+import { useWritingMode } from "../use-writing-mode";
 import type {
   CommentaryBpData,
   CommentaryItemData,
@@ -173,6 +174,7 @@ function PhraseList({
   cdId: string;
   phrases: readonly CommentaryItemData[];
 }) {
+  const { isReadOnly } = useWritingMode();
   return (
     <div className="ml-4 space-y-2">
       {phrases.length === 0 && (
@@ -183,11 +185,13 @@ function PhraseList({
       {phrases.map((phrase) => (
         <PhraseRow key={phrase.id} writingId={writingId} phrase={phrase} />
       ))}
-      <AddPhraseButton
-        writingId={writingId}
-        chunkId={chunkId}
-        cdId={cdId}
-      />
+      {!isReadOnly && (
+        <AddPhraseButton
+          writingId={writingId}
+          chunkId={chunkId}
+          cdId={cdId}
+        />
+      )}
     </div>
   );
 }
@@ -199,6 +203,7 @@ function PhraseRow({
   writingId: string;
   phrase: CommentaryItemData;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
   return (
     <div className="flex items-start gap-2">
@@ -208,28 +213,31 @@ function PhraseRow({
           rows={2}
           initialValue={phrase.text}
           placeholder="A synonym, or a 3+ word phrase that explains what you mean…"
+          disabled={isReadOnly}
           onSave={async (text) => {
             await updateCmText(writingId, phrase.id, text);
           }}
         />
       </div>
-      <button
-        type="button"
-        onClick={() =>
-          start(async () => {
-            await deleteCm(writingId, phrase.id);
-          })
-        }
-        disabled={pending}
-        title="Remove phrase"
-        className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
-      >
-        {pending ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Trash2 className="w-4 h-4" />
-        )}
-      </button>
+      {!isReadOnly && (
+        <button
+          type="button"
+          onClick={() =>
+            start(async () => {
+              await deleteCm(writingId, phrase.id);
+            })
+          }
+          disabled={pending}
+          title="Remove phrase"
+          className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+        >
+          {pending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Trash2 className="w-4 h-4" />
+          )}
+        </button>
+      )}
     </div>
   );
 }

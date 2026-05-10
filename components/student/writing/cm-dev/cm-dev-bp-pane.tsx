@@ -20,6 +20,7 @@ import {
   updateCmText,
   deleteCm,
 } from "@/lib/actions/commentary";
+import { useWritingMode } from "../use-writing-mode";
 import type {
   CommentaryBpData,
   CommentaryItemData,
@@ -84,6 +85,7 @@ function CdSection({
   cdText: string;
   words: readonly CommentaryItemData[];
 }) {
+  const { isReadOnly } = useWritingMode();
   return (
     <div className="space-y-3">
       <header className="border-l-4 border-red-300 pl-3">
@@ -111,11 +113,13 @@ function CdSection({
         {words.map((word) => (
           <WordRow key={word.id} writingId={writingId} word={word} />
         ))}
-        <AddWordButton
-          writingId={writingId}
-          chunkId={chunkId}
-          parentCdId={cdId}
-        />
+        {!isReadOnly && (
+          <AddWordButton
+            writingId={writingId}
+            chunkId={chunkId}
+            parentCdId={cdId}
+          />
+        )}
       </div>
     </div>
   );
@@ -128,6 +132,7 @@ function WordRow({
   writingId: string;
   word: CommentaryItemData;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
   return (
     <div className="flex items-start gap-2">
@@ -135,28 +140,31 @@ function WordRow({
         <AutoSaveInput
           initialValue={word.text}
           placeholder="One word — tone, mood, character trait…"
+          disabled={isReadOnly}
           onSave={async (text) => {
             await updateCmText(writingId, word.id, text);
           }}
         />
       </div>
-      <button
-        type="button"
-        onClick={() =>
-          start(async () => {
-            await deleteCm(writingId, word.id);
-          })
-        }
-        disabled={pending}
-        title="Remove word"
-        className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
-      >
-        {pending ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Trash2 className="w-4 h-4" />
-        )}
-      </button>
+      {!isReadOnly && (
+        <button
+          type="button"
+          onClick={() =>
+            start(async () => {
+              await deleteCm(writingId, word.id);
+            })
+          }
+          disabled={pending}
+          title="Remove word"
+          className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+        >
+          {pending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Trash2 className="w-4 h-4" />
+          )}
+        </button>
+      )}
     </div>
   );
 }

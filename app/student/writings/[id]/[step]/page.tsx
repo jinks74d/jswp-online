@@ -13,7 +13,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { getWriting } from "@/lib/queries/student-writings";
 import { getPromptDecoding } from "@/lib/queries/prompt-decoding";
-import { MODES, type JswpMode } from "@/lib/jswp-modes";
+import { MODES, getNextStep, type JswpMode } from "@/lib/jswp-modes";
 import { DecodePromptStep } from "../_steps/decode-prompt-step";
 import { PlaceholderStep } from "../_steps/placeholder-step";
 import { AnnotateTextStep } from "../_steps/annotate-text-step";
@@ -70,6 +70,8 @@ export default async function StepDispatcher({
     }
     notFound();
   }
+
+  const isTerminal = getNextStep(target.key, visible) === null;
 
   // Real step UIs: decode_prompt, annotate_text. Others render the
   // placeholder shim until their chunks land (4.4-4.6).
@@ -255,6 +257,7 @@ export default async function StepDispatcher({
         stepKey={target.key}
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
+        isTerminal={isTerminal}
         mode={mode}
         hasCounterargument={a.has_counterargument}
       />
@@ -303,6 +306,7 @@ export default async function StepDispatcher({
         stepKey={target.key}
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
+        isTerminal={isTerminal}
       />
     );
   }

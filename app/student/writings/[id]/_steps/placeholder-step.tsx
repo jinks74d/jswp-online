@@ -11,6 +11,7 @@
 import { useTransition } from "react";
 import { Loader2, Construction } from "lucide-react";
 import { advanceCurrentStep } from "@/lib/actions/student-writings";
+import { useWritingMode } from "@/components/student/writing/use-writing-mode";
 
 export function PlaceholderStep({
   writingId,
@@ -23,6 +24,7 @@ export function PlaceholderStep({
   stepLabel: string;
   pedagogyHint: string | null;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, startTransition] = useTransition();
 
   const onContinue = () => {
@@ -61,18 +63,20 @@ export function PlaceholderStep({
         </p>
       </div>
 
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={onContinue}
-          disabled={pending}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-60 disabled:cursor-wait"
-          style={{ backgroundColor: "var(--district-primary)" }}
-        >
-          {pending && <Loader2 className="w-4 h-4 animate-spin" />}
-          {pending ? "Loading…" : "Continue"}
-        </button>
-      </div>
+      {!isReadOnly && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={pending}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-60 disabled:cursor-wait"
+            style={{ backgroundColor: "var(--district-primary)" }}
+          >
+            {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+            {pending ? "Loading…" : "Continue"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

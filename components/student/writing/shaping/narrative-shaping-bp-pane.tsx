@@ -18,6 +18,7 @@
 
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { updateShapingSheet } from "@/lib/actions/shaping";
+import { useWritingMode } from "../use-writing-mode";
 import type { ShapingBpData } from "@/lib/queries/shaping";
 
 export function NarrativeShapingBpPane({
@@ -27,6 +28,7 @@ export function NarrativeShapingBpPane({
   writingId: string;
   bp: ShapingBpData;
 }) {
+  const { isReadOnly } = useWritingMode();
   const ss = bp.shaping_sheet;
   if (!ss) {
     return (
@@ -56,6 +58,7 @@ export function NarrativeShapingBpPane({
             rows={2}
             initialValue={ss.final_topic_sentence ?? ""}
             placeholder="Write the polished topic sentence…"
+            disabled={isReadOnly}
             onSave={async (final_topic_sentence) => {
               await updateShapingSheet(writingId, ss.id, {
                 final_topic_sentence,
@@ -77,6 +80,7 @@ export function NarrativeShapingBpPane({
             rows={2}
             initialValue={ss.final_concluding_sentence ?? ""}
             placeholder="Write the polished concluding sentence…"
+            disabled={isReadOnly}
             onSave={async (final_concluding_sentence) => {
               await updateShapingSheet(writingId, ss.id, {
                 final_concluding_sentence,
@@ -92,6 +96,7 @@ export function NarrativeShapingBpPane({
           rows={3}
           initialValue={ss.notes ?? ""}
           placeholder="Anything to remember about this paragraph's shaping…"
+          disabled={isReadOnly}
           onSave={async (notes) => {
             await updateShapingSheet(writingId, ss.id, { notes });
           }}

@@ -30,6 +30,7 @@ import {
   updateTitle,
 } from "@/lib/actions/final-draft";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useWritingMode } from "../use-writing-mode";
 import type {
   AssemblySource,
   FinalDraftRowData,
@@ -38,6 +39,7 @@ import type {
 interface Props {
   writingId: string;
   stepKey: string;
+  isTerminal: boolean;
   finalDraft: FinalDraftRowData | null;
   assembly: AssemblySource;
 }
@@ -45,6 +47,7 @@ interface Props {
 export function FinalDraftClient({
   writingId,
   stepKey,
+  isTerminal,
   finalDraft,
   assembly,
 }: Props) {
@@ -81,6 +84,7 @@ export function FinalDraftClient({
       <ContinueBar
         writingId={writingId}
         stepKey={stepKey}
+        isTerminal={isTerminal}
         currentFullText={finalDraft.full_text}
       />
     </div>
@@ -98,6 +102,7 @@ function TitleField({
   finalDraftId: string;
   initialTitle: string;
 }) {
+  const { isReadOnly } = useWritingMode();
   return (
     <div>
       <div className="text-sm font-medium text-gray-900">
@@ -110,6 +115,7 @@ function TitleField({
         <AutoSaveInput
           initialValue={initialTitle}
           placeholder="Untitled"
+          disabled={isReadOnly}
           onSave={async (next) => {
             await updateTitle(writingId, finalDraftId, next);
           }}
@@ -228,8 +234,11 @@ function AssembleButton({
   finalDraftId: string;
   currentFullText: string;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  if (isReadOnly) return null;
 
   const onClick = () => {
     setError(null);
@@ -283,6 +292,7 @@ function FullTextEditor({
   finalDraftId: string;
   initialValue: string;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [value, setValue] = useState(initialValue);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
     "idle"
@@ -332,9 +342,10 @@ function FullTextEditor({
             isFocusedRef.current = true;
           }}
           onBlur={handleBlur}
+          disabled={isReadOnly}
           rows={18}
           placeholder="Your assembled essay will appear here…"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
         />
         <span
           className="absolute right-2 top-2 text-xs text-gray-500 pointer-events-none"
@@ -360,24 +371,35 @@ function countWords(text: string): number {
   return t.split(/\s+/).length;
 }
 
-/* ─── Continue bar ────────────────────────────────────────────────── */
+/* ─── Continue / Submit bar ───────────────────────────────────────── */
 
 function ContinueBar({
   writingId,
   stepKey,
+  isTerminal,
   currentFullText,
 }: {
   writingId: string;
   stepKey: string;
+  isTerminal: boolean;
   currentFullText: string;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
+  if (isReadOnly) return null;
+
   const canContinue = currentFullText.trim().length > 0;
 
-  const onContinue = () => {
+  const onClick = () => {
     setError(null);
+    if (isTerminal) {
+      const ok = window.confirm(
+        "Submit your writing for review? You won't be able to edit until it's returned."
+      );
+      if (!ok) return;
+    }
     start(async () => {
       try {
         await completeStepAndAdvance(writingId, stepKey);
@@ -389,11 +411,16 @@ function ContinueBar({
     });
   };
 
+  const buttonLabel = isTerminal ? "Submit" : "Continue";
+  const pendingLabel = isTerminal ? "Submitting…" : "Saving…";
+
   return (
     <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
       <div className="text-xs text-gray-500">
         {canContinue
-          ? "Final draft ready."
+          ? isTerminal
+            ? "Final draft ready to submit."
+            : "Final draft ready."
           : "Write or assemble your full draft to continue."}
       </div>
       <div className="flex items-center gap-3">
@@ -404,13 +431,13 @@ function ContinueBar({
         )}
         <button
           type="button"
-          onClick={onContinue}
+          onClick={onClick}
           disabled={!canContinue || pending}
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ backgroundColor: "var(--district-primary)" }}
         >
           {pending && <Loader2 className="w-4 h-4 animate-spin" />}
-          {pending ? "Saving…" : "Continue"}
+          {pending ? pendingLabel : buttonLabel}
         </button>
       </div>
     </div>

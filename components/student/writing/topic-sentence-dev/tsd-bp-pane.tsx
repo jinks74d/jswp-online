@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { setCandidateSide } from "@/lib/actions/candidate-cds";
+import { useWritingMode } from "../use-writing-mode";
 import type {
   CandidateData,
   GatheringSheetData,
@@ -134,6 +135,7 @@ function CandidateRow({
   writingId: string;
   candidate: CandidateData;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
 
   const onSelect = (side: Side) => {
@@ -174,7 +176,7 @@ function CandidateRow({
               role="radio"
               aria-checked={active}
               onClick={() => onSelect(opt.value)}
-              disabled={pending}
+              disabled={pending || isReadOnly}
               className={`px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
                 active ? opt.selectedClass : opt.unselectedClass
               }`}

@@ -16,6 +16,7 @@ import {
   updateCandidateText,
   deleteCandidate,
 } from "@/lib/actions/candidate-cds";
+import { useWritingMode } from "../use-writing-mode";
 import type { CandidateData } from "@/lib/queries/candidate-cds";
 
 export function CandidateRow({
@@ -25,6 +26,7 @@ export function CandidateRow({
   writingId: string;
   candidate: CandidateData;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [togglePending, toggleStart] = useTransition();
   const [deletePending, deleteStart] = useTransition();
 
@@ -53,7 +55,7 @@ export function CandidateRow({
         <input
           type="checkbox"
           checked={candidate.is_selected}
-          disabled={togglePending}
+          disabled={togglePending || isReadOnly}
           onChange={onToggleSelected}
           className="rounded border-gray-300 disabled:opacity-50"
           aria-label={
@@ -78,25 +80,28 @@ export function CandidateRow({
           rows={2}
           initialValue={candidate.text}
           placeholder="A concrete detail from the text or your knowledge…"
+          disabled={isReadOnly}
           onSave={async (text) => {
             await updateCandidateText(writingId, candidate.id, text);
           }}
         />
       </div>
 
-      <button
-        type="button"
-        onClick={onDelete}
-        disabled={deletePending}
-        title="Remove candidate"
-        className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
-      >
-        {deletePending ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Trash2 className="w-4 h-4" />
-        )}
-      </button>
+      {!isReadOnly && (
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={deletePending}
+          title="Remove candidate"
+          className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+        >
+          {deletePending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Trash2 className="w-4 h-4" />
+          )}
+        </button>
+      )}
     </div>
   );
 }

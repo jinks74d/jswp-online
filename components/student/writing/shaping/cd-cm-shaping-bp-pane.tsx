@@ -26,6 +26,7 @@ import {
   updateChunkOutputCdSentences,
   updateChunkOutputCmSentences,
 } from "@/lib/actions/shaping";
+import { useWritingMode } from "../use-writing-mode";
 import type {
   ShapingBpData,
   ShapingChunkData,
@@ -46,6 +47,7 @@ export function CdCmShapingBpPane({
   mode: Mode;
   hasCounterargument: boolean;
 }) {
+  const { isReadOnly } = useWritingMode();
   const ss = bp.shaping_sheet;
   if (!ss) {
     return (
@@ -79,6 +81,7 @@ export function CdCmShapingBpPane({
               rows={2}
               initialValue={ss.final_topic_sentence ?? ""}
               placeholder="Write the polished topic sentence…"
+              disabled={isReadOnly}
               onSave={async (final_topic_sentence) => {
                 await updateShapingSheet(writingId, ss.id, {
                   final_topic_sentence,
@@ -96,6 +99,7 @@ export function CdCmShapingBpPane({
                 multiline
                 rows={2}
                 initialValue={ss.final_concession ?? ""}
+                disabled={isReadOnly}
                 onSave={async (final_concession) => {
                   await updateShapingSheet(writingId, ss.id, {
                     final_concession,
@@ -108,6 +112,7 @@ export function CdCmShapingBpPane({
                 multiline
                 rows={2}
                 initialValue={ss.final_counterargument ?? ""}
+                disabled={isReadOnly}
                 onSave={async (final_counterargument) => {
                   await updateShapingSheet(writingId, ss.id, {
                     final_counterargument,
@@ -120,6 +125,7 @@ export function CdCmShapingBpPane({
                 multiline
                 rows={2}
                 initialValue={ss.final_refutation ?? ""}
+                disabled={isReadOnly}
                 onSave={async (final_refutation) => {
                   await updateShapingSheet(writingId, ss.id, {
                     final_refutation,
@@ -152,6 +158,7 @@ export function CdCmShapingBpPane({
               rows={2}
               initialValue={ss.final_concluding_sentence ?? ""}
               placeholder="Write the polished concluding sentence…"
+              disabled={isReadOnly}
               onSave={async (final_concluding_sentence) => {
                 await updateShapingSheet(writingId, ss.id, {
                   final_concluding_sentence,
@@ -168,6 +175,7 @@ export function CdCmShapingBpPane({
             rows={2}
             initialValue={ss.notes ?? ""}
             placeholder="Anything to remember about this paragraph's shaping…"
+            disabled={isReadOnly}
             onSave={async (notes) => {
               await updateShapingSheet(writingId, ss.id, { notes });
             }}
@@ -255,6 +263,7 @@ function SentenceList({
   sentences: readonly string[];
   onSave: (next: string[]) => Promise<void>;
 }) {
+  const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
 
   const updateAt = (i: number, value: string): string[] => {
@@ -286,39 +295,44 @@ function SentenceList({
               multiline
               rows={2}
               initialValue={s}
+              disabled={isReadOnly}
               onSave={async (value) => {
                 await onSave(updateAt(i, value));
               }}
             />
           </div>
-          <button
-            type="button"
-            onClick={() => start(async () => onSave(removeAt(i)))}
-            disabled={pending}
-            title="Remove sentence"
-            className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
-          >
-            {pending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-          </button>
+          {!isReadOnly && (
+            <button
+              type="button"
+              onClick={() => start(async () => onSave(removeAt(i)))}
+              disabled={pending}
+              title="Remove sentence"
+              className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+            >
+              {pending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+            </button>
+          )}
         </div>
       ))}
-      <button
-        type="button"
-        onClick={() => start(async () => onSave([...sentences, ""]))}
-        disabled={pending}
-        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-gray-300 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-      >
-        {pending ? (
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        ) : (
-          <Plus className="w-3.5 h-3.5" />
-        )}
-        Add sentence
-      </button>
+      {!isReadOnly && (
+        <button
+          type="button"
+          onClick={() => start(async () => onSave([...sentences, ""]))}
+          disabled={pending}
+          className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-gray-300 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        >
+          {pending ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Plus className="w-3.5 h-3.5" />
+          )}
+          Add sentence
+        </button>
+      )}
     </div>
   );
 }

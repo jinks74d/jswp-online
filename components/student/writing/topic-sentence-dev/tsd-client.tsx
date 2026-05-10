@@ -16,6 +16,7 @@ import { Loader2 } from "lucide-react";
 import { TsdBpPane } from "./tsd-bp-pane";
 import { ReferencePanel } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useWritingMode } from "../use-writing-mode";
 import type { GatheringSheetData } from "@/lib/queries/candidate-cds";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 
@@ -58,6 +59,7 @@ export function TsdClient({
   sourceAuthor,
   annotations,
 }: Props) {
+  const { isReadOnly } = useWritingMode();
   const [activeIdx, setActiveIdx] = useState(0);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -169,30 +171,32 @@ export function TsdClient({
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-        <div className="text-xs text-gray-500">
-          {gate.canContinue
-            ? "Each body paragraph has at least one tagged candidate."
-            : `Body paragraph ${gate.blockerPosition} needs at least one tagged candidate (For / Against / Neutral).`}
+      {!isReadOnly && (
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
+          <div className="text-xs text-gray-500">
+            {gate.canContinue
+              ? "Each body paragraph has at least one tagged candidate."
+              : `Body paragraph ${gate.blockerPosition} needs at least one tagged candidate (For / Against / Neutral).`}
+          </div>
+          <div className="flex items-center gap-3">
+            {error && (
+              <div className="text-sm text-red-700" role="alert">
+                {error}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onContinue}
+              disabled={!gate.canContinue || pending}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "var(--district-primary)" }}
+            >
+              {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {pending ? "Saving…" : "Continue"}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {error && (
-            <div className="text-sm text-red-700" role="alert">
-              {error}
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={onContinue}
-            disabled={!gate.canContinue || pending}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "var(--district-primary)" }}
-          >
-            {pending && <Loader2 className="w-4 h-4 animate-spin" />}
-            {pending ? "Saving…" : "Continue"}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

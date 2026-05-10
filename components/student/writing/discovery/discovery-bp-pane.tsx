@@ -15,6 +15,7 @@
 import { useState } from "react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { updateTChart } from "@/lib/actions/t-charts";
+import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 import type { Database } from "@/lib/database.types";
 
@@ -28,6 +29,7 @@ export function DiscoveryBpPane({
   writingId: string;
   bp: BodyParagraphData;
 }) {
+  const { isReadOnly } = useWritingMode();
   if (!bp.t_chart) {
     return (
       <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
@@ -43,12 +45,14 @@ export function DiscoveryBpPane({
       <div className="grid gap-4 md:grid-cols-2">
         <KindSelect
           initialValue={tc.narrative_kind}
+          disabled={isReadOnly}
           onSave={async (v) => {
             await updateTChart(writingId, tc.id, { narrative_kind: v });
           }}
         />
         <SubjectSelect
           initialValue={tc.narrative_subject}
+          disabled={isReadOnly}
           onSave={async (v) => {
             await updateTChart(writingId, tc.id, { narrative_subject: v });
           }}
@@ -59,6 +63,7 @@ export function DiscoveryBpPane({
         <AutoSaveInput
           initialValue={tc.narrative_key_word ?? ""}
           placeholder="e.g. courage, betrayal, joy"
+          disabled={isReadOnly}
           onSave={async (narrative_key_word) => {
             await updateTChart(writingId, tc.id, { narrative_key_word });
           }}
@@ -71,6 +76,7 @@ export function DiscoveryBpPane({
       >
         <GeneralIdeasInput
           initialValue={tc.narrative_general_ideas ?? []}
+          disabled={isReadOnly}
           onSave={async (narrative_general_ideas) => {
             await updateTChart(writingId, tc.id, { narrative_general_ideas });
           }}
@@ -86,6 +92,7 @@ export function DiscoveryBpPane({
           rows={2}
           initialValue={tc.narrative_concrete_example ?? ""}
           placeholder="The moment when…"
+          disabled={isReadOnly}
           onSave={async (narrative_concrete_example) => {
             await updateTChart(writingId, tc.id, {
               narrative_concrete_example,
@@ -119,9 +126,11 @@ function Field({
 
 function KindSelect({
   initialValue,
+  disabled,
   onSave,
 }: {
   initialValue: NarrativeKind | null;
+  disabled?: boolean;
   onSave: (v: NarrativeKind | null) => Promise<void>;
 }) {
   const [value, setValue] = useState<string>(initialValue ?? "");
@@ -129,12 +138,13 @@ function KindSelect({
     <Field label="Kind" help="Personal narrative or fictional?">
       <select
         value={value}
+        disabled={disabled}
         onChange={(e) => setValue(e.target.value)}
         onBlur={async () => {
           const v = (value || null) as NarrativeKind | null;
           await onSave(v);
         }}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
       >
         <option value="">— Select —</option>
         <option value="personal">Personal</option>
@@ -146,9 +156,11 @@ function KindSelect({
 
 function SubjectSelect({
   initialValue,
+  disabled,
   onSave,
 }: {
   initialValue: NarrativeSubject | null;
+  disabled?: boolean;
   onSave: (v: NarrativeSubject | null) => Promise<void>;
 }) {
   const [value, setValue] = useState<string>(initialValue ?? "");
@@ -156,12 +168,13 @@ function SubjectSelect({
     <Field label="Subject" help="What is the narrative centered on?">
       <select
         value={value}
+        disabled={disabled}
         onChange={(e) => setValue(e.target.value)}
         onBlur={async () => {
           const v = (value || null) as NarrativeSubject | null;
           await onSave(v);
         }}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
       >
         <option value="">— Select —</option>
         <option value="event">Event</option>
@@ -175,15 +188,18 @@ function SubjectSelect({
 
 function GeneralIdeasInput({
   initialValue,
+  disabled,
   onSave,
 }: {
   initialValue: readonly string[];
+  disabled?: boolean;
   onSave: (v: string[] | null) => Promise<void>;
 }) {
   return (
     <AutoSaveInput
       initialValue={initialValue.join(", ")}
       placeholder="freedom, fear, growing up"
+      disabled={disabled}
       onSave={async (raw) => {
         const arr = raw
           .split(",")
