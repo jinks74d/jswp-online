@@ -4,7 +4,7 @@ Consolidated list of deferred work that isn't part of a current chunk. Most item
 
 When you finish an item, move it to **Closed** with the commit hash. Don't delete — the closed list is the audit trail.
 
-Last reviewed: chunk 4.5c.
+Last reviewed: chunk 4.7a.
 
 ---
 
@@ -72,6 +72,16 @@ Cross-cutting JSWP pedagogy per CLAUDE.md §1. The `shaping_sheets.rules_applied
 3. **UI** — shaping_sheet step exposes `rules_applied` selection (chunk 4.6a left this column unwritten because the data file isn't built yet).
 - **Identified:** chunk 4.6a (and CLAUDE.md §1 since project inception)
 - **Priority:** **content-blocked**, not engineering-blocked. Engineering effort is small once content exists. Before production cutover (Phase 7).
+
+### Clone-forward on writing return
+When teacher returns a submission, clone all artifacts (`body_paragraphs`, `t_charts`, `chunks`, `concrete_details`, `commentary_items`, `gathering_cds_sheets`, `candidate_cds`, `shaping_sheets`, `shaping_chunk_outputs`, `paragraph_forms`, `essay_parts`, `final_drafts`) to `draft_number=2` so the original submission is preserved as a snapshot. Currently chunk 4.7a stays on `draft_number=1` through revision loops — students edit the same row, so the original submission state is overwritten on save. Phase 5+ feature; meaningful for grade history and revision-comparison views.
+- **Identified:** chunk 4.7a (commit `fe41809`)
+- **Priority:** Phase 5+; not load-bearing for the basic submit/revise loop
+
+### Inline-anchored teacher feedback
+`teacher_feedback.target_kind` enum supports 13 target types (`student_writing`, `prompt_decoding`, `gathering_sheet`, `candidate_cd`, `body_paragraph`, `t_chart`, `chunk`, `concrete_detail`, `commentary_item`, `shaping_sheet`, `paragraph_form`, `essay_parts`, `final_draft`). Chunk 4.7b will implement only `target_kind='student_writing'` (whole-writing). Inline anchoring would let teachers click a specific artifact (e.g., a CD or a thesis) and leave a comment scoped to it. UX work: click-to-anchor on each artifact type, popover composer, persistent comment indicators on the read-only review surface, student-side surfacing on the matching step pages. Schema is ready; UX is the lift.
+- **Identified:** chunk 4.7a (commit `fe41809`)
+- **Priority:** Phase 5+ territory
 
 ---
 
