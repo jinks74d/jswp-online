@@ -56,6 +56,11 @@ const TEST = {
   teacher2Email: "teacher2-rls-test@demo.test",
   unreleased: "11111111-0000-0000-0000-000000004000",
   unreleasedNull: "11111111-0000-0000-0000-000000004001",
+  // Defense-in-depth probe: teacher_id matches IDS.teacher (in demo
+  // district) but district_id/school_id point at the cross-tenant
+  // fixture. Migration 0009's tightened assignments_teacher_own
+  // policy must keep teacherClient from seeing this row.
+  crossTenantOwned: "11111111-0000-0000-0000-000000004002",
   alexWriting: "22222222-0000-0000-0000-000000000001",
   baileyWriting: "22222222-0000-0000-0000-000000000002",
 } as const;
@@ -165,6 +170,29 @@ beforeAll(async () => {
     })
     .throwOnError();
 
+  // 4c. Cross-tenant-owned probe for migration 0009: teacher_id matches
+  // the demo-district teacher but district_id/school_id point at the
+  // cross-tenant fixture. Only insertable via service role; the tightened
+  // policy must keep teacherClient from seeing it.
+  await svc
+    .from("assignments")
+    .upsert({
+      id: TEST.crossTenantOwned,
+      teacher_id: IDS.teacher,
+      class_period_id: null,
+      district_id: TEST.district2,
+      school_id: TEST.school2,
+      title: "RLS Test — Cross-Tenant Owned",
+      prompt: "Mismatched district/school; teacher must not read.",
+      mode: "expository",
+      is_essay: false,
+      num_body_paragraphs: 1,
+      default_chunk_ratio: "two_plus_to_one",
+      default_chunks_per_bp: 1,
+      released_at: null,
+    })
+    .throwOnError();
+
   // 5. Student writings for Alex and Bailey on the expository assignment
   await svc
     .from("student_writings")
@@ -208,7 +236,7 @@ afterAll(async () => {
   await svc
     .from("assignments")
     .delete()
-    .in("id", [TEST.unreleased, TEST.unreleasedNull]);
+    .in("id", [TEST.unreleased, TEST.unreleasedNull, TEST.crossTenantOwned]);
   await svc.from("user_profiles").delete().eq("id", TEST.teacher2);
   await svc.from("schools").delete().eq("id", TEST.school2);
   await svc.from("districts").delete().eq("id", TEST.district2);
@@ -287,6 +315,21 @@ describe("Cross-tenant isolation", () => {
     expect(error).toBeNull();
     expect(data).not.toBeNull();
     expect(data!.email).toBe(TEST.teacher2Email);
+  });
+
+  // Migration 0009 — defense-in-depth on assignments_teacher_own.
+  // teacher_id alone is no longer sufficient; district_id and school_id
+  // must also match the caller's profile. Service-role inserted a row
+  // where teacher_id = IDS.teacher (Demo District) but the tenancy
+  // columns point at TEST.district2 / TEST.school2.
+  it("blocks read when teacher_id matches but district/school diverge (defense-in-depth)", async () => {
+    const { data, error } = await teacherClient
+      .from("assignments")
+      .select("id")
+      .eq("id", TEST.crossTenantOwned);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
   });
 });
 

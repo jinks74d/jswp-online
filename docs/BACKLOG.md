@@ -4,29 +4,14 @@ Consolidated list of deferred work that isn't part of a current chunk. Most item
 
 When you finish an item, move it to **Closed** with the commit hash. Don't delete — the closed list is the audit trail.
 
-Last reviewed: chunk 4.7b.
+Last reviewed: chunk P7-1.
 
 ---
 
 ## Open
 
-### Legacy `/dashboard/**` route stubs need proper 404s or redirects
-The legacy teacher dashboard surface (created pre-rebuild) still has live routes for steps and admin pages we don't intend to keep. Replace with 404s or redirects to the v2 equivalents before production cutover.
-- **Identified:** pre-Phase 4 (called out in CLAUDE.md folder layout note)
-- **Priority:** before production cutover (Phase 7)
-
 ### Storage upload UI failure surface
 Storage upload errors currently log to console only; users see no feedback when an upload fails. Surface failures inline (toast or form-level error).
-- **Identified:** pre-Phase 4
-- **Priority:** before production cutover (Phase 7)
-
-### RLS hardening: tighten `assignments_teacher_own`
-The current `assignments_teacher_own` policy gates on `teacher_id = auth.uid()` only. Defense in depth: also validate `district_id` and `school_id` match the calling profile's tenancy. Belt-and-suspenders against a hypothetical leaked `auth.uid()` from a cross-tenant teacher.
-- **Identified:** pre-Phase 4
-- **Priority:** before production cutover (Phase 7)
-
-### Legacy `__tests__/auth-*.test.tsx` files
-`__tests__/auth-basic.test.tsx`, `auth-flow.test.tsx`, `auth-integration.test.tsx` are excluded from typecheck via `tsconfig.json`. Either rewrite for the v2 server-side auth flow or delete; lingering excludes erode signal.
 - **Identified:** pre-Phase 4
 - **Priority:** before production cutover (Phase 7)
 
@@ -40,15 +25,26 @@ Schema supports embedded quotations on `concrete_details` via `is_quotation`, `t
 - **Identified:** chunk 4.3 (commit `972547c`); reiterated in chunk 4.4
 - **Priority:** before production cutover (Phase 7); blocks any chunk that reads from `JSWP_COLORS` for runtime styling
 
-### Two `as unknown as <Shape>` TS narrowing hacks
-`lib/actions/student-writings.ts` and `lib/actions/prompt-decoding.ts` each have an `as unknown as` cast on a Supabase nested-select result because the generated `Database` types don't infer the embed shape. Likely resolves when `lib/database.types.ts` is regenerated against the live schema (per CLAUDE.md §12.5). Until then, casts work and `npm run type-check` passes.
-- **Identified:** chunk 4.2 (commit `fffc3ac`)
-- **Priority:** before production cutover (Phase 7); revisit after the type regen
+### Remove `as unknown as <Shape>` TS narrowing hacks (chunk P7-2)
+The P7-1 audit revealed the actual count is **34 casts across 23 files**, not 2 across 2 as originally noted. Most narrow Supabase nested-embed results (`assignment:assignment_id ( ... )`) — the same root cause: the hand-written `Database` types don't carry the relationship metadata Supabase needs to infer embed shapes. Two outliers in `lib/actions/assignments.ts` cast a typed rubric to `Json` for a JSONB column (different problem; would not be fixed by regen).
 
-### `createCandidate` race on `(gathering_sheet_id, position)` uniqueness
-Two concurrent [Add candidate] clicks (same student, double-tab or fast double-click) can both compute the same `max(position) + 1` and one INSERT will 23505. Currently throws to the user. Fix is a 5-line retry loop catching `23505` and re-fetching max position.
-- **Identified:** chunk 4.5 (commit `6881cca`)
-- **Priority:** before production cutover (Phase 7); rare in practice
+Plan for chunk P7-2:
+1. `npx supabase gen types typescript --project-id hcdvypzfzrzevkwkssiw --schema public > lib/database.types.ts` (requires `supabase login` or `SUPABASE_ACCESS_TOKEN` env — not currently configured).
+2. Audit type-check output for unexpected drift (column renames since the hand-write, enum changes, etc.).
+3. Remove obsolete `as unknown as` casts across `lib/actions/`, `lib/queries/`, and the 5 scattered hits in `app/`.
+
+Affected files (from `grep -c "as unknown as"`):
+- `lib/actions/`: assignments (2), candidate-cds (1), commentary (1), final-draft (1), prompt-decoding (1), roster-import (1), shaping (2), student-writings (3), writing-structure (2)
+- `lib/queries/`: assignments (2), candidate-cds (1), classes (3), commentary (1), final-draft (2), paragraph-form (1), shaping (1), students (2), student-writings (1), teacher-feedback (1), teacher-writings (2), t-charts (1)
+- `app/`: admin/import/students (1), student/writings/[id]/_steps/counterargument-step (1)
+
+- **Identified:** chunk 4.2 (commit `fffc3ac`); rescoped in chunk P7-1 audit
+- **Priority:** before production cutover (Phase 7); blocked on Supabase CLI auth setup
+
+### Legacy `app/super-admin/**` cleanup
+Parallels v2's `app/admin/` surface. Super-admin routes (`/super-admin`, `/super-admin/analytics`, `/super-admin/districts/*`, `/super-admin/settings`, `/super-admin/users`) still ship — some likely v1 patterns using the `@/lib/supabase` shim and v1 components. Audit each route the way P7-1 audited `/dashboard/**`: identify which are v2 (use `@/lib/auth` `requireRole` and `@/lib/supabase/server`) vs. v1 (use the shim and v1 `OptimizedAuthProvider` / `components/dashboard/*` imports), then delete the v1 set. The v2 admin home lives at `/admin/`, so v1 super-admin routes are unreachable from the v2 nav surface.
+- **Identified:** chunk P7-1 audit
+- **Priority:** before production cutover (Phase 7)
 
 ### Drag-and-drop reordering of selected candidates
 The pedagogyHint for gather-cds says "Drag them into the order you want them to appear." Chunk 4.5 implements selection-order via toggle order (first selected = priority 1). `@dnd-kit/*` is already in `package.json`; add a drag handle to selected candidates and persist `selection_order` on drop.
@@ -102,6 +98,22 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Legacy `/dashboard/**` route stubs (35 files)
+Deleted the 35 v1 dashboard route files. 17 top-level (analytics, teachers, users/, schools/, settings, test, classes/create, assignments/create + 4 modes) and 18 per-step pages under `assignments/[id]/`. The v1 components in `components/dashboard/*` they imported remain — separately dead code, not in scope.
+- **Closed:** commit `69ba8b2` (`chore(phase-7.1): delete legacy v1 dashboard routes (35 files)`)
+
+### Legacy `__tests__/auth-*.test.tsx` files
+Deleted `auth-basic`, `auth-flow`, `auth-integration` tests + their `tsconfig.json` excludes. All three targeted v1 client-side patterns (`AuthProvider`, `signInWithPassword`, `onAuthStateChange`, `/api/auth/signout`). None tested universal concerns reused by v2.
+- **Closed:** commit `ca0461c` (`chore(phase-7.1): delete legacy v1 auth tests`)
+
+### RLS hardening: `assignments_teacher_own`
+Tightened the policy via migration `0009` to also require `district_id = auth_user_district_id()` and `school_id = auth_user_school_id()`. Added a defense-in-depth test case in `__tests__/schema/rls.test.ts` that probes a service-role-inserted row where `teacher_id` matches but tenancy diverges.
+- **Closed:** commit `83aac84` (`feat(phase-7.1): tighten assignments_teacher_own RLS`)
+
+### `createCandidate` race on `(gathering_sheet_id, position)`
+Wrapped the SELECT-max-then-INSERT in a 3-attempt retry loop catching `error.code === '23505'`. On collision, refetches `max(position)` and retries.
+- **Closed:** commit `771145c` (`fix(phase-7.1): retry createCandidate on 23505 unique-violation`)
 
 ### Vendor chunk bloat from `splitChunks: 'all'`
 Custom webpack `splitChunks` config in `next.config.js` was producing oversized vendor bundles. Restoring Next.js's default code-splitting reduced first-load JS substantially.
