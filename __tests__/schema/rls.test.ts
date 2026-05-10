@@ -193,27 +193,45 @@ beforeAll(async () => {
     })
     .throwOnError();
 
-  // 5. Student writings for Alex and Bailey on the expository assignment
+  // 5. Student writings for Alex and Bailey on the expository assignment.
+  // Phase 4 browser testing may have left student_writings rows with a
+  // different id but the same business key (assignment_id, student_id,
+  // draft_number=1). An UPSERT alone can't repair this: with onConflict
+  // on the business key, Postgres tries to UPDATE the existing row's id
+  // to TEST.alexWriting/baileyWriting and trips FK constraints from
+  // dependent tables (prompt_decodings, body_paragraphs, etc.). Clear
+  // any pre-existing row for that key first — ON DELETE CASCADE wipes
+  // dependents — then upsert clean rows with our fixed test ids.
   await svc
     .from("student_writings")
-    .upsert([
-      {
-        id: TEST.alexWriting,
-        assignment_id: IDS.assignmentExpository,
-        student_id: IDS.alex,
-        draft_number: 1,
-        status: "in_progress",
-        chunk_ratio: "two_plus_to_one",
-      },
-      {
-        id: TEST.baileyWriting,
-        assignment_id: IDS.assignmentExpository,
-        student_id: IDS.bailey,
-        draft_number: 1,
-        status: "in_progress",
-        chunk_ratio: "two_plus_to_one",
-      },
-    ])
+    .delete()
+    .eq("assignment_id", IDS.assignmentExpository)
+    .in("student_id", [IDS.alex, IDS.bailey])
+    .eq("draft_number", 1);
+
+  await svc
+    .from("student_writings")
+    .upsert(
+      [
+        {
+          id: TEST.alexWriting,
+          assignment_id: IDS.assignmentExpository,
+          student_id: IDS.alex,
+          draft_number: 1,
+          status: "in_progress",
+          chunk_ratio: "two_plus_to_one",
+        },
+        {
+          id: TEST.baileyWriting,
+          assignment_id: IDS.assignmentExpository,
+          student_id: IDS.bailey,
+          draft_number: 1,
+          status: "in_progress",
+          chunk_ratio: "two_plus_to_one",
+        },
+      ],
+      { onConflict: "assignment_id,student_id,draft_number" }
+    )
     .throwOnError();
 
   // 6. Create authenticated clients for each test user (sets password + signs in)
