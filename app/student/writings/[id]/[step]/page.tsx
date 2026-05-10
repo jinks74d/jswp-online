@@ -21,6 +21,8 @@ import { TChartStep } from "../_steps/t-chart-step";
 import { GatherCdsStep } from "../_steps/gather-cds-step";
 import { TopicSentenceDevStep } from "../_steps/topic-sentence-dev-step";
 import { CmDevStep } from "../_steps/cm-dev-step";
+import { DecisionsStep } from "../_steps/decisions-step";
+import { ElaborationStep } from "../_steps/elaboration-step";
 
 export const dynamic = "force-dynamic";
 
@@ -121,6 +123,34 @@ export default async function StepDispatcher({
   if (target.groupOrigin === "literary_cm_dev") {
     return (
       <CmDevStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+        sourceText={a.source_text}
+        sourceTitle={a.source_title}
+        sourceAuthor={a.source_author}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "literary_decisions") {
+    return (
+      <DecisionsStep
+        writingId={id}
+        stepKey={target.key}
+        stepLabel={target.label}
+        pedagogyHint={target.pedagogyHint ?? null}
+        sourceText={a.source_text}
+        sourceTitle={a.source_title}
+        sourceAuthor={a.source_author}
+      />
+    );
+  }
+
+  if (target.groupOrigin === "literary_elaboration") {
+    return (
+      <ElaborationStep
         writingId={id}
         stepKey={target.key}
         stepLabel={target.label}

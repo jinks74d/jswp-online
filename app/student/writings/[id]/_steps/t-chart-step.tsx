@@ -9,7 +9,7 @@
  * skip it entirely, expository/argumentation/literary include it.
  */
 
-import { bootstrapTCharts } from "@/lib/actions/t-charts";
+import { bootstrapWritingStructure } from "@/lib/actions/writing-structure";
 import { getTChartData } from "@/lib/queries/t-charts";
 import { getAnnotations } from "@/lib/queries/text-annotations";
 import { TChartClient } from "@/components/student/writing/t-chart/t-chart-client";
@@ -44,7 +44,7 @@ export async function TChartStep({
   // Bootstrap is idempotent: safe to call on every visit. Concurrent
   // tabs racing through this won't create duplicates — see the
   // UNIQUE constraints + ignoreDuplicates upserts in the action.
-  await bootstrapTCharts(writingId);
+  await bootstrapWritingStructure(writingId);
 
   const [data, annotations] = await Promise.all([
     getTChartData(writingId),

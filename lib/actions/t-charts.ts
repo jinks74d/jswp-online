@@ -7,24 +7,18 @@
  * through joins (see migrations/0002_rls_policies.sql).
  *
  * The structural bootstrap (BPs + chunks + starter CDs/CMs +
- * candidate promotion) was extracted in chunk 4.5b1 to
- * lib/actions/writing-structure.ts so the Literary cm_dev step can
- * share it. bootstrapTCharts is preserved here as a thin wrapper
- * for chunk 4.4's t-chart step entry; remove after 4.5b2.
+ * candidate promotion) lives in lib/actions/writing-structure.ts
+ * and is called by both t-chart and Literary's cm-dev step entries.
  *
- * addChunk and createConcreteDetail also delegate their per-mode
- * starter-CM layout to buildStarterCmRows so they stay consistent
- * with bootstrap (Literary: 5 word slots + 2 sentence slots; others:
- * 1 sentence slot).
+ * addChunk and createConcreteDetail delegate their per-mode starter-CM
+ * layout to buildStarterCmRows so they stay consistent with bootstrap
+ * (Literary: 5 word slots + 2 sentence slots; others: 1 sentence slot).
  */
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import {
-  bootstrapWritingStructure,
-  buildStarterCmRows,
-} from "@/lib/actions/writing-structure";
+import { buildStarterCmRows } from "@/lib/actions/writing-structure";
 import type { Database } from "@/lib/database.types";
 
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -32,18 +26,6 @@ type NarrativeKind = Database["public"]["Enums"]["jswp_narrative_kind"];
 type NarrativeSubject = Database["public"]["Enums"]["jswp_narrative_subject"];
 type CmKind = Database["public"]["Enums"]["jswp_cm_kind"];
 type Mode = Database["public"]["Enums"]["jswp_mode"];
-
-/* ─── Bootstrap (thin wrapper, delegates to writing-structure) ─────── */
-
-/**
- * Thin wrapper preserved for chunk 4.4's t-chart step entry. The real
- * bootstrap lives in lib/actions/writing-structure.ts and is also
- * called by Literary's cm-dev step. Delete this wrapper in 4.5b2 after
- * t-chart-step.tsx updates its import.
- */
-export async function bootstrapTCharts(writingId: string): Promise<void> {
-  return bootstrapWritingStructure(writingId);
-}
 
 /* ─── t_charts updates (TS, CS, narrative_*) ───────────────────────── */
 

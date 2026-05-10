@@ -4,7 +4,7 @@ Consolidated list of deferred work that isn't part of a current chunk. Most item
 
 When you finish an item, move it to **Closed** with the commit hash. Don't delete — the closed list is the audit trail.
 
-Last reviewed: chunk 4.5 (commit `6881cca`).
+Last reviewed: chunk 4.5b2.
 
 ---
 
@@ -53,6 +53,11 @@ Two concurrent [Add candidate] clicks (same student, double-tab or fast double-c
 ### Drag-and-drop reordering of selected candidates
 The pedagogyHint for gather-cds says "Drag them into the order you want them to appear." Chunk 4.5 implements selection-order via toggle order (first selected = priority 1). `@dnd-kit/*` is already in `package.json`; add a drag handle to selected candidates and persist `selection_order` on drop.
 - **Identified:** chunk 4.5 (commit `6881cca`)
+- **Priority:** polish; before production cutover (Phase 7)
+
+### Phrase-to-word linking on `commentary_items`
+Literary's elaboration step (chunk 4.5b2) pools phrase CMs per CD via `parent_cd_id` only. The pedagogyHint says "for each CM word, write a synonym, then two phrases" — implying a 1:1 word→phrase association. Schema doesn't enforce this. Adding a `parent_cm_id UUID REFERENCES commentary_items(id) ON DELETE CASCADE` column would let elaboration link each phrase to the specific best-word it elaborates, improving pedagogical fidelity. Requires migration; not load-bearing for any current step.
+- **Identified:** chunk 4.5b2 audit
 - **Priority:** polish; before production cutover (Phase 7)
 
 ---

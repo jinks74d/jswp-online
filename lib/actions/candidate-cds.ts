@@ -55,7 +55,12 @@ export async function bootstrapGatheringSheets(
   if (error) {
     throw new Error(`bootstrapGatheringSheets: ${error.message}`);
   }
-  revalidatePath(`/student/writings/${writingId}`, "layout");
+  // No revalidatePath: this is called from RSC render in
+  // gather-cds-step.tsx and topic-sentence-dev-step.tsx, both with
+  // dynamic = "force-dynamic". Calling revalidatePath during render
+  // is unsupported in Next.js 15.5+ (it errors). The other mutations
+  // in this file (createCandidate, etc.) DO call revalidatePath
+  // because they're invoked from form actions on the client side.
 }
 
 /* ─── Sheet field updates ──────────────────────────────────────────── */
@@ -133,7 +138,8 @@ export async function updateCandidateText(
 /**
  * Toggle a candidate's is_selected flag. When selecting, assign the
  * next selection_order on this sheet (max + 1) so the promotion logic
- * in t-charts.bootstrapTCharts can iterate them in priority order.
+ * in writing-structure.bootstrapWritingStructure can iterate them
+ * in priority order.
  * When deselecting, clear selection_order.
  *
  * Per the chunk 4.5 contract: deselecting does NOT delete an already-
