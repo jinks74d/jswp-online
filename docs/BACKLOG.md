@@ -60,6 +60,14 @@ Literary's elaboration step (chunk 4.5b2) pools phrase CMs per CD via `parent_cd
 - **Identified:** chunk 4.5b2 audit
 - **Priority:** polish; before production cutover (Phase 7)
 
+### Implement Dr. Louis's 15 Grammar Rules
+Cross-cutting JSWP pedagogy per CLAUDE.md §1. The `shaping_sheets.rules_applied TEXT[]` column already exists in the schema for tracking which rules a student applied during shaping. Three deliverables:
+1. **Content** — rule titles, descriptions, examples per rule, sourced from the printed guides (2024 Expository pp. 36–72, 2019 Argumentation pp. 22–72, 2018 P&F Narrative pp. 26–110, RTL Quick Start v4). Per CLAUDE.md §15, requires explicit user approval before invention.
+2. **`lib/jswp-grammar-rules.ts`** — typed data file with `key`, `shortName`, `description`, `examples.{weak,strong}`, `appliesAt[]` per rule.
+3. **UI** — shaping_sheet step exposes `rules_applied` selection (chunk 4.6a left this column unwritten because the data file isn't built yet).
+- **Identified:** chunk 4.6a (and CLAUDE.md §1 since project inception)
+- **Priority:** **content-blocked**, not engineering-blocked. Engineering effort is small once content exists. Before production cutover (Phase 7).
+
 ---
 
 ## Deferred chunk work

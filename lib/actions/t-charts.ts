@@ -27,12 +27,17 @@ type NarrativeSubject = Database["public"]["Enums"]["jswp_narrative_subject"];
 type CmKind = Database["public"]["Enums"]["jswp_cm_kind"];
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 
-/* ─── t_charts updates (TS, CS, narrative_*) ───────────────────────── */
+/* ─── t_charts updates (TS, CS, narrative_*, argumentation drafts) ── */
 
 export interface TChartFieldUpdates {
   working_topic_sentence?: string | null;
   revised_topic_sentence?: string | null;
   concluding_sentence?: string | null;
+  // Argumentation drafts (written by argumentation.counterargument step,
+  // chunk 4.6a). Polished into shaping_sheets.final_* by shaping step.
+  concession?: string | null;
+  counterargument?: string | null;
+  refutation?: string | null;
   // Narrative
   narrative_kind?: NarrativeKind | null;
   narrative_subject?: NarrativeSubject | null;
