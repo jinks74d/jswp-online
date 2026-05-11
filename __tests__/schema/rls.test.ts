@@ -651,6 +651,69 @@ describe("Exemplars (chunk 6.1)", () => {
   });
 });
 
+describe("Promote-to-exemplar read access (chunk 6.4)", () => {
+  // Promote-to-exemplar reads final_drafts.full_text via the
+  // student_writing join. The teacher review surface uses
+  // hasFinalDraftForPromotion + getWritingPrefillData; both rely on
+  // student_writings_teacher_select for the writing visibility and
+  // final_drafts's existing policy for the content. These tests
+  // verify the access boundary at the SQL layer.
+  const finalDraftAlex = "77777777-0000-0000-0000-000000000001";
+
+  beforeAll(async () => {
+    await svc
+      .from("final_drafts")
+      .upsert({
+        id: finalDraftAlex,
+        student_writing_id: TEST.alexWriting,
+        full_text: "Alex's polished essay content for promotion.",
+        title: "Promotion test",
+      })
+      .throwOnError();
+  });
+
+  afterAll(async () => {
+    await svc.from("final_drafts").delete().eq("id", finalDraftAlex);
+  });
+
+  it("supervising teacher can read final_draft content via the writing join", async () => {
+    const { data, error } = await teacherClient
+      .from("student_writings")
+      .select("id, final_draft:final_drafts ( full_text )")
+      .eq("id", TEST.alexWriting)
+      .maybeSingle();
+
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    const fdRaw = (data as unknown as { final_draft: unknown }).final_draft;
+    const fd = Array.isArray(fdRaw)
+      ? (fdRaw[0] as { full_text: string } | undefined)
+      : (fdRaw as { full_text: string } | null);
+    expect(fd?.full_text).toContain("Alex's polished essay");
+  });
+
+  it("teacher in another district cannot read this writing's final_draft", async () => {
+    const { data, error } = await teacher2Client
+      .from("final_drafts")
+      .select("full_text")
+      .eq("id", finalDraftAlex);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("anon cannot read final_drafts", async () => {
+    const { data, error } = await anonClient
+      .from("final_drafts")
+      .select("id");
+    if (error) {
+      expect(error.code).toBeDefined();
+    } else {
+      expect(data).toEqual([]);
+    }
+  });
+});
+
 describe("School-shared exemplars (chunk 6.3)", () => {
   // Self-contained fixtures.
   //   sharedPublished     — teacher's, published, expository, SHARED

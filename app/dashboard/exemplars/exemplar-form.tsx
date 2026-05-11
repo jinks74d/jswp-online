@@ -14,7 +14,7 @@
  */
 
 import { useActionState, useState } from "react";
-import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
 import type { ExemplarFormState } from "@/lib/actions/exemplars";
 import { EXEMPLAR_TEXT_MAX } from "@/lib/exemplar-limits";
 import type { ExemplarForViewer } from "@/lib/queries/exemplars";
@@ -30,6 +30,13 @@ const MODES: ReadonlyArray<{ value: Mode; label: string }> = [
 
 const initialState: ExemplarFormState = {};
 
+interface PrefillFromWriting {
+  studentName: string;
+  assignmentTitle: string;
+  fullText: string;
+  mode: Mode;
+}
+
 interface Props {
   action: (
     prev: ExemplarFormState,
@@ -39,6 +46,11 @@ interface Props {
   formMode: "create" | "edit";
   /** Shown briefly after a successful save in edit mode. */
   savedNotice?: boolean;
+  /** Promote-to-exemplar pre-fill (chunk 6.4). When set, the
+   * student-permission banner renders above the title and the
+   * full_text textarea starts populated with the writing's final
+   * draft. */
+  prefillFromWriting?: PrefillFromWriting;
 }
 
 export function ExemplarForm({
@@ -46,9 +58,12 @@ export function ExemplarForm({
   initial,
   formMode,
   savedNotice,
+  prefillFromWriting,
 }: Props) {
   const [state, formAction, pending] = useActionState(action, initialState);
-  const [text, setText] = useState<string>(initial?.full_text ?? "");
+  const [text, setText] = useState<string>(
+    initial?.full_text ?? prefillFromWriting?.fullText ?? ""
+  );
 
   const charCount = text.length;
   const wordCount =
@@ -74,6 +89,32 @@ export function ExemplarForm({
         >
           <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-green-800">Exemplar saved.</p>
+        </div>
+      )}
+
+      {prefillFromWriting && (
+        <div
+          className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start gap-2"
+          role="status"
+        >
+          <Sparkles className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-900">
+            <p>
+              Promoting from{" "}
+              <span className="font-semibold">
+                {prefillFromWriting.studentName}
+              </span>
+              &apos;s submission to{" "}
+              <span className="font-semibold">
+                {prefillFromWriting.assignmentTitle}
+              </span>
+              . Make sure you have permission from the student before
+              publishing or sharing this exemplar.
+            </p>
+            <p className="mt-1 text-amber-800/90">
+              If your draft is over 20,000 characters, trim before saving.
+            </p>
+          </div>
         </div>
       )}
 
@@ -112,7 +153,9 @@ export function ExemplarForm({
           id="mode"
           name="mode"
           required
-          defaultValue={initial?.mode ?? "expository"}
+          defaultValue={
+            initial?.mode ?? prefillFromWriting?.mode ?? "expository"
+          }
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           {MODES.map((m) => (

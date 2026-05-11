@@ -159,6 +159,129 @@ export async function getForViewer(
   };
 }
 
+export interface WritingPrefillData {
+  full_text: string;
+  mode: Mode;
+  studentName: string;
+  assignmentTitle: string;
+}
+
+/**
+ * Promote-to-exemplar prefill (chunk 6.4).
+ *
+ * Returns a snapshot of a writing's final_draft suitable for
+ * pre-populating /dashboard/exemplars/new. Returns null if:
+ *   - The writing doesn't exist or the teacher can't see it (RLS
+ *     gates via student_writings_teacher_select).
+ *   - No final_drafts row yet (student hasn't assembled the essay).
+ *   - The final_draft's full_text trims to empty.
+ *
+ * The returned data is a copy at promotion time. Subsequent edits
+ * to the student's final_draft don't propagate to any exemplar
+ * created from this snapshot — exemplars are curated content, not
+ * live mirrors.
+ *
+ * teacherId is intentionally unused at the SQL layer (RLS handles
+ * the scope). It's kept in the signature so callers can't forget
+ * the access context.
+ */
+export async function getWritingPrefillData(
+  writingId: string,
+  _teacherId: string
+): Promise<WritingPrefillData | null> {
+  const supabase = await createServerClient();
+
+  const { data, error } = await supabase
+    .from("student_writings")
+    .select(
+      `
+      id,
+      student:student_id ( first_name, last_name, email ),
+      assignment:assignment_id ( title, mode ),
+      final_draft:final_drafts ( full_text )
+      `
+    )
+    .eq("id", writingId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("exemplars.getWritingPrefillData:", error);
+    return null;
+  }
+  if (!data) return null;
+
+  type Row = {
+    id: string;
+    student:
+      | { first_name: string | null; last_name: string | null; email: string | null }
+      | Array<{
+          first_name: string | null;
+          last_name: string | null;
+          email: string | null;
+        }>
+      | null;
+    assignment:
+      | { title: string; mode: Mode }
+      | Array<{ title: string; mode: Mode }>
+      | null;
+    final_draft:
+      | { full_text: string }
+      | Array<{ full_text: string }>
+      | null;
+  };
+  const row = data as unknown as Row;
+
+  const student = Array.isArray(row.student) ? row.student[0] : row.student;
+  const assignment = Array.isArray(row.assignment)
+    ? row.assignment[0]
+    : row.assignment;
+  const finalDraft = Array.isArray(row.final_draft)
+    ? row.final_draft[0]
+    : row.final_draft;
+
+  if (!assignment || !finalDraft) return null;
+  const trimmed = finalDraft.full_text.trim();
+  if (trimmed.length === 0) return null;
+
+  const studentName = student
+    ? [student.first_name, student.last_name]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      student.email ||
+      "this student"
+    : "this student";
+
+  return {
+    full_text: finalDraft.full_text,
+    mode: assignment.mode,
+    studentName,
+    assignmentTitle: assignment.title,
+  };
+}
+
+/**
+ * Returns true when a writing has a non-empty final_draft. Used by
+ * the teacher review surface to gate the [Promote to Exemplar]
+ * button without pulling the full content. RLS-scoped.
+ */
+export async function hasFinalDraftForPromotion(
+  writingId: string
+): Promise<boolean> {
+  const supabase = await createServerClient();
+  const { data, error } = await supabase
+    .from("final_drafts")
+    .select("full_text")
+    .eq("student_writing_id", writingId)
+    .maybeSingle();
+  if (error) {
+    console.error("exemplars.hasFinalDraftForPromotion:", error);
+    return false;
+  }
+  if (!data) return false;
+  return data.full_text.trim().length > 0;
+}
+
 /**
  * Student-side exemplars for a writing (chunk 6.2).
  *

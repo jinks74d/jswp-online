@@ -23,6 +23,7 @@ import { ChevronLeft } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getWritingForTeacherReview } from "@/lib/queries/teacher-writings";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
+import { hasFinalDraftForPromotion } from "@/lib/queries/exemplars";
 import { CombinedView } from "@/components/dashboard/writing-review/combined-view";
 import { FeedbackPanel } from "@/components/dashboard/writing-review/feedback-panel";
 import { ReviewActions } from "@/components/dashboard/writing-review/review-actions";
@@ -45,7 +46,10 @@ export default async function TeacherWritingReviewPage({
     notFound();
   }
 
-  const feedback = await listFeedback(writingId);
+  const [feedback, hasFinalDraft] = await Promise.all([
+    listFeedback(writingId),
+    hasFinalDraftForPromotion(writingId),
+  ]);
   const unresolvedCount = feedback.filter((f) => !f.is_resolved).length;
 
   const studentName =
@@ -83,6 +87,7 @@ export default async function TeacherWritingReviewPage({
           status={writing.status}
           unresolvedCount={unresolvedCount}
           rubric={writing.assignment.rubric}
+          hasFinalDraft={hasFinalDraft}
         />
       </header>
 
