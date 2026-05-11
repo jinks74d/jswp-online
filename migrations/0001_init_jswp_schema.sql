@@ -662,18 +662,43 @@ END $$;
 -- 19. Word-count triggers for paragraph_forms / final_drafts
 -- ---------------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION trigger_set_word_count()
+-- One trigger function per table: Postgres binds NEW.<col> against the
+-- table rowtype at execution, so a shared function referencing both
+-- final_text and full_text would throw "record 'new' has no field …"
+-- on whichever column the firing table lacks.
+-- NULLIF(trim(...), '') makes an empty/whitespace-only body produce
+-- word_count = 0 (regexp_split_to_array on '' returns {''}, length 1).
+
+CREATE OR REPLACE FUNCTION trigger_set_word_count_paragraph_forms()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
-DECLARE
-  source_text TEXT;
 BEGIN
-  source_text := COALESCE(NEW.final_text, NEW.full_text, '');
   NEW.word_count := COALESCE(
-    array_length(regexp_split_to_array(trim(source_text), '\s+'), 1),
+    array_length(
+      regexp_split_to_array(NULLIF(trim(COALESCE(NEW.final_text, '')), ''), '\s+'),
+      1
+    ),
+    0
+  );
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION trigger_set_word_count_final_drafts()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  NEW.word_count := COALESCE(
+    array_length(
+      regexp_split_to_array(NULLIF(trim(COALESCE(NEW.full_text, '')), ''), '\s+'),
+      1
+    ),
     0
   );
   RETURN NEW;
@@ -682,11 +707,11 @@ $$;
 
 CREATE TRIGGER set_word_count_paragraph_forms
   BEFORE INSERT OR UPDATE OF final_text ON paragraph_forms
-  FOR EACH ROW EXECUTE FUNCTION trigger_set_word_count();
+  FOR EACH ROW EXECUTE FUNCTION trigger_set_word_count_paragraph_forms();
 
 CREATE TRIGGER set_word_count_final_drafts
   BEFORE INSERT OR UPDATE OF full_text ON final_drafts
-  FOR EACH ROW EXECUTE FUNCTION trigger_set_word_count();
+  FOR EACH ROW EXECUTE FUNCTION trigger_set_word_count_final_drafts();
 
 -- ---------------------------------------------------------------------------
 -- 20. RLS helper functions (policies live in 0002_rls_policies.sql)

@@ -7,15 +7,6 @@
  *   per body_paragraph (UNIQUE on body_paragraph_id, race-safe via
  *   ignoreDuplicates upsert). Inserts with final_text='' so the
  *   row exists before the student starts typing.
- *
- *   Trigger edge case: the schema's word-count trigger (line 683
- *   of 0001) computes word_count via regexp_split_to_array on the
- *   trimmed text. For empty string, this produces a 1-element
- *   array {''} → word_count = 1 on initial insert. We never display
- *   the DB word_count (the UI uses a client-side count that handles
- *   empty correctly), so this is harmless. First real save corrects
- *   word_count to the actual word count.
- *
  * - updateFinalText: writes paragraph_forms.final_text. Word count
  *   recomputed by the trigger.
  *
