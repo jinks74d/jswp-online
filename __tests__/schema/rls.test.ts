@@ -531,6 +531,126 @@ describe("Anon has no access", () => {
   });
 });
 
+describe("Exemplars (chunk 6.1)", () => {
+  // Three exemplars seeded via service role:
+  //   - publishedOwned: teacher's, published, expository — Alex should see
+  //   - draftOwned: teacher's, draft, expository — Alex should NOT see
+  //   - otherTeacher: teacher2's, published, expository — Alex should NOT see
+  const publishedOwnedId = "44444444-0000-0000-0000-000000000001";
+  const draftOwnedId = "44444444-0000-0000-0000-000000000002";
+  const otherTeacherId = "44444444-0000-0000-0000-000000000003";
+
+  beforeAll(async () => {
+    await svc
+      .from("exemplars")
+      .upsert([
+        {
+          id: publishedOwnedId,
+          district_id: IDS.district,
+          school_id: IDS.school,
+          created_by: IDS.teacher,
+          title: "Published exemplar — Sports",
+          description: "Demo expository exemplar",
+          mode: "expository",
+          full_text: "Working together to achieve a goal requires…",
+          is_published: true,
+        },
+        {
+          id: draftOwnedId,
+          district_id: IDS.district,
+          school_id: IDS.school,
+          created_by: IDS.teacher,
+          title: "Draft exemplar — Teamwork",
+          description: null,
+          mode: "expository",
+          full_text: "Not ready for students yet.",
+          is_published: false,
+        },
+        {
+          id: otherTeacherId,
+          district_id: TEST.district2,
+          school_id: TEST.school2,
+          created_by: TEST.teacher2,
+          title: "Other teacher's exemplar",
+          description: null,
+          mode: "expository",
+          full_text: "Should be invisible to Alex.",
+          is_published: true,
+        },
+      ])
+      .throwOnError();
+  });
+
+  afterAll(async () => {
+    await svc
+      .from("exemplars")
+      .delete()
+      .in("id", [publishedOwnedId, draftOwnedId, otherTeacherId]);
+  });
+
+  it("teacher can read their own exemplars (published + draft)", async () => {
+    const { data, error } = await teacherClient
+      .from("exemplars")
+      .select("id, is_published")
+      .in("id", [publishedOwnedId, draftOwnedId]);
+
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    expect(data!.length).toBe(2);
+  });
+
+  it("teacher cannot read another teacher's exemplars", async () => {
+    const { data, error } = await teacherClient
+      .from("exemplars")
+      .select("id")
+      .eq("id", otherTeacherId);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("student reads published exemplar from their teacher", async () => {
+    const { data, error } = await alexClient
+      .from("exemplars")
+      .select("id")
+      .eq("id", publishedOwnedId);
+
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    expect(data!.length).toBe(1);
+  });
+
+  it("student cannot read draft exemplar (even from their teacher)", async () => {
+    const { data, error } = await alexClient
+      .from("exemplars")
+      .select("id")
+      .eq("id", draftOwnedId);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("student cannot read exemplars from a different teacher", async () => {
+    const { data, error } = await alexClient
+      .from("exemplars")
+      .select("id")
+      .eq("id", otherTeacherId);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("anon cannot read exemplars", async () => {
+    const { data, error } = await anonClient.from("exemplars").select("id");
+
+    if (error) {
+      expect(error.code).toBeDefined();
+    } else {
+      expect(data).toEqual([]);
+    }
+  });
+});
+
 describe("Rubric scores (chunk 5.1)", () => {
   // Service-role helper: seeds a single rubric_score row for Alex's writing.
   // Tests below verify each role's view of it through the RLS policies.

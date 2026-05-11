@@ -13,9 +13,11 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Award, MessageSquare } from "lucide-react";
 import { StepSidebar } from "./step-sidebar";
 import { RubricBreakdown } from "./rubric-breakdown";
+import { ExemplarReference } from "./exemplar-reference";
 import { FeedbackPanel } from "@/components/dashboard/writing-review/feedback-panel";
 import type { FeedbackItemRow } from "@/lib/queries/teacher-feedback";
 import type { RubricScoreRow } from "@/lib/queries/rubric-scores";
+import type { ExemplarForStudent } from "@/lib/queries/exemplars";
 import type { StepConfig } from "@/lib/jswp-modes";
 import type { Database } from "@/lib/database.types";
 
@@ -41,6 +43,7 @@ export function WritingShell({
   totalScore,
   feedback,
   rubricScores,
+  exemplars,
   children,
 }: {
   writingId: string;
@@ -59,6 +62,7 @@ export function WritingShell({
   totalScore: number | null;
   feedback: readonly FeedbackItemRow[];
   rubricScores: readonly RubricScoreRow[];
+  exemplars: readonly ExemplarForStudent[];
   children: React.ReactNode;
 }) {
   const unresolvedCount = feedback.filter((f) => !f.is_resolved).length;
@@ -100,6 +104,8 @@ export function WritingShell({
       {status === "graded" && rubricScores.length > 0 && (
         <RubricBreakdown scores={rubricScores} />
       )}
+
+      <ExemplarReference exemplars={exemplars} />
 
       <div className={gridClass}>
         <StepSidebar

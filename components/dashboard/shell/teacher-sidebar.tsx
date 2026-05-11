@@ -9,12 +9,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, FileText, GraduationCap } from "lucide-react";
+import { BookOpen, FileText, GraduationCap, Library } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard/classes", label: "My Classes", icon: BookOpen },
   { href: "/dashboard/assignments", label: "My Assignments", icon: FileText },
   { href: "/dashboard/students", label: "My Students", icon: GraduationCap },
+  { href: "/dashboard/exemplars", label: "Exemplars", icon: Library },
 ] as const;
 
 export function TeacherSidebar({

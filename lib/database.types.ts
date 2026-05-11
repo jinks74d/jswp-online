@@ -241,6 +241,15 @@ export interface Database {
         Update: UpdateOf<RubricScores>;
         Relationships: [];
       };
+      exemplars: {
+        Row: Exemplars;
+        Insert: InsertOf<
+          Exemplars,
+          "district_id" | "school_id" | "title" | "mode" | "full_text"
+        >;
+        Update: UpdateOf<Exemplars>;
+        Relationships: [];
+      };
       audit_log: {
         Row: AuditLog;
         Insert: InsertOf<AuditLog, "actor_id" | "action">;
@@ -637,6 +646,18 @@ export type RubricScores = {
   score: number;
   level_label: string | null;
   comment: string | null;
+} & Timestamps;
+
+export type Exemplars = {
+  id: string;
+  district_id: string;
+  school_id: string;
+  created_by: string | null;
+  title: string;
+  description: string | null;
+  mode: Database["public"]["Enums"]["jswp_mode"];
+  full_text: string;
+  is_published: boolean;
 } & Timestamps;
 
 export type AuditLog = {
