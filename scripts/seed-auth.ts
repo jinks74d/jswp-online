@@ -62,7 +62,13 @@ const SEED_USERS: readonly SeedUser[] = [
     id: "939c2df8-ae49-40b8-b216-bd4d6b61ea43",
     email: "teacher@demo.test",
     password: "Teacher1!",
-    label: "Teacher",
+    label: "Teacher (Ms. Schaffer)",
+  },
+  {
+    id: "a7b7c925-d5de-49d9-a8f4-b59b69dbae7f",
+    email: "provision1@demo.test",
+    password: "Teacher2!",
+    label: "Teacher (Bill Teach)",
   },
   {
     id: "30d8b2f9-0bf9-4044-a254-9b8a0612b584",
