@@ -93,23 +93,47 @@ CREATE POLICY assignment_exemplars_admin_read ON assignment_exemplars
 -- via-pin path: a published exemplar is readable if it's pinned to an
 -- assignment the student can read.
 --
+-- Implementation note: the natural inline EXISTS would create a
+-- table-level cycle between exemplars and assignment_exemplars
+-- (assignment_exemplars_teacher_all WITH CHECK does EXISTS on exemplars;
+-- this policy would do EXISTS on assignment_exemplars). Postgres flags
+-- the cycle even though runtime AND short-circuits would prevent
+-- infinite recursion. Hide the dependency behind a SECURITY DEFINER
+-- helper, same pattern as 6.1's auth_user_student_can_read_exemplar.
+--
 -- Postgres ORs multiple SELECT policies, so this stacks alongside the
 -- existing exemplars_student_read without breaking it.
+
+CREATE OR REPLACE FUNCTION auth_user_student_can_read_pinned_exemplar(target_exemplar_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM assignment_exemplars ae
+    JOIN assignments a ON a.id = ae.assignment_id
+    WHERE ae.exemplar_id = target_exemplar_id
+      AND a.class_period_id IS NOT NULL
+      AND a.released_at IS NOT NULL
+      AND a.released_at <= NOW()
+      AND EXISTS (
+        SELECT 1 FROM class_student_enrollments cse
+        WHERE cse.class_period_id = a.class_period_id
+          AND cse.student_id = auth.uid()
+          AND cse.unenrolled_at IS NULL
+      )
+  );
+$$;
+
 CREATE POLICY exemplars_student_read_via_pin ON exemplars
   FOR SELECT TO authenticated
   USING (
     is_published = TRUE
     AND auth_user_role() = 'student'
-    AND EXISTS (
-      SELECT 1
-      FROM assignment_exemplars ae
-      JOIN assignments a ON a.id = ae.assignment_id
-      WHERE ae.exemplar_id = exemplars.id
-        AND a.class_period_id IS NOT NULL
-        AND auth_user_enrolled_in_class_period(a.class_period_id)
-        AND a.released_at IS NOT NULL
-        AND a.released_at <= NOW()
-    )
+    AND auth_user_student_can_read_pinned_exemplar(id)
   );
 
 COMMIT;
