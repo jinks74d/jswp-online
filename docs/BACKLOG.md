@@ -25,11 +25,6 @@ Schema supports embedded quotations on `concrete_details` via `is_quotation`, `t
 - **Identified:** chunk 4.4 (commit `01191de`)
 - **Priority:** before production cutover (Phase 7) — pedagogically canonical per CLAUDE.md §4
 
-### Define `--jswp-*` CSS custom properties in `globals.css`
-`lib/jswp-modes.ts` exports `JSWP_COLORS` mapping to `var(--jswp-red)`, `--jswp-green`, `--jswp-yellow`, `--jswp-blue`, `--jswp-purple`, `--jswp-orange`, `--jswp-teal`. None are defined in `globals.css` yet — the values silently fall back to whatever CSS interprets. Downstream chunks (T-chart color coding, chunk composition, paragraph form) will need them once mode-color styling shows up in the UI. Tailwind utility classes carry chunks 4.3 and 4.4.
-- **Identified:** chunk 4.3 (commit `972547c`); reiterated in chunk 4.4
-- **Priority:** before production cutover (Phase 7); blocks any chunk that reads from `JSWP_COLORS` for runtime styling
-
 ### Remove `as unknown as <Shape>` TS narrowing hacks (chunk P7-2)
 The P7-1 audit revealed the actual count is **34 casts across 23 files**, not 2 across 2 as originally noted. Most narrow Supabase nested-embed results (`assignment:assignment_id ( ... )`) — the same root cause: the hand-written `Database` types don't carry the relationship metadata Supabase needs to infer embed shapes. Two outliers in `lib/actions/assignments.ts` cast a typed rubric to `Json` for a JSONB column (different problem; would not be fixed by regen).
 
@@ -127,3 +122,19 @@ Custom webpack `splitChunks` config in `next.config.js` was producing oversized 
 ### Refactor `narrative-t-chart.tsx` Discovery section out
 The 5 narrative_* fields (kind, subject, key_word, general_ideas, concrete_example) moved from t-chart's Discovery section to the new `narrative.discovery` step UI. Data stayed on `t_charts` — only UI surface relocated. T-chart now shows a read-only "From your discovery" header above the WOW section.
 - **Closed:** chunk 4.5c
+
+### Define `--jswp-*` CSS custom properties in `globals.css`
+Chunk 6.6a's CSS pass shipped the full palette plus role-pointer aliases (`--jswp-color-ts`, etc.) and the `.jswp-*` class definitions with shape-symbol `::before` content for accessibility. Closes the long-standing carryover from chunk 4.3.
+- **Closed:** commit `5e07520` (`feat(phase-6.6a): color-coded exemplars — rendering + sanitization`)
+
+### Dead v1 components in `components/dashboard/**`, `components/auth/**`, `components/analytics/**`, `hooks/`
+84 file deletions across the dashboard PascalCase tree (root + analytics + assignments + classes + schools + students + teachers + users), the legacy auth modal + provider components, the standalone analytics SessionTrackingProvider, and the two `useSessionTracking` hooks that only fed it. Two `components/super-admin/*` orphans (ClientSuperAdmin + SuperAdminSidebar) also went — both were self-referenced only. The remaining `components/super-admin/*` files (UsersList, DistrictsClientPage, DistrictDetailsView, EditDistrictForm, DistrictAdminManager) plus `components/dashboard/analytics/AnalyticsDashboard.tsx` stay; B4 (super-admin cleanup) will close them.
+- **Closed:** chunk P7-5a
+
+### Legacy `lib/sanitization.tsx` + `app/api/errors/route.ts` stubs
+v1 browser-only DOMPurify wrapper (5 importers all in the P7-5a deletion set) plus the placeholder error-reporting route handler that referenced never-set env vars and a non-existent Supabase table. ErrorBoundary's fire-and-forget POST now 404s silently via `.catch(console.error)`. Real error sink stays behind D3 (Sentry vs homegrown `error_logs` table — Raymond's call post-cutover).
+- **Closed:** chunk P7-5b
+
+### Unnumbered legacy SQL files in `migrations/`
+24 v1 apply-once patches deleted (e.g., `fix-rls-auth-performance.sql`, `add-prompt-field.sql`, `database-setup.sql`). All were folded into the canonical numbered schema long ago. Git history preserves them. Migrations directory is now just the 17 numbered files (`0001` → `0017`) + `README.md`.
+- **Closed:** chunk P7-5c
