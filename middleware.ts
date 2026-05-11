@@ -122,9 +122,16 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set("x-jswp-district-logo", branding.logoUrl);
   }
 
-  return NextResponse.next({
+  // Carry forward any refreshed-session cookies that @supabase/ssr wrote
+  // onto `response` during getUser() — otherwise this branch silently
+  // drops them and the user gets logged out when the access token rotates.
+  const brandedResponse = NextResponse.next({
     request: { headers: requestHeaders },
   });
+  response.cookies.getAll().forEach((cookie) => {
+    brandedResponse.cookies.set(cookie);
+  });
+  return brandedResponse;
 }
 
 export const config = {

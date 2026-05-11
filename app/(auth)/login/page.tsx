@@ -52,6 +52,12 @@ export default async function LoginPage({
       kind: "error",
       message: "Access denied. Please sign in to continue.",
     };
+  } else if (error === "orphan_account") {
+    banner = {
+      kind: "error",
+      message:
+        "Your account isn't fully set up. Please sign up again or contact your administrator.",
+    };
   }
 
   return (

@@ -164,7 +164,7 @@ export async function signUpAction(
     email,
     password,
     options: {
-      emailRedirectTo: `${siteUrl}/auth/callback?next=/login?confirmed=1`,
+      emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent("/login?confirmed=1")}`,
     },
   });
 
