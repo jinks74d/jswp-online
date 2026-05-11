@@ -232,6 +232,15 @@ export interface Database {
         Update: UpdateOf<TeacherFeedback>;
         Relationships: [];
       };
+      rubric_scores: {
+        Row: RubricScores;
+        Insert: InsertOf<
+          RubricScores,
+          "student_writing_id" | "criterion_id" | "criterion_name" | "max_score" | "score"
+        >;
+        Update: UpdateOf<RubricScores>;
+        Relationships: [];
+      };
       audit_log: {
         Row: AuditLog;
         Insert: InsertOf<AuditLog, "actor_id" | "action">;
@@ -617,6 +626,17 @@ export type TeacherFeedback = {
   body: string;
   rubric_score: number | null;
   is_resolved: boolean;
+} & Timestamps;
+
+export type RubricScores = {
+  id: string;
+  student_writing_id: string;
+  criterion_id: string;
+  criterion_name: string;
+  max_score: number;
+  score: number;
+  level_label: string | null;
+  comment: string | null;
 } & Timestamps;
 
 export type AuditLog = {

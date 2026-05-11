@@ -531,6 +531,131 @@ describe("Anon has no access", () => {
   });
 });
 
+describe("Rubric scores (chunk 5.1)", () => {
+  // Service-role helper: seeds a single rubric_score row for Alex's writing.
+  // Tests below verify each role's view of it through the RLS policies.
+  const rubricRowId = "33333333-0000-0000-0000-000000000001";
+  const criterionId = "33333333-0000-0000-0000-000000000010";
+
+  beforeAll(async () => {
+    await svc
+      .from("rubric_scores")
+      .upsert({
+        id: rubricRowId,
+        student_writing_id: TEST.alexWriting,
+        criterion_id: criterionId,
+        criterion_name: "Thesis clarity",
+        max_score: 4,
+        score: 3,
+        level_label: "Proficient",
+      })
+      .throwOnError();
+  });
+
+  afterAll(async () => {
+    await svc.from("rubric_scores").delete().eq("id", rubricRowId);
+  });
+
+  it("student can read their own rubric scores", async () => {
+    const { data, error } = await alexClient
+      .from("rubric_scores")
+      .select("id")
+      .eq("id", rubricRowId);
+
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    expect(data!.length).toBe(1);
+  });
+
+  it("student cannot read another student's rubric scores", async () => {
+    const { data, error } = await baileyClient
+      .from("rubric_scores")
+      .select("id")
+      .eq("id", rubricRowId);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("teacher can read rubric scores on their assignment", async () => {
+    const { data, error } = await teacherClient
+      .from("rubric_scores")
+      .select("id, score")
+      .eq("id", rubricRowId);
+
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    expect(data!.length).toBe(1);
+  });
+
+  it("teacher in another district cannot read these rubric scores", async () => {
+    const { data, error } = await teacher2Client
+      .from("rubric_scores")
+      .select("id")
+      .eq("id", rubricRowId);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("student cannot insert their own rubric scores", async () => {
+    const { error } = await alexClient.from("rubric_scores").insert({
+      student_writing_id: TEST.alexWriting,
+      criterion_id: "33333333-0000-0000-0000-000000000099",
+      criterion_name: "Self-graded",
+      max_score: 4,
+      score: 4,
+    });
+
+    expect(error).not.toBeNull();
+  });
+
+  it("teacher can insert rubric scores on their assignment", async () => {
+    const tmpCriterion = "33333333-0000-0000-0000-000000000020";
+    const { error: insErr } = await teacherClient.from("rubric_scores").insert({
+      student_writing_id: TEST.alexWriting,
+      criterion_id: tmpCriterion,
+      criterion_name: "Evidence",
+      max_score: 4,
+      score: 2,
+      level_label: "Developing",
+    });
+
+    expect(insErr).toBeNull();
+
+    // Clean up via service role so afterAll's targeted delete leaves nothing.
+    await svc
+      .from("rubric_scores")
+      .delete()
+      .eq("student_writing_id", TEST.alexWriting)
+      .eq("criterion_id", tmpCriterion);
+  });
+
+  it("teacher in another district cannot insert rubric scores", async () => {
+    const { error } = await teacher2Client.from("rubric_scores").insert({
+      student_writing_id: TEST.alexWriting,
+      criterion_id: "33333333-0000-0000-0000-000000000030",
+      criterion_name: "Hijack attempt",
+      max_score: 4,
+      score: 4,
+    });
+
+    expect(error).not.toBeNull();
+  });
+
+  it("anon cannot read rubric scores", async () => {
+    const { data, error } = await anonClient
+      .from("rubric_scores")
+      .select("id");
+
+    if (error) {
+      expect(error.code).toBeDefined();
+    } else {
+      expect(data).toEqual([]);
+    }
+  });
+});
+
 describe("Super admin sees all", () => {
   it("super admin can read assignments across districts", async () => {
     const { data, error } = await superClient

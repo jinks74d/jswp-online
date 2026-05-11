@@ -7,8 +7,9 @@
  * (never null) so Phase 4/5 rendering doesn't have to null-check.
  *
  * Criterion ids are crypto.randomUUID() generated in the editor and
- * persisted; Phase 5 grading will reference them from
- * student_writings.rubric_score.
+ * persisted; chunk 5.1 grading references them from
+ * rubric_scores.criterion_id (with snapshot fields so historical grades
+ * survive later rubric edits).
  */
 
 export interface RubricLevel {

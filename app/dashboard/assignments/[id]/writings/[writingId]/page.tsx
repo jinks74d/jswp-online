@@ -82,6 +82,7 @@ export default async function TeacherWritingReviewPage({
           writingId={writing.id}
           status={writing.status}
           unresolvedCount={unresolvedCount}
+          rubric={writing.assignment.rubric}
         />
       </header>
 

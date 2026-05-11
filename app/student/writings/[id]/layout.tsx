@@ -14,6 +14,7 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { getWriting, getCompletedStepKeys } from "@/lib/queries/student-writings";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
+import { getRubricScoresForWriting } from "@/lib/queries/rubric-scores";
 import { MODES, type JswpMode } from "@/lib/jswp-modes";
 import { WritingShell } from "@/components/student/writing/writing-shell";
 import { WritingModeProvider } from "@/components/student/writing/writing-mode-provider";
@@ -47,12 +48,18 @@ export default async function WritingLayout({
     writing.status === "submitted" || writing.status === "graded";
 
   // Fetch feedback for any returned writing so we can render the panel
-  // and a banner count. Other statuses don't need it (no panel shown).
-  const [completedKeys, feedback] = await Promise.all([
+  // and a banner count. Rubric scores load on graded writings to drive
+  // the per-criterion breakdown. Other statuses don't need either.
+  const [completedKeys, feedback, rubricScores] = await Promise.all([
     getCompletedStepKeys(id),
     writing.status === "returned"
       ? listFeedback(id)
       : Promise.resolve([] as Awaited<ReturnType<typeof listFeedback>>),
+    writing.status === "graded"
+      ? getRubricScoresForWriting(id)
+      : Promise.resolve(
+          [] as Awaited<ReturnType<typeof getRubricScoresForWriting>>
+        ),
   ]);
 
   return (
@@ -73,6 +80,7 @@ export default async function WritingLayout({
         gradedAt={writing.graded_at}
         totalScore={writing.total_score}
         feedback={feedback}
+        rubricScores={rubricScores}
       >
         {children}
       </WritingShell>

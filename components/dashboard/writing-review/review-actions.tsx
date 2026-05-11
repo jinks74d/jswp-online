@@ -8,12 +8,14 @@
  *     native confirm() → returnWriting(writingId). Status becomes
  *     'returned'.
  *
- *   - [Mark Graded]: click expands an inline composer with optional
- *     numeric score input (range 0-999.99 to match NUMERIC(5,2)).
- *     Confirm → gradeWriting(writingId, score|null). Status becomes
- *     'graded'. Phase 5 will swap this for rubric-based scoring.
+ *   - [Mark Graded]: click expands an inline composer. When the
+ *     assignment has a non-empty rubric (rubric.criteria.length > 0),
+ *     the RubricScoringPanel renders for per-criterion scoring.
+ *     Otherwise the legacy numeric GradeComposer renders. Status
+ *     becomes 'graded' on confirm.
  *
- * Idempotent on target state — see lib/actions/teacher-review.ts.
+ * Idempotent on target state — see lib/actions/teacher-review.ts
+ * and lib/actions/rubric-grading.ts.
  *
  * Hidden on already-graded writings (graded is terminal in 4.7b's
  * UX; re-grade is Phase 5+ per spec).
@@ -22,7 +24,9 @@
 import { useState, useTransition } from "react";
 import { Loader2, ArrowLeftCircle, Award } from "lucide-react";
 import { returnWriting, gradeWriting } from "@/lib/actions/teacher-review";
-import type { Database } from "@/lib/database.types";
+import { loadRubric } from "@/lib/rubric";
+import { RubricScoringPanel } from "./rubric-scoring-panel";
+import type { Database, Json } from "@/lib/database.types";
 
 type WritingStatus = Database["public"]["Enums"]["jswp_writing_status"];
 
@@ -30,12 +34,21 @@ interface Props {
   writingId: string;
   status: WritingStatus;
   unresolvedCount: number;
+  rubric: Json | null;
 }
 
-export function ReviewActions({ writingId, status, unresolvedCount }: Props) {
+export function ReviewActions({
+  writingId,
+  status,
+  unresolvedCount,
+  rubric,
+}: Props) {
   const [grading, setGrading] = useState(false);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  const parsedRubric = loadRubric(rubric);
+  const hasRubric = parsedRubric.criteria.length > 0;
 
   const canReturn = unresolvedCount > 0 && status !== "graded";
   const showActions = status !== "graded";
@@ -95,13 +108,21 @@ export function ReviewActions({ writingId, status, unresolvedCount }: Props) {
         </button>
       </div>
 
-      {grading && (
-        <GradeComposer
-          writingId={writingId}
-          onClose={() => setGrading(false)}
-          onError={setError}
-        />
-      )}
+      {grading &&
+        (hasRubric ? (
+          <RubricScoringPanel
+            writingId={writingId}
+            rubric={parsedRubric}
+            onClose={() => setGrading(false)}
+            onError={setError}
+          />
+        ) : (
+          <GradeComposer
+            writingId={writingId}
+            onClose={() => setGrading(false)}
+            onError={setError}
+          />
+        ))}
 
       {error && (
         <div className="text-sm text-red-700" role="alert">

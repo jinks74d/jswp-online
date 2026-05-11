@@ -8,7 +8,7 @@
 
 import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/database.types";
+import type { Database, Json } from "@/lib/database.types";
 
 type WritingStatus = Database["public"]["Enums"]["jswp_writing_status"];
 type Mode = Database["public"]["Enums"]["jswp_mode"];
@@ -60,6 +60,7 @@ export interface WritingForTeacherReview {
     default_chunk_ratio: Database["public"]["Enums"]["jswp_chunk_ratio"];
     num_body_paragraphs: number;
     default_chunks_per_bp: number;
+    rubric: Json | null;
   };
 }
 
@@ -135,7 +136,7 @@ export async function getWritingForTeacherReview(
       assignment:assignment_id (
         id, title, prompt, mode, is_essay, has_counterargument,
         source_text, source_title, source_author, default_chunk_ratio,
-        num_body_paragraphs, default_chunks_per_bp
+        num_body_paragraphs, default_chunks_per_bp, rubric
       )
       `
     )
