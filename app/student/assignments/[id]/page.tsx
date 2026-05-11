@@ -14,6 +14,7 @@ import { notFound } from "next/navigation";
 import { Calendar, FileText } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getStudentAssignmentDetail } from "@/lib/queries/student-assignments";
+import { loadRubric } from "@/lib/rubric";
 import { StatusBadge } from "@/components/student/status-badge";
 import { StartWritingButton } from "./start-writing-button";
 import { startWriting } from "@/lib/actions/student-writings";
@@ -42,6 +43,7 @@ export default async function StudentAssignmentDetail({
 
   const dueText = formatDue(item.due_at);
   const ctaLabel = ctaLabelFor(item.status);
+  const rubric = loadRubric(item.rubric);
 
   return (
     <div className="space-y-6">
@@ -109,7 +111,7 @@ export default async function StudentAssignmentDetail({
         </details>
       )}
 
-      {item.rubric && (
+      {rubric.criteria.length > 0 && (
         <details className="bg-white border border-gray-200 rounded-lg group">
           <summary className="flex items-center justify-between gap-3 p-5 cursor-pointer list-none">
             <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
@@ -122,10 +124,51 @@ export default async function StudentAssignmentDetail({
               Hide
             </span>
           </summary>
-          <div className="px-5 pb-5 border-t border-gray-100 pt-4">
-            <pre className="text-xs text-gray-700 overflow-x-auto whitespace-pre-wrap font-mono">
-              {JSON.stringify(item.rubric, null, 2)}
-            </pre>
+          <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
+            {rubric.criteria.map((criterion) => {
+              const orderedLevels = [...criterion.levels].sort(
+                (a, b) => b.score - a.score
+              );
+              const maxScore = orderedLevels[0]?.score ?? 0;
+              return (
+                <div
+                  key={criterion.id}
+                  className="border border-gray-200 rounded-md p-3"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      {criterion.name}
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      out of {maxScore}
+                    </span>
+                  </div>
+                  {criterion.description && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      {criterion.description}
+                    </p>
+                  )}
+                  <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+                    {orderedLevels.map((level) => (
+                      <li
+                        key={`${criterion.id}-${level.score}`}
+                        className="flex items-baseline gap-2 text-xs"
+                      >
+                        <span className="font-medium text-gray-800">
+                          {level.label}
+                        </span>
+                        <span className="text-gray-500">({level.score})</span>
+                        {level.description && (
+                          <span className="text-gray-600 truncate">
+                            — {level.description}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </details>
       )}
