@@ -44,6 +44,7 @@ export type ExemplarListItem = Pick<
   | "updated_at"
   | "created_by"
   | "step_tags"
+  | "content_format"
 > & {
   ownedByViewer: boolean;
   authorName: string | null;
@@ -62,6 +63,7 @@ export type ExemplarForViewer = Pick<
   | "updated_at"
   | "created_by"
   | "step_tags"
+  | "content_format"
 > & {
   ownedByViewer: boolean;
   authorName: string | null;
@@ -69,7 +71,7 @@ export type ExemplarForViewer = Pick<
 
 export type ExemplarForStudent = Pick<
   Exemplars,
-  "id" | "title" | "description" | "full_text" | "updated_at"
+  "id" | "title" | "description" | "full_text" | "updated_at" | "content_format"
 > & {
   /** True when the exemplar was kept because its step_tags include
    * the student's current step. False when the row survives via the
@@ -119,7 +121,7 @@ export async function listForViewer(
     .select(
       `
       id, title, mode, description, is_published, shared_with_school,
-      updated_at, created_by, step_tags,
+      updated_at, created_by, step_tags, content_format,
       author:created_by ( first_name, last_name, email )
       `
     )
@@ -154,6 +156,7 @@ export async function listForViewer(
       updated_at: r.updated_at,
       created_by: r.created_by,
       step_tags: r.step_tags,
+      content_format: r.content_format,
       ownedByViewer: r.created_by === viewerId,
       authorName: formatAuthorName(author ?? null),
     };
@@ -171,6 +174,7 @@ export async function getForViewer(
       `
       id, title, description, mode, full_text, is_published,
       shared_with_school, created_at, updated_at, created_by, step_tags,
+      content_format,
       author:created_by ( first_name, last_name, email )
       `
     )
@@ -200,6 +204,7 @@ export async function getForViewer(
     updated_at: row.updated_at,
     created_by: row.created_by,
     step_tags: row.step_tags,
+    content_format: row.content_format,
     ownedByViewer: row.created_by === viewerId,
     authorName: formatAuthorName(author ?? null),
   };
@@ -366,7 +371,7 @@ export async function getExemplarsForStudent(
       `
       position, pinned_at,
       exemplar:exemplar_id (
-        id, title, description, full_text, updated_at, mode, is_published, step_tags
+        id, title, description, full_text, updated_at, mode, is_published, step_tags, content_format
       )
       `
     )
@@ -387,6 +392,7 @@ export async function getExemplarsForStudent(
     mode: Mode;
     is_published: boolean;
     step_tags: string[] | null;
+    content_format: "plain" | "html";
   };
   type PinRow = {
     position: number;
@@ -411,7 +417,7 @@ export async function getExemplarsForStudent(
     const { data, error } = await supabase
       .from("exemplars")
       .select(
-        "id, title, description, full_text, updated_at, mode, is_published, step_tags"
+        "id, title, description, full_text, updated_at, mode, is_published, step_tags, content_format"
       )
       .eq("mode", mode)
       .eq("is_published", true)
@@ -440,6 +446,7 @@ export async function getExemplarsForStudent(
     description: c.description,
     full_text: c.full_text,
     updated_at: c.updated_at,
+    content_format: c.content_format,
     matchedCurrentStep: hasStepMatch,
   }));
 }

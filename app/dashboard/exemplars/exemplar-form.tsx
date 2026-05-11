@@ -69,6 +69,9 @@ export function ExemplarForm({
   const [text, setText] = useState<string>(
     initial?.full_text ?? prefillFromWriting?.fullText ?? ""
   );
+  const [contentFormat, setContentFormat] = useState<"plain" | "html">(
+    initial?.content_format ?? "plain"
+  );
   const initialTags = (initial?.step_tags ?? []).filter((t): t is StepTag =>
     (STEP_TAG_VALUES as readonly string[]).includes(t)
   );
@@ -186,9 +189,49 @@ export function ExemplarForm({
         </select>
       </Field>
 
+      <fieldset>
+        <legend className="block text-sm font-medium text-gray-800 mb-1">
+          Content format
+        </legend>
+        <div className="flex flex-wrap gap-3 text-sm text-gray-800">
+          <label className="inline-flex items-center gap-1.5">
+            <input
+              type="radio"
+              name="content_format"
+              value="plain"
+              checked={contentFormat === "plain"}
+              onChange={() => setContentFormat("plain")}
+              className="text-blue-600 focus:ring-blue-500"
+            />
+            Plain text
+          </label>
+          <label className="inline-flex items-center gap-1.5">
+            <input
+              type="radio"
+              name="content_format"
+              value="html"
+              checked={contentFormat === "html"}
+              onChange={() => setContentFormat("html")}
+              className="text-blue-600 focus:ring-blue-500"
+            />
+            HTML (JSWP color codes)
+          </label>
+        </div>
+        {contentFormat === "html" && (
+          <p className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+            Raw HTML editing — toolbar coming in next chunk. Wrap text
+            in <code className="font-mono">&lt;span class=&quot;jswp-cd&quot;&gt;…&lt;/span&gt;</code>{" "}
+            etc. Allowed classes: jswp-ts, jswp-cs, jswp-cd, jswp-cm,
+            jswp-thesis, jswp-intro, jswp-conclusion, jswp-concession,
+            jswp-counterargument, jswp-refutation. Other tags / classes
+            are stripped and the save is blocked so you can review.
+          </p>
+        )}
+      </fieldset>
+
       <Field
         id="full_text"
-        label="Exemplar text"
+        label={contentFormat === "html" ? "Exemplar text (HTML)" : "Exemplar text"}
         required
         error={state.fieldErrors?.full_text}
         hint={

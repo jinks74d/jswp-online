@@ -14,6 +14,7 @@
 
 import { BookOpenCheck, Target } from "lucide-react";
 import type { ExemplarForStudent } from "@/lib/queries/exemplars";
+import { ExemplarRender } from "@/components/exemplar-render";
 
 interface Props {
   exemplars: readonly ExemplarForStudent[];
@@ -69,9 +70,11 @@ export function ExemplarReference({ exemplars }: Props) {
               )}
             </summary>
             <div className="px-3 pb-3 border-t border-gray-200 pt-2">
-              <pre className="whitespace-pre-wrap font-sans text-sm text-gray-900 leading-relaxed">
-                {ex.full_text}
-              </pre>
+              <ExemplarRender
+                content={ex.full_text}
+                format={ex.content_format}
+                className="text-sm text-gray-900"
+              />
             </div>
           </details>
         ))}

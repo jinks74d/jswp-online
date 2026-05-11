@@ -25,6 +25,10 @@ import {
   validateStepTags,
   type StepTag,
 } from "@/lib/exemplar-limits";
+import {
+  sanitizeExemplarHtml,
+  htmlToPlainText,
+} from "@/lib/exemplar-content";
 import type { Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
@@ -50,6 +54,7 @@ export type ExemplarFormState = {
     mode?: string;
     full_text?: string;
     step_tags?: string;
+    content_format?: string;
   };
 };
 
@@ -63,6 +68,9 @@ interface ParsedFields {
   /** Normalized: empty arrays collapse to null at the action layer so
    * the DB column stays NULL = "untagged / mode-default." */
   step_tags: StepTag[] | null;
+  /** 'plain' or 'html'. When 'html', full_text has already been
+   * sanitized by parseForm. */
+  content_format: "plain" | "html";
 }
 
 type ParseResult =
@@ -73,11 +81,12 @@ function parseForm(formData: FormData): ParseResult {
   const title = String(formData.get("title") ?? "").trim();
   const descriptionRaw = String(formData.get("description") ?? "").trim();
   const mode = String(formData.get("mode") ?? "") as Mode;
-  const full_text = String(formData.get("full_text") ?? "");
+  const fullTextRaw = String(formData.get("full_text") ?? "");
   const is_published = formData.get("is_published") === "on";
   const shared_with_school = formData.get("shared_with_school") === "on";
-  // step_tags: FormData has one entry per checked chip — getAll
-  // returns the array directly.
+  const contentFormatRaw = String(formData.get("content_format") ?? "plain");
+  const content_format: "plain" | "html" =
+    contentFormatRaw === "html" ? "html" : "plain";
   const stepTagsRaw = formData
     .getAll("step_tags")
     .map((v) => (typeof v === "string" ? v : ""))
@@ -92,10 +101,32 @@ function parseForm(formData: FormData): ParseResult {
   if (!VALID_MODES.includes(mode)) {
     fieldErrors.mode = "Pick a valid mode.";
   }
-  if (!full_text.trim()) {
-    fieldErrors.full_text = "Exemplar text is required.";
-  } else if (full_text.length > EXEMPLAR_TEXT_MAX) {
-    fieldErrors.full_text = `Exemplar text must be ${EXEMPLAR_TEXT_MAX.toLocaleString()} characters or fewer (currently ${full_text.length.toLocaleString()}).`;
+
+  // Format-specific content handling. For 'html', sanitize via
+  // DOMPurify + the JSWP class allowlist; if anything was stripped,
+  // refuse the save so the teacher reviews. For 'plain', the
+  // existing length + empty-text checks apply.
+  let full_text = fullTextRaw;
+  if (content_format === "html") {
+    const result = sanitizeExemplarHtml(fullTextRaw);
+    if (result.removedAny) {
+      fieldErrors.full_text =
+        "Invalid markup detected. The save was blocked so you can review.";
+    } else {
+      full_text = result.sanitized;
+      const plain = htmlToPlainText(result.sanitized);
+      if (!plain) {
+        fieldErrors.full_text = "Exemplar text is required.";
+      } else if (full_text.length > EXEMPLAR_TEXT_MAX) {
+        fieldErrors.full_text = `Exemplar markup must be ${EXEMPLAR_TEXT_MAX.toLocaleString()} characters or fewer (currently ${full_text.length.toLocaleString()}, including markup).`;
+      }
+    }
+  } else {
+    if (!fullTextRaw.trim()) {
+      fieldErrors.full_text = "Exemplar text is required.";
+    } else if (fullTextRaw.length > EXEMPLAR_TEXT_MAX) {
+      fieldErrors.full_text = `Exemplar text must be ${EXEMPLAR_TEXT_MAX.toLocaleString()} characters or fewer (currently ${fullTextRaw.length.toLocaleString()}).`;
+    }
   }
 
   const stepValidation = validateStepTags(stepTagsRaw);
@@ -118,9 +149,8 @@ function parseForm(formData: FormData): ParseResult {
       full_text,
       is_published,
       shared_with_school,
-      // Normalize empty array → NULL so the DB column means
-      // "untagged / mode-default" cleanly.
       step_tags: tags.length > 0 ? tags : null,
+      content_format,
     },
   };
 }
@@ -153,6 +183,7 @@ export async function createExemplar(
       is_published: fields.is_published,
       shared_with_school: fields.shared_with_school,
       step_tags: fields.step_tags,
+      content_format: fields.content_format,
     })
     .select("id")
     .single();
@@ -211,6 +242,7 @@ export async function updateExemplar(
       is_published: fields.is_published,
       shared_with_school: fields.shared_with_school,
       step_tags: fields.step_tags,
+      content_format: fields.content_format,
     })
     .eq("id", exemplarId);
 

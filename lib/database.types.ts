@@ -669,6 +669,7 @@ export type Exemplars = {
   is_published: boolean;
   shared_with_school: boolean;
   step_tags: string[] | null;
+  content_format: "plain" | "html";
 } & Timestamps;
 
 export type AssignmentExemplars = {

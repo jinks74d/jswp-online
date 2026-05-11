@@ -13,6 +13,7 @@ import { ChevronLeft, Users } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getForViewer } from "@/lib/queries/exemplars";
 import { updateExemplar, deleteExemplar } from "@/lib/actions/exemplars";
+import { ExemplarRender } from "@/components/exemplar-render";
 import { ExemplarForm } from "../exemplar-form";
 import { DeleteExemplarButton } from "./delete-button";
 
@@ -115,9 +116,11 @@ function ReadOnlyView({
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">
           Exemplar text
         </h2>
-        <pre className="whitespace-pre-wrap font-sans text-sm text-gray-900 leading-relaxed">
-          {exemplar.full_text}
-        </pre>
+        <ExemplarRender
+          content={exemplar.full_text}
+          format={exemplar.content_format}
+          className="text-sm text-gray-900"
+        />
       </section>
 
       <p className="text-xs text-gray-500">

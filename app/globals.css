@@ -27,3 +27,112 @@ body {
     @apply text-gray-900;
   }
 }
+
+/* ── JSWP color-code variables ───────────────────────────────────────
+ * Canonical palette referenced by lib/jswp-modes.ts (JSWP_COLORS) and
+ * the .jswp-* class definitions below. Closes the long-standing
+ * docs/BACKLOG.md entry for --jswp-* CSS variables.
+ *
+ * Per CLAUDE.md §9, color alone isn't an accessible signal — every
+ * .jswp-* class also carries a leading shape symbol via ::before so
+ * users with color-vision differences or in print can still tell the
+ * roles apart.
+ */
+:root {
+  --jswp-blue: #1E40AF;
+  --jswp-red: #B91C1C;
+  --jswp-green: #15803D;
+  --jswp-yellow: #FDE68A;
+  --jswp-black: #111827;
+  --jswp-purple: #6D28D9;
+  --jswp-orange: #C2410C;
+  --jswp-teal: #0F766E;
+
+  /* Role → color pointers (chunk 6.6a). Themes can override these
+   * without touching the role classes below. */
+  --jswp-color-ts: var(--jswp-blue);
+  --jswp-color-cs: var(--jswp-blue);
+  --jswp-color-cd: var(--jswp-red);
+  --jswp-color-cm: var(--jswp-green);
+  --jswp-color-thesis-bg: var(--jswp-yellow);
+  --jswp-color-thesis-fg: var(--jswp-black);
+  --jswp-color-intro: var(--jswp-black);
+  --jswp-color-conclusion: var(--jswp-black);
+  --jswp-color-concession: var(--jswp-purple);
+  --jswp-color-counterargument: var(--jswp-orange);
+  --jswp-color-refutation: var(--jswp-teal);
+}
+
+.jswp-ts,
+.jswp-cs {
+  color: var(--jswp-color-ts);
+  font-weight: 600;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-ts::before { content: "● "; }
+.jswp-cs::before { content: "● "; }
+
+.jswp-cd {
+  color: var(--jswp-color-cd);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-cd::before { content: "▲ "; }
+
+.jswp-cm {
+  color: var(--jswp-color-cm);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-cm::before { content: "■ "; }
+
+.jswp-thesis {
+  color: var(--jswp-color-thesis-fg);
+  background-color: var(--jswp-color-thesis-bg);
+  padding: 0 0.2em;
+  border-radius: 0.125rem;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-thesis::before { content: "◆ "; }
+
+.jswp-intro,
+.jswp-conclusion {
+  color: var(--jswp-color-intro);
+  font-weight: 600;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-intro::before { content: "§ "; }
+.jswp-conclusion::before { content: "¶ "; }
+
+.jswp-concession {
+  color: var(--jswp-color-concession);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-concession::before { content: "◐ "; }
+
+.jswp-counterargument {
+  color: var(--jswp-color-counterargument);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-counterargument::before { content: "◑ "; }
+
+.jswp-refutation {
+  color: var(--jswp-color-refutation);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-refutation::before { content: "✕ "; }
+
+/* Rendered exemplar wrapper: preserve paragraph spacing without
+ * relying on Tailwind's preflight (which collapses <p> margins). */
+.exemplar-content p {
+  margin-bottom: 0.75em;
+}
+.exemplar-content p:last-child {
+  margin-bottom: 0;
+}

@@ -651,6 +651,102 @@ describe("Exemplars (chunk 6.1)", () => {
   });
 });
 
+describe("Exemplar content_format (chunk 6.6a)", () => {
+  const formatPlain = "99999999-0000-0000-0000-000000000001";
+  const formatHtml = "99999999-0000-0000-0000-000000000002";
+
+  beforeAll(async () => {
+    await svc
+      .from("exemplars")
+      .upsert([
+        {
+          id: formatPlain,
+          district_id: IDS.district,
+          school_id: IDS.school,
+          created_by: IDS.teacher,
+          title: "content_format RLS — plain",
+          mode: "expository",
+          full_text: "Plain exemplar.",
+          is_published: true,
+          content_format: "plain",
+        },
+        {
+          id: formatHtml,
+          district_id: IDS.district,
+          school_id: IDS.school,
+          created_by: IDS.teacher,
+          title: "content_format RLS — html",
+          mode: "expository",
+          full_text:
+            '<p><span class="jswp-cd">Sanitized content.</span></p>',
+          is_published: true,
+          content_format: "html",
+        },
+      ])
+      .throwOnError();
+  });
+
+  afterAll(async () => {
+    await svc
+      .from("exemplars")
+      .delete()
+      .in("id", [formatPlain, formatHtml]);
+  });
+
+  it("teacher reads content_format on own exemplars", async () => {
+    const { data, error } = await teacherClient
+      .from("exemplars")
+      .select("id, content_format")
+      .in("id", [formatPlain, formatHtml]);
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    expect(data!.length).toBe(2);
+    const byId = new Map(data!.map((r) => [r.id, r.content_format]));
+    expect(byId.get(formatPlain)).toBe("plain");
+    expect(byId.get(formatHtml)).toBe("html");
+  });
+
+  it("teacher updates content_format on own exemplar", async () => {
+    const { error } = await teacherClient
+      .from("exemplars")
+      .update({ content_format: "html" })
+      .eq("id", formatPlain);
+    expect(error).toBeNull();
+
+    const { data } = await svc
+      .from("exemplars")
+      .select("content_format")
+      .eq("id", formatPlain)
+      .single();
+    expect(data?.content_format).toBe("html");
+
+    // Restore for downstream tests
+    await svc
+      .from("exemplars")
+      .update({ content_format: "plain" })
+      .eq("id", formatPlain);
+  });
+
+  it("CHECK constraint rejects invalid content_format values", async () => {
+    // Service role bypasses RLS but still has to honor the CHECK
+    // constraint. This verifies the schema-level enum guard.
+    const { error } = await svc
+      .from("exemplars")
+      .update({ content_format: "markdown" })
+      .eq("id", formatPlain);
+    expect(error).not.toBeNull();
+  });
+
+  it("cross-tenant teacher cannot read content_format", async () => {
+    const { data, error } = await teacher2Client
+      .from("exemplars")
+      .select("content_format")
+      .eq("id", formatHtml);
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+});
+
 describe("Exemplar step_tags (chunk 6.5)", () => {
   const taggedExemplar = "88888888-0000-0000-0000-000000000001";
 
