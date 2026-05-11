@@ -45,3 +45,6 @@ next-env.d.ts
 *.sql
 !migrations/*.sql
 .claude/settings.local.json
+
+# local DB dumps / fixtures (may contain PII — keep out of git)
+docs/*.csv
