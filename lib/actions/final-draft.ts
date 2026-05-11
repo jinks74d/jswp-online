@@ -24,11 +24,15 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth";
+import { requireRole, requireUser } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 
 export async function bootstrapFinalDraft(writingId: string): Promise<void> {
-  await requireRole("student");
+  // Teacher review's CombinedView re-renders these step components in
+  // read-only mode. Bootstrap is a student-only side effect; non-students
+  // early-return rather than 403 to /forbidden.
+  const profile = await requireUser();
+  if (profile.role !== "student") return;
   const supabase = await createServerClient();
 
   // Read-only states: skip bootstrap. RLS would reject the upsert.

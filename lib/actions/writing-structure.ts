@@ -39,7 +39,7 @@
  */
 
 import "server-only";
-import { requireRole } from "@/lib/auth";
+import { requireRole, requireUser } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 
@@ -110,7 +110,11 @@ export function buildStarterCmRows(
 export async function bootstrapWritingStructure(
   writingId: string
 ): Promise<void> {
-  await requireRole("student");
+  // Teacher review's CombinedView re-renders these step components in
+  // read-only mode. Bootstrap is a student-only side effect; non-students
+  // early-return rather than 403 to /forbidden.
+  const profile = await requireUser();
+  if (profile.role !== "student") return;
   const supabase = await createServerClient();
 
   // 1. Load writing + assignment context.

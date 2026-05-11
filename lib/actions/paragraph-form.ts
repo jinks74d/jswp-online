@@ -14,13 +14,19 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth";
+import { requireRole, requireUser } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 
 export async function bootstrapParagraphForms(
   writingId: string
 ): Promise<void> {
-  await requireRole("student");
+  // Same step components render in the teacher's CombinedView review
+  // surface. Bootstrap is a student-only side effect (creates rows so
+  // the UI has something to bind to); teachers viewing read-only just
+  // see whatever exists. Early-return for non-students rather than
+  // redirecting to /forbidden.
+  const profile = await requireUser();
+  if (profile.role !== "student") return;
   const supabase = await createServerClient();
 
   // Read-only states: skip bootstrap. RLS would reject the upserts.

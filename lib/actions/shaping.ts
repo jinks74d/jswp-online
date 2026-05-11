@@ -32,7 +32,7 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth";
+import { requireRole, requireUser } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 
 const CD_CM_MODES = new Set(["expository", "argumentation", "literary"]);
@@ -40,7 +40,11 @@ const CD_CM_MODES = new Set(["expository", "argumentation", "literary"]);
 /* ─── Bootstrap ────────────────────────────────────────────────────── */
 
 export async function bootstrapShapingSheets(writingId: string): Promise<void> {
-  await requireRole("student");
+  // Teacher review's CombinedView re-renders these step components in
+  // read-only mode. Bootstrap is a student-only side effect; non-students
+  // early-return rather than 403 to /forbidden.
+  const profile = await requireUser();
+  if (profile.role !== "student") return;
   const supabase = await createServerClient();
 
   // Fetch BPs + their chunks + the writing's mode (to skip chunks for narrative).
