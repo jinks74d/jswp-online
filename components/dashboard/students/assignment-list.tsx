@@ -148,15 +148,20 @@ function StatusPill({ status }: { status: WritingStatus | null }) {
       </span>
     );
   }
+  // 'draft' is the row's initial state right after Start Writing; until a
+  // step is completed, status stays 'draft' even though the student is
+  // actively working. Match the student-side deriveStatus and surface both
+  // as "In progress" so the teacher sees the meaningful state.
+  const displayKey: WritingStatus = status === "draft" ? "in_progress" : status;
   const map: Record<WritingStatus, string> = {
-    draft: "bg-gray-100 text-gray-700",
+    draft: "bg-blue-50 text-blue-800",
     in_progress: "bg-blue-50 text-blue-800",
     submitted: "bg-amber-50 text-amber-800",
     returned: "bg-purple-50 text-purple-800",
     graded: "bg-green-50 text-green-800",
   };
   const labels: Record<WritingStatus, string> = {
-    draft: "Draft",
+    draft: "In progress",
     in_progress: "In progress",
     submitted: "Submitted",
     returned: "Returned",
@@ -164,9 +169,9 @@ function StatusPill({ status }: { status: WritingStatus | null }) {
   };
   return (
     <span
-      className={`inline-flex items-center gap-1 text-xs rounded-full px-2 py-0.5 ${map[status]}`}
+      className={`inline-flex items-center gap-1 text-xs rounded-full px-2 py-0.5 ${map[displayKey]}`}
     >
-      {labels[status]}
+      {labels[displayKey]}
     </span>
   );
 }
