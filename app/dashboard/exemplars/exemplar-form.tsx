@@ -17,7 +17,7 @@ import { useActionState, useState } from "react";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import type { ExemplarFormState } from "@/lib/actions/exemplars";
 import { EXEMPLAR_TEXT_MAX } from "@/lib/exemplar-limits";
-import type { ExemplarForEdit } from "@/lib/queries/exemplars";
+import type { ExemplarForViewer } from "@/lib/queries/exemplars";
 
 type Mode = "expository" | "argumentation" | "literary" | "narrative";
 
@@ -35,7 +35,7 @@ interface Props {
     prev: ExemplarFormState,
     formData: FormData
   ) => Promise<ExemplarFormState>;
-  initial?: ExemplarForEdit | null;
+  initial?: ExemplarForViewer | null;
   formMode: "create" | "edit";
   /** Shown briefly after a successful save in edit mode. */
   savedNotice?: boolean;
@@ -152,15 +152,32 @@ export function ExemplarForm({
         />
       </Field>
 
-      <label className="inline-flex items-center gap-2 text-sm text-gray-800">
+      <label className="inline-flex items-start gap-2 text-sm text-gray-800">
         <input
           type="checkbox"
           name="is_published"
           defaultChecked={initial?.is_published ?? false}
-          className="rounded text-blue-600 focus:ring-blue-500"
+          className="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
         />
-        Published — students in your class periods see this exemplar.
-        Students see the latest saved version.
+        <span>
+          <span className="font-medium">Published</span> — students in your
+          class periods see this exemplar. Students see the latest saved
+          version.
+        </span>
+      </label>
+
+      <label className="inline-flex items-start gap-2 text-sm text-gray-800">
+        <input
+          type="checkbox"
+          name="shared_with_school"
+          defaultChecked={initial?.shared_with_school ?? false}
+          className="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
+        />
+        <span>
+          <span className="font-medium">Share with school</span> — other
+          teachers at your school can view and pin this exemplar to their
+          own assignments. Your students see it only when you publish.
+        </span>
       </label>
 
       <div className="flex items-center gap-3">

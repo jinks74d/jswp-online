@@ -1,16 +1,14 @@
 /**
- * Exemplar reads (chunk 6.1).
+ * Exemplar reads (chunks 6.1 → 6.3).
  *
- * Three small helpers covering the surfaces we ship:
- *   - listForTeacher: teacher's own exemplars (for /dashboard/exemplars).
- *   - getForTeacher: single exemplar for edit page; null if not the
- *     author. RLS handles cross-tenant — this just adds the ownership
- *     check as belt-and-suspenders.
- *   - listForStudentByMode: student-side read, filtered by mode. RLS
- *     restricts to published exemplars from the student's teacher set;
- *     this query layers the mode filter on top.
- *
- * Sort order on lists: most-recently-updated first.
+ *   - listForViewer: teacher's own exemplars + same-school shared
+ *     exemplars by colleagues. Each row is annotated with ownedByViewer
+ *     so the UI can render read-only chrome for shared ones. Single
+ *     chronological list (most-recently-updated first).
+ *   - getForViewer: single exemplar by id; resolves owner vs reader
+ *     view. Returns null if the caller can't see it (RLS).
+ *   - getExemplarsForStudent: per-writing read; tries pinned first,
+ *     falls back to mode-default. Shape unchanged from 6.2.
  */
 
 import "server-only";
@@ -21,10 +19,20 @@ type Mode = Database["public"]["Enums"]["jswp_mode"];
 
 export type ExemplarListItem = Pick<
   Exemplars,
-  "id" | "title" | "mode" | "description" | "is_published" | "updated_at"
->;
+  | "id"
+  | "title"
+  | "mode"
+  | "description"
+  | "is_published"
+  | "shared_with_school"
+  | "updated_at"
+  | "created_by"
+> & {
+  ownedByViewer: boolean;
+  authorName: string | null;
+};
 
-export type ExemplarForEdit = Pick<
+export type ExemplarForViewer = Pick<
   Exemplars,
   | "id"
   | "title"
@@ -32,50 +40,123 @@ export type ExemplarForEdit = Pick<
   | "mode"
   | "full_text"
   | "is_published"
+  | "shared_with_school"
   | "created_at"
   | "updated_at"
   | "created_by"
->;
+> & {
+  ownedByViewer: boolean;
+  authorName: string | null;
+};
 
 export type ExemplarForStudent = Pick<
   Exemplars,
   "id" | "title" | "description" | "full_text" | "updated_at"
 >;
 
-export async function listForTeacher(
-  teacherId: string
+interface AuthorEmbed {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+}
+
+function formatAuthorName(author: AuthorEmbed | null): string | null {
+  if (!author) return null;
+  const name = [author.first_name, author.last_name]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return name || author.email || null;
+}
+
+/**
+ * Lists every exemplar the viewer can see in /dashboard/exemplars:
+ * own rows (any state) plus same-school shared rows (any publish state,
+ * per α). Sorted by updated_at desc, mixed.
+ */
+export async function listForViewer(
+  viewerId: string
 ): Promise<ExemplarListItem[]> {
   const supabase = await createServerClient();
   const { data, error } = await supabase
     .from("exemplars")
-    .select("id, title, mode, description, is_published, updated_at")
-    .eq("created_by", teacherId)
+    .select(
+      `
+      id, title, mode, description, is_published, shared_with_school,
+      updated_at, created_by,
+      author:created_by ( first_name, last_name, email )
+      `
+    )
     .order("updated_at", { ascending: false });
   if (error) {
-    console.error("exemplars.listForTeacher:", error);
+    console.error("exemplars.listForViewer:", error);
     return [];
   }
-  return (data ?? []) as ExemplarListItem[];
+
+  type Row = Omit<ExemplarListItem, "ownedByViewer" | "authorName"> & {
+    author: AuthorEmbed | AuthorEmbed[] | null;
+  };
+  const rows = (data ?? []) as unknown as Row[];
+
+  return rows.map((r) => {
+    const author = Array.isArray(r.author) ? r.author[0] : r.author;
+    return {
+      id: r.id,
+      title: r.title,
+      mode: r.mode,
+      description: r.description,
+      is_published: r.is_published,
+      shared_with_school: r.shared_with_school,
+      updated_at: r.updated_at,
+      created_by: r.created_by,
+      ownedByViewer: r.created_by === viewerId,
+      authorName: formatAuthorName(author ?? null),
+    };
+  });
 }
 
-export async function getForTeacher(
+export async function getForViewer(
   exemplarId: string,
-  teacherId: string
-): Promise<ExemplarForEdit | null> {
+  viewerId: string
+): Promise<ExemplarForViewer | null> {
   const supabase = await createServerClient();
   const { data, error } = await supabase
     .from("exemplars")
     .select(
-      "id, title, description, mode, full_text, is_published, created_at, updated_at, created_by"
+      `
+      id, title, description, mode, full_text, is_published,
+      shared_with_school, created_at, updated_at, created_by,
+      author:created_by ( first_name, last_name, email )
+      `
     )
     .eq("id", exemplarId)
-    .eq("created_by", teacherId)
     .maybeSingle();
   if (error) {
-    console.error("exemplars.getForTeacher:", error);
+    console.error("exemplars.getForViewer:", error);
     return null;
   }
-  return (data as ExemplarForEdit) ?? null;
+  if (!data) return null;
+
+  type Row = Omit<ExemplarForViewer, "ownedByViewer" | "authorName"> & {
+    author: AuthorEmbed | AuthorEmbed[] | null;
+  };
+  const row = data as unknown as Row;
+  const author = Array.isArray(row.author) ? row.author[0] : row.author;
+
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    mode: row.mode,
+    full_text: row.full_text,
+    is_published: row.is_published,
+    shared_with_school: row.shared_with_school,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    created_by: row.created_by,
+    ownedByViewer: row.created_by === viewerId,
+    authorName: formatAuthorName(author ?? null),
+  };
 }
 
 /**
@@ -85,9 +166,8 @@ export async function getForTeacher(
  *   1. Try pinned exemplars on the assignment first. If ≥1 visible
  *      published exemplar in matching mode, return them in
  *      (position ASC, pinned_at ASC) order.
- *   2. Otherwise, fall back to 6.1's mode-default — all published
- *      exemplars in matching mode the student can read (RLS-scoped
- *      to the student's teacher set + the via-pin path).
+ *   2. Otherwise, fall back to mode-default — all published exemplars
+ *      in matching mode the student can read.
  *
  * RLS does the heavy lifting; this query just shapes the response.
  */
@@ -97,7 +177,6 @@ export async function getExemplarsForStudent(
 ): Promise<ExemplarForStudent[]> {
   const supabase = await createServerClient();
 
-  // Pinned-first.
   const { data: pinnedData, error: pinnedErr } = await supabase
     .from("assignment_exemplars")
     .select(
@@ -146,11 +225,6 @@ export async function getExemplarsForStudent(
     .map((r) => {
       const ex = Array.isArray(r.exemplar) ? r.exemplar[0] : r.exemplar;
       if (!ex) return null;
-      // Defense in depth: enforce mode + published at the app layer too.
-      // RLS already restricts what the student can read, but the join
-      // could surface a pin row whose exemplar got unpublished or whose
-      // mode drifted (impossible today since mode is fixed at create,
-      // but cheap to guard).
       if (!ex.is_published) return null;
       if (ex.mode !== mode) return null;
       return {
@@ -167,7 +241,6 @@ export async function getExemplarsForStudent(
     return pinnedVisible;
   }
 
-  // Fallback: mode-default (6.1 behavior preserved).
   const { data, error } = await supabase
     .from("exemplars")
     .select("id, title, description, full_text, updated_at")

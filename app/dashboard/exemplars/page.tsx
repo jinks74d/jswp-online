@@ -1,15 +1,18 @@
 /**
- * /dashboard/exemplars — list the teacher's own exemplars (chunk 6.1).
+ * /dashboard/exemplars — list the viewer's own exemplars and
+ * same-school colleagues' shared exemplars (chunks 6.1 + 6.3).
  *
- * Private-by-author: only the viewing teacher's rows appear (RLS
- * exemplars_owner_all + explicit created_by filter in the query).
- * Sharing across teachers is 6.2+.
+ * Single chronological list (most-recently-updated first). Non-owned
+ * rows carry a "Shared by …" chip; owned rows show Draft/Published
+ * + (if shared) a Shared pill. Clicking either opens the detail
+ * page, which decides between edit and read-only view based on
+ * ownership.
  */
 
 import Link from "next/link";
-import { Library, Plus } from "lucide-react";
+import { Library, Plus, Users } from "lucide-react";
 import { requireRole } from "@/lib/auth";
-import { listForTeacher, type ExemplarListItem } from "@/lib/queries/exemplars";
+import { listForViewer, type ExemplarListItem } from "@/lib/queries/exemplars";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +30,7 @@ export default async function ExemplarsListPage() {
     "district_admin",
     "super_admin",
   ]);
-  const exemplars = await listForTeacher(profile.id);
+  const exemplars = await listForViewer(profile.id);
 
   return (
     <div className="space-y-6">
@@ -36,6 +39,7 @@ export default async function ExemplarsListPage() {
           <h1 className="text-2xl font-bold text-gray-900">Exemplars</h1>
           <p className="text-gray-600">
             Reference essays and paragraphs you can publish to your students.
+            Colleagues at your school can share theirs with you to use.
           </p>
         </div>
         <Link
@@ -57,9 +61,16 @@ export default async function ExemplarsListPage() {
                 href={`/dashboard/exemplars/${e.id}`}
                 className="block hover:bg-gray-50 px-4 py-3"
               >
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500 mb-1">
+                <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-gray-500 mb-1">
                   {MODE_LABELS[e.mode]}
-                  <PublishedPill published={e.is_published} />
+                  {e.ownedByViewer ? (
+                    <>
+                      <PublishedPill published={e.is_published} />
+                      {e.shared_with_school && <SharedPill />}
+                    </>
+                  ) : (
+                    <SharedByChip name={e.authorName} />
+                  )}
                 </div>
                 <div className="text-sm font-medium text-gray-900">
                   {e.title}
@@ -95,6 +106,24 @@ function PublishedPill({ published }: { published: boolean }) {
   );
 }
 
+function SharedPill() {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-800">
+      <Users className="w-3 h-3" />
+      Shared
+    </span>
+  );
+}
+
+function SharedByChip({ name }: { name: string | null }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-purple-50 text-purple-800">
+      <Users className="w-3 h-3" />
+      Shared by {name ?? "a colleague"}
+    </span>
+  );
+}
+
 function EmptyState() {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
@@ -104,7 +133,8 @@ function EmptyState() {
       </h2>
       <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
         Create an exemplar to give your students a model essay or
-        paragraph to reference while they write.
+        paragraph to reference while they write. Or wait for a
+        colleague to share one with you.
       </p>
       <Link
         href="/dashboard/exemplars/new"

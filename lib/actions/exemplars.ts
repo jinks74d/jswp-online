@@ -54,6 +54,7 @@ interface ParsedFields {
   mode: Mode;
   full_text: string;
   is_published: boolean;
+  shared_with_school: boolean;
 }
 
 type ParseResult =
@@ -66,6 +67,7 @@ function parseForm(formData: FormData): ParseResult {
   const mode = String(formData.get("mode") ?? "") as Mode;
   const full_text = String(formData.get("full_text") ?? "");
   const is_published = formData.get("is_published") === "on";
+  const shared_with_school = formData.get("shared_with_school") === "on";
 
   const fieldErrors: ExemplarFormState["fieldErrors"] = {};
   if (!title) {
@@ -93,6 +95,7 @@ function parseForm(formData: FormData): ParseResult {
       mode,
       full_text,
       is_published,
+      shared_with_school,
     },
   };
 }
@@ -123,6 +126,7 @@ export async function createExemplar(
       mode: fields.mode,
       full_text: fields.full_text,
       is_published: fields.is_published,
+      shared_with_school: fields.shared_with_school,
     })
     .select("id")
     .single();
@@ -140,13 +144,37 @@ export async function updateExemplar(
   _prev: ExemplarFormState,
   formData: FormData
 ): Promise<ExemplarFormState> {
-  await requireRole(TEACHER_ROLES);
+  const profile = await requireRole(TEACHER_ROLES);
 
   const parsed = parseForm(formData);
   if (!parsed.ok) return parsed.state;
   const { fields } = parsed;
 
   const supabase = await createServerClient();
+
+  // Defense in depth: reject updates by non-authors with a clean
+  // message before relying on RLS to silently no-op. RLS's
+  // exemplars_owner_all WITH CHECK requires created_by = auth.uid()
+  // so the row update would otherwise return zero rows affected
+  // without an error.
+  const { data: existing, error: fetchErr } = await supabase
+    .from("exemplars")
+    .select("created_by")
+    .eq("id", exemplarId)
+    .maybeSingle();
+  if (fetchErr) {
+    return { error: `Could not load exemplar: ${fetchErr.message}` };
+  }
+  if (!existing) {
+    return { error: "Exemplar not found." };
+  }
+  if (existing.created_by !== profile.id) {
+    return {
+      error:
+        "You can only edit exemplars you authored. Ask the author to make changes.",
+    };
+  }
+
   const { error } = await supabase
     .from("exemplars")
     .update({
@@ -155,6 +183,7 @@ export async function updateExemplar(
       mode: fields.mode,
       full_text: fields.full_text,
       is_published: fields.is_published,
+      shared_with_school: fields.shared_with_school,
     })
     .eq("id", exemplarId);
 

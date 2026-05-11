@@ -667,6 +667,7 @@ export type Exemplars = {
   mode: Database["public"]["Enums"]["jswp_mode"];
   full_text: string;
   is_published: boolean;
+  shared_with_school: boolean;
 } & Timestamps;
 
 export type AssignmentExemplars = {

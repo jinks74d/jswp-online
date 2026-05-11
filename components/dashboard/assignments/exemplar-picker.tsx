@@ -121,6 +121,11 @@ export function ExemplarPicker({
                       </span>
                     )}
                   </div>
+                  {!p.ownedByViewer && (
+                    <p className="text-xs text-purple-700">
+                      Shared by {p.authorName ?? "a colleague"}
+                    </p>
+                  )}
                   {p.description && (
                     <p className="text-xs text-gray-600 truncate">
                       {p.description}
@@ -166,24 +171,28 @@ export function ExemplarPicker({
             {available.map((opt) => (
               <option key={opt.id} value={opt.id}>
                 {opt.title}
+                {!opt.ownedByViewer
+                  ? ` — Shared by ${opt.authorName ?? "a colleague"}`
+                  : ""}
               </option>
             ))}
           </select>
         </div>
       ) : pinned.length === 0 ? (
         <div className="text-sm text-gray-600 border border-dashed border-gray-300 rounded-md px-3 py-3">
-          No published {MODE_LABELS[mode]} exemplars yet.{" "}
+          No {MODE_LABELS[mode]} exemplars available yet.{" "}
           <Link
             href="/dashboard/exemplars/new"
             className="text-blue-600 hover:text-blue-800"
           >
             Create one
-          </Link>{" "}
-          to pin it here.
+          </Link>
+          {" "}
+          or ask a colleague to share theirs.
         </div>
       ) : (
         <p className="text-xs text-gray-500">
-          All your published {MODE_LABELS[mode]} exemplars are pinned.
+          All available {MODE_LABELS[mode]} exemplars are pinned.
         </p>
       )}
     </fieldset>

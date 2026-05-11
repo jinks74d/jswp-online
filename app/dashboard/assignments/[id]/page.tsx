@@ -41,7 +41,7 @@ export default async function AssignmentDetailPage({
   const studentWritingCount = await getStudentWritingCount(assignment.id);
   const writingCounts = await countAssignmentWritingsByStatus(assignment.id);
   const [pinnedExemplars, pinnableExemplars] = await Promise.all([
-    listPinnedForAssignment(assignment.id),
+    listPinnedForAssignment(assignment.id, profile.id),
     listPinnableForTeacher(profile.id, assignment.mode),
   ]);
   const published = isPublished(assignment);
