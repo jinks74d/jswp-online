@@ -1,5 +1,5 @@
 /**
- * Exemplar content sanitization (chunk 6.6a).
+ * Exemplar content sanitization (chunk 6.6a; client/server split in 6.6b).
  *
  * Server-side sanitization for HTML-formatted exemplars. Only a tiny
  * allowlist of tags + the `class` attribute + the JSWP_CONTENT_CLASSES
@@ -7,49 +7,26 @@
  *
  * `removedAny` is returned alongside the sanitized output so the action
  * layer can refuse the save and surface a clean error to the teacher
- * rather than silently mutating their content. That makes paste-from-
- * Word and similar accidents visible.
+ * rather than silently mutating their content.
  *
- * Runs server-side via DOMPurify + JSDOM. The legacy lib/sanitization.tsx
- * pattern (strip-all on server) isn't usable here — we need real
- * sanitization that preserves the JSWP markup we're enabling.
+ * SERVER ONLY — pulls in jsdom for DOMPurify's DOM provider. The
+ * client-safe constants and the pure-string htmlToPlainText helper
+ * live in lib/exemplar-content-shared.ts so the form bundle doesn't
+ * try to bundle jsdom.
  */
 
+import "server-only";
 import createDOMPurify from "dompurify";
 import { JSDOM } from "jsdom";
 
-/**
- * The 10 JSWP color-code classes. Order matches CLAUDE.md §4.
- * `JSWP_CONTENT_LABELS` provides human-readable names for tooltips
- * and toolbar buttons (chunk 6.6b will consume these).
- */
-export const JSWP_CONTENT_CLASSES = [
-  "jswp-ts",
-  "jswp-cs",
-  "jswp-cd",
-  "jswp-cm",
-  "jswp-thesis",
-  "jswp-intro",
-  "jswp-conclusion",
-  "jswp-concession",
-  "jswp-counterargument",
-  "jswp-refutation",
-] as const;
+export {
+  JSWP_CONTENT_CLASSES,
+  JSWP_CONTENT_LABELS,
+  htmlToPlainText,
+  type JswpContentClass,
+} from "./exemplar-content-shared";
 
-export type JswpContentClass = (typeof JSWP_CONTENT_CLASSES)[number];
-
-export const JSWP_CONTENT_LABELS: Record<JswpContentClass, string> = {
-  "jswp-ts": "Topic Sentence",
-  "jswp-cs": "Concluding Sentence",
-  "jswp-cd": "Concrete Detail",
-  "jswp-cm": "Commentary",
-  "jswp-thesis": "Thesis",
-  "jswp-intro": "Introduction",
-  "jswp-conclusion": "Conclusion",
-  "jswp-concession": "Concession",
-  "jswp-counterargument": "Counterargument",
-  "jswp-refutation": "Refutation",
-};
+import { JSWP_CONTENT_CLASSES } from "./exemplar-content-shared";
 
 const JSWP_CLASS_SET = new Set<string>(JSWP_CONTENT_CLASSES);
 
@@ -161,20 +138,3 @@ function walkAndPrune(html: string): { html: string; removed: boolean } {
   return { html: next, removed };
 }
 
-/**
- * Returns the sanitized HTML as plain text (no markup). Used by the
- * char-count display for HTML exemplars and any place that needs the
- * "what the student would read" string.
- */
-export function htmlToPlainText(html: string): string {
-  return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-}

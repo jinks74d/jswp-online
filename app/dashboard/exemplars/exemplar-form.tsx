@@ -13,7 +13,7 @@
  * button as a UX hint; final validation is server-side.
  */
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Loader2, AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
 import type { ExemplarFormState } from "@/lib/actions/exemplars";
 import {
@@ -22,7 +22,10 @@ import {
   STEP_TAG_LABELS,
   type StepTag,
 } from "@/lib/exemplar-limits";
+import { htmlToPlainText } from "@/lib/exemplar-content-shared";
 import type { ExemplarForViewer } from "@/lib/queries/exemplars";
+import { ColorToolbar } from "@/components/dashboard/exemplars/color-toolbar";
+import { ExemplarRender } from "@/components/exemplar-render";
 
 type Mode = "expository" | "argumentation" | "literary" | "narrative";
 
@@ -72,12 +75,41 @@ export function ExemplarForm({
   const [contentFormat, setContentFormat] = useState<"plain" | "html">(
     initial?.content_format ?? "plain"
   );
+  const [mode, setMode] = useState<Mode>(
+    initial?.mode ?? prefillFromWriting?.mode ?? "expository"
+  );
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   const initialTags = (initial?.step_tags ?? []).filter((t): t is StepTag =>
     (STEP_TAG_VALUES as readonly string[]).includes(t)
   );
   const [stepTags, setStepTags] = useState<Set<StepTag>>(
     () => new Set(initialTags)
   );
+
+  /** Handle the radio toggle. plain → html is free; html → plain
+   * strips marks after confirmation when marks exist. */
+  const onFormatChange = (next: "plain" | "html") => {
+    if (next === contentFormat) return;
+    if (next === "plain") {
+      const hasMarks = /<span\s+class="jswp-[\w-]+">/.test(text);
+      if (hasMarks) {
+        const ok = window.confirm(
+          "Switching to plain text will remove all color tags from this exemplar. Continue?"
+        );
+        if (!ok) return;
+        // Strip jswp-* span wrappers (keep inner text). Other allowed
+        // tags (p, br, em, strong) stay; downstream the action layer
+        // treats the format as 'plain' and stores text as-is.
+        const stripped = text.replace(
+          /<span\s+class="jswp-[\w-]+">([^<]*)<\/span>/g,
+          "$1"
+        );
+        setText(stripped);
+      }
+    }
+    setContentFormat(next);
+  };
 
   const toggleTag = (tag: StepTag) => {
     setStepTags((prev) => {
@@ -88,9 +120,16 @@ export function ExemplarForm({
     });
   };
 
+  // Char count uses raw text length (matches the server-side cap on
+  // saved markup). Word count strips tags for an accurate count in
+  // html mode so teachers see what students will read.
   const charCount = text.length;
+  const wordCountSource =
+    contentFormat === "html" ? htmlToPlainText(text) : text;
   const wordCount =
-    text.trim().length === 0 ? 0 : text.trim().split(/\s+/).length;
+    wordCountSource.trim().length === 0
+      ? 0
+      : wordCountSource.trim().split(/\s+/).length;
   const overLimit = charCount > EXEMPLAR_TEXT_MAX;
 
   return (
@@ -176,9 +215,8 @@ export function ExemplarForm({
           id="mode"
           name="mode"
           required
-          defaultValue={
-            initial?.mode ?? prefillFromWriting?.mode ?? "expository"
-          }
+          value={mode}
+          onChange={(e) => setMode(e.target.value as Mode)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           {MODES.map((m) => (
@@ -200,7 +238,7 @@ export function ExemplarForm({
               name="content_format"
               value="plain"
               checked={contentFormat === "plain"}
-              onChange={() => setContentFormat("plain")}
+              onChange={() => onFormatChange("plain")}
               className="text-blue-600 focus:ring-blue-500"
             />
             Plain text
@@ -211,20 +249,17 @@ export function ExemplarForm({
               name="content_format"
               value="html"
               checked={contentFormat === "html"}
-              onChange={() => setContentFormat("html")}
+              onChange={() => onFormatChange("html")}
               className="text-blue-600 focus:ring-blue-500"
             />
             HTML (JSWP color codes)
           </label>
         </div>
         {contentFormat === "html" && (
-          <p className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-            Raw HTML editing — toolbar coming in next chunk. Wrap text
-            in <code className="font-mono">&lt;span class=&quot;jswp-cd&quot;&gt;…&lt;/span&gt;</code>{" "}
-            etc. Allowed classes: jswp-ts, jswp-cs, jswp-cd, jswp-cm,
-            jswp-thesis, jswp-intro, jswp-conclusion, jswp-concession,
-            jswp-counterargument, jswp-refutation. Other tags / classes
-            are stripped and the save is blocked so you can review.
+          <p className="mt-2 text-xs text-gray-600">
+            Select text in the editor, then click a toolbar button to
+            mark it. Character count includes markup. Invalid tags or
+            classes are rejected at save time.
           </p>
         )}
       </fieldset>
@@ -246,17 +281,52 @@ export function ExemplarForm({
           </span>
         }
       >
+        {contentFormat === "html" && (
+          <ColorToolbar
+            textareaRef={textareaRef}
+            value={text}
+            onChange={setText}
+            mode={mode}
+          />
+        )}
         <textarea
           id="full_text"
           name="full_text"
           required
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={18}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Paste or type the exemplar essay/paragraph here."
+          placeholder={
+            contentFormat === "html"
+              ? "Type the exemplar text, then select passages and click toolbar buttons to mark them."
+              : "Paste or type the exemplar essay/paragraph here."
+          }
         />
       </Field>
+
+      {contentFormat === "html" && (
+        <section
+          aria-label="Exemplar preview"
+          className="border border-gray-200 rounded-md bg-gray-50 p-3"
+        >
+          <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+            Preview
+          </h3>
+          {text.trim().length > 0 ? (
+            <ExemplarRender
+              content={text}
+              format="html"
+              className="text-sm text-gray-900"
+            />
+          ) : (
+            <p className="text-sm text-gray-500 italic">
+              Preview appears here once you start typing.
+            </p>
+          )}
+        </section>
+      )}
 
       <fieldset>
         <legend className="block text-sm font-medium text-gray-800 mb-1">
