@@ -41,10 +41,14 @@ Affected files (from `grep -c "as unknown as"`):
 - **Identified:** chunk 4.2 (commit `fffc3ac`); rescoped in chunk P7-1 audit
 - **Priority:** before production cutover (Phase 7); blocked on Supabase CLI auth setup
 
-### Legacy `app/super-admin/**` cleanup
-Parallels v2's `app/admin/` surface. Super-admin routes (`/super-admin`, `/super-admin/analytics`, `/super-admin/districts/*`, `/super-admin/settings`, `/super-admin/users`) still ship — some likely v1 patterns using the `@/lib/supabase` shim and v1 components. Audit each route the way P7-1 audited `/dashboard/**`: identify which are v2 (use `@/lib/auth` `requireRole` and `@/lib/supabase/server`) vs. v1 (use the shim and v1 `OptimizedAuthProvider` / `components/dashboard/*` imports), then delete the v1 set. The v2 admin home lives at `/admin/`, so v1 super-admin routes are unreachable from the v2 nav surface.
-- **Identified:** chunk P7-1 audit
-- **Priority:** before production cutover (Phase 7)
+### Rebuild district management UI under `/admin/districts`
+Path A in P7-6 deleted the v1 super-admin district CRUD surface (create, edit, branding/POC, add/remove district-admin, cross-district user list) because v2's `/admin/` doesn't have equivalents. Provisioning currently runs via the Supabase SQL Editor. When multi-tenant district onboarding becomes a real need, rebuild in `/admin/` using v2's patterns (server components, RLS-scoped queries, `useActionState` forms). Scope on rebuild:
+- District CRUD (list, detail, create, edit) with branding (logo + primary/secondary colors) and POC fields.
+- District-admin role assignment (add/remove).
+- Cross-district user listing for super-admin.
+- Cross-district analytics surface (deferred until the per-assignment analytics shape from chunk 5.2 has stabilized; a cross-district view will likely reuse the same card components rather than the deleted `AnalyticsDashboard`).
+- **Identified:** chunk P7-6
+- **Priority:** before first production tenant onboarding
 
 ### Drag-and-drop reordering of selected candidates
 The pedagogyHint for gather-cds says "Drag them into the order you want them to appear." Chunk 4.5 implements selection-order via toggle order (first selected = priority 1). `@dnd-kit/*` is already in `package.json`; add a drag handle to selected candidates and persist `selection_order` on drop.
@@ -138,3 +142,7 @@ v1 browser-only DOMPurify wrapper (5 importers all in the P7-5a deletion set) pl
 ### Unnumbered legacy SQL files in `migrations/`
 24 v1 apply-once patches deleted (e.g., `fix-rls-auth-performance.sql`, `add-prompt-field.sql`, `database-setup.sql`). All were folded into the canonical numbered schema long ago. Git history preserves them. Migrations directory is now just the 17 numbered files (`0001` → `0017`) + `README.md`.
 - **Closed:** chunk P7-5c
+
+### B4: Legacy `app/super-admin/**` cleanup
+Path A: deleted the v1 super-admin route tree entirely. 26 file deletions, 7,230 lines: 12 routes under `app/super-admin/`, 5 components under `components/super-admin/`, the lone `AnalyticsDashboard.tsx` (only consumer was `/super-admin/analytics`), 7 backing API routes under `app/api/super-admin/districts/*` and `app/api/analytics/dashboard`, and `lib/redirect-handler.ts` (v1 client-side role redirect helper, zero imports). District provisioning continues via Supabase SQL Editor until a future chunk rebuilds the surface under `/admin/` — tracked in the new Open entry "Rebuild district management UI under `/admin/districts`."
+- **Closed:** chunk P7-6 (commits `021e09f`, `4b8e14d`, `a0ad753`)
