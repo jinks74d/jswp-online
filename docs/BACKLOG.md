@@ -10,6 +10,11 @@ Last reviewed: chunk P7-1.
 
 ## Open
 
+### Exemplar step-match uses persisted current_step, not URL [step]
+6.5's per-step exemplar tagging filters by `writing.current_step` (the persisted column updated on save / `navigateToStep`). The student writing flow URL `[step]` segment is the actually-displayed step. They align on every normal navigation (sidebar clicks fire `navigateToStep` before the route change), but a backwards URL navigation by hand could briefly diverge — student lands on the thesis URL while `current_step` is still `paragraph_form`, and the reference panel filters to paragraph_form. Reconcile by either passing `[step]` down through the layout via a context the page populates, or by reading the URL on the page level and re-fetching exemplars there. Low impact in practice; tracked so a Phase 7 audit doesn't miss it.
+- **Identified:** chunk 6.5
+- **Priority:** polish; before production cutover (Phase 7)
+
 ### Storage upload UI failure surface
 Storage upload errors currently log to console only; users see no feedback when an upload fails. Surface failures inline (toast or form-level error).
 - **Identified:** pre-Phase 4

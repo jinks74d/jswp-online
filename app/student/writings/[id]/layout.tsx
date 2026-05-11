@@ -62,7 +62,11 @@ export default async function WritingLayout({
       : Promise.resolve(
           [] as Awaited<ReturnType<typeof getRubricScoresForWriting>>
         ),
-    getExemplarsForStudent(a.id, a.mode as JswpMode),
+    getExemplarsForStudent(
+      a.id,
+      a.mode as JswpMode,
+      writing.current_step
+    ),
   ]);
 
   return (

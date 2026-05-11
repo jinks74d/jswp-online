@@ -651,6 +651,93 @@ describe("Exemplars (chunk 6.1)", () => {
   });
 });
 
+describe("Exemplar step_tags (chunk 6.5)", () => {
+  const taggedExemplar = "88888888-0000-0000-0000-000000000001";
+
+  beforeAll(async () => {
+    await svc
+      .from("exemplars")
+      .upsert({
+        id: taggedExemplar,
+        district_id: IDS.district,
+        school_id: IDS.school,
+        created_by: IDS.teacher,
+        title: "Step-tag RLS — tagged",
+        mode: "expository",
+        full_text: "Tagged exemplar content.",
+        is_published: true,
+        shared_with_school: false,
+        step_tags: ["thesis", "topic_sentence_dev"],
+      })
+      .throwOnError();
+  });
+
+  afterAll(async () => {
+    await svc.from("exemplars").delete().eq("id", taggedExemplar);
+  });
+
+  it("teacher reads their own exemplar's step_tags", async () => {
+    const { data, error } = await teacherClient
+      .from("exemplars")
+      .select("step_tags")
+      .eq("id", taggedExemplar)
+      .single();
+    expect(error).toBeNull();
+    expect(data?.step_tags).toEqual(["thesis", "topic_sentence_dev"]);
+  });
+
+  it("teacher updates step_tags on their own exemplar", async () => {
+    const { error } = await teacherClient
+      .from("exemplars")
+      .update({ step_tags: ["paragraph_form"] })
+      .eq("id", taggedExemplar);
+    expect(error).toBeNull();
+
+    const { data } = await svc
+      .from("exemplars")
+      .select("step_tags")
+      .eq("id", taggedExemplar)
+      .single();
+    expect(data?.step_tags).toEqual(["paragraph_form"]);
+
+    // Restore for downstream tests
+    await svc
+      .from("exemplars")
+      .update({ step_tags: ["thesis", "topic_sentence_dev"] })
+      .eq("id", taggedExemplar);
+  });
+
+  it("teacher clears step_tags to null", async () => {
+    const { error } = await teacherClient
+      .from("exemplars")
+      .update({ step_tags: null })
+      .eq("id", taggedExemplar);
+    expect(error).toBeNull();
+
+    const { data } = await svc
+      .from("exemplars")
+      .select("step_tags")
+      .eq("id", taggedExemplar)
+      .single();
+    expect(data?.step_tags).toBeNull();
+
+    // Restore for downstream tests
+    await svc
+      .from("exemplars")
+      .update({ step_tags: ["thesis", "topic_sentence_dev"] })
+      .eq("id", taggedExemplar);
+  });
+
+  it("cross-tenant teacher cannot read step_tags", async () => {
+    const { data, error } = await teacher2Client
+      .from("exemplars")
+      .select("step_tags")
+      .eq("id", taggedExemplar);
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+});
+
 describe("Promote-to-exemplar read access (chunk 6.4)", () => {
   // Promote-to-exemplar reads final_drafts.full_text via the
   // student_writing join. The teacher review surface uses

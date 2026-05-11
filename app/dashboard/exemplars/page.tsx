@@ -12,7 +12,16 @@
 import Link from "next/link";
 import { Library, Plus, Users } from "lucide-react";
 import { requireRole } from "@/lib/auth";
-import { listForViewer, type ExemplarListItem } from "@/lib/queries/exemplars";
+import {
+  listForViewer,
+  type ExemplarListItem,
+  type StepFilter,
+} from "@/lib/queries/exemplars";
+import {
+  STEP_TAG_VALUES,
+  STEP_TAG_LABELS,
+  isStepTag,
+} from "@/lib/exemplar-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -23,14 +32,29 @@ const MODE_LABELS: Record<ExemplarListItem["mode"], string> = {
   narrative: "Narrative",
 };
 
-export default async function ExemplarsListPage() {
+type SearchParams = Promise<{ step?: string }>;
+
+function parseStepFilter(raw: string | undefined): StepFilter {
+  if (!raw || raw === "all") return "all";
+  if (raw === "untagged") return "untagged";
+  if (isStepTag(raw)) return raw;
+  return "all";
+}
+
+export default async function ExemplarsListPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const profile = await requireRole([
     "teacher",
     "school_admin",
     "district_admin",
     "super_admin",
   ]);
-  const exemplars = await listForViewer(profile.id);
+  const { step: rawStep } = await searchParams;
+  const stepFilter = parseStepFilter(rawStep);
+  const exemplars = await listForViewer(profile.id, stepFilter);
 
   return (
     <div className="space-y-6">
@@ -51,8 +75,10 @@ export default async function ExemplarsListPage() {
         </Link>
       </header>
 
+      <FilterChips current={stepFilter} />
+
       {exemplars.length === 0 ? (
-        <EmptyState />
+        <FilteredEmptyState filter={stepFilter} />
       ) : (
         <ul className="divide-y divide-gray-100 border border-gray-200 rounded-lg bg-white">
           {exemplars.map((e) => (
@@ -88,6 +114,60 @@ export default async function ExemplarsListPage() {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function FilterChips({ current }: { current: StepFilter }) {
+  const chips: ReadonlyArray<{ value: StepFilter; label: string }> = [
+    { value: "all", label: "All" },
+    ...STEP_TAG_VALUES.map((v) => ({ value: v, label: STEP_TAG_LABELS[v] })),
+    { value: "untagged", label: "Untagged" },
+  ];
+
+  return (
+    <nav
+      aria-label="Filter exemplars by step"
+      className="flex flex-wrap gap-1.5"
+    >
+      {chips.map((c) => {
+        const active = c.value === current;
+        const href =
+          c.value === "all"
+            ? "/dashboard/exemplars"
+            : `/dashboard/exemplars?step=${c.value}`;
+        return (
+          <Link
+            key={c.value}
+            href={href}
+            aria-current={active ? "page" : undefined}
+            className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
+              active
+                ? "border-blue-600 bg-blue-50 text-blue-800"
+                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            {c.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function FilteredEmptyState({ filter }: { filter: StepFilter }) {
+  if (filter === "all") {
+    return <EmptyState />;
+  }
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-sm text-gray-700">
+      No exemplars match this filter.{" "}
+      <Link
+        href="/dashboard/exemplars"
+        className="text-blue-600 hover:text-blue-800"
+      >
+        Show all
+      </Link>
     </div>
   );
 }

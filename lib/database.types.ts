@@ -668,6 +668,7 @@ export type Exemplars = {
   full_text: string;
   is_published: boolean;
   shared_with_school: boolean;
+  step_tags: string[] | null;
 } & Timestamps;
 
 export type AssignmentExemplars = {

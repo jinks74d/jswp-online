@@ -13,9 +13,25 @@
 
 import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
+import { MODES, type JswpMode } from "@/lib/jswp-modes";
+import { isStepTag } from "@/lib/exemplar-limits";
 import type { Exemplars, Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
+
+/** Look up the GroupOrigin (step-tag candidate) for a current_step
+ * key like "expository.thesis". Returns null when the step key isn't
+ * tag-relevant or doesn't resolve. */
+function groupOriginForStepKey(stepKey: string | null): string | null {
+  if (!stepKey) return null;
+  const [modeName] = stepKey.split(".");
+  if (!modeName) return null;
+  const modeConfig = (MODES as Record<string, { steps: ReadonlyArray<{ key: string; groupOrigin: string }> } | undefined>)[modeName];
+  if (!modeConfig) return null;
+  const step = modeConfig.steps.find((s) => s.key === stepKey);
+  if (!step) return null;
+  return isStepTag(step.groupOrigin) ? step.groupOrigin : null;
+}
 
 export type ExemplarListItem = Pick<
   Exemplars,
@@ -27,6 +43,7 @@ export type ExemplarListItem = Pick<
   | "shared_with_school"
   | "updated_at"
   | "created_by"
+  | "step_tags"
 > & {
   ownedByViewer: boolean;
   authorName: string | null;
@@ -44,6 +61,7 @@ export type ExemplarForViewer = Pick<
   | "created_at"
   | "updated_at"
   | "created_by"
+  | "step_tags"
 > & {
   ownedByViewer: boolean;
   authorName: string | null;
@@ -52,7 +70,14 @@ export type ExemplarForViewer = Pick<
 export type ExemplarForStudent = Pick<
   Exemplars,
   "id" | "title" | "description" | "full_text" | "updated_at"
->;
+> & {
+  /** True when the exemplar was kept because its step_tags include
+   * the student's current step. False when the row survives via the
+   * fallback path (no step match in the candidate pool, or no
+   * current step). Used to render the "matched to current step"
+   * badge in ExemplarReference. */
+  matchedCurrentStep: boolean;
+};
 
 interface AuthorEmbed {
   first_name: string | null;
@@ -69,13 +94,24 @@ function formatAuthorName(author: AuthorEmbed | null): string | null {
   return name || author.email || null;
 }
 
+export type StepFilter = "all" | "untagged" | string;
+
 /**
  * Lists every exemplar the viewer can see in /dashboard/exemplars:
  * own rows (any state) plus same-school shared rows (any publish state,
- * per α). Sorted by updated_at desc, mixed.
+ * per 6.3 α). Sorted by updated_at desc, mixed.
+ *
+ * stepFilter narrows the result:
+ *   - "all" / undefined: every visible row
+ *   - "untagged": rows where step_tags IS NULL or empty
+ *   - <tag>: rows where step_tags @> [tag]
+ *
+ * Filter is applied app-side after the RLS fetch — small data volumes
+ * make the partial GIN index value moot for the dashboard list.
  */
 export async function listForViewer(
-  viewerId: string
+  viewerId: string,
+  stepFilter: StepFilter = "all"
 ): Promise<ExemplarListItem[]> {
   const supabase = await createServerClient();
   const { data, error } = await supabase
@@ -83,7 +119,7 @@ export async function listForViewer(
     .select(
       `
       id, title, mode, description, is_published, shared_with_school,
-      updated_at, created_by,
+      updated_at, created_by, step_tags,
       author:created_by ( first_name, last_name, email )
       `
     )
@@ -98,7 +134,15 @@ export async function listForViewer(
   };
   const rows = (data ?? []) as unknown as Row[];
 
-  return rows.map((r) => {
+  const filtered = rows.filter((r) => {
+    if (stepFilter === "all") return true;
+    if (stepFilter === "untagged") {
+      return !r.step_tags || r.step_tags.length === 0;
+    }
+    return Array.isArray(r.step_tags) && r.step_tags.includes(stepFilter);
+  });
+
+  return filtered.map((r) => {
     const author = Array.isArray(r.author) ? r.author[0] : r.author;
     return {
       id: r.id,
@@ -109,6 +153,7 @@ export async function listForViewer(
       shared_with_school: r.shared_with_school,
       updated_at: r.updated_at,
       created_by: r.created_by,
+      step_tags: r.step_tags,
       ownedByViewer: r.created_by === viewerId,
       authorName: formatAuthorName(author ?? null),
     };
@@ -125,7 +170,7 @@ export async function getForViewer(
     .select(
       `
       id, title, description, mode, full_text, is_published,
-      shared_with_school, created_at, updated_at, created_by,
+      shared_with_school, created_at, updated_at, created_by, step_tags,
       author:created_by ( first_name, last_name, email )
       `
     )
@@ -154,6 +199,7 @@ export async function getForViewer(
     created_at: row.created_at,
     updated_at: row.updated_at,
     created_by: row.created_by,
+    step_tags: row.step_tags,
     ownedByViewer: row.created_by === viewerId,
     authorName: formatAuthorName(author ?? null),
   };
@@ -283,20 +329,34 @@ export async function hasFinalDraftForPromotion(
 }
 
 /**
- * Student-side exemplars for a writing (chunk 6.2).
+ * Student-side exemplars for a writing (chunks 6.2 + 6.5).
  *
- * Branches:
- *   1. Try pinned exemplars on the assignment first. If ≥1 visible
- *      published exemplar in matching mode, return them in
- *      (position ASC, pinned_at ASC) order.
- *   2. Otherwise, fall back to mode-default — all published exemplars
- *      in matching mode the student can read.
+ * Two-stage filter:
+ *   Stage 1 (candidate pool):
+ *     - Try pinned exemplars on the assignment first.
+ *     - If no pins: fall back to mode-default (all published in
+ *       matching mode the student can read).
+ *   Stage 2 (step-aware narrowing):
+ *     - currentStepKey → groupOrigin via lib/jswp-modes lookup
+ *     - If at least one candidate has step_tags containing that
+ *       groupOrigin, return only the matched candidates (each
+ *       flagged matchedCurrentStep = true).
+ *     - Otherwise return the full candidate pool (each flagged
+ *       matchedCurrentStep = false) — preserves 6.1's "panel
+ *       never disappears" UX.
  *
- * RLS does the heavy lifting; this query just shapes the response.
+ * RLS does the heavy lifting; this query shapes + filters.
+ *
+ * Edge case (BACKLOG): currentStepKey comes from writing.current_step
+ * which is persisted on save/navigateToStep. If a student backwards-
+ * navigates by URL without going through the sidebar, the URL [step]
+ * may briefly diverge. v1 uses the persisted value — practical for
+ * the canonical navigation path.
  */
 export async function getExemplarsForStudent(
   assignmentId: string,
-  mode: Mode
+  mode: Mode,
+  currentStepKey: string | null
 ): Promise<ExemplarForStudent[]> {
   const supabase = await createServerClient();
 
@@ -306,7 +366,7 @@ export async function getExemplarsForStudent(
       `
       position, pinned_at,
       exemplar:exemplar_id (
-        id, title, description, full_text, updated_at, mode, is_published
+        id, title, description, full_text, updated_at, mode, is_published, step_tags
       )
       `
     )
@@ -318,61 +378,68 @@ export async function getExemplarsForStudent(
     console.error("exemplars.getExemplarsForStudent (pinned):", pinnedErr);
   }
 
+  type ExemplarShape = {
+    id: string;
+    title: string;
+    description: string | null;
+    full_text: string;
+    updated_at: string;
+    mode: Mode;
+    is_published: boolean;
+    step_tags: string[] | null;
+  };
   type PinRow = {
     position: number;
     pinned_at: string;
-    exemplar:
-      | {
-          id: string;
-          title: string;
-          description: string | null;
-          full_text: string;
-          updated_at: string;
-          mode: Mode;
-          is_published: boolean;
-        }
-      | Array<{
-          id: string;
-          title: string;
-          description: string | null;
-          full_text: string;
-          updated_at: string;
-          mode: Mode;
-          is_published: boolean;
-        }>
-      | null;
+    exemplar: ExemplarShape | ExemplarShape[] | null;
   };
 
   const pinnedRows = (pinnedData ?? []) as unknown as PinRow[];
-  const pinnedVisible: ExemplarForStudent[] = pinnedRows
-    .map((r) => {
-      const ex = Array.isArray(r.exemplar) ? r.exemplar[0] : r.exemplar;
-      if (!ex) return null;
-      if (!ex.is_published) return null;
-      if (ex.mode !== mode) return null;
-      return {
-        id: ex.id,
-        title: ex.title,
-        description: ex.description,
-        full_text: ex.full_text,
-        updated_at: ex.updated_at,
-      } satisfies ExemplarForStudent;
-    })
-    .filter((r): r is ExemplarForStudent => r !== null);
+  const pinnedCandidates: ExemplarShape[] = pinnedRows
+    .map((r) => (Array.isArray(r.exemplar) ? r.exemplar[0] : r.exemplar))
+    .filter((ex): ex is ExemplarShape => {
+      if (!ex) return false;
+      if (!ex.is_published) return false;
+      if (ex.mode !== mode) return false;
+      return true;
+    });
 
-  if (pinnedVisible.length > 0) {
-    return pinnedVisible;
+  let candidates: ExemplarShape[];
+  if (pinnedCandidates.length > 0) {
+    candidates = pinnedCandidates;
+  } else {
+    const { data, error } = await supabase
+      .from("exemplars")
+      .select(
+        "id, title, description, full_text, updated_at, mode, is_published, step_tags"
+      )
+      .eq("mode", mode)
+      .eq("is_published", true)
+      .order("updated_at", { ascending: false });
+    if (error) {
+      console.error("exemplars.getExemplarsForStudent (fallback):", error);
+      return [];
+    }
+    candidates = (data ?? []) as ExemplarShape[];
   }
 
-  const { data, error } = await supabase
-    .from("exemplars")
-    .select("id, title, description, full_text, updated_at")
-    .eq("mode", mode)
-    .eq("is_published", true)
-    .order("updated_at", { ascending: false });
-  if (error) {
-    console.error("exemplars.getExemplarsForStudent (fallback):", error);
-    return [];
-  }
-  return (data ?? []) as ExemplarForStudent[];
+  const currentStepGroup = groupOriginForStepKey(currentStepKey);
+  const matched = currentStepGroup
+    ? candidates.filter(
+        (c) =>
+          Array.isArray(c.step_tags) && c.step_tags.includes(currentStepGroup)
+      )
+    : [];
+
+  const finalRows = matched.length > 0 ? matched : candidates;
+  const hasStepMatch = matched.length > 0;
+
+  return finalRows.map((c) => ({
+    id: c.id,
+    title: c.title,
+    description: c.description,
+    full_text: c.full_text,
+    updated_at: c.updated_at,
+    matchedCurrentStep: hasStepMatch,
+  }));
 }

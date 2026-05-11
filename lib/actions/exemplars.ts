@@ -20,7 +20,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import { EXEMPLAR_TEXT_MAX } from "@/lib/exemplar-limits";
+import {
+  EXEMPLAR_TEXT_MAX,
+  validateStepTags,
+  type StepTag,
+} from "@/lib/exemplar-limits";
 import type { Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
@@ -45,6 +49,7 @@ export type ExemplarFormState = {
     title?: string;
     mode?: string;
     full_text?: string;
+    step_tags?: string;
   };
 };
 
@@ -55,6 +60,9 @@ interface ParsedFields {
   full_text: string;
   is_published: boolean;
   shared_with_school: boolean;
+  /** Normalized: empty arrays collapse to null at the action layer so
+   * the DB column stays NULL = "untagged / mode-default." */
+  step_tags: StepTag[] | null;
 }
 
 type ParseResult =
@@ -68,6 +76,12 @@ function parseForm(formData: FormData): ParseResult {
   const full_text = String(formData.get("full_text") ?? "");
   const is_published = formData.get("is_published") === "on";
   const shared_with_school = formData.get("shared_with_school") === "on";
+  // step_tags: FormData has one entry per checked chip — getAll
+  // returns the array directly.
+  const stepTagsRaw = formData
+    .getAll("step_tags")
+    .map((v) => (typeof v === "string" ? v : ""))
+    .filter(Boolean);
 
   const fieldErrors: ExemplarFormState["fieldErrors"] = {};
   if (!title) {
@@ -83,9 +97,17 @@ function parseForm(formData: FormData): ParseResult {
   } else if (full_text.length > EXEMPLAR_TEXT_MAX) {
     fieldErrors.full_text = `Exemplar text must be ${EXEMPLAR_TEXT_MAX.toLocaleString()} characters or fewer (currently ${full_text.length.toLocaleString()}).`;
   }
+
+  const stepValidation = validateStepTags(stepTagsRaw);
+  if (!stepValidation.ok) {
+    fieldErrors.step_tags = stepValidation.error;
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return { ok: false, state: { fieldErrors } };
   }
+
+  const tags = stepValidation.ok ? stepValidation.tags : [];
 
   return {
     ok: true,
@@ -96,6 +118,9 @@ function parseForm(formData: FormData): ParseResult {
       full_text,
       is_published,
       shared_with_school,
+      // Normalize empty array → NULL so the DB column means
+      // "untagged / mode-default" cleanly.
+      step_tags: tags.length > 0 ? tags : null,
     },
   };
 }
@@ -127,6 +152,7 @@ export async function createExemplar(
       full_text: fields.full_text,
       is_published: fields.is_published,
       shared_with_school: fields.shared_with_school,
+      step_tags: fields.step_tags,
     })
     .select("id")
     .single();
@@ -184,6 +210,7 @@ export async function updateExemplar(
       full_text: fields.full_text,
       is_published: fields.is_published,
       shared_with_school: fields.shared_with_school,
+      step_tags: fields.step_tags,
     })
     .eq("id", exemplarId);
 

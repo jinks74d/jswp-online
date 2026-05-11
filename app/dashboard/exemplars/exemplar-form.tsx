@@ -16,7 +16,12 @@
 import { useActionState, useState } from "react";
 import { Loader2, AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
 import type { ExemplarFormState } from "@/lib/actions/exemplars";
-import { EXEMPLAR_TEXT_MAX } from "@/lib/exemplar-limits";
+import {
+  EXEMPLAR_TEXT_MAX,
+  STEP_TAG_VALUES,
+  STEP_TAG_LABELS,
+  type StepTag,
+} from "@/lib/exemplar-limits";
 import type { ExemplarForViewer } from "@/lib/queries/exemplars";
 
 type Mode = "expository" | "argumentation" | "literary" | "narrative";
@@ -64,6 +69,21 @@ export function ExemplarForm({
   const [text, setText] = useState<string>(
     initial?.full_text ?? prefillFromWriting?.fullText ?? ""
   );
+  const initialTags = (initial?.step_tags ?? []).filter((t): t is StepTag =>
+    (STEP_TAG_VALUES as readonly string[]).includes(t)
+  );
+  const [stepTags, setStepTags] = useState<Set<StepTag>>(
+    () => new Set(initialTags)
+  );
+
+  const toggleTag = (tag: StepTag) => {
+    setStepTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  };
 
   const charCount = text.length;
   const wordCount =
@@ -194,6 +214,49 @@ export function ExemplarForm({
           placeholder="Paste or type the exemplar essay/paragraph here."
         />
       </Field>
+
+      <fieldset>
+        <legend className="block text-sm font-medium text-gray-800 mb-1">
+          Step tags{" "}
+          <span className="font-normal text-gray-500">
+            (optional — which JSWP steps does this exemplar illustrate?)
+          </span>
+        </legend>
+        <p className="text-xs text-gray-600 mb-2">
+          Students on a matching step see tagged exemplars first. Leave
+          empty for "general" — appears as fallback on every step.
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {STEP_TAG_VALUES.map((tag) => {
+            const selected = stepTags.has(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                aria-pressed={selected}
+                className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
+                  selected
+                    ? "border-blue-600 bg-blue-50 text-blue-800"
+                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {STEP_TAG_LABELS[tag]}
+              </button>
+            );
+          })}
+        </div>
+        {/* Hidden inputs serialize the Set into FormData. One entry
+            per selected tag — server action reads via getAll(). */}
+        {Array.from(stepTags).map((tag) => (
+          <input key={tag} type="hidden" name="step_tags" value={tag} />
+        ))}
+        {state.fieldErrors?.step_tags && (
+          <p className="mt-1 text-sm text-red-700">
+            {state.fieldErrors.step_tags}
+          </p>
+        )}
+      </fieldset>
 
       <label className="inline-flex items-start gap-2 text-sm text-gray-800">
         <input
