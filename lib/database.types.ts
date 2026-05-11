@@ -250,6 +250,15 @@ export interface Database {
         Update: UpdateOf<Exemplars>;
         Relationships: [];
       };
+      assignment_exemplars: {
+        Row: AssignmentExemplars;
+        Insert: InsertOf<
+          AssignmentExemplars,
+          "assignment_id" | "exemplar_id"
+        >;
+        Update: UpdateOf<AssignmentExemplars>;
+        Relationships: [];
+      };
       audit_log: {
         Row: AuditLog;
         Insert: InsertOf<AuditLog, "actor_id" | "action">;
@@ -659,6 +668,14 @@ export type Exemplars = {
   full_text: string;
   is_published: boolean;
 } & Timestamps;
+
+export type AssignmentExemplars = {
+  assignment_id: string;
+  exemplar_id: string;
+  position: number;
+  pinned_by: string | null;
+  pinned_at: string;
+};
 
 export type AuditLog = {
   id: string;

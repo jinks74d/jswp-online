@@ -15,7 +15,7 @@ import { requireRole } from "@/lib/auth";
 import { getWriting, getCompletedStepKeys } from "@/lib/queries/student-writings";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { getRubricScoresForWriting } from "@/lib/queries/rubric-scores";
-import { listForStudentByMode } from "@/lib/queries/exemplars";
+import { getExemplarsForStudent } from "@/lib/queries/exemplars";
 import { MODES, type JswpMode } from "@/lib/jswp-modes";
 import { WritingShell } from "@/components/student/writing/writing-shell";
 import { WritingModeProvider } from "@/components/student/writing/writing-mode-provider";
@@ -62,7 +62,7 @@ export default async function WritingLayout({
       : Promise.resolve(
           [] as Awaited<ReturnType<typeof getRubricScoresForWriting>>
         ),
-    listForStudentByMode(a.mode as JswpMode),
+    getExemplarsForStudent(a.id, a.mode as JswpMode),
   ]);
 
   return (

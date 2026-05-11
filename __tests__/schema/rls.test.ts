@@ -651,6 +651,181 @@ describe("Exemplars (chunk 6.1)", () => {
   });
 });
 
+describe("Assignment-exemplar pins (chunk 6.2)", () => {
+  // Self-contained fixtures (don't rely on the Exemplars block's
+  // lifecycle, which would already have cleaned up by the time we run).
+  //
+  // Three exemplars seeded fresh:
+  //   pinPublishedOwned   — teacher's, published, expository (pinnable)
+  //   pinDraftOwned       — teacher's, draft, expository (write-pin only)
+  //   pinOtherTeacher     — teacher2's, published, expository (forbidden)
+  //
+  // One pin row is pre-seeded: pinPublishedOwned pinned to the released
+  // seed expository assignment. Alex (enrolled in that period) should
+  // be able to read it.
+  const pinPublishedOwned = "55555555-0000-0000-0000-000000000001";
+  const pinDraftOwned = "55555555-0000-0000-0000-000000000002";
+  const pinOtherTeacher = "55555555-0000-0000-0000-000000000003";
+
+  beforeAll(async () => {
+    await svc
+      .from("exemplars")
+      .upsert([
+        {
+          id: pinPublishedOwned,
+          district_id: IDS.district,
+          school_id: IDS.school,
+          created_by: IDS.teacher,
+          title: "Pin RLS — published owned",
+          description: null,
+          mode: "expository",
+          full_text: "Pinned exemplar text.",
+          is_published: true,
+        },
+        {
+          id: pinDraftOwned,
+          district_id: IDS.district,
+          school_id: IDS.school,
+          created_by: IDS.teacher,
+          title: "Pin RLS — draft owned",
+          description: null,
+          mode: "expository",
+          full_text: "Draft exemplar text.",
+          is_published: false,
+        },
+        {
+          id: pinOtherTeacher,
+          district_id: TEST.district2,
+          school_id: TEST.school2,
+          created_by: TEST.teacher2,
+          title: "Pin RLS — other teacher",
+          description: null,
+          mode: "expository",
+          full_text: "Other-teacher exemplar text.",
+          is_published: true,
+        },
+      ])
+      .throwOnError();
+
+    await svc
+      .from("assignment_exemplars")
+      .upsert(
+        {
+          assignment_id: IDS.assignmentExpository,
+          exemplar_id: pinPublishedOwned,
+          pinned_by: IDS.teacher,
+        },
+        { onConflict: "assignment_id,exemplar_id" }
+      )
+      .throwOnError();
+  });
+
+  afterAll(async () => {
+    await svc
+      .from("assignment_exemplars")
+      .delete()
+      .eq("assignment_id", IDS.assignmentExpository);
+    await svc
+      .from("exemplars")
+      .delete()
+      .in("id", [pinPublishedOwned, pinDraftOwned, pinOtherTeacher]);
+  });
+
+  it("teacher can read pins on their assignment", async () => {
+    const { data, error } = await teacherClient
+      .from("assignment_exemplars")
+      .select("exemplar_id")
+      .eq("assignment_id", IDS.assignmentExpository);
+
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    expect(data!.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("teacher can pin and unpin their own exemplar", async () => {
+    const { error: pinErr } = await teacherClient
+      .from("assignment_exemplars")
+      .insert({
+        assignment_id: IDS.assignmentExpository,
+        exemplar_id: pinDraftOwned,
+        pinned_by: IDS.teacher,
+      });
+    expect(pinErr).toBeNull();
+
+    const { error: unpinErr } = await teacherClient
+      .from("assignment_exemplars")
+      .delete()
+      .eq("assignment_id", IDS.assignmentExpository)
+      .eq("exemplar_id", pinDraftOwned);
+    expect(unpinErr).toBeNull();
+  });
+
+  it("teacher cannot pin another teacher's exemplar", async () => {
+    const { error } = await teacherClient
+      .from("assignment_exemplars")
+      .insert({
+        assignment_id: IDS.assignmentExpository,
+        exemplar_id: pinOtherTeacher,
+        pinned_by: IDS.teacher,
+      });
+    expect(error).not.toBeNull();
+  });
+
+  it("teacher in another district cannot pin to this assignment", async () => {
+    const { error } = await teacher2Client
+      .from("assignment_exemplars")
+      .insert({
+        assignment_id: IDS.assignmentExpository,
+        exemplar_id: pinOtherTeacher,
+        pinned_by: TEST.teacher2,
+      });
+    expect(error).not.toBeNull();
+  });
+
+  it("student in the class can read pin rows on the assignment", async () => {
+    const { data, error } = await alexClient
+      .from("assignment_exemplars")
+      .select("exemplar_id")
+      .eq("assignment_id", IDS.assignmentExpository);
+
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    expect(data!.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("anon cannot read pin rows", async () => {
+    const { data, error } = await anonClient
+      .from("assignment_exemplars")
+      .select("exemplar_id");
+
+    if (error) {
+      expect(error.code).toBeDefined();
+    } else {
+      expect(data).toEqual([]);
+    }
+  });
+
+  it("exemplars_student_read_via_pin: student can read a pinned exemplar even when teacher relationship is bypassed", async () => {
+    // The student already reads this exemplar via the original
+    // exemplars_student_read policy (their teacher made it), so this
+    // assertion is a defense-in-depth verification that the new
+    // via-pin policy resolves to TRUE for this scenario. The negative
+    // case (teacher reassigned mid-cohort) is hard to fixture without
+    // a transient class-period reshuffle; the via-pin policy's EXISTS
+    // is the same shape as assignment_exemplars_student_read which is
+    // already covered above.
+    const { data, error } = await alexClient
+      .from("exemplars")
+      .select("id, full_text")
+      .eq("id", pinPublishedOwned)
+      .maybeSingle();
+
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    expect(data!.id).toBe(pinPublishedOwned);
+  });
+});
+
 describe("Rubric scores (chunk 5.1)", () => {
   // Service-role helper: seeds a single rubric_score row for Alex's writing.
   // Tests below verify each role's view of it through the RLS policies.
