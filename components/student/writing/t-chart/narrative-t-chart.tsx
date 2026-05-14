@@ -32,6 +32,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { Cloud as CloudIcon } from "lucide-react";
 import { updateTChart } from "@/lib/actions/t-charts";
 import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
@@ -274,6 +275,12 @@ function CdRow({
   );
 }
 
+/**
+ * Modernized CMs-side elements. The printed guide (pp. 63/69) draws
+ * literal cloud bubbles webbing off a center circle; here that becomes
+ * soft green-tinted cards — the center "circle" reads as the elevated
+ * white card, the "clouds" as the receding tinted cards around it.
+ */
 function Cloud({
   prompt,
   children,
@@ -282,10 +289,14 @@ function Cloud({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-xs border-2 border-gray-900 bg-white px-4 py-3 rounded-[50%_50%_50%_50%/_30%_30%_50%_50%]">
-      <p className="mb-1.5 text-center text-xs font-bold text-gray-900">
-        {prompt}
-      </p>
+    <div className="mx-auto max-w-sm rounded-2xl border border-green-200 bg-green-50/70 px-4 py-3">
+      <div className="mb-2 flex items-center justify-center gap-1.5">
+        <CloudIcon
+          className="h-3.5 w-3.5 shrink-0 text-green-600"
+          aria-hidden="true"
+        />
+        <p className="text-xs font-semibold text-green-800">{prompt}</p>
+      </div>
       {children}
     </div>
   );
@@ -293,81 +304,23 @@ function Cloud({
 
 function Connector() {
   return (
-    <svg
-      width="20"
-      height="26"
-      viewBox="0 0 20 26"
-      className="mx-auto block my-1"
-      aria-hidden="true"
-    >
-      <circle
-        cx="10"
-        cy="9"
-        r="8"
-        fill="white"
-        stroke="#111827"
-        strokeWidth="1.5"
-      />
-      <circle
-        cx="10"
-        cy="20.5"
-        r="5.5"
-        fill="white"
-        stroke="#111827"
-        strokeWidth="1.5"
-      />
-    </svg>
+    <div className="flex justify-center py-1" aria-hidden="true">
+      <div className="flex flex-col items-center gap-1">
+        <span className="h-2.5 w-px bg-green-300" />
+        <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+        <span className="h-2.5 w-px bg-green-300" />
+      </div>
+    </div>
   );
 }
 
 function Oval({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative mx-auto max-w-xs">
-      <svg
-        viewBox="0 0 260 170"
-        className="block w-full"
-        aria-hidden="true"
-      >
-        <ellipse
-          cx="130"
-          cy="85"
-          rx="127"
-          ry="82"
-          fill="white"
-          stroke="#111827"
-          strokeWidth="1.5"
-        />
-        <line
-          x1="46"
-          y1="64"
-          x2="214"
-          y2="64"
-          stroke="#9ca3af"
-          strokeWidth="1"
-          strokeDasharray="8 5"
-        />
-        <line
-          x1="34"
-          y1="90"
-          x2="226"
-          y2="90"
-          stroke="#9ca3af"
-          strokeWidth="1"
-          strokeDasharray="8 5"
-        />
-        <line
-          x1="50"
-          y1="116"
-          x2="210"
-          y2="116"
-          stroke="#9ca3af"
-          strokeWidth="1"
-          strokeDasharray="8 5"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center px-9 py-6">
-        {children}
-      </div>
+    <div className="mx-auto max-w-sm rounded-3xl border border-green-300 bg-white px-5 py-4 shadow-sm">
+      <p className="mb-2 text-center text-xs font-semibold text-green-800">
+        The circle in the middle
+      </p>
+      {children}
     </div>
   );
 }
