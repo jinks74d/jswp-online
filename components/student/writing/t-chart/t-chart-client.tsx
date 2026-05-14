@@ -18,6 +18,7 @@
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { CdCmTChart } from "./cd-cm-t-chart";
+import { ExpositoryTChart } from "./expository-t-chart";
 import { NarrativeTChart } from "./narrative-t-chart";
 import { FictionalAbcPlan } from "./fictional-abc-plan";
 import { ReferencePanel } from "../reference-panel";
@@ -186,6 +187,13 @@ export function TChartClient({
           ) : (
             <NarrativeTChart writingId={writingId} bp={activeBp} />
           )
+        ) : mode === "expository" ? (
+          <ExpositoryTChart
+            writingId={writingId}
+            bp={activeBp}
+            mode={mode}
+            writingChunkRatio={writingChunkRatio}
+          />
         ) : (
           <CdCmTChart
             writingId={writingId}

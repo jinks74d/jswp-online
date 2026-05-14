@@ -53,15 +53,25 @@ export async function TChartStep({
 
   return (
     <div className="space-y-5">
-      <header>
-        <div className="text-xs uppercase tracking-wide text-gray-500">
-          {stepLabel}
-        </div>
-        <h2 className="text-xl font-semibold text-gray-900">{stepLabel}</h2>
-        {pedagogyHint && (
-          <p className="mt-1 text-sm text-gray-600">{pedagogyHint}</p>
-        )}
-      </header>
+      {/* Expository renders its own guide-style header band inside
+          ExpositoryTChart (chunk 4.5d-2), so the generic step header
+          is skipped here to avoid a redundant double title — only the
+          pedagogy hint is kept. Other modes keep the generic header. */}
+      {mode === "expository" ? (
+        pedagogyHint && (
+          <p className="text-sm text-gray-600">{pedagogyHint}</p>
+        )
+      ) : (
+        <header>
+          <div className="text-xs uppercase tracking-wide text-gray-500">
+            {stepLabel}
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900">{stepLabel}</h2>
+          {pedagogyHint && (
+            <p className="mt-1 text-sm text-gray-600">{pedagogyHint}</p>
+          )}
+        </header>
+      )}
 
       <TChartClient
         writingId={writingId}

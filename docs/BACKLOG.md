@@ -10,6 +10,21 @@ Last reviewed: chunk P7-1.
 
 ## Open
 
+### Expository step subLabels are off-by-one for 3+:0
+`jswp-modes.ts` hard-codes each Expository step's `subLabel` as a static
+`"Step N"` string ("Step 1" … "Step 5"), numbered for the 2+:1 sequence.
+Chunk 4.5d-1 made the sequence ratio-dependent (3+:0 drops `gather_cds`),
+so for a 3+:0 writing every step from `t_chart` onward is labelled one
+higher than its real position — the step sidebar shows "Step 4" for what
+is actually step 3, etc. Chunk 4.5d-2 renders the *correct* number in the
+T-Chart's own header band (from `chunkRatio` via `getExpositoryTChartSpec`),
+but the sidebar is still wrong. Fix = derive step numbers dynamically from
+the resolved (ratio-aware) visible step list rather than ratio-branching
+the static strings. Affects `lib/jswp-modes.ts` (drop/replace the static
+`subLabel` numbers) + the step sidebar that renders them.
+- **Identified:** chunk 4.5d-2
+- **Priority:** before production cutover (Phase 7) — visible but not blocking
+
 ### Is 3+:0 argumentation pedagogically valid? (assignment-form question)
 Chunk 4.5d-1 made the Expository flow ratio-aware: 3+:0 (summary) drops the discrete Gathering & Prioritizing CDs step, and the 3+:0 CM-correctness fixes (zero starter CM slots, no CM rows in the T-Chart, Shaping gate skips the CM requirement) are keyed on per-chunk `chunk.ratio`, so they apply to **any** 3+:0 chunk regardless of mode. But `omitForRatio` is set only on `expository.gather_cds` — so an Argumentation assignment set to 3+:0 lands in a "partially correct" interim state: it gets the CM fixes but keeps its `gather_cds` step. The real question is upstream, not "extend `omitForRatio` to `argumentation.gather_cds`": **should the assignment form offer 3+:0 for Argumentation at all?** Argumentation is inherently a commentary-driven mode (you can't argue with zero commentary) — 3+:0 is the *summary* ratio. If 3+:0 argumentation isn't a real JSWP use case, the fix is to remove that option from the `assignment-form.tsx` ratio dropdown for `mode = "argumentation"` (the `assignments` CHECK constraint could also be tightened), not to special-case the step engine. Needs a pedagogy call from Dr. Louis / Raymond before either path.
 - **Identified:** chunk 4.5d-1
