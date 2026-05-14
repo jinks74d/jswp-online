@@ -30,6 +30,7 @@ import {
   updateTitle,
 } from "@/lib/actions/final-draft";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type {
   AssemblySource,
@@ -156,19 +157,27 @@ function AssemblyPanel({
           emptyMessage="(introduction not written yet)"
           backLink={{ href: `/student/writings/${writingId}/introduction`, label: "Back to Introduction" }}
         />
-        {assembly.paragraphs.map((p) => (
-          <SourceSection
-            key={p.bp_id}
-            label={`Body paragraph ${p.bp_position}`}
-            accentClass="text-gray-700"
-            text={p.final_text}
-            emptyMessage={`(BP ${p.bp_position} not written yet)`}
-            backLink={{
-              href: `/student/writings/${writingId}/paragraph-form`,
-              label: "Back to Paragraph Form",
-            }}
-          />
-        ))}
+        {assembly.paragraphs.map((p) => {
+          const label = narrativeBpLabel(
+            p.narrative_kind,
+            p.narrative_subject,
+            p.bp_position,
+            assembly.paragraphs.length
+          );
+          return (
+            <SourceSection
+              key={p.bp_id}
+              label={label}
+              accentClass="text-gray-700"
+              text={p.final_text}
+              emptyMessage={`(${label} not written yet)`}
+              backLink={{
+                href: `/student/writings/${writingId}/paragraph-form`,
+                label: "Back to Paragraph Form",
+              }}
+            />
+          );
+        })}
         <SourceSection
           label="Conclusion"
           accentClass="text-blue-700"

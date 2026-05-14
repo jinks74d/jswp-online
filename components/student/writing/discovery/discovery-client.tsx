@@ -15,6 +15,7 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { DiscoveryBpPane } from "./discovery-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 
@@ -93,7 +94,12 @@ export function DiscoveryClient({ writingId, stepKey, bps }: Props) {
                     : undefined
                 }
               >
-                Body {bp.position}
+                {narrativeBpLabel(
+                  bp.t_chart?.narrative_kind ?? null,
+                  bp.t_chart?.narrative_subject ?? null,
+                  bp.position,
+                  bps.length
+                )}
               </button>
             );
           })}

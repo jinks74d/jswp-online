@@ -14,6 +14,10 @@
 
 import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/database.types";
+
+type NarrativeKind = Database["public"]["Enums"]["jswp_narrative_kind"];
+type NarrativeSubject = Database["public"]["Enums"]["jswp_narrative_subject"];
 
 export interface FinalDraftRowData {
   id: string;
@@ -25,6 +29,9 @@ export interface AssemblyParagraph {
   bp_id: string;
   bp_position: number;
   final_text: string;
+  // Narrative layout context (guide p. 59) — drives the BP label.
+  narrative_kind: NarrativeKind | null;
+  narrative_subject: NarrativeSubject | null;
 }
 
 export interface AssemblySource {
@@ -52,6 +59,11 @@ interface RawWriting {
     | null;
 }
 
+interface RawTChart {
+  narrative_kind: NarrativeKind | null;
+  narrative_subject: NarrativeSubject | null;
+}
+
 interface RawBp {
   id: string;
   position: number;
@@ -59,6 +71,7 @@ interface RawBp {
     | { final_text: string }
     | Array<{ final_text: string }>
     | null;
+  t_chart: RawTChart | RawTChart[] | null;
 }
 
 export async function getFinalDraftData(
@@ -94,10 +107,16 @@ export async function getFinalDraftData(
     ? (w.essay_parts[0] ?? null)
     : w.essay_parts;
 
-  // Second round-trip: BPs with their paragraph_forms.
+  // Second round-trip: BPs with their paragraph_forms + narrative layout.
   const { data: bps, error: bpErr } = await supabase
     .from("body_paragraphs")
-    .select(`id, position, paragraph_form:paragraph_forms ( final_text )`)
+    .select(
+      `
+      id, position,
+      paragraph_form:paragraph_forms ( final_text ),
+      t_chart:t_charts ( narrative_kind, narrative_subject )
+      `
+    )
     .eq("student_writing_id", writingId)
     .order("position", { ascending: true });
   if (bpErr) {
@@ -109,10 +128,15 @@ export async function getFinalDraftData(
       const pf = Array.isArray(bp.paragraph_form)
         ? (bp.paragraph_form[0] ?? null)
         : bp.paragraph_form;
+      const tc = Array.isArray(bp.t_chart)
+        ? (bp.t_chart[0] ?? null)
+        : bp.t_chart;
       return {
         bp_id: bp.id,
         bp_position: bp.position,
         final_text: pf?.final_text ?? "",
+        narrative_kind: tc?.narrative_kind ?? null,
+        narrative_subject: tc?.narrative_subject ?? null,
       };
     }
   );

@@ -15,6 +15,8 @@ import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 
 type CmKind = Database["public"]["Enums"]["jswp_cm_kind"];
+type NarrativeKind = Database["public"]["Enums"]["jswp_narrative_kind"];
+type NarrativeSubject = Database["public"]["Enums"]["jswp_narrative_subject"];
 
 export interface ShapingSheetData {
   id: string;
@@ -71,6 +73,8 @@ export interface ShapingBpData {
   working_topic_sentence: string | null;
   concluding_sentence: string | null;
   // Narrative WOW context (read-only on shaping)
+  narrative_kind: NarrativeKind | null;
+  narrative_subject: NarrativeSubject | null;
   narrative_key_word: string | null;
   narrative_concrete_example: string | null;
   narrative_when: string | null;
@@ -87,6 +91,8 @@ interface RawTChart {
   id: string;
   working_topic_sentence: string | null;
   concluding_sentence: string | null;
+  narrative_kind: NarrativeKind | null;
+  narrative_subject: NarrativeSubject | null;
   narrative_key_word: string | null;
   narrative_concrete_example: string | null;
   narrative_when: string | null;
@@ -127,6 +133,7 @@ export async function getShapingData(
       id, position,
       t_chart:t_charts (
         id, working_topic_sentence, concluding_sentence,
+        narrative_kind, narrative_subject,
         narrative_key_word, narrative_concrete_example,
         narrative_when, narrative_where, narrative_who,
         narrative_what_happened, narrative_dialogue,
@@ -215,6 +222,8 @@ export async function getShapingData(
         : null,
       working_topic_sentence: tc?.working_topic_sentence ?? null,
       concluding_sentence: tc?.concluding_sentence ?? null,
+      narrative_kind: tc?.narrative_kind ?? null,
+      narrative_subject: tc?.narrative_subject ?? null,
       narrative_key_word: tc?.narrative_key_word ?? null,
       narrative_concrete_example: tc?.narrative_concrete_example ?? null,
       narrative_when: tc?.narrative_when ?? null,

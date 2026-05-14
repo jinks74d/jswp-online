@@ -26,6 +26,7 @@ import { Loader2 } from "lucide-react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { updateTChart } from "@/lib/actions/t-charts";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 
@@ -88,6 +89,7 @@ export function TopicSentencesClient({ writingId, stepKey, bps }: Props) {
             }}
             writingId={writingId}
             bp={bp}
+            totalBps={bps.length}
             tinted={i % 2 === 1}
           />
         ))}
@@ -135,11 +137,12 @@ export function TopicSentencesClient({ writingId, stepKey, bps }: Props) {
 interface BpSectionProps {
   writingId: string;
   bp: BodyParagraphData;
+  totalBps: number;
   tinted: boolean;
 }
 
 const BpSection = forwardRef<HTMLElement, BpSectionProps>(function BpSection(
-  { writingId, bp, tinted },
+  { writingId, bp, totalBps, tinted },
   ref
 ) {
   const { isReadOnly } = useWritingMode();
@@ -157,7 +160,12 @@ const BpSection = forwardRef<HTMLElement, BpSectionProps>(function BpSection(
     >
       <header>
         <div className="text-xs uppercase tracking-wide text-gray-500">
-          Body paragraph {bp.position}
+          {narrativeBpLabel(
+            bp.t_chart?.narrative_kind ?? null,
+            bp.t_chart?.narrative_subject ?? null,
+            bp.position,
+            totalBps
+          )}
         </div>
       </header>
 

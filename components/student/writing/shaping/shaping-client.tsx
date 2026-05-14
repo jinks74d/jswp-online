@@ -20,6 +20,7 @@ import { Loader2 } from "lucide-react";
 import { CdCmShapingBpPane } from "./cd-cm-shaping-bp-pane";
 import { NarrativeShapingBpPane } from "./narrative-shaping-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { ShapingBpData } from "@/lib/queries/shaping";
 import type { Database } from "@/lib/database.types";
@@ -135,7 +136,12 @@ export function ShapingClient({
                     : undefined
                 }
               >
-                Body {bp.position}
+                {narrativeBpLabel(
+                  bp.narrative_kind,
+                  bp.narrative_subject,
+                  bp.position,
+                  bps.length
+                )}
               </button>
             );
           })}

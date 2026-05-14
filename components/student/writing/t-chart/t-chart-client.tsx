@@ -22,6 +22,7 @@ import { NarrativeTChart } from "./narrative-t-chart";
 import { FictionalAbcPlan } from "./fictional-abc-plan";
 import { ReferencePanel } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
@@ -166,7 +167,12 @@ export function TChartClient({
                     : undefined
                 }
               >
-                Body {bp.position}
+                {narrativeBpLabel(
+                  bp.t_chart?.narrative_kind ?? null,
+                  bp.t_chart?.narrative_subject ?? null,
+                  bp.position,
+                  bodyParagraphs.length
+                )}
               </button>
             );
           })}

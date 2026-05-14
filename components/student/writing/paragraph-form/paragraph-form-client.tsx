@@ -14,6 +14,7 @@ import { Loader2 } from "lucide-react";
 import { CdCmParagraphFormBpPane } from "./cd-cm-paragraph-form-bp-pane";
 import { NarrativeParagraphFormBpPane } from "./narrative-paragraph-form-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { ParagraphFormBpData } from "@/lib/queries/paragraph-form";
 import type { Database } from "@/lib/database.types";
@@ -111,7 +112,12 @@ export function ParagraphFormClient({
                     : undefined
                 }
               >
-                Body {bp.position}
+                {narrativeBpLabel(
+                  bp.narrative_kind,
+                  bp.narrative_subject,
+                  bp.position,
+                  bps.length
+                )}
               </button>
             );
           })}
