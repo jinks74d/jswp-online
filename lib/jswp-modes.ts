@@ -42,6 +42,10 @@ export type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
  *   * `essayOnly`  — only shown when assignments.is_essay = true.
  *   * `requiresCounterargument` — only shown when assignments.has_counterargument = true.
  *   * `requiresSourceText` — only shown when an assignment provides source_text.
+ *   * `omitForRatio` — dropped when the writing's chunk ratio equals this
+ *               value. Used for the 3+:0 (summary) Expository flow, where
+ *               the guide folds CD-collection into the T-Chart and there
+ *               is no discrete Gathering & Prioritizing CDs step.
  */
 export interface StepConfig {
   readonly key: string;
@@ -55,6 +59,7 @@ export interface StepConfig {
   readonly essayOnly?: boolean;
   readonly requiresCounterargument?: boolean;
   readonly requiresSourceText?: boolean;
+  readonly omitForRatio?: ChunkRatio;
 }
 
 export type GroupOrigin =
@@ -124,6 +129,9 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
       "List 4 or more concrete details that fit the prompt. Highlight the 2 or more you want to use. Drag them into the order you want them to appear.",
     required: true,
     repeatPerBP: true,
+    // 3+:0 (summary) folds CD-collection into the T-Chart — no discrete
+    // Gathering step. See the 2024 Expository Guide, Section 2 vs Section 3.
+    omitForRatio: "three_plus_to_zero",
   },
   {
     key: "expository.t_chart",
@@ -622,12 +630,14 @@ export interface StepResolutionContext {
   isEssay: boolean;
   hasCounterargument: boolean;
   hasSourceText: boolean;
+  chunkRatio: ChunkRatio;
 }
 
 /**
  * Returns the visible, ordered steps for a given mode and assignment context.
  * Steps marked essayOnly / requiresCounterargument / requiresSourceText
- * are filtered out when their flag is false.
+ * are filtered out when their flag is false; steps marked omitForRatio
+ * are filtered out when the writing's chunk ratio matches.
  */
 export function getSteps(
   mode: JswpMode,
@@ -637,6 +647,7 @@ export function getSteps(
     if (step.essayOnly && !ctx.isEssay) return false;
     if (step.requiresCounterargument && !ctx.hasCounterargument) return false;
     if (step.requiresSourceText && !ctx.hasSourceText) return false;
+    if (step.omitForRatio && step.omitForRatio === ctx.chunkRatio) return false;
     return true;
   });
 }

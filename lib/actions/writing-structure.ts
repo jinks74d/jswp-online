@@ -66,11 +66,16 @@ interface BootstrapContext {
  * Build the starter commentary_items rows for a newly-created CD.
  * Exposed so other action paths (addChunk, createConcreteDetail)
  * can stay consistent with bootstrap's per-mode layout.
+ *
+ * 3+:0 (summary) chunks get zero CM slots — the ratio has no
+ * commentary. Literary always gets 5 word + 2 sentence slots
+ * regardless (it's locked to 1:2+).
  */
 export function buildStarterCmRows(
   chunkId: string,
   cdId: string,
-  mode: Mode
+  mode: Mode,
+  ratio: ChunkRatio
 ): Array<{
   chunk_id: string;
   parent_cd_id: string;
@@ -80,7 +85,11 @@ export function buildStarterCmRows(
 }> {
   const isLiterary = mode === "literary";
   const wordSlots = isLiterary ? 5 : 0;
-  const sentenceSlots = isLiterary ? 2 : 1;
+  const sentenceSlots = isLiterary
+    ? 2
+    : ratio === "three_plus_to_zero"
+      ? 0
+      : 1;
 
   const rows: ReturnType<typeof buildStarterCmRows> = [];
 
@@ -291,7 +300,7 @@ export async function bootstrapWritingStructure(
 
     const { error: cmErr } = await supabase
       .from("commentary_items")
-      .insert(buildStarterCmRows(chunk.id, cd.id, ctx.mode));
+      .insert(buildStarterCmRows(chunk.id, cd.id, ctx.mode, ctx.chunkRatio));
     if (cmErr) {
       console.error("bootstrap starter CMs:", cmErr);
     }
@@ -306,7 +315,8 @@ export async function bootstrapWritingStructure(
     bps,
     allChunks,
     sheetsByPosition,
-    ctx.mode
+    ctx.mode,
+    ctx.chunkRatio
   );
 }
 
@@ -354,7 +364,8 @@ async function promoteSelectedCandidates(
   bps: Array<{ id: string; position: number }>,
   allChunks: Array<{ id: string; body_paragraph_id: string; position: number }>,
   sheets: Map<number, SheetForPromotion>,
-  mode: Mode
+  mode: Mode,
+  ratio: ChunkRatio
 ): Promise<void> {
   if (sheets.size === 0) return;
 
@@ -413,7 +424,7 @@ async function promoteSelectedCandidates(
 
       const { error: cmErr } = await supabase
         .from("commentary_items")
-        .insert(buildStarterCmRows(firstChunk.id, newCd.id, mode));
+        .insert(buildStarterCmRows(firstChunk.id, newCd.id, mode, ratio));
       if (cmErr) {
         console.error("promote starter CMs:", cmErr);
       }

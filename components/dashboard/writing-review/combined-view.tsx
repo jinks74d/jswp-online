@@ -18,7 +18,7 @@
  * accepts server-component children via React's standard pattern.
  */
 
-import { MODES, type JswpMode } from "@/lib/jswp-modes";
+import { MODES, getSteps, type JswpMode } from "@/lib/jswp-modes";
 import { getPromptDecoding } from "@/lib/queries/prompt-decoding";
 import { WritingModeProvider } from "@/components/student/writing/writing-mode-provider";
 import { DecodePromptStep } from "@/app/student/writings/[id]/_steps/decode-prompt-step";
@@ -62,11 +62,11 @@ export async function CombinedView({
   chunkRatio,
   assignment,
 }: Props) {
-  const visible = MODES[mode].steps.filter((s) => {
-    if (s.essayOnly && !assignment.is_essay) return false;
-    if (s.requiresCounterargument && !assignment.has_counterargument) return false;
-    if (s.requiresSourceText && !assignment.source_text) return false;
-    return true;
+  const visible = getSteps(mode, {
+    isEssay: assignment.is_essay,
+    hasCounterargument: assignment.has_counterargument,
+    hasSourceText: !!assignment.source_text,
+    chunkRatio,
   });
 
   // Pre-fetch decode-prompt data (same pattern as the dispatcher;

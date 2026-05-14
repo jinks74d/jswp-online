@@ -21,6 +21,7 @@ import { CdCmShapingBpPane } from "./cd-cm-shaping-bp-pane";
 import { NarrativeShapingBpPane } from "./narrative-shaping-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
+import { computeGate } from "@/lib/shaping-gate";
 import { useWritingMode } from "../use-writing-mode";
 import type { ShapingBpData } from "@/lib/queries/shaping";
 import type { Database } from "@/lib/database.types";
@@ -33,50 +34,6 @@ interface Props {
   mode: Mode;
   hasCounterargument: boolean;
   bps: readonly ShapingBpData[];
-}
-
-interface GateResult {
-  canContinue: boolean;
-  blockerPosition: number | null;
-  reason: string | null;
-}
-
-function computeGate(
-  mode: Mode,
-  bps: readonly ShapingBpData[]
-): GateResult {
-  const isNarrative = mode === "narrative";
-  for (const bp of bps) {
-    const ss = bp.shaping_sheet;
-    const hasTs = !!(ss?.final_topic_sentence?.trim());
-    const hasCs = !!(ss?.final_concluding_sentence?.trim());
-    if (!hasTs && !hasCs) {
-      return {
-        canContinue: false,
-        blockerPosition: bp.position,
-        reason: "needs a final TS or CS",
-      };
-    }
-
-    if (!isNarrative) {
-      // Each chunk needs ≥1 non-empty CD sentence and ≥1 non-empty CM sentence.
-      for (const chunk of bp.chunks) {
-        const out = chunk.output;
-        const cdCount =
-          out?.cd_sentences.filter((s) => s.trim().length > 0).length ?? 0;
-        const cmCount =
-          out?.cm_sentences.filter((s) => s.trim().length > 0).length ?? 0;
-        if (cdCount === 0 || cmCount === 0) {
-          return {
-            canContinue: false,
-            blockerPosition: bp.position,
-            reason: `chunk ${chunk.position} needs at least one CD sentence and one CM sentence`,
-          };
-        }
-      }
-    }
-  }
-  return { canContinue: true, blockerPosition: null, reason: null };
 }
 
 export function ShapingClient({

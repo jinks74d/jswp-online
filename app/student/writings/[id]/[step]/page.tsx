@@ -13,7 +13,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { getWriting } from "@/lib/queries/student-writings";
 import { getPromptDecoding } from "@/lib/queries/prompt-decoding";
-import { MODES, getNextStep, type JswpMode } from "@/lib/jswp-modes";
+import { getSteps, getNextStep, type JswpMode } from "@/lib/jswp-modes";
 import { DecodePromptStep } from "../_steps/decode-prompt-step";
 import { PlaceholderStep } from "../_steps/placeholder-step";
 import { AnnotateTextStep } from "../_steps/annotate-text-step";
@@ -48,11 +48,11 @@ export default async function StepDispatcher({
 
   const a = writing.assignment;
   const mode = a.mode as JswpMode;
-  const visible = MODES[mode].steps.filter((s) => {
-    if (s.essayOnly && !a.is_essay) return false;
-    if (s.requiresCounterargument && !a.has_counterargument) return false;
-    if (s.requiresSourceText && !a.source_text) return false;
-    return true;
+  const visible = getSteps(mode, {
+    isEssay: a.is_essay,
+    hasCounterargument: a.has_counterargument,
+    hasSourceText: !!a.source_text,
+    chunkRatio: writing.chunk_ratio,
   });
 
   const target = visible.find((s) => s.slug === stepSlug);

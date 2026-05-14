@@ -10,6 +10,11 @@ Last reviewed: chunk P7-1.
 
 ## Open
 
+### Is 3+:0 argumentation pedagogically valid? (assignment-form question)
+Chunk 4.5d-1 made the Expository flow ratio-aware: 3+:0 (summary) drops the discrete Gathering & Prioritizing CDs step, and the 3+:0 CM-correctness fixes (zero starter CM slots, no CM rows in the T-Chart, Shaping gate skips the CM requirement) are keyed on per-chunk `chunk.ratio`, so they apply to **any** 3+:0 chunk regardless of mode. But `omitForRatio` is set only on `expository.gather_cds` — so an Argumentation assignment set to 3+:0 lands in a "partially correct" interim state: it gets the CM fixes but keeps its `gather_cds` step. The real question is upstream, not "extend `omitForRatio` to `argumentation.gather_cds`": **should the assignment form offer 3+:0 for Argumentation at all?** Argumentation is inherently a commentary-driven mode (you can't argue with zero commentary) — 3+:0 is the *summary* ratio. If 3+:0 argumentation isn't a real JSWP use case, the fix is to remove that option from the `assignment-form.tsx` ratio dropdown for `mode = "argumentation"` (the `assignments` CHECK constraint could also be tightened), not to special-case the step engine. Needs a pedagogy call from Dr. Louis / Raymond before either path.
+- **Identified:** chunk 4.5d-1
+- **Priority:** before production cutover (Phase 7) — small, but blocked on a pedagogy decision
+
 ### Exemplar step-match uses persisted current_step, not URL [step]
 6.5's per-step exemplar tagging filters by `writing.current_step` (the persisted column updated on save / `navigateToStep`). The student writing flow URL `[step]` segment is the actually-displayed step. They align on every normal navigation (sidebar clicks fire `navigateToStep` before the route change), but a backwards URL navigation by hand could briefly diverge — student lands on the thesis URL while `current_step` is still `paragraph_form`, and the reference panel filters to paragraph_form. Reconcile by either passing `[step]` down through the layout via a context the page populates, or by reading the URL on the page level and re-fetching exemplars there. Low impact in practice; tracked so a Phase 7 audit doesn't miss it.
 - **Identified:** chunk 6.5

@@ -15,6 +15,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 
 type CmKind = Database["public"]["Enums"]["jswp_cm_kind"];
+type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
 type NarrativeKind = Database["public"]["Enums"]["jswp_narrative_kind"];
 type NarrativeSubject = Database["public"]["Enums"]["jswp_narrative_subject"];
 
@@ -60,6 +61,7 @@ export interface ShapingCmData {
 export interface ShapingChunkData {
   id: string;
   position: number;
+  ratio: ChunkRatio;
   output: ChunkOutputData | null;
   cds: ShapingCdData[];
   cms: ShapingCmData[];
@@ -116,6 +118,7 @@ interface RawBp {
   chunks: Array<{
     id: string;
     position: number;
+    ratio: ChunkRatio;
     concrete_details: ShapingCdData[];
     commentary_items: ShapingCmData[];
   }>;
@@ -149,7 +152,7 @@ export async function getShapingData(
         )
       ),
       chunks (
-        id, position,
+        id, position, ratio,
         concrete_details ( id, position, text ),
         commentary_items (
           id, position, text, kind, parent_cd_id,
@@ -194,6 +197,7 @@ export async function getShapingData(
       .map((chunk) => ({
         id: chunk.id,
         position: chunk.position,
+        ratio: chunk.ratio,
         output: outputsByChunk.get(chunk.id) ?? null,
         cds: (chunk.concrete_details ?? [])
           .slice()

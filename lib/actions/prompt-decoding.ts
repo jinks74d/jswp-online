@@ -17,7 +17,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { markStepComplete } from "@/lib/actions/student-writings";
-import { MODES, getNextStep, type JswpMode } from "@/lib/jswp-modes";
+import { getSteps, getNextStep, type JswpMode } from "@/lib/jswp-modes";
 import type { Database } from "@/lib/database.types";
 
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -95,29 +95,31 @@ export async function completePromptDecoding(
   const { data: writing } = await supabase
     .from("student_writings")
     .select(
-      "assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )"
+      "chunk_ratio, assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )"
     )
     .eq("id", writingId)
     .maybeSingle();
 
-  const a = (writing as unknown as {
+  const w = writing as unknown as {
+    chunk_ratio: ChunkRatio;
     assignment: {
       mode: JswpMode;
       is_essay: boolean;
       has_counterargument: boolean;
       source_text: string | null;
     };
-  } | null)?.assignment;
+  } | null;
+  const a = w?.assignment;
 
-  if (!a) {
+  if (!w || !a) {
     throw new Error("Could not resolve writing mode.");
   }
 
-  const visible = MODES[a.mode].steps.filter((s) => {
-    if (s.essayOnly && !a.is_essay) return false;
-    if (s.requiresCounterargument && !a.has_counterargument) return false;
-    if (s.requiresSourceText && !a.source_text) return false;
-    return true;
+  const visible = getSteps(a.mode, {
+    isEssay: a.is_essay,
+    hasCounterargument: a.has_counterargument,
+    hasSourceText: !!a.source_text,
+    chunkRatio: w.chunk_ratio,
   });
 
   const decodeStep = visible.find((s) => s.groupOrigin === "decode_prompt");

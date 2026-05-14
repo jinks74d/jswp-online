@@ -16,7 +16,7 @@ import { getWriting, getCompletedStepKeys } from "@/lib/queries/student-writings
 import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { getRubricScoresForWriting } from "@/lib/queries/rubric-scores";
 import { getExemplarsForStudent } from "@/lib/queries/exemplars";
-import { MODES, type JswpMode } from "@/lib/jswp-modes";
+import { getSteps, type JswpMode } from "@/lib/jswp-modes";
 import { WritingShell } from "@/components/student/writing/writing-shell";
 import { WritingModeProvider } from "@/components/student/writing/writing-mode-provider";
 
@@ -38,11 +38,11 @@ export default async function WritingLayout({
   }
 
   const a = writing.assignment;
-  const visibleSteps = MODES[a.mode as JswpMode].steps.filter((s) => {
-    if (s.essayOnly && !a.is_essay) return false;
-    if (s.requiresCounterargument && !a.has_counterargument) return false;
-    if (s.requiresSourceText && !a.source_text) return false;
-    return true;
+  const visibleSteps = getSteps(a.mode as JswpMode, {
+    isEssay: a.is_essay,
+    hasCounterargument: a.has_counterargument,
+    hasSourceText: !!a.source_text,
+    chunkRatio: writing.chunk_ratio,
   });
 
   const isReadOnly =

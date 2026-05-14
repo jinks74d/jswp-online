@@ -118,7 +118,8 @@ export async function addChunk(
     throw new Error(`addChunk insert: ${insErr?.message ?? "no row"}`);
   }
 
-  // Starter CD + per-mode CMs (Literary: 5 word + 2 sentence; others: 1 sentence)
+  // Starter CD + per-mode/ratio CMs (Literary: 5 word + 2 sentence;
+  // 3+:0: 0 sentence; other ratios: 1 sentence)
   const { data: cd, error: cdErr } = await supabase
     .from("concrete_details")
     .insert({ chunk_id: chunk.id, position: 1, text: "" })
@@ -129,7 +130,7 @@ export async function addChunk(
   }
   await supabase
     .from("commentary_items")
-    .insert(buildStarterCmRows(chunk.id, cd.id, mode));
+    .insert(buildStarterCmRows(chunk.id, cd.id, mode, ratio));
 
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }
@@ -153,7 +154,8 @@ export async function removeChunk(
 export async function createConcreteDetail(
   writingId: string,
   chunkId: string,
-  mode: Mode
+  mode: Mode,
+  ratio: ChunkRatio
 ): Promise<void> {
   await requireRole("student");
   const supabase = await createServerClient();
@@ -181,10 +183,11 @@ export async function createConcreteDetail(
     );
   }
 
-  // Per-mode starter CMs (Literary: 5 word + 2 sentence; others: 1 sentence)
+  // Per-mode/ratio starter CMs (Literary: 5 word + 2 sentence;
+  // 3+:0: 0 sentence; other ratios: 1 sentence)
   await supabase
     .from("commentary_items")
-    .insert(buildStarterCmRows(chunkId, cd.id, mode));
+    .insert(buildStarterCmRows(chunkId, cd.id, mode, ratio));
 
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }

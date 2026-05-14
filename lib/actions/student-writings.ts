@@ -13,9 +13,11 @@ import { createServerClient } from "@/lib/supabase/server";
 import { getOrCreateWriting } from "@/lib/queries/student-writings";
 import {
   MODES,
+  getSteps,
   getNextStep,
   getStepByKey,
   type JswpMode,
+  type ChunkRatio,
 } from "@/lib/jswp-modes";
 
 /**
@@ -64,7 +66,7 @@ export async function markStepComplete(
     .from("student_writings")
     .select(
       `
-      id, current_step,
+      id, current_step, chunk_ratio,
       assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )
       `
     )
@@ -80,6 +82,7 @@ export async function markStepComplete(
   type WritingShape = {
     id: string;
     current_step: string | null;
+    chunk_ratio: ChunkRatio;
     assignment: {
       mode: JswpMode;
       is_essay: boolean;
@@ -109,11 +112,11 @@ export async function markStepComplete(
   }
 
   // 3. Advance current_step to next step in the visible sequence.
-  const visible = MODES[a.mode].steps.filter((s) => {
-    if (s.essayOnly && !a.is_essay) return false;
-    if (s.requiresCounterargument && !a.has_counterargument) return false;
-    if (s.requiresSourceText && !a.source_text) return false;
-    return true;
+  const visible = getSteps(a.mode, {
+    isEssay: a.is_essay,
+    hasCounterargument: a.has_counterargument,
+    hasSourceText: !!a.source_text,
+    chunkRatio: w.chunk_ratio,
   });
   const next = getNextStep(stepKey, visible);
 
@@ -233,7 +236,7 @@ export async function advanceCurrentStep(
   const { data: writing, error: wErr } = await supabase
     .from("student_writings")
     .select(
-      `id, assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )`
+      `id, chunk_ratio, assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )`
     )
     .eq("id", writingId)
     .maybeSingle();
@@ -242,20 +245,22 @@ export async function advanceCurrentStep(
     throw new Error(`Could not load writing ${writingId}`);
   }
 
-  const a = (writing as unknown as {
+  const w = writing as unknown as {
+    chunk_ratio: ChunkRatio;
     assignment: {
       mode: JswpMode;
       is_essay: boolean;
       has_counterargument: boolean;
       source_text: string | null;
     };
-  }).assignment;
+  };
+  const a = w.assignment;
 
-  const visible = MODES[a.mode].steps.filter((s) => {
-    if (s.essayOnly && !a.is_essay) return false;
-    if (s.requiresCounterargument && !a.has_counterargument) return false;
-    if (s.requiresSourceText && !a.source_text) return false;
-    return true;
+  const visible = getSteps(a.mode, {
+    isEssay: a.is_essay,
+    hasCounterargument: a.has_counterargument,
+    hasSourceText: !!a.source_text,
+    chunkRatio: w.chunk_ratio,
   });
   const next = getNextStep(fromStepKey, visible);
   if (!next) {
@@ -294,29 +299,31 @@ export async function completeStepAndAdvance(
   const { data: writing } = await supabase
     .from("student_writings")
     .select(
-      `assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )`
+      `chunk_ratio, assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )`
     )
     .eq("id", writingId)
     .maybeSingle();
 
-  const a = (writing as unknown as {
+  const w = writing as unknown as {
+    chunk_ratio: ChunkRatio;
     assignment: {
       mode: JswpMode;
       is_essay: boolean;
       has_counterargument: boolean;
       source_text: string | null;
     };
-  } | null)?.assignment;
+  } | null;
+  const a = w?.assignment;
 
-  if (!a) {
+  if (!w || !a) {
     throw new Error(`Could not resolve writing mode for ${writingId}`);
   }
 
-  const visible = MODES[a.mode].steps.filter((s) => {
-    if (s.essayOnly && !a.is_essay) return false;
-    if (s.requiresCounterargument && !a.has_counterargument) return false;
-    if (s.requiresSourceText && !a.source_text) return false;
-    return true;
+  const visible = getSteps(a.mode, {
+    isEssay: a.is_essay,
+    hasCounterargument: a.has_counterargument,
+    hasSourceText: !!a.source_text,
+    chunkRatio: w.chunk_ratio,
   });
 
   const next = getNextStep(stepKey, visible);

@@ -86,7 +86,12 @@ export function ChunkEditor({
         ))}
 
         {!isReadOnly && (
-          <AddCdButton writingId={writingId} chunkId={chunk.id} mode={mode} />
+          <AddCdButton
+            writingId={writingId}
+            chunkId={chunk.id}
+            mode={mode}
+            ratio={chunk.ratio}
+          />
         )}
       </div>
     </section>
@@ -117,6 +122,9 @@ function CdRow({
   const childCms = chunk.commentary_items.filter(
     (c) => c.parent_cd_id === cd.id && c.kind === "sentence"
   );
+  // 3+:0 (summary) has no commentary — the ratio is concrete details
+  // only. Hide the CM rows + "Add CM" affordance entirely.
+  const isSummaryRatio = chunk.ratio === "three_plus_to_zero";
 
   return (
     <div className="border-l-4 border-red-300 pl-3 space-y-2">
@@ -141,22 +149,20 @@ function CdRow({
         )}
       </div>
 
-      <div className="ml-6 space-y-2">
-        {childCms.map((cm) => (
-          <CmRow
-            key={cm.id}
-            writingId={writingId}
-            cm={cm}
-          />
-        ))}
-        {!isReadOnly && (
-          <AddCmButton
-            writingId={writingId}
-            chunkId={chunk.id}
-            parentCdId={cd.id}
-          />
-        )}
-      </div>
+      {!isSummaryRatio && (
+        <div className="ml-6 space-y-2">
+          {childCms.map((cm) => (
+            <CmRow key={cm.id} writingId={writingId} cm={cm} />
+          ))}
+          {!isReadOnly && (
+            <AddCmButton
+              writingId={writingId}
+              chunkId={chunk.id}
+              parentCdId={cd.id}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -197,10 +203,12 @@ function AddCdButton({
   writingId,
   chunkId,
   mode,
+  ratio,
 }: {
   writingId: string;
   chunkId: string;
   mode: Mode;
+  ratio: ChunkData["ratio"];
 }) {
   const [pending, start] = useTransition();
   return (
@@ -208,7 +216,7 @@ function AddCdButton({
       type="button"
       onClick={() =>
         start(async () => {
-          await createConcreteDetail(writingId, chunkId, mode);
+          await createConcreteDetail(writingId, chunkId, mode, ratio);
         })
       }
       disabled={pending}
