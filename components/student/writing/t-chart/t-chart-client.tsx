@@ -19,6 +19,7 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { CdCmTChart } from "./cd-cm-t-chart";
 import { NarrativeTChart } from "./narrative-t-chart";
+import { FictionalAbcPlan } from "./fictional-abc-plan";
 import { ReferencePanel } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useWritingMode } from "../use-writing-mode";
@@ -42,9 +43,12 @@ interface Props {
   annotations: readonly TextAnnotationRow[];
 }
 
+type BlockerKind = "fictional" | "wow" | "cdcm";
+
 interface GateResult {
   canContinue: boolean;
   blockerPosition: number | null;
+  blockerKind: BlockerKind | null;
 }
 
 function computeGate(
@@ -54,7 +58,23 @@ function computeGate(
   const isNarrative = mode === "narrative";
   for (const bp of bps) {
     const tc = bp.t_chart;
-    if (isNarrative) {
+    // Fictional narratives use the ABC plan, not the WOW fields — gate on
+    // ABC content (key word / concrete example / story conflict) instead.
+    if (isNarrative && tc?.narrative_kind === "fictional") {
+      const hasContent = !!(
+        (tc?.narrative_key_word && tc.narrative_key_word.trim()) ||
+        (tc?.narrative_concrete_example &&
+          tc.narrative_concrete_example.trim()) ||
+        (tc?.abc_conflict && tc.abc_conflict.trim())
+      );
+      if (!hasContent) {
+        return {
+          canContinue: false,
+          blockerPosition: bp.position,
+          blockerKind: "fictional",
+        };
+      }
+    } else if (isNarrative) {
       const hasContent = !!(
         (tc?.narrative_when && tc.narrative_when.trim()) ||
         (tc?.narrative_where && tc.narrative_where.trim()) ||
@@ -62,18 +82,26 @@ function computeGate(
         (tc?.narrative_what_happened && tc.narrative_what_happened.trim())
       );
       if (!hasContent) {
-        return { canContinue: false, blockerPosition: bp.position };
+        return {
+          canContinue: false,
+          blockerPosition: bp.position,
+          blockerKind: "wow",
+        };
       }
     } else {
       const hasCD = bp.chunks.some((c) =>
         c.concrete_details.some((cd) => cd.text.trim().length > 0)
       );
       if (!hasCD) {
-        return { canContinue: false, blockerPosition: bp.position };
+        return {
+          canContinue: false,
+          blockerPosition: bp.position,
+          blockerKind: "cdcm",
+        };
       }
     }
   }
-  return { canContinue: true, blockerPosition: null };
+  return { canContinue: true, blockerPosition: null, blockerKind: null };
 }
 
 export function TChartClient({
@@ -147,7 +175,11 @@ export function TChartClient({
 
       {activeBp ? (
         isNarrative ? (
-          <NarrativeTChart writingId={writingId} bp={activeBp} />
+          activeBp.t_chart?.narrative_kind === "fictional" ? (
+            <FictionalAbcPlan writingId={writingId} bp={activeBp} />
+          ) : (
+            <NarrativeTChart writingId={writingId} bp={activeBp} />
+          )
         ) : (
           <CdCmTChart
             writingId={writingId}
@@ -216,9 +248,11 @@ export function TChartClient({
               ? `${bodyParagraphs.length} body paragraph${
                   bodyParagraphs.length === 1 ? "" : "s"
                 } ready`
-              : isNarrative
-                ? `Body paragraph ${gate.blockerPosition} needs at least one WOW detail (when, where, who, or what happened).`
-                : `Body paragraph ${gate.blockerPosition} needs at least one concrete detail.`}
+              : gate.blockerKind === "fictional"
+                ? `Body paragraph ${gate.blockerPosition} needs ABC planning — a key word, concrete example, or story conflict.`
+                : gate.blockerKind === "wow"
+                  ? `Body paragraph ${gate.blockerPosition} needs at least one WOW detail (when, where, who, or what happened).`
+                  : `Body paragraph ${gate.blockerPosition} needs at least one concrete detail.`}
           </div>
           <div className="flex items-center gap-3">
             {error && (

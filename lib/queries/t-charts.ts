@@ -53,6 +53,11 @@ export interface TChartRowData {
   narrative_feeling: string | null;
   narrative_thinking: string | null;
   narrative_thinking_2: string | null;
+  abc_character: string | null;
+  abc_setting: string | null;
+  abc_back_story: string | null;
+  abc_conflict: string | null;
+  abc_end: string | null;
 }
 
 export interface ConcreteDetailData {
@@ -122,7 +127,8 @@ export async function getTChartData(
         narrative_where, narrative_where_details,
         narrative_who, narrative_who_details,
         narrative_what_happened, narrative_dialogue,
-        narrative_feeling, narrative_thinking, narrative_thinking_2
+        narrative_feeling, narrative_thinking, narrative_thinking_2,
+        abc_character, abc_setting, abc_back_story, abc_conflict, abc_end
       ),
       chunks (
         id, position, ratio,

@@ -55,6 +55,12 @@ export interface TChartFieldUpdates {
   narrative_feeling?: string | null;
   narrative_thinking?: string | null;
   narrative_thinking_2?: string | null;
+  // Fictional Narrative ABC plan — chain links 2-6 ("Key" reuses narrative_key_word)
+  abc_character?: string | null;
+  abc_setting?: string | null;
+  abc_back_story?: string | null;
+  abc_conflict?: string | null;
+  abc_end?: string | null;
 }
 
 export async function updateTChart(

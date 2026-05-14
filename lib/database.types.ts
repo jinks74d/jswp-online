@@ -551,6 +551,11 @@ export type TCharts = {
   narrative_feeling: string | null;
   narrative_thinking: string | null;
   narrative_thinking_2: string | null;
+  abc_character: string | null;
+  abc_setting: string | null;
+  abc_back_story: string | null;
+  abc_conflict: string | null;
+  abc_end: string | null;
 } & Timestamps;
 
 export type Chunks = {
