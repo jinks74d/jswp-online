@@ -43,12 +43,16 @@ export interface TChartRowData {
   narrative_general_ideas: string[] | null;
   narrative_concrete_example: string | null;
   narrative_when: string | null;
+  narrative_when_details: string | null;
   narrative_where: string | null;
+  narrative_where_details: string | null;
   narrative_who: string | null;
+  narrative_who_details: string | null;
   narrative_what_happened: string | null;
   narrative_dialogue: string | null;
   narrative_feeling: string | null;
   narrative_thinking: string | null;
+  narrative_thinking_2: string | null;
 }
 
 export interface ConcreteDetailData {
@@ -114,9 +118,11 @@ export async function getTChartData(
         concession, counterargument, refutation,
         narrative_kind, narrative_subject, narrative_key_word,
         narrative_general_ideas, narrative_concrete_example,
-        narrative_when, narrative_where, narrative_who,
+        narrative_when, narrative_when_details,
+        narrative_where, narrative_where_details,
+        narrative_who, narrative_who_details,
         narrative_what_happened, narrative_dialogue,
-        narrative_feeling, narrative_thinking
+        narrative_feeling, narrative_thinking, narrative_thinking_2
       ),
       chunks (
         id, position, ratio,

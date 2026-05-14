@@ -1,19 +1,37 @@
 "use client";
 
 /**
- * Narrative T-chart form. Shows ONLY the WOW Brainstorm section now;
- * the Discovery section moved to its own step in chunk 4.5c
- * (components/student/writing/discovery/). The 5 narrative_* fields
- * (kind, subject, key_word, general_ideas, concrete_example) still
- * live on t_charts — only the UI surface relocated.
+ * Narrative WOW T-Chart — a faithful two-column rebuild of the form on
+ * pp. 63/69 of the 2018 Personal & Fictional Narrative Guide.
  *
- * Adds a read-only "From your discovery" header above WOW so the
- * student stays anchored to what they discovered while filling in
- * the senses-and-action details. Empty discovery → informational
- * fallback copy (no back button — step sidebar handles navigation).
+ * Layout:
+ *   - Header: BP# box (top-left) + centered title block
+ *   - Topic Sentence — READ-ONLY, sourced from the topic-sentences step's
+ *     working_topic_sentence (that step owns the TS; we only display it)
+ *   - Two-column grid inside a heavy outer border:
+ *       Left  "CDs" — When/Where/Who each paired with a "Details about …"
+ *                     sub-block, then What Happened and Dialogue. Red text.
+ *       Right "CMs" — upper thinking cloud, central "I was feeling…" oval,
+ *                     lower thinking cloud. Green text.
+ *
+ * JSWP color law: TS → blue, CD inputs → red, CM inputs → green. No gray
+ * field anywhere a CD or CM is collected.
+ *
+ * Field → column map (t_charts):
+ *   When?/Details          → narrative_when / narrative_when_details
+ *   Where?/Details         → narrative_where / narrative_where_details
+ *   Who?/Details           → narrative_who / narrative_who_details
+ *   What Happened          → narrative_what_happened
+ *   Dialogue               → narrative_dialogue
+ *   Upper cloud (thinking) → narrative_thinking
+ *   Center oval (feeling)  → narrative_feeling
+ *   Lower cloud (thinking) → narrative_thinking_2
+ *
+ * The "Prompt" line from the paper form is intentionally omitted — the
+ * assignment prompt renders in the step chrome, not on the T-Chart.
  */
 
-import { AutoSaveInput } from "./auto-save-input";
+import { useEffect, useRef, useState } from "react";
 import { updateTChart } from "@/lib/actions/t-charts";
 import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
@@ -35,175 +53,419 @@ export function NarrativeTChart({
     );
   }
   const tc = bp.t_chart;
+  const save = (updates: Parameters<typeof updateTChart>[2]) =>
+    updateTChart(writingId, tc.id, updates);
 
   return (
-    <div className="space-y-6">
-      <DiscoveryContextHeader
-        keyWord={tc.narrative_key_word ?? ""}
-        concreteExample={tc.narrative_concrete_example ?? ""}
-      />
+    <div className="space-y-4">
+      {/* ─── Header: BP# box + centered title ─────────────────────── */}
+      <div className="flex items-stretch gap-3">
+        <div className="shrink-0 flex flex-col items-center justify-center border-2 border-gray-900 px-3 py-1.5 leading-none">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-900">
+            BP #
+          </span>
+          <span className="mt-0.5 text-xl font-bold text-gray-900">
+            {bp.position}
+          </span>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
+          <span className="text-sm font-bold uppercase tracking-wide text-gray-900">
+            Narrative (2+:1)
+          </span>
+          <span className="text-sm font-bold uppercase tracking-wide text-gray-900">
+            Event, Person, Place, or Thing
+          </span>
+          <span className="text-sm font-bold uppercase tracking-wide text-gray-900">
+            Gathering CDs and CMs on the T-Chart
+          </span>
+        </div>
+      </div>
 
-      <Section title="WOW Brainstorm">
-        <p className="text-xs text-gray-500 -mt-1">
-          Web Off the Word — capture the senses, the action, and what
-          you were feeling and thinking.
-        </p>
+      <hr className="border-gray-900" />
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="When" help="Time of day, season, age, era.">
-            <AutoSaveInput
-              initialValue={tc.narrative_when ?? ""}
-              disabled={isReadOnly}
-              onSave={async (narrative_when) => {
-                await updateTChart(writingId, tc.id, { narrative_when });
-              }}
-            />
-          </Field>
-          <Field label="Where" help="Place, sensory details.">
-            <AutoSaveInput
-              initialValue={tc.narrative_where ?? ""}
-              disabled={isReadOnly}
-              onSave={async (narrative_where) => {
-                await updateTChart(writingId, tc.id, { narrative_where });
-              }}
-            />
-          </Field>
-          <Field label="Who" help="People in the moment.">
-            <AutoSaveInput
-              initialValue={tc.narrative_who ?? ""}
-              disabled={isReadOnly}
-              onSave={async (narrative_who) => {
-                await updateTChart(writingId, tc.id, { narrative_who });
-              }}
-            />
-          </Field>
-          <Field label="What happened" help="The action — verbs first.">
-            <AutoSaveInput
-              multiline
-              rows={2}
-              initialValue={tc.narrative_what_happened ?? ""}
-              disabled={isReadOnly}
-              onSave={async (narrative_what_happened) => {
-                await updateTChart(writingId, tc.id, {
-                  narrative_what_happened,
-                });
-              }}
-            />
-          </Field>
+      {/* ─── Topic Sentence (read-only, from topic-sentences step) ── */}
+      <div>
+        <div className="text-xs font-bold uppercase tracking-wide text-blue-700 mb-1">
+          Topic Sentence
+        </div>
+        {tc.working_topic_sentence && tc.working_topic_sentence.trim() ? (
+          <p className="text-sm text-blue-700 border-b border-dashed border-blue-300 pb-1 whitespace-pre-wrap">
+            {tc.working_topic_sentence}
+          </p>
+        ) : (
+          <p className="text-xs italic text-gray-500 border-b border-dashed border-gray-300 pb-1">
+            Write this paragraph&apos;s topic sentence on the Topic
+            Sentences step — it will appear here.
+          </p>
+        )}
+      </div>
+
+      <hr className="border-gray-900" />
+
+      {/* ─── Two-column T-Chart ───────────────────────────────────── */}
+      <div className="grid grid-cols-2 border-2 border-gray-900">
+        {/* Left column — CDs */}
+        <div>
+          <div className="border-b-2 border-gray-900 py-1.5 text-center text-sm font-bold uppercase tracking-wide text-gray-900">
+            CDs
+          </div>
+          <div className="space-y-3 p-3">
+            <CdRow label="When?">
+              <WowField
+                color="cd"
+                initialValue={tc.narrative_when ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_when: v })}
+              />
+            </CdRow>
+            <CdRow label="Details about When:" sub>
+              <WowField
+                color="cd"
+                multiline
+                rows={2}
+                initialValue={tc.narrative_when_details ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_when_details: v })}
+              />
+            </CdRow>
+
+            <CdRow label="Where?">
+              <WowField
+                color="cd"
+                initialValue={tc.narrative_where ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_where: v })}
+              />
+            </CdRow>
+            <CdRow label="Details about Where:" sub>
+              <WowField
+                color="cd"
+                multiline
+                rows={2}
+                initialValue={tc.narrative_where_details ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_where_details: v })}
+              />
+            </CdRow>
+
+            <CdRow label="Who?">
+              <WowField
+                color="cd"
+                initialValue={tc.narrative_who ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_who: v })}
+              />
+            </CdRow>
+            <CdRow label="Details about Who:" sub>
+              <WowField
+                color="cd"
+                multiline
+                rows={2}
+                initialValue={tc.narrative_who_details ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_who_details: v })}
+              />
+            </CdRow>
+
+            <CdRow label="Details about What Happened (step-by-step)?">
+              <WowField
+                color="cd"
+                multiline
+                rows={5}
+                initialValue={tc.narrative_what_happened ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_what_happened: v })}
+              />
+            </CdRow>
+
+            <CdRow label="Dialogue?">
+              <WowField
+                color="cd"
+                multiline
+                rows={3}
+                placeholder={`"Where do you think you're going?" she asked.`}
+                initialValue={tc.narrative_dialogue ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_dialogue: v })}
+              />
+            </CdRow>
+          </div>
         </div>
 
-        <Field
-          label="Dialogue"
-          help="Words spoken — yours, theirs, or both."
-        >
-          <AutoSaveInput
-            multiline
-            rows={2}
-            initialValue={tc.narrative_dialogue ?? ""}
-            placeholder={`"Where do you think you're going?" she asked.`}
-            disabled={isReadOnly}
-            onSave={async (narrative_dialogue) => {
-              await updateTChart(writingId, tc.id, { narrative_dialogue });
-            }}
-          />
-        </Field>
+        {/* Right column — CMs */}
+        <div className="border-l-2 border-gray-900">
+          <div className="border-b-2 border-gray-900 py-1.5 text-center text-sm font-bold uppercase tracking-wide text-gray-900">
+            CMs
+          </div>
+          <div className="p-3">
+            <p className="mb-2 text-center text-xs text-gray-500">
+              Fill in the circle in the middle, then web off into the
+              clouds to dig deeper.
+            </p>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Feeling" help="What did your body feel?">
-            <AutoSaveInput
-              multiline
-              rows={2}
-              initialValue={tc.narrative_feeling ?? ""}
-              disabled={isReadOnly}
-              onSave={async (narrative_feeling) => {
-                await updateTChart(writingId, tc.id, { narrative_feeling });
-              }}
-            />
-          </Field>
-          <Field label="Thinking" help="What ran through your mind?">
-            <AutoSaveInput
-              multiline
-              rows={2}
-              initialValue={tc.narrative_thinking ?? ""}
-              disabled={isReadOnly}
-              onSave={async (narrative_thinking) => {
-                await updateTChart(writingId, tc.id, { narrative_thinking });
-              }}
-            />
-          </Field>
+            <Cloud prompt="What were you thinking? Why?">
+              <WowField
+                color="cm"
+                multiline
+                rows={2}
+                initialValue={tc.narrative_thinking ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_thinking: v })}
+              />
+            </Cloud>
+
+            <Connector />
+
+            <Oval>
+              <WowField
+                color="cm"
+                multiline
+                rows={3}
+                placeholder="I was feeling … because …"
+                initialValue={tc.narrative_feeling ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_feeling: v })}
+              />
+            </Oval>
+
+            <Connector />
+
+            <Cloud prompt="What were you thinking? Why?">
+              <WowField
+                color="cm"
+                multiline
+                rows={2}
+                initialValue={tc.narrative_thinking_2 ?? ""}
+                disabled={isReadOnly}
+                onSave={(v) => save({ narrative_thinking_2: v })}
+              />
+            </Cloud>
+          </div>
         </div>
-      </Section>
+      </div>
     </div>
   );
 }
 
-/* ─── Helpers ─────────────────────────────────────────────────────── */
+/* ─── Layout helpers ──────────────────────────────────────────────── */
 
-function DiscoveryContextHeader({
-  keyWord,
-  concreteExample,
-}: {
-  keyWord: string;
-  concreteExample: string;
-}) {
-  const kw = keyWord.trim();
-  const ex = concreteExample.trim();
-  const hasContext = kw.length > 0 || ex.length > 0;
-
-  if (!hasContext) {
-    return (
-      <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-900">
-        Add a key word and concrete example on the Discovering step to
-        anchor this BP.
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
-      <div className="text-xs uppercase tracking-wide text-amber-900 mb-0.5">
-        From your discovery
-      </div>
-      <div className="text-sm text-gray-900">
-        {kw && <span className="font-semibold">{kw}</span>}
-        {kw && ex && <span className="text-gray-500"> — </span>}
-        {ex && <span className="line-clamp-2">{ex}</span>}
-      </div>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
-
-function Field({
+function CdRow({
   label,
-  help,
+  sub,
   children,
 }: {
   label: string;
-  help?: string;
+  sub?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <label className="block">
-      <div className="text-sm font-medium text-gray-900">{label}</div>
-      {help && <div className="text-xs text-gray-500 mt-0.5">{help}</div>}
-      <div className="mt-1.5">{children}</div>
-    </label>
+    <div>
+      <div
+        className={
+          sub
+            ? "text-center text-xs font-bold text-gray-900"
+            : "text-sm font-bold text-gray-900"
+        }
+      >
+        {label}
+      </div>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function Cloud({
+  prompt,
+  children,
+}: {
+  prompt: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mx-auto max-w-xs border-2 border-gray-900 bg-white px-4 py-3 rounded-[50%_50%_50%_50%/_30%_30%_50%_50%]">
+      <p className="mb-1.5 text-center text-xs font-bold text-gray-900">
+        {prompt}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function Connector() {
+  return (
+    <svg
+      width="20"
+      height="26"
+      viewBox="0 0 20 26"
+      className="mx-auto block my-1"
+      aria-hidden="true"
+    >
+      <circle
+        cx="10"
+        cy="9"
+        r="8"
+        fill="white"
+        stroke="#111827"
+        strokeWidth="1.5"
+      />
+      <circle
+        cx="10"
+        cy="20.5"
+        r="5.5"
+        fill="white"
+        stroke="#111827"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+function Oval({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative mx-auto max-w-xs">
+      <svg
+        viewBox="0 0 260 170"
+        className="block w-full"
+        aria-hidden="true"
+      >
+        <ellipse
+          cx="130"
+          cy="85"
+          rx="127"
+          ry="82"
+          fill="white"
+          stroke="#111827"
+          strokeWidth="1.5"
+        />
+        <line
+          x1="46"
+          y1="64"
+          x2="214"
+          y2="64"
+          stroke="#9ca3af"
+          strokeWidth="1"
+          strokeDasharray="8 5"
+        />
+        <line
+          x1="34"
+          y1="90"
+          x2="226"
+          y2="90"
+          stroke="#9ca3af"
+          strokeWidth="1"
+          strokeDasharray="8 5"
+        />
+        <line
+          x1="50"
+          y1="116"
+          x2="210"
+          y2="116"
+          stroke="#9ca3af"
+          strokeWidth="1"
+          strokeDasharray="8 5"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center px-9 py-6">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Autosave field (dashed-underline, color-coded) ──────────────── */
+/**
+ * Inlined rather than using <AutoSaveInput> because that component
+ * bakes in a boxed gray border; the guide's WOW cells are dashed
+ * underline writing-lines. Same blur-save + revalidate-aware behavior.
+ */
+function WowField({
+  color,
+  initialValue,
+  onSave,
+  disabled,
+  multiline,
+  rows,
+  placeholder,
+}: {
+  color: "cd" | "cm";
+  initialValue: string;
+  onSave: (value: string) => Promise<void>;
+  disabled?: boolean;
+  multiline?: boolean;
+  rows?: number;
+  placeholder?: string;
+}) {
+  const [value, setValue] = useState(initialValue);
+  const [status, setStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const isFocusedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isFocusedRef.current) setValue(initialValue);
+  }, [initialValue]);
+
+  const handleBlur = async () => {
+    isFocusedRef.current = false;
+    if (value === initialValue) return;
+    setStatus("saving");
+    try {
+      await onSave(value);
+      setStatus("saved");
+      setTimeout(
+        () => setStatus((s) => (s === "saved" ? "idle" : s)),
+        1200
+      );
+    } catch (e) {
+      console.error("narrative t-chart save failed:", e);
+      setStatus("error");
+    }
+  };
+
+  const textColor = color === "cd" ? "text-red-600" : "text-green-700";
+  const borderColor =
+    color === "cd" ? "border-red-300" : "border-green-300";
+  const cls = `w-full bg-transparent px-1 py-1 text-sm ${textColor} placeholder:text-gray-300 placeholder:not-italic border-b border-dashed ${borderColor} focus:outline-none focus:border-solid focus:border-blue-400 disabled:opacity-60`;
+
+  return (
+    <div className="relative">
+      {multiline ? (
+        <textarea
+          value={value}
+          rows={rows ?? 2}
+          placeholder={placeholder}
+          disabled={disabled}
+          onChange={(e) => setValue(e.target.value)}
+          onFocus={() => {
+            isFocusedRef.current = true;
+          }}
+          onBlur={handleBlur}
+          className={`${cls} resize-y leading-6`}
+        />
+      ) : (
+        <input
+          type="text"
+          value={value}
+          placeholder={placeholder}
+          disabled={disabled}
+          onChange={(e) => setValue(e.target.value)}
+          onFocus={() => {
+            isFocusedRef.current = true;
+          }}
+          onBlur={handleBlur}
+          className={cls}
+        />
+      )}
+      <span
+        className="absolute right-1 top-0.5 text-[10px] pointer-events-none"
+        aria-live="polite"
+      >
+        {status === "saving" && <span className="text-gray-400">…</span>}
+        {status === "saved" && <span className="text-green-600">✓</span>}
+        {status === "error" && (
+          <span className="text-red-600">retry</span>
+        )}
+      </span>
+    </div>
   );
 }
