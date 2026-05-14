@@ -152,6 +152,10 @@ export interface ShapingSheetUpdates {
   final_counterargument?: string | null;
   final_refutation?: string | null;
   notes?: string | null;
+  // Narrative shaping shape-blocks (CD1/CD2/CM); TS/CS reuse final_*.
+  narrative_shaping_cd1?: string | null;
+  narrative_shaping_cd2?: string | null;
+  narrative_shaping_cm?: string | null;
 }
 
 export async function updateShapingSheet(

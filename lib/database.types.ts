@@ -595,6 +595,9 @@ export type ShapingSheets = {
   final_concluding_sentence: string | null;
   rules_applied: string[] | null;
   notes: string | null;
+  narrative_shaping_cd1: string | null;
+  narrative_shaping_cd2: string | null;
+  narrative_shaping_cm: string | null;
 } & Timestamps;
 
 export type ShapingChunkOutputs = {
