@@ -43,7 +43,7 @@ export function NarrativeShapingBpPane({
     <div className="space-y-5 max-w-3xl">
       <WowContext bp={bp} />
 
-      <Section title="Topic Sentence">
+      <Section title="Topic Sentence" accentClass="text-blue-700">
         {bp.working_topic_sentence && (
           <ReadOnlyContext label="Working TS (from topic-sentences step)">
             {bp.working_topic_sentence}
@@ -68,7 +68,7 @@ export function NarrativeShapingBpPane({
         </Field>
       </Section>
 
-      <Section title="Concluding Sentence">
+      <Section title="Concluding Sentence" accentClass="text-blue-700">
         {bp.concluding_sentence && (
           <ReadOnlyContext label="CS (from t-chart)">
             {bp.concluding_sentence}
@@ -159,14 +159,18 @@ function WowContext({ bp }: { bp: ShapingBpData }) {
 
 function Section({
   title,
+  accentClass = "text-gray-700",
   children,
 }: {
   title: string;
+  accentClass?: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+      <h3
+        className={`text-sm font-semibold uppercase tracking-wide ${accentClass}`}
+      >
         {title}
       </h3>
       {children}

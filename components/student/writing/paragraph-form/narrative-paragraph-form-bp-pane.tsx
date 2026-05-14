@@ -191,14 +191,16 @@ function ReadOnlyMaterial({
   const concreteExample = bp.narrative_concrete_example?.trim() ?? "";
   const hasDiscovery = keyWord.length > 0 || concreteExample.length > 0;
 
-  const wowFields: Array<[string, string | null]> = [
-    ["When", bp.narrative_when],
-    ["Where", bp.narrative_where],
-    ["Who", bp.narrative_who],
-    ["What happened", bp.narrative_what_happened],
-    ["Dialogue", bp.narrative_dialogue],
-    ["Feeling", bp.narrative_feeling],
-    ["Thinking", bp.narrative_thinking],
+  // WOW notes carry the JSWP color law: When/Where/Who/What/Dialogue are
+  // concrete details (red), Feeling/Thinking are commentary (green).
+  const wowFields: Array<[string, string | null, "cd" | "cm"]> = [
+    ["When", bp.narrative_when, "cd"],
+    ["Where", bp.narrative_where, "cd"],
+    ["Who", bp.narrative_who, "cd"],
+    ["What happened", bp.narrative_what_happened, "cd"],
+    ["Dialogue", bp.narrative_dialogue, "cd"],
+    ["Feeling", bp.narrative_feeling, "cm"],
+    ["Thinking", bp.narrative_thinking, "cm"],
   ];
   const wowFilled = wowFields.filter(
     ([, v]) => v !== null && v !== undefined && v.trim().length > 0
@@ -247,12 +249,16 @@ function ReadOnlyMaterial({
       {wowFilled.length > 0 && (
         <Section title="WOW notes" accentClass="text-gray-700">
           <dl className="space-y-1">
-            {wowFilled.map(([label, value]) => (
+            {wowFilled.map(([label, value, kind]) => (
               <div key={label}>
                 <dt className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
                   {label}
                 </dt>
-                <dd className="text-sm text-gray-900 whitespace-pre-wrap">
+                <dd
+                  className={`text-sm whitespace-pre-wrap ${
+                    kind === "cd" ? "text-red-600" : "text-green-700"
+                  }`}
+                >
                   {value}
                 </dd>
               </div>
