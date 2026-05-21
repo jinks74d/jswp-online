@@ -70,11 +70,6 @@ Path A in P7-6 deleted the v1 super-admin district CRUD surface (create, edit, b
 - **Identified:** chunk P7-6
 - **Priority:** before first production tenant onboarding
 
-### Drag-and-drop reordering of selected candidates
-The pedagogyHint for gather-cds says "Drag them into the order you want them to appear." Chunk 4.5 implements selection-order via toggle order (first selected = priority 1). `@dnd-kit/*` is already in `package.json`; add a drag handle to selected candidates and persist `selection_order` on drop.
-- **Identified:** chunk 4.5 (commit `6881cca`)
-- **Priority:** polish; before production cutover (Phase 7)
-
 ### Phrase-to-word linking on `commentary_items`
 Literary's elaboration step (chunk 4.5b2) pools phrase CMs per CD via `parent_cd_id` only. The pedagogyHint says "for each CM word, write a synonym, then two phrases" — implying a 1:1 word→phrase association. Schema doesn't enforce this. Adding a `parent_cm_id UUID REFERENCES commentary_items(id) ON DELETE CASCADE` column would let elaboration link each phrase to the specific best-word it elaborates, improving pedagogical fidelity. Requires migration; not load-bearing for any current step.
 - **Identified:** chunk 4.5b2 audit
@@ -122,6 +117,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Drag-and-drop reordering of selected candidates
+Added a drag handle (`@dnd-kit/sortable`) to selected candidates on the gathering sheet and persist `selection_order` on drop via the new `reorderSelectedCandidates` server action. The PRIORITY list renders selected CDs as a sortable list with display-position priority badges (1..N, decoupled from stored `selection_order` so deselection gaps never surface); the BRAINSTORM list holds unselected candidates. Keyboard reorder fallback via `KeyboardSensor`. Same chunk also restructured the gather-cds surface from per-BP tabs to stacked per-BP cards. `selection_order` has no unique constraint (only `(gathering_sheet_id, position)` does), so the contiguous 1..N rewrite loop is collision-safe.
+- **Closed:** chunk 4.5e
 
 ### Legacy `/dashboard/**` route stubs (35 files)
 Deleted the 35 v1 dashboard route files. 17 top-level (analytics, teachers, users/, schools/, settings, test, classes/create, assignments/create + 4 modes) and 18 per-step pages under `assignments/[id]/`. The v1 components in `components/dashboard/*` they imported remain — separately dead code, not in scope.

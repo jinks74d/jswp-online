@@ -242,6 +242,55 @@ export async function setCandidateSide(
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }
 
+/**
+ * Reorder the selected candidates on a single sheet. Caller passes the
+ * candidate IDs in their new priority order; each row's selection_order
+ * is rewritten contiguously 1..N. Non-selected candidates are not
+ * touched and keep selection_order=NULL.
+ *
+ * Callers should pass only currently-selected candidates that belong to
+ * the same gathering_sheet_id. RLS rejects writes to candidates outside
+ * the student's own writing. Empty / single-item arrays are no-ops.
+ */
+export async function reorderSelectedCandidates(
+  writingId: string,
+  sheetId: string,
+  orderedCandidateIds: readonly string[]
+): Promise<void> {
+  await requireRole("student");
+  if (orderedCandidateIds.length < 2) return;
+  const supabase = await createServerClient();
+
+  // Verify all IDs belong to this sheet and are currently selected.
+  // Defensive: malformed input shouldn't silently rewrite an unrelated
+  // sheet's selection_order.
+  const { data: rows, error: fErr } = await supabase
+    .from("candidate_cds")
+    .select("id, gathering_sheet_id, is_selected")
+    .in("id", orderedCandidateIds as string[]);
+  if (fErr) throw new Error(`reorderSelectedCandidates fetch: ${fErr.message}`);
+
+  const valid = (rows ?? []).every(
+    (r) => r.gathering_sheet_id === sheetId && r.is_selected === true
+  );
+  if (!valid || (rows ?? []).length !== orderedCandidateIds.length) {
+    throw new Error(
+      "reorderSelectedCandidates: id list does not match sheet's selected candidates"
+    );
+  }
+
+  for (let i = 0; i < orderedCandidateIds.length; i++) {
+    const { error } = await supabase
+      .from("candidate_cds")
+      .update({ selection_order: i + 1 })
+      .eq("id", orderedCandidateIds[i]);
+    if (error) {
+      throw new Error(`reorderSelectedCandidates: ${error.message}`);
+    }
+  }
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
 export async function deleteCandidate(
   writingId: string,
   candidateId: string

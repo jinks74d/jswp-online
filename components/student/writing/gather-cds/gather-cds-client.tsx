@@ -1,15 +1,14 @@
 "use client";
 
 /**
- * Gather-CDs orchestrator. Per-BP tabs + reference panel (when source
- * text exists) + Continue gate.
+ * Gather-CDs orchestrator. Renders every body paragraph's gathering
+ * sheet as its own stacked card (one card per BP, scrollable). Source
+ * text + annotations live in a sticky right-rail when present. Continue
+ * gate requires ≥1 is_selected=true on every BP's sheet; the tooltip
+ * names the offending BP.
  *
- * Continue gate: each BP's sheet must have ≥1 is_selected=true. The
- * tooltip names the offending BP. Same per-BP gating shape as 4.4's
- * t-chart so students learn one mental model.
- *
- * No optimistic UI — server actions revalidate, fresh data flows
- * down through the bodyParagraphSheets prop.
+ * No optimistic UI for the gate — server actions revalidate, fresh
+ * data flows down through the bodyParagraphSheets prop.
  */
 
 import { useState, useTransition } from "react";
@@ -60,12 +59,10 @@ export function GatherCdsClient({
   annotations,
 }: Props) {
   const { isReadOnly } = useWritingMode();
-  const [activeIdx, setActiveIdx] = useState(0);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const gate = computeGate(sheets);
-  const activeSheet = sheets[activeIdx] ?? sheets[0];
   const showReference = sourceText !== null;
 
   const onContinue = () => {
@@ -82,46 +79,31 @@ export function GatherCdsClient({
   };
 
   const formColumn = (
-    <div className="space-y-4 min-w-0">
-      {sheets.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Body paragraphs"
-          className="flex gap-1 border-b border-gray-200 overflow-x-auto"
-        >
-          {sheets.map((sheet, i) => {
-            const active = i === activeIdx;
-            return (
-              <button
-                key={sheet.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setActiveIdx(i)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${
-                  active
-                    ? "text-gray-900"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-                style={
-                  active
-                    ? { borderBottomColor: "var(--district-primary)" }
-                    : undefined
-                }
-              >
-                Body {sheet.body_paragraph_position}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {activeSheet ? (
-        <SheetEditor writingId={writingId} sheet={activeSheet} />
-      ) : (
+    <div className="space-y-5 min-w-0">
+      {sheets.length === 0 ? (
         <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
           No gathering sheets yet. Reload to bootstrap.
         </div>
+      ) : (
+        sheets.map((sheet) => (
+          <section
+            key={sheet.id}
+            aria-label={`Body Paragraph ${sheet.body_paragraph_position}`}
+            className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+          >
+            <header
+              className="px-4 py-2.5 border-b border-gray-200 bg-gray-50"
+              style={{ borderLeft: "4px solid var(--district-primary)" }}
+            >
+              <h3 className="text-sm font-semibold text-gray-900">
+                Body Paragraph {sheet.body_paragraph_position}
+              </h3>
+            </header>
+            <div className="p-4">
+              <SheetEditor writingId={writingId} sheet={sheet} />
+            </div>
+          </section>
+        ))
       )}
     </div>
   );
