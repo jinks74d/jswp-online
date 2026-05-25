@@ -2,32 +2,52 @@
 
 /**
  * One body paragraph's paragraph-form pane for expository /
- * argumentation / literary modes.
+ * argumentation / literary modes. Rebuilt in chunk 4.5d-3.
+ *
+ * The artifact is the assembled paragraph in JSWP color — composed
+ * automatically from the tagged Shaping Sheet sentences (TS blue →
+ * per-chunk CD red + CM green → CS blue), per the guide's Paragraph
+ * Form (docs/reference/expository-organizer-specs.md). The student
+ * reads and confirms; they don't retype.
  *
  * Layout:
- *   Desktop (lg+): two-column grid.
- *     Left  (18rem): read-only sentence material from shaping.
- *     Right (1fr):   editable final_text textarea + live word count.
- *   Mobile: read-only material in a <details> at top, textarea below.
+ *   Left (aside): read-only discrete-sentence material from shaping.
+ *   Right (main): the composed COLOR-CODED paragraph + an optional
+ *                 "fine-tune wording" editor (final_text) with word count.
  *
- * Read-only material structure:
- *   - Topic Sentence  (final_topic_sentence, falling back to working_topic_sentence
- *                      with a "draft" pill if final is empty)
- *   - Per chunk: CD sentences + CM sentences (color-tinted headers)
- *   - Conditional Concession / Counterargument / Refutation block
- *     (when has_counterargument)
- *   - Concluding Sentence (final_concluding_sentence, falling back)
- *
- * Empty sections (a chunk without any cd_sentences/cm_sentences) get
- * a friendly "no sentences yet — finish shaping first" notice with a
- * back-link. Doesn't gate.
+ * final_text contract: Final Draft assembly reads paragraph_forms.final_text
+ * (lib/actions/final-draft.ts). We auto-seed final_text from the composed
+ * text once, only while it is still empty, so the Continue gate passes and
+ * the essay assembles — without ever clobbering a student's manual edit.
  */
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { updateFinalText } from "@/lib/actions/paragraph-form";
+import {
+  composeParagraphSegments,
+  composeParagraphText,
+  type SegmentRole,
+} from "@/lib/compose-paragraph";
 import { useWritingMode } from "../use-writing-mode";
 import type { ParagraphFormBpData } from "@/lib/queries/paragraph-form";
+
+// Static literal classes so Tailwind's scanner generates them.
+const SEGMENT_TEXT_CLASS: Record<SegmentRole, string> = {
+  ts: "text-[color:var(--jswp-color-ts)]",
+  cd: "text-[color:var(--jswp-color-cd)]",
+  cm: "text-[color:var(--jswp-color-cm)]",
+  cs: "text-[color:var(--jswp-color-cs)]",
+  other: "text-gray-900",
+};
+
+const SEGMENT_SR_LABEL: Record<SegmentRole, string> = {
+  ts: "Topic sentence",
+  cd: "Concrete detail",
+  cm: "Commentary",
+  cs: "Concluding sentence",
+  other: "",
+};
 
 export function CdCmParagraphFormBpPane({
   writingId,
@@ -47,9 +67,36 @@ export function CdCmParagraphFormBpPane({
     );
   }
 
+  // Compose from the final (falling back to working) topic/concluding
+  // sentences plus the per-chunk shaped sentence arrays.
+  const ts =
+    bp.shaping?.final_topic_sentence?.trim() ||
+    bp.working_topic_sentence?.trim() ||
+    "";
+  const cs =
+    bp.shaping?.final_concluding_sentence?.trim() ||
+    bp.concluding_sentence?.trim() ||
+    "";
+
+  const composeInput = {
+    topicSentence: ts,
+    chunks: bp.chunks.map((c) => ({
+      cd_sentences: c.cd_sentences,
+      cm_sentences: c.cm_sentences,
+    })),
+    concession: hasCounterargument ? bp.shaping?.final_concession : null,
+    counterargument: hasCounterargument
+      ? bp.shaping?.final_counterargument
+      : null,
+    refutation: hasCounterargument ? bp.shaping?.final_refutation : null,
+    concludingSentence: cs,
+  };
+  const segments = composeParagraphSegments(composeInput);
+  const composedText = composeParagraphText(composeInput);
+
   return (
     <>
-      {/* Mobile: read-only as collapsible at top */}
+      {/* Mobile: read-only material as collapsible at top */}
       <details className="lg:hidden bg-white border border-gray-200 rounded-lg group mb-3">
         <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between">
           <span className="text-sm font-medium text-gray-900">
@@ -69,7 +116,6 @@ export function CdCmParagraphFormBpPane({
         </div>
       </details>
 
-      {/* Desktop two-column / mobile single-column for the editor */}
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <aside className="hidden lg:block lg:sticky lg:top-20 lg:self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
           <ReadOnlyMaterial
@@ -79,28 +125,89 @@ export function CdCmParagraphFormBpPane({
           />
         </aside>
 
-        <Editor writingId={writingId} paragraphFormId={pf.id} initialValue={pf.final_text} />
+        <div className="space-y-4 min-w-0">
+          <ComposedParagraph segments={segments} writingId={writingId} />
+          <Editor
+            writingId={writingId}
+            paragraphFormId={pf.id}
+            initialValue={pf.final_text}
+            composedText={composedText}
+          />
+        </div>
       </div>
     </>
   );
 }
 
-/* ─── Editor (right column on desktop) ────────────────────────────── */
+/* ─── Composed color-coded paragraph (the artifact) ───────────────── */
+
+function ComposedParagraph({
+  segments,
+  writingId,
+}: {
+  segments: ReturnType<typeof composeParagraphSegments>;
+  writingId: string;
+}) {
+  if (segments.length === 0) {
+    return (
+      <div className="space-y-2">
+        <div className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+          Your paragraph
+        </div>
+        <BackLinkNotice
+          writingId={writingId}
+          message="Nothing to assemble yet — finish your Shaping Sheet first."
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+        Your paragraph
+      </div>
+      <p className="text-xs text-gray-500">
+        Assembled in color from your shaped sentences. Read it through — blue
+        topic &amp; concluding sentences, red concrete details, green
+        commentary.
+      </p>
+      <div
+        className="rounded-md border border-gray-200 bg-white p-4 text-sm leading-7"
+        style={{ textIndent: "1.5rem", printColorAdjust: "exact" }}
+      >
+        {segments.map((seg, i) => (
+          <span key={i} className={SEGMENT_TEXT_CLASS[seg.role]}>
+            {SEGMENT_SR_LABEL[seg.role] && (
+              <span className="sr-only">{SEGMENT_SR_LABEL[seg.role]}: </span>
+            )}
+            {seg.text}
+            {i < segments.length - 1 ? " " : ""}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Optional fine-tune editor (seeds + overrides final_text) ────── */
 
 /**
- * Inline editor with live word count + onBlur autosave + save-status
- * indicator. AutoSaveInput would have worked except its onChange is
- * private — we need live word count as the student types, so this
- * component owns its own state.
+ * Editable final_text with live word count + onBlur autosave. Seeds
+ * final_text from the composed paragraph once, only while it is empty,
+ * so Final Draft assembly and the Continue gate work even if the student
+ * never opens this editor. A manual edit is never overwritten.
  */
 function Editor({
   writingId,
   paragraphFormId,
   initialValue,
+  composedText,
 }: {
   writingId: string;
   paragraphFormId: string;
   initialValue: string;
+  composedText: string;
 }) {
   const { isReadOnly } = useWritingMode();
   const [value, setValue] = useState(initialValue);
@@ -109,9 +216,41 @@ function Editor({
   );
   const isFocusedRef = useRef(false);
   const lastSavedRef = useRef(initialValue);
+  const seededRef = useRef(false);
 
-  // Pick up server-side prop refresh (e.g., after revalidate from a
-  // sibling action) when the user isn't actively editing.
+  // One-time seed: if final_text is still empty and we have composed text,
+  // persist it so the gate passes and the essay assembles. Guarded by a
+  // ref so it fires once per mount; skipped in read-only review.
+  useEffect(() => {
+    if (seededRef.current) return;
+    if (isReadOnly) return;
+    if (initialValue.trim().length > 0) return;
+    if (composedText.trim().length === 0) return;
+    seededRef.current = true;
+    setStatus("saving");
+    void updateFinalText(writingId, paragraphFormId, composedText)
+      .then(() => {
+        lastSavedRef.current = composedText;
+        if (!isFocusedRef.current) setValue(composedText);
+        setStatus("saved");
+        setTimeout(
+          () => setStatus((s) => (s === "saved" ? "idle" : s)),
+          1500
+        );
+      })
+      .catch((e) => {
+        console.error("paragraph-form seed:", e);
+        setStatus("error");
+      });
+  }, [
+    writingId,
+    paragraphFormId,
+    initialValue,
+    composedText,
+    isReadOnly,
+  ]);
+
+  // Pick up server prop refresh when not actively editing.
   useEffect(() => {
     if (!isFocusedRef.current) {
       setValue(initialValue);
@@ -127,10 +266,7 @@ function Editor({
       await updateFinalText(writingId, paragraphFormId, value);
       lastSavedRef.current = value;
       setStatus("saved");
-      setTimeout(
-        () => setStatus((s) => (s === "saved" ? "idle" : s)),
-        1500
-      );
+      setTimeout(() => setStatus((s) => (s === "saved" ? "idle" : s)), 1500);
     } catch (e) {
       console.error("paragraph-form save:", e);
       setStatus("error");
@@ -140,44 +276,46 @@ function Editor({
   const wordCount = countWords(value);
 
   return (
-    <div className="space-y-2">
-      <div className="text-xs font-semibold uppercase tracking-wide text-gray-700">
-        Your paragraph
-      </div>
-      <p className="text-xs text-gray-500">
-        Compose the polished paragraph from your sentence material. Use
-        the side panel as your reference.
-      </p>
-      <div className="relative">
-        <textarea
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onFocus={() => {
-            isFocusedRef.current = true;
-          }}
-          onBlur={handleBlur}
-          disabled={isReadOnly}
-          rows={14}
-          placeholder="Write the polished paragraph here…"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-        />
-        <span
-          className="absolute right-2 top-2 text-xs text-gray-500 pointer-events-none"
-          aria-live="polite"
-        >
-          {status === "saving" && "Saving…"}
-          {status === "saved" && (
-            <span className="text-green-600">Saved</span>
-          )}
-          {status === "error" && (
-            <span className="text-red-600">Retry?</span>
-          )}
+    <details className="rounded-md border border-gray-200 bg-white group">
+      <summary className="px-3 py-2 cursor-pointer list-none flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+          Fine-tune wording (optional)
         </span>
+        <span className="text-xs text-gray-500 group-open:hidden">Open</span>
+        <span className="text-xs text-gray-500 hidden group-open:inline">
+          Close
+        </span>
+      </summary>
+      <div className="px-3 pb-3 space-y-2 border-t border-gray-100 pt-3">
+        <p className="text-xs text-gray-500">
+          The paragraph above is assembled for you. Adjust wording or
+          transitions here if you want — this is what gets submitted.
+        </p>
+        <div className="relative">
+          <textarea
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onFocus={() => {
+              isFocusedRef.current = true;
+            }}
+            onBlur={handleBlur}
+            disabled={isReadOnly}
+            rows={10}
+            placeholder="Your assembled paragraph…"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          />
+          <span
+            className="absolute right-2 top-2 text-xs text-gray-500 pointer-events-none"
+            aria-live="polite"
+          >
+            {status === "saving" && "Saving…"}
+            {status === "saved" && <span className="text-green-600">Saved</span>}
+            {status === "error" && <span className="text-red-600">Retry?</span>}
+          </span>
+        </div>
+        <div className="text-xs text-gray-500">Word count: {wordCount}</div>
       </div>
-      <div className="text-xs text-gray-500">
-        Word count: {wordCount}
-      </div>
-    </div>
+    </details>
   );
 }
 
@@ -203,7 +341,8 @@ function ReadOnlyMaterial({
     bp.working_topic_sentence?.trim() ||
     "";
   const tsIsDraft =
-    !bp.shaping?.final_topic_sentence?.trim() && !!bp.working_topic_sentence?.trim();
+    !bp.shaping?.final_topic_sentence?.trim() &&
+    !!bp.working_topic_sentence?.trim();
 
   const cs =
     bp.shaping?.final_concluding_sentence?.trim() ||
@@ -228,7 +367,7 @@ function ReadOnlyMaterial({
       </header>
 
       {/* Topic Sentence */}
-      <Section title="Topic Sentence" accentClass="text-blue-700">
+      <Section title="Topic Sentence" accentClass="text-[color:var(--jswp-color-ts)]">
         {ts ? (
           <SentenceBlock text={ts} draft={tsIsDraft} />
         ) : (
@@ -273,7 +412,7 @@ function ReadOnlyMaterial({
       )}
 
       {/* Concluding Sentence */}
-      <Section title="Concluding Sentence" accentClass="text-blue-700">
+      <Section title="Concluding Sentence" accentClass="text-[color:var(--jswp-color-cs)]">
         {cs ? (
           <SentenceBlock text={cs} draft={csIsDraft} />
         ) : (
@@ -314,14 +453,14 @@ function ChunkSection({
           {cds.length > 0 && (
             <SentenceList
               label="CD sentences"
-              accentClass="text-red-700"
+              accentClass="text-[color:var(--jswp-color-cd)]"
               sentences={cds}
             />
           )}
           {cms.length > 0 && (
             <SentenceList
               label="CM sentences"
-              accentClass="text-green-700"
+              accentClass="text-[color:var(--jswp-color-cm)]"
               sentences={cms}
             />
           )}

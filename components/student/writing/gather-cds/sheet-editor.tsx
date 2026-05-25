@@ -163,7 +163,7 @@ export function SheetEditor({
           </span>
         </div>
         <p className="text-xs text-gray-500 mb-3">
-          List 4 or more. Check the box on the ones you want to use.
+          List 5 or more. Check the box on the ones you want to use.
           Drag the selected ones into the order you want them to appear
           in your paragraph.
         </p>

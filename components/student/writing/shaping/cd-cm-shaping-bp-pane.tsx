@@ -2,18 +2,26 @@
 
 /**
  * One body paragraph's shaping pane for expository / argumentation /
- * literary modes. Layout:
+ * literary modes. Rebuilt in chunk 4.5d-3 to the guide's Shaping Sheet:
+ * a single-column sequence of labeled boxes, each introduced by its
+ * JSWP color/shape role-label (blue trapezoid TS, red rectangle CD,
+ * green oval CM, blue trapezoid CS), with sentence text color-coded via
+ * the --jswp-color-* tokens. See docs/reference/expository-organizer-specs.md.
  *
  *   Main column (left):
- *     - Working TS (read-only) + Final TS (autosave)
+ *     - "Move and improve" callout (the guide's ! reminder)
+ *     - TS  role-label → working TS context + Final TS (autosave)
  *     - For has_counterargument: final concession / counter / refutation
- *     - Per chunk: cd_sentences[] list-with-add + cm_sentences[] list-with-add
- *     - Working CS (read-only) + Final CS (autosave)
+ *     - Per chunk: CD role-label + cd_sentences[]  ·  CM role-label +
+ *       cm_sentences[] (CM suppressed for the 3+:0 summary ratio), plus a
+ *       non-blocking "once you use it, you lose it" repetition nudge
+ *     - CS  role-label → working CS context + Final CS (autosave)
  *     - Notes
  *
  *   Side column (right):
- *     - Pick-n-stitch panel showing CMs to stitch from. Filtered by mode:
- *         Expository / Argumentation: kind='sentence' CMs (drafts from t-chart)
+ *     - Pick-n-stitch panel (sits ALONGSIDE the labeled-box column, not
+ *       instead of it). Filtered by mode:
+ *         Expository / Argumentation: kind='sentence' CMs (t-chart drafts)
  *         Literary: kind='phrase' CMs (cloud phrases from elaboration)
  */
 
@@ -21,6 +29,8 @@ import { useTransition } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { PickNStitchPanel } from "./pick-n-stitch-panel";
+import { RoleShapeLabel, type ShapeRole } from "@/components/jswp-color/role-shape";
+import { findRepeatedContentWords } from "@/lib/once-you-lose-it";
 import {
   updateShapingSheet,
   updateChunkOutputCdSentences,
@@ -30,11 +40,26 @@ import { useWritingMode } from "../use-writing-mode";
 import type {
   ShapingBpData,
   ShapingChunkData,
-  ChunkOutputData,
 } from "@/lib/queries/shaping";
 import type { Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
+
+const ROLE_COLOR_VAR: Record<ShapeRole, string> = {
+  ts: "var(--jswp-color-ts)",
+  cd: "var(--jswp-color-cd)",
+  cm: "var(--jswp-color-cm)",
+  cs: "var(--jswp-color-cs)",
+};
+
+// Static literal classes so Tailwind's content scanner generates them
+// (a dynamically built `text-[color:${var}]` string would not register).
+const ROLE_TEXT_CLASS: Record<ShapeRole, string> = {
+  ts: "text-[color:var(--jswp-color-ts)]",
+  cd: "text-[color:var(--jswp-color-cd)]",
+  cm: "text-[color:var(--jswp-color-cm)]",
+  cs: "text-[color:var(--jswp-color-cs)]",
+};
 
 export function CdCmShapingBpPane({
   writingId,
@@ -68,8 +93,10 @@ export function CdCmShapingBpPane({
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
       {/* Main column */}
       <div className="space-y-5 min-w-0">
+        <MovesAndImprovesCallout />
+
         {/* Topic Sentence */}
-        <Section title="Topic Sentence">
+        <Section role="ts" title="Topic Sentence">
           {bp.working_topic_sentence && (
             <ReadOnlyContext label="Working TS (from t-chart)">
               {bp.working_topic_sentence}
@@ -82,6 +109,7 @@ export function CdCmShapingBpPane({
               initialValue={ss.final_topic_sentence ?? ""}
               placeholder="Write the polished topic sentence…"
               disabled={isReadOnly}
+              className="text-[color:var(--jswp-color-ts)]"
               onSave={async (final_topic_sentence) => {
                 await updateShapingSheet(writingId, ss.id, {
                   final_topic_sentence,
@@ -93,7 +121,7 @@ export function CdCmShapingBpPane({
 
         {/* Counterargument finals (argumentation only with has_counterargument) */}
         {hasCounterargument && (
-          <Section title="Concession / Counterargument / Refutation">
+          <PlainSection title="Concession / Counterargument / Refutation">
             <Field label="Final concession">
               <AutoSaveInput
                 multiline
@@ -133,20 +161,16 @@ export function CdCmShapingBpPane({
                 }}
               />
             </Field>
-          </Section>
+          </PlainSection>
         )}
 
         {/* Chunks: per-chunk woven CD/CM sentence arrays */}
         {bp.chunks.map((chunk) => (
-          <ChunkSection
-            key={chunk.id}
-            writingId={writingId}
-            chunk={chunk}
-          />
+          <ChunkSection key={chunk.id} writingId={writingId} chunk={chunk} />
         ))}
 
         {/* Concluding Sentence */}
-        <Section title="Concluding Sentence">
+        <Section role="cs" title="Concluding Sentence">
           {bp.concluding_sentence && (
             <ReadOnlyContext label="CS (from t-chart)">
               {bp.concluding_sentence}
@@ -159,6 +183,7 @@ export function CdCmShapingBpPane({
               initialValue={ss.final_concluding_sentence ?? ""}
               placeholder="Write the polished concluding sentence…"
               disabled={isReadOnly}
+              className="text-[color:var(--jswp-color-cs)]"
               onSave={async (final_concluding_sentence) => {
                 await updateShapingSheet(writingId, ss.id, {
                   final_concluding_sentence,
@@ -169,7 +194,7 @@ export function CdCmShapingBpPane({
         </Section>
 
         {/* Notes */}
-        <Section title="Notes">
+        <PlainSection title="Notes">
           <AutoSaveInput
             multiline
             rows={2}
@@ -180,7 +205,7 @@ export function CdCmShapingBpPane({
               await updateShapingSheet(writingId, ss.id, { notes });
             }}
           />
-        </Section>
+        </PlainSection>
       </div>
 
       {/* Side column: pick-n-stitch */}
@@ -199,6 +224,19 @@ export function CdCmShapingBpPane({
   );
 }
 
+/* ─── "Move and improve" callout (the guide's ! reminder) ─────────── */
+
+function MovesAndImprovesCallout() {
+  return (
+    <div className="rounded-md border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+      <span className="font-semibold">Move and improve.</span> Don&apos;t just
+      copy your T-Chart — revise each sentence and underline every change.
+      Remember: <em>once you use a word, you lose it</em> — try not to repeat
+      the same word across sentences in a chunk.
+    </div>
+  );
+}
+
 /* ─── Per-chunk section: cd_sentences[] + cm_sentences[] lists ───── */
 
 function ChunkSection({
@@ -208,63 +246,93 @@ function ChunkSection({
   writingId: string;
   chunk: ShapingChunkData;
 }) {
+  // 3+:0 (summary) has no commentary — suppress the CM box entirely.
+  const isSummaryRatio = chunk.ratio === "three_plus_to_zero";
+
   if (!chunk.output) {
     return (
-      <Section title={`Chunk ${chunk.position}`}>
+      <PlainSection title={`Chunk ${chunk.position}`}>
         <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
           Chunk output not bootstrapped. Reload to retry.
         </div>
-      </Section>
+      </PlainSection>
     );
   }
 
+  const repeated = findRepeatedContentWords([
+    ...chunk.output.cd_sentences,
+    ...(isSummaryRatio ? [] : chunk.output.cm_sentences),
+  ]);
+
   return (
-    <Section title={`Chunk ${chunk.position}`}>
+    <PlainSection title={`Chunk ${chunk.position}`}>
       <SentenceList
+        role="cd"
         label="CD sentences"
-        accentClass="text-red-700"
         helpText="Final concrete-detail sentences for this chunk."
         sentences={chunk.output.cd_sentences}
         onSave={async (next) => {
-          await updateChunkOutputCdSentences(
-            writingId,
-            chunk.output!.id,
-            next
-          );
+          await updateChunkOutputCdSentences(writingId, chunk.output!.id, next);
         }}
       />
-      <SentenceList
-        label="CM sentences"
-        accentClass="text-green-700"
-        helpText="Final commentary sentences. Mark which CMs you stitched in via the side panel."
-        sentences={chunk.output.cm_sentences}
-        onSave={async (next) => {
-          await updateChunkOutputCmSentences(
-            writingId,
-            chunk.output!.id,
-            next
-          );
-        }}
-      />
-    </Section>
+      {!isSummaryRatio && (
+        <SentenceList
+          role="cm"
+          label="CM sentences"
+          helpText="Final commentary sentences. Mark which CMs you stitched in via the side panel."
+          sentences={chunk.output.cm_sentences}
+          onSave={async (next) => {
+            await updateChunkOutputCmSentences(
+              writingId,
+              chunk.output!.id,
+              next
+            );
+          }}
+        />
+      )}
+      {repeated.length > 0 && <RepeatNudge words={repeated.map((r) => r.word)} />}
+    </PlainSection>
+  );
+}
+
+function RepeatNudge({ words }: { words: readonly string[] }) {
+  const shown = words.slice(0, 6);
+  return (
+    <div
+      className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900"
+      role="status"
+    >
+      <span className="font-semibold">Once you use it, you lose it:</span>{" "}
+      {shown.map((w, i) => (
+        <span key={w}>
+          <span className="font-mono">{w}</span>
+          {i < shown.length - 1 ? ", " : ""}
+        </span>
+      ))}{" "}
+      {words.length > shown.length && `(+${words.length - shown.length} more) `}
+      appear{shown.length === 1 && words.length === 1 ? "s" : ""} in more than
+      one sentence. Consider rewording.
+    </div>
   );
 }
 
 function SentenceList({
+  role,
   label,
-  accentClass,
   helpText,
   sentences,
   onSave,
 }: {
+  role: ShapeRole;
   label: string;
-  accentClass: string;
   helpText: string;
   sentences: readonly string[];
   onSave: (next: string[]) => Promise<void>;
 }) {
   const { isReadOnly } = useWritingMode();
   const [pending, start] = useTransition();
+  const colorVar = ROLE_COLOR_VAR[role];
+  const textClass = ROLE_TEXT_CLASS[role];
 
   const updateAt = (i: number, value: string): string[] => {
     const next = sentences.slice();
@@ -279,8 +347,14 @@ function SentenceList({
 
   return (
     <div className="space-y-2">
-      <div className={`text-xs font-semibold uppercase tracking-wide ${accentClass}`}>
-        {label}
+      <div className="flex items-center gap-2">
+        <RoleShapeLabel role={role} />
+        <span
+          className="text-xs font-semibold uppercase tracking-wide"
+          style={{ color: colorVar }}
+        >
+          {label}
+        </span>
       </div>
       <p className="text-xs text-gray-500">{helpText}</p>
       {sentences.length === 0 && (
@@ -296,6 +370,7 @@ function SentenceList({
               rows={2}
               initialValue={s}
               disabled={isReadOnly}
+              className={textClass}
               onSave={async (value) => {
                 await onSave(updateAt(i, value));
               }}
@@ -339,7 +414,34 @@ function SentenceList({
 
 /* ─── Helpers ─────────────────────────────────────────────────────── */
 
+/** Section whose title is introduced by a JSWP color/shape role-label. */
 function Section({
+  role,
+  title,
+  children,
+}: {
+  role: ShapeRole;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <RoleShapeLabel role={role} />
+        <h3
+          className="text-sm font-semibold uppercase tracking-wide"
+          style={{ color: ROLE_COLOR_VAR[role] }}
+        >
+          {title}
+        </h3>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** Section with a plain (non-role) heading — chunks, C/CA/R, notes. */
+function PlainSection({
   title,
   children,
 }: {
