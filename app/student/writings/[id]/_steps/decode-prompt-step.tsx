@@ -43,6 +43,9 @@ const FORM_LABELS: Record<string, string> = {
 };
 
 interface InitialFields {
+  background_text: string;
+  trigger_text: string;
+  cd_source: string;
   task: string;
   form: string;
   ratio_identified: string;
@@ -52,6 +55,9 @@ interface InitialFields {
 }
 
 interface FormState {
+  background_text: string;
+  trigger_text: string;
+  cd_source: string;
   task: string;
   form: string;
   ratio_identified: string;
@@ -62,6 +68,9 @@ interface FormState {
 
 function initialToState(init: InitialFields): FormState {
   return {
+    background_text: init.background_text,
+    trigger_text: init.trigger_text,
+    cd_source: init.cd_source,
     task: init.task,
     form: init.form,
     ratio_identified: init.ratio_identified,
@@ -73,6 +82,9 @@ function initialToState(init: InitialFields): FormState {
 
 function stateToFields(s: FormState): PromptDecodingFields {
   return {
+    background_text: s.background_text || null,
+    trigger_text: s.trigger_text || null,
+    cd_source: s.cd_source || null,
     task: s.task || null,
     form: s.form || null,
     ratio_identified:
@@ -166,6 +178,68 @@ export function DecodePromptStep({
         </div>
         <p className="text-gray-800 whitespace-pre-wrap">{assignmentPrompt}</p>
       </section>
+
+      {/* Break the prompt into its parts (Background → Trigger → Task) */}
+      <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-5">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">
+            Break the prompt into its parts
+          </h3>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Good prompts have three parts: the background that sets the stage,
+            the trigger that tells you where to find your evidence, and the
+            task itself.
+          </p>
+        </div>
+
+        {/* background */}
+        <Field
+          label="Background"
+          help="The sentence(s) that set the stage. What topic or situation is the prompt about?"
+        >
+          <textarea
+            rows={2}
+            value={form.background_text}
+            onChange={update("background_text")}
+            onBlur={handleBlur}
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            placeholder="The prompt sets the stage by telling me about…"
+          />
+        </Field>
+
+        {/* trigger */}
+        <Field
+          label="Trigger"
+          help="The sentence that tells you where to look. It points you toward the concrete details you'll gather."
+        >
+          <textarea
+            rows={2}
+            value={form.trigger_text}
+            onChange={update("trigger_text")}
+            onBlur={handleBlur}
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            placeholder="The trigger tells me to look at / reflect on / read…"
+          />
+        </Field>
+
+        {/* cd_source — the trigger's payoff question */}
+        <Field
+          label="Where will you find your concrete details?"
+          help="Name your source(s): a text or video, your class notes, an experience, something you or someone else said."
+        >
+          <textarea
+            rows={2}
+            value={form.cd_source}
+            onChange={update("cd_source")}
+            onBlur={handleBlur}
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            placeholder="My concrete details will come from…"
+          />
+        </Field>
+      </div>
 
       <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-5">
         {/* task */}

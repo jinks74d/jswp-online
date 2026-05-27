@@ -129,6 +129,9 @@ function renderStep({
         stepLabel={step.label}
         pedagogyHint={step.pedagogyHint ?? null}
         initial={{
+          background_text: decoding?.background_text ?? "",
+          trigger_text: decoding?.trigger_text ?? "",
+          cd_source: decoding?.cd_source ?? "",
           task: decoding?.task ?? "",
           form: decoding?.form ?? "",
           ratio_identified: decoding?.ratio_identified ?? "",

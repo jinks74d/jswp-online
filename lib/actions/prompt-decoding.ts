@@ -29,6 +29,11 @@ export interface PromptDecodingFields {
   key_verbs: string[];
   focus_terms: string[];
   notes: string | null;
+  // The guide's three-part prompt decomposition (2024 Expository guide
+  // pp.135-139). cd_source = "where will I find my concrete details?".
+  background_text: string | null;
+  trigger_text: string | null;
+  cd_source: string | null;
 }
 
 const VALID_FORMS = new Set(["short_answer", "paragraph", "essay"]);
@@ -50,6 +55,9 @@ function sanitize(fields: PromptDecodingFields): PromptDecodingFields {
     key_verbs: fields.key_verbs.map((v) => v.trim()).filter(Boolean),
     focus_terms: fields.focus_terms.map((v) => v.trim()).filter(Boolean),
     notes: fields.notes?.trim() || null,
+    background_text: fields.background_text?.trim() || null,
+    trigger_text: fields.trigger_text?.trim() || null,
+    cd_source: fields.cd_source?.trim() || null,
   };
 }
 

@@ -487,6 +487,9 @@ export type PromptDecodings = {
   key_verbs: string[] | null;
   focus_terms: string[] | null;
   notes: string | null;
+  background_text: string | null;
+  trigger_text: string | null;
+  cd_source: string | null;
 } & Timestamps;
 
 export type TextAnnotations = {

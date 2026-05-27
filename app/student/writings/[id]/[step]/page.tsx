@@ -84,6 +84,9 @@ export default async function StepDispatcher({
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
         initial={{
+          background_text: decoding?.background_text ?? "",
+          trigger_text: decoding?.trigger_text ?? "",
+          cd_source: decoding?.cd_source ?? "",
           task: decoding?.task ?? "",
           form: decoding?.form ?? "",
           ratio_identified: decoding?.ratio_identified ?? "",

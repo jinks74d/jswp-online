@@ -27,7 +27,7 @@ separate P7-2 backlog item).
 | # | Chunk | Migration | Pedagogy gate | Status |
 |---|-------|-----------|---------------|--------|
 | 4.5f-1 | TLCD: embed quotations in the T-Chart | — | none | ✅ Shipped (chunk 4.5f-1) |
-| 4.5f-2 | Decode: Background / Trigger / Task | 0022 | none | ☐ Not started |
+| 4.5f-2 | Decode: Background / Trigger / Task | 0022 | none | ✅ Shipped (chunk 4.5f-2) · ⚠ migration 0022 NEEDS live apply |
 | 4.5f-3 | Annotate: capture the Main Idea | 0023 | none | ☐ Not started |
 | 4.5f-4 | Essay frames: mode-aware thesis + intro | — | ⚠ Dr. Louis | ☐ Not started |
 | 4.5f-5 | Shaping: the five-move checklist | 0024 | none | ☐ Not started |
@@ -102,9 +102,14 @@ All nullable — existing rows load fine.
 - `app/student/writings/[id]/_steps/decode-prompt-step.tsx` — add Background, Trigger, and the "Where will my concrete details come from?" fields (the cd_source field tied to the trigger).
 
 **Acceptance.**
-- [ ] New fields autosave on blur and persist across reload.
-- [ ] Continue still gated only on a non-empty `task`.
-- [ ] Existing decodings load with the new fields empty.
+- [x] Migration `0022` written (3 nullable columns). **⚠ Needs live Supabase apply.**
+- [x] Decode step shows Background / Trigger / "Where will you find your concrete details?" grouped above Task.
+- [x] New fields autosave on blur and persist across reload (`savePromptDecoding` upsert + `sanitize` trim→null).
+- [x] Continue still gated only on a non-empty `task`.
+- [x] Teacher review (`combined-view.tsx`) renders the three fields read-only.
+- [x] Existing decodings load with the new fields empty (nullable; `getPromptDecoding` uses `select("*")`).
+- [x] type-check + build clean.
+- [x] Applies to all four modes (shared decode step), not expository-only.
 
 ---
 
