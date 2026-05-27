@@ -65,6 +65,8 @@ export interface ConcreteDetailData {
   position: number;
   text: string;
   is_quotation: boolean;
+  transitional_lead_in: string | null;
+  source_citation: string | null;
 }
 
 export interface CommentaryItemData {
@@ -132,7 +134,7 @@ export async function getTChartData(
       ),
       chunks (
         id, position, ratio,
-        concrete_details ( id, position, text, is_quotation ),
+        concrete_details ( id, position, text, is_quotation, transitional_lead_in, source_citation ),
         commentary_items ( id, position, text, parent_cd_id, kind )
       )
       `

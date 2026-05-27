@@ -210,6 +210,50 @@ export async function updateConcreteDetail(
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }
 
+/**
+ * Embedding Quotations (TLCD) on a CD. The "Mark as quotation" toggle and
+ * its lead-in / citation fields are a T-Chart authoring aid mirroring the
+ * guide's 2+:1 T-Chart (2024 Expository guide p.79). Toggling off is
+ * non-destructive — the stored lead-in/citation are kept so an accidental
+ * toggle never loses the student's work; the UI just collapses them and
+ * the preview ignores them while is_quotation is false.
+ */
+export interface ConcreteDetailQuotationFields {
+  isQuotation: boolean;
+  transitionalLeadIn?: string | null;
+  sourceCitation?: string | null;
+}
+
+export async function setConcreteDetailQuotation(
+  writingId: string,
+  cdId: string,
+  fields: ConcreteDetailQuotationFields
+): Promise<void> {
+  await requireRole("student");
+  const supabase = await createServerClient();
+
+  const updates: {
+    is_quotation: boolean;
+    transitional_lead_in?: string | null;
+    source_citation?: string | null;
+  } = { is_quotation: fields.isQuotation };
+  if (fields.transitionalLeadIn !== undefined) {
+    updates.transitional_lead_in = fields.transitionalLeadIn;
+  }
+  if (fields.sourceCitation !== undefined) {
+    updates.source_citation = fields.sourceCitation;
+  }
+
+  const { error } = await supabase
+    .from("concrete_details")
+    .update(updates)
+    .eq("id", cdId);
+  if (error) {
+    throw new Error(`setConcreteDetailQuotation: ${error.message}`);
+  }
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
 export async function deleteConcreteDetail(
   writingId: string,
   cdId: string
