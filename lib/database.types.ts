@@ -383,7 +383,7 @@ export type Schools = {
 
 export type UserProfiles = {
   id: string;
-  district_id: string;
+  district_id: string | null; // NULL for super_admin (platform owners, no district)
   school_id: string | null;
   role: Database["public"]["Enums"]["jswp_role"];
   first_name: string | null;

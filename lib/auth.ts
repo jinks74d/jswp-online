@@ -92,9 +92,17 @@ export async function requireRole(
 /**
  * Returns the current user's district ID.
  * Redirects to /login if not authenticated.
+ *
+ * Throws if the user has no district. Super admins are districtless, so they
+ * must never reach district-scoped code paths that call this.
  */
 export async function getCurrentDistrict(): Promise<string> {
   const profile = await requireUser();
+  if (!profile.district_id) {
+    throw new Error(
+      "Current user has no district (super admins are districtless)."
+    );
+  }
   return profile.district_id;
 }
 

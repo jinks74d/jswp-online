@@ -88,6 +88,8 @@ export async function signInAction(
   if (
     baseDomain &&
     districtFromSubdomain &&
+    // Super admins are districtless and sign in on the apex domain — skip.
+    profile.district_id &&
     districtFromSubdomain !== profile.district_id
   ) {
     const admin = createAdminClient();

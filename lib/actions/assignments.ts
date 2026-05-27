@@ -250,6 +250,12 @@ export async function createDraftAssignment(
   // even if the form somehow sent values (defense in depth).
   const isNarrative = mode === "narrative";
 
+  // Teachers always have a district (enforced by a DB CHECK on user_profiles);
+  // this narrows the now-nullable type and guards the impossible case.
+  if (!profile.district_id) {
+    return { error: "Your profile isn't attached to a district." };
+  }
+
   const supabase = await createServerClient();
   const { data, error } = await supabase
     .from("assignments")

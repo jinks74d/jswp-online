@@ -164,6 +164,9 @@ export async function createExemplar(
   if (!profile.school_id) {
     return { error: "Your profile isn't attached to a school yet." };
   }
+  if (!profile.district_id) {
+    return { error: "Your profile isn't attached to a district." };
+  }
 
   const parsed = parseForm(formData);
   if (!parsed.ok) return parsed.state;
