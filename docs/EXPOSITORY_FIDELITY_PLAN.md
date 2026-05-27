@@ -27,8 +27,8 @@ separate P7-2 backlog item).
 | # | Chunk | Migration | Pedagogy gate | Status |
 |---|-------|-----------|---------------|--------|
 | 4.5f-1 | TLCD: embed quotations in the T-Chart | — | none | ✅ Shipped (chunk 4.5f-1) |
-| 4.5f-2 | Decode: Background / Trigger / Task | 0022 | none | ✅ Shipped (chunk 4.5f-2) · ⚠ migration 0022 NEEDS live apply |
-| 4.5f-3 | Annotate: capture the Main Idea | 0023 | none | ☐ Not started |
+| 4.5f-2 | Decode: Background / Trigger / Task | 0022 | none | ✅ Shipped (chunk 4.5f-2) · migration 0022 applied to live 2026-05-27 |
+| 4.5f-3 | Annotate: capture the Main Idea | 0023 | none | ✅ Shipped (chunk 4.5f-3) · ⚠ migration 0023 NEEDS live apply |
 | 4.5f-4 | Essay frames: mode-aware thesis + intro | — | ⚠ Dr. Louis | ☐ Not started |
 | 4.5f-5 | Shaping: the five-move checklist | 0024 | none | ☐ Not started |
 
@@ -136,10 +136,14 @@ Supabase PG15 handles it.
 - Kind-picker UI / sidebar — pick up the new kind automatically via the config.
 - *Optional (Open decision):* a per-writing "Main idea (in your words)" text field if range-underline alone feels thin.
 
-**Acceptance.**
-- [ ] Student can mark a range as `main_idea`; it renders distinctly (black/neutral).
-- [ ] Sidebar groups `main_idea` annotations.
-- [ ] Existing cd/cm/transition/note annotations unaffected.
+**Acceptance.** *(Open decision resolved in audit: range-underline only, paraphrase lives in the existing `note` field — no new column.)*
+- [x] Migration `0023` written (`ADD VALUE IF NOT EXISTS 'main_idea'`, bare/no-txn). **⚠ Needs live Supabase apply.**
+- [x] "Main Idea" appears first in the kind dropdown; saving works (`VALID_KINDS` allowlist updated — the one non-config-driven spot).
+- [x] `main_idea` renders with a dark-underline treatment (echoes "underline in black"); sidebar groups it (groupByKind now seeded from `ANNOTATION_KIND_ORDER` so it can't drift).
+- [x] Paraphrase uses the existing annotation `note` field; no new column.
+- [x] Continue gate unchanged (≥1 annotation, any kind).
+- [x] Teacher review renders `main_idea` (config-driven viewer/sidebar).
+- [x] type-check + build clean.
 
 ---
 

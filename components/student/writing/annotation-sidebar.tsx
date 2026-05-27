@@ -128,12 +128,10 @@ export function AnnotationSidebar({
 function groupByKind(
   annotations: readonly TextAnnotationRow[]
 ): Record<AnnotationKind, TextAnnotationRow[]> {
-  const groups: Record<AnnotationKind, TextAnnotationRow[]> = {
-    cd: [],
-    cm: [],
-    transition: [],
-    note: [],
-  };
+  // Seed from ANNOTATION_KIND_ORDER so a new kind never drifts out of sync.
+  const groups = Object.fromEntries(
+    ANNOTATION_KIND_ORDER.map((k) => [k, [] as TextAnnotationRow[]])
+  ) as Record<AnnotationKind, TextAnnotationRow[]>;
   for (const a of annotations) {
     groups[a.kind].push(a);
   }

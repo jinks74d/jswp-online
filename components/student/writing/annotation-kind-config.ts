@@ -7,7 +7,10 @@
  * CD/CM are anchored to the JSWP color canon (red/green per CLAUDE.md
  * §4 and the schema comment at migrations/0001:299-300). Transition
  * uses sky to avoid colliding with reserved JSWP-blue (TS/CS).
- * Note uses gray as a neutral side-comment color.
+ * Note uses gray as a neutral side-comment color. Main Idea uses a
+ * dark underline (not a fill) to echo the guide's "underline the main
+ * idea in black" convention (Finding the Main Idea, 2024 guide pp.52-53);
+ * highlightBg holds underline utilities rather than a background here.
  */
 
 import type { Database } from "@/lib/database.types";
@@ -27,6 +30,16 @@ export interface AnnotationKindConfig {
 }
 
 export const ANNOTATION_KINDS: Record<AnnotationKind, AnnotationKindConfig> = {
+  main_idea: {
+    key: "main_idea",
+    label: "Main Idea",
+    description: "The source's main idea or thesis — underline it first.",
+    // Dark underline, no fill — echoes "underline the main idea in black."
+    highlightBg:
+      "bg-gray-100 underline decoration-2 decoration-gray-800 underline-offset-2",
+    accentText: "text-gray-900",
+    dotBg: "bg-gray-900",
+  },
   cd: {
     key: "cd",
     label: "Concrete Detail",
@@ -62,6 +75,7 @@ export const ANNOTATION_KINDS: Record<AnnotationKind, AnnotationKindConfig> = {
 };
 
 export const ANNOTATION_KIND_ORDER: readonly AnnotationKind[] = [
+  "main_idea",
   "cd",
   "cm",
   "transition",

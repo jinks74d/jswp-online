@@ -17,7 +17,13 @@ import type { Database } from "@/lib/database.types";
 
 type AnnotationKind = Database["public"]["Enums"]["jswp_annotation_kind"];
 
-const VALID_KINDS = new Set<AnnotationKind>(["cd", "cm", "transition", "note"]);
+const VALID_KINDS = new Set<AnnotationKind>([
+  "cd",
+  "cm",
+  "transition",
+  "note",
+  "main_idea",
+]);
 
 export interface CreateAnnotationInput {
   writingId: string;

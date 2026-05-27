@@ -340,7 +340,7 @@ export interface Database {
         | "framed_although"
         | "three_pronged";
       jswp_cm_kind: "word" | "phrase" | "sentence";
-      jswp_annotation_kind: "cd" | "cm" | "transition" | "note";
+      jswp_annotation_kind: "cd" | "cm" | "transition" | "note" | "main_idea";
       jswp_signup_status: "pending" | "approved" | "denied";
       jswp_feedback_target:
         | "student_writing"
