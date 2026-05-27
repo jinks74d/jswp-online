@@ -30,7 +30,7 @@ separate P7-2 backlog item).
 | 4.5f-2 | Decode: Background / Trigger / Task | 0022 | none | ✅ Shipped (chunk 4.5f-2) · migration 0022 applied to live 2026-05-27 |
 | 4.5f-3 | Annotate: capture the Main Idea | 0023 | none | ✅ Shipped (chunk 4.5f-3) · migration 0023 applied to live 2026-05-27 |
 | 4.5f-4 | Essay frames: mode-aware thesis + intro | — | ⚠ Dr. Louis | ✅ Built on `v2` (chunk 4.5f-4) · ⚠ wording PENDING Dr. Louis before master |
-| 4.5f-5 | Shaping: the five-move checklist | 0024 | none | ☐ Not started |
+| 4.5f-5 | Shaping: the five-move checklist | 0024 | none | ✅ Shipped (chunk 4.5f-5) · ⚠ migration 0024 NEEDS live apply |
 
 Only 4.5f-4 is content-blocked; the other four are pure engineering and can
 ship independently. 4.5f-4 can slot last or pause for Dr. Louis without
@@ -214,9 +214,13 @@ Rules" surface — the five moves are likely a subset/precursor. Don't ship a
 competing rules UI; note the relationship so the two don't conflict.
 
 **Acceptance.**
-- [ ] Checking a move persists to `revision_moves`; reload reflects it.
-- [ ] Shows in the teacher review surface.
-- [ ] Does not block Continue (non-blocking by design).
+- [x] Migration `0024` written (`revision_moves TEXT[]`, nullable). **⚠ Needs live Supabase apply.**
+- [x] Five-move checklist renders under the "Move and improve" callout (expository/argumentation/literary panes).
+- [x] Checking a move persists to `revision_moves` (optimistic, reverts on error); reload reflects it.
+- [x] Non-blocking — Continue gate unchanged.
+- [x] Teacher review renders the checklist read-only (disabled via `isReadOnly`).
+- [x] Kept separate from `rules_applied` (15 Grammar Rules surface).
+- [x] type-check + build clean; unit suites pass (RLS integration suite needs live Supabase, unrelated).
 
 ---
 

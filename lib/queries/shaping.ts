@@ -27,6 +27,7 @@ export interface ShapingSheetData {
   final_counterargument: string | null;
   final_refutation: string | null;
   notes: string | null;
+  revision_moves: string[] | null;
   narrative_shaping_cd1: string | null;
   narrative_shaping_cd2: string | null;
   narrative_shaping_cm: string | null;
@@ -145,7 +146,7 @@ export async function getShapingData(
       shaping_sheet:shaping_sheets (
         id, final_topic_sentence, final_concluding_sentence,
         final_concession, final_counterargument, final_refutation,
-        notes,
+        notes, revision_moves,
         narrative_shaping_cd1, narrative_shaping_cd2, narrative_shaping_cm,
         shaping_chunk_outputs (
           id, chunk_id, cd_sentences, cm_sentences
@@ -219,6 +220,7 @@ export async function getShapingData(
             final_counterargument: ss.final_counterargument,
             final_refutation: ss.final_refutation,
             notes: ss.notes,
+            revision_moves: ss.revision_moves,
             narrative_shaping_cd1: ss.narrative_shaping_cd1,
             narrative_shaping_cd2: ss.narrative_shaping_cd2,
             narrative_shaping_cm: ss.narrative_shaping_cm,

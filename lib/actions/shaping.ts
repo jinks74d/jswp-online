@@ -152,6 +152,10 @@ export interface ShapingSheetUpdates {
   final_counterargument?: string | null;
   final_refutation?: string | null;
   notes?: string | null;
+  // Five-move self-check (guide glossary pp.151-152). Move keys:
+  // transitions | vary_openings | sentence_types | mechanics | voice.
+  // Separate from rules_applied (reserved for the 15 Grammar Rules).
+  revision_moves?: string[] | null;
   // Narrative shaping shape-blocks (CD1/CD2/CM); TS/CS reuse final_*.
   narrative_shaping_cd1?: string | null;
   narrative_shaping_cd2?: string | null;

@@ -25,7 +25,7 @@
  *         Literary: kind='phrase' CMs (cloud phrases from elaboration)
  */
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { PickNStitchPanel } from "./pick-n-stitch-panel";
@@ -94,6 +94,12 @@ export function CdCmShapingBpPane({
       {/* Main column */}
       <div className="space-y-5 min-w-0">
         <MovesAndImprovesCallout />
+
+        <RevisionMovesChecklist
+          writingId={writingId}
+          sheetId={ss.id}
+          initial={ss.revision_moves ?? []}
+        />
 
         {/* Topic Sentence */}
         <Section role="ts" title="Topic Sentence">
@@ -234,6 +240,80 @@ function MovesAndImprovesCallout() {
       Remember: <em>once you use a word, you lose it</em> — try not to repeat
       the same word across sentences in a chunk.
     </div>
+  );
+}
+
+/* ─── Five-move revision checklist (guide glossary pp.151-152) ──────────
+   Non-blocking self-check. Move keys persist to shaping_sheets.revision_moves
+   (separate from rules_applied, which is reserved for the 15 Grammar Rules). */
+
+const REVISION_MOVES: ReadonlyArray<{ key: string; label: string }> = [
+  { key: "transitions", label: "Add transitions between ideas" },
+  { key: "vary_openings", label: "Vary your sentence openings" },
+  {
+    key: "sentence_types",
+    label:
+      "Use different sentence types (simple, compound, complex, compound-complex)",
+  },
+  { key: "mechanics", label: "Fix spelling, punctuation, and capitalization" },
+  { key: "voice", label: "Add or delete words to create your voice" },
+];
+
+function RevisionMovesChecklist({
+  writingId,
+  sheetId,
+  initial,
+}: {
+  writingId: string;
+  sheetId: string;
+  initial: readonly string[];
+}) {
+  const { isReadOnly } = useWritingMode();
+  const [moves, setMoves] = useState<readonly string[]>(initial);
+  const [pending, start] = useTransition();
+
+  const toggle = (key: string) => {
+    const prev = moves;
+    const next = prev.includes(key)
+      ? prev.filter((m) => m !== key)
+      : [...prev, key];
+    setMoves(next); // optimistic
+    start(async () => {
+      try {
+        await updateShapingSheet(writingId, sheetId, { revision_moves: [...next] });
+      } catch (e) {
+        console.error("revision_moves toggle:", e);
+        setMoves(prev); // revert on failure
+      }
+    });
+  };
+
+  return (
+    <section className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+        Revision checklist
+      </h3>
+      <p className="text-xs text-gray-500">
+        Check each move as you make it — your self-check, not a gate.
+      </p>
+      <ul className="space-y-1.5">
+        {REVISION_MOVES.map((m) => (
+          <li key={m.key}>
+            <label className="flex items-start gap-2 text-sm text-gray-800">
+              <input
+                type="checkbox"
+                checked={moves.includes(m.key)}
+                onChange={() => toggle(m.key)}
+                disabled={isReadOnly || pending}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                style={{ accentColor: "var(--district-primary)" }}
+              />
+              <span>{m.label}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

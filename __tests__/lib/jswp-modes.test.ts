@@ -89,6 +89,7 @@ function bp(chunks: ShapingChunkData[]): ShapingBpData {
       final_counterargument: null,
       final_refutation: null,
       notes: null,
+      revision_moves: null,
       narrative_shaping_cd1: null,
       narrative_shaping_cd2: null,
       narrative_shaping_cm: null,

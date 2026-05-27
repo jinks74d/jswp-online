@@ -602,6 +602,7 @@ export type ShapingSheets = {
   final_refutation: string | null;
   final_concluding_sentence: string | null;
   rules_applied: string[] | null;
+  revision_moves: string[] | null;
   notes: string | null;
   narrative_shaping_cd1: string | null;
   narrative_shaping_cd2: string | null;
