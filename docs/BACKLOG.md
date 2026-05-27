@@ -4,7 +4,7 @@ Consolidated list of deferred work that isn't part of a current chunk. Most item
 
 When you finish an item, move it to **Closed** with the commit hash. Don't delete — the closed list is the audit trail.
 
-Last reviewed: chunk P7-1.
+Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 Open items (Decode 3-part, Annotate Main Idea, thesis frames, intro pyramid, Shaping 5 moves) and enriched "TLCD support on CDs."
 
 ---
 
@@ -40,10 +40,10 @@ Storage upload errors currently log to console only; users see no feedback when 
 - **Identified:** pre-Phase 4
 - **Priority:** before production cutover (Phase 7)
 
-### TLCD support on CDs
-Schema supports embedded quotations on `concrete_details` via `is_quotation`, `transitional_lead_in`, `source_citation`. Chunk 4.4 stores CDs as plain text only. Add a "Mark as quotation" toggle on each CD; when enabled, expose the TLCD + citation fields underneath.
-- **Identified:** chunk 4.4 (commit `01191de`)
-- **Priority:** before production cutover (Phase 7) — pedagogically canonical per CLAUDE.md §4
+### Mirror TLCD quotation UI into `cd-cm-t-chart.tsx` (argumentation + literary)
+Chunk 4.5f-1 wired the "Mark as quotation" toggle + Lead-in / Citation fields + embedded-quotation preview into the **Expository** T-Chart (`expository-chunk-grid.tsx` → shared `CdEditor`). Argumentation and literary render their T-Charts through the deliberately-frozen `cd-cm-t-chart.tsx` + `chunk-editor.tsx` (untouched since 4.5d-2), so they still store CDs as plain text. Embedding quotations is canonical for all three modes (schema comment `0001:425`, CLAUDE.md §4, guide pp.77–78). Port the `CdEditor` affordance (extract it to a shared component) into the argumentation/literary CD cells. The `transitional_lead_in` / `source_citation` columns and the `setConcreteDetailQuotation` action already exist — UI-only lift.
+- **Identified:** chunk 4.5f-1 (split out of the original "TLCD support on CDs" item)
+- **Priority:** before production cutover (Phase 7) — pedagogically canonical
 
 ### Remove `as unknown as <Shape>` TS narrowing hacks (chunk P7-2)
 The P7-1 audit revealed the actual count is **34 casts across 23 files**, not 2 across 2 as originally noted. Most narrow Supabase nested-embed results (`assignment:assignment_id ( ... )`) — the same root cause: the hand-written `Database` types don't carry the relationship metadata Supabase needs to infer embed shapes. Two outliers in `lib/actions/assignments.ts` cast a typed rubric to `Json` for a JSONB column (different problem; would not be fixed by regen).
@@ -82,10 +82,11 @@ Extend `AutoSaveInput` with an optional `onChange` callback prop, OR extract a s
 
 ### Implement Dr. Louis's 15 Grammar Rules
 Cross-cutting JSWP pedagogy per CLAUDE.md §1. The `shaping_sheets.rules_applied TEXT[]` column already exists in the schema for tracking which rules a student applied during shaping. Three deliverables:
-1. **Content** — rule titles, descriptions, examples per rule, sourced from the printed guides (2024 Expository pp. 36–72, 2019 Argumentation pp. 22–72, 2018 P&F Narrative pp. 26–110, RTL Quick Start v4). Per CLAUDE.md §15, requires explicit user approval before invention.
-2. **`lib/jswp-grammar-rules.ts`** — typed data file with `key`, `shortName`, `description`, `examples.{weak,strong}`, `appliesAt[]` per rule.
-3. **UI** — shaping_sheet step exposes `rules_applied` selection (chunk 4.6a left this column unwritten because the data file isn't built yet).
-- **Identified:** chunk 4.6a (and CLAUDE.md §1 since project inception)
+1. **Content** — rule titles, descriptions, examples per rule, sourced from the printed guides. Per CLAUDE.md §15, requires explicit user approval before invention.
+   - **⚠ Source discrepancy (verified 2026-05-25, chunk 4.5d-3):** CLAUDE.md §13's cited locations are WRONG for the editions on disk. Full-text search of the 2024 Expository guide (`docs/reference/Sec_Exp (1).pdf`, byte-for-byte the same Third Edition as `2023-2024…FNL5`) and the 2018 P&F Narrative guide found **no enumerated "15 Grammar Rules" section** in either — only *distributed* guidance ("Transitions That…" Expos p.81, sentence-variety lines in the rubrics, and the Narrative "Helping Hand" syntax checklist: Sentence Beginnings Vary / Sentence Types Vary / Parallel Structure). The canonical 15-rule list is presumably in the **2019 Argumentation guide** or **RTL Quick Start v4** (neither on disk) or a standalone grammar handout. Do NOT extract "15 rules" from the Expository/Narrative guides — they aren't there. Get the real source before building.
+2. **`lib/jswp-grammar-rules.ts`** — typed data file with `key`, `shortName`, `description`, `examples.{weak,strong}`, `appliesAt[]` per rule. Currently a 15-entry SCAFFOLD with every `shortName: "TBD"` — no real content.
+3. **UI** — shaping_sheet step exposes `rules_applied` selection. Chunk 4.5d-3 rebuilt the Shaping Sheet (shape-labels, color tokens, "moves & improves" callout, non-blocking "once you use it, you lose it" repetition nudge) but deliberately left `rules_applied` unwired pending rule content. Note: `lib/actions/shaping.ts` still carries a stale comment claiming `lib/jswp-grammar-rules.ts` "isn't built" — the stub now exists; fix that comment when wiring the UI.
+- **Identified:** chunk 4.6a (and CLAUDE.md §1 since project inception); source-discrepancy confirmed chunk 4.5d-3
 - **Priority:** **content-blocked**, not engineering-blocked. Engineering effort is small once content exists. Before production cutover (Phase 7).
 
 ### Clone-forward on writing return
@@ -108,6 +109,11 @@ Currently the combined view + feedback panel are desktop-first (`md:` breakpoint
 - **Identified:** chunk 4.7b
 - **Priority:** Phase 7 polish
 
+### ⚠ Confirm expository essay-frame wording with Dr. Louis (gate before master)
+Chunk 4.5f-4 built mode-aware expository thesis frames + intro openers + a "Flip the Prompt" helper, transcribed from the 2024 Expository guide pp.117–122. The student-facing **wording is provisional** and needs Dr. Louis's sign-off before merge to master. Specifically confirm: (1) the thesis frame labels/help ("Open thesis" / "Framed thesis — name each body paragraph"); (2) whether expository wants a **dedicated `framed` enum value** (any paragraph count) rather than reusing `three_pronged` — if yes, that's an enum `ADD VALUE` migration + an option-value change; (3) the "Flip the Prompt" template + example wording; (4) the five intro opener labels (`historical_background`, `current_event`, `quotation`, `question_problem`, `startling_fact`). Also still open: a true 3-section intro **scaffold** (perspective → say more → thesis as separate inputs) and a narrow→broad **conclusion** pyramid (pp.126–128) — 4.5f-4 added hints/help text but not separate section inputs.
+- **Identified:** chunk 4.5f-4 (split out of the two closed essay-frame review items)
+- **Priority:** **pedagogy-gated** — confirm before merge to master (Phase 7)
+
 ---
 
 ## Deferred chunk work
@@ -117,6 +123,26 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Shaping Sheet: five-move revision checklist
+Added a non-blocking five-move self-check to the Shaping Sheet (`cd-cm-shaping-bp-pane.tsx`), under the "Move and improve" callout: add transitions / vary openings / vary sentence types / fix mechanics / add-delete for voice (2024 guide glossary pp.151–152). Persists to a new `shaping_sheets.revision_moves TEXT[]` (migration `0024`), kept separate from `rules_applied` (reserved for the 15 Grammar Rules). Optimistic toggle, reverts on error; read-only (disabled) in teacher review. Expository/argumentation/literary panes; narrative pane is a possible follow-up.
+- **Closed:** chunk 4.5f-5 (migration 0024 — NEEDS live Supabase apply)
+
+### Essay frames: mode-aware expository thesis + intro
+Made the shared `EssayPartForm` essay steps mode-aware. Expository thesis now offers Open / Framed (name each body paragraph) with a beginner "Flip the Prompt" template helper; expository intro offers historical-background / current-event / quotation / question-or-problem / startling-fact with an inverted-pyramid hint (2024 guide pp.117–122). Argumentation/literary/narrative option sets unchanged. No migration — "framed" reuses `three_pronged`, openers are free strings (`introduction_hook_kind` is VARCHAR). `KindSelect` keeps a stored out-of-list value selectable; `ThesisStep` now receives `mode` at both call sites. **Student-facing wording is provisional** — see the Open item "Confirm expository essay-frame wording with Dr. Louis."
+- **Closed:** chunk 4.5f-4 (no migration; wording gated before master)
+
+### Read & Annotate: Main Idea capture
+Added a `main_idea` annotation kind (migration `0023`, enum `ADD VALUE`). It leads the kind dropdown and renders with a dark-underline treatment echoing the guide's "underline the main idea in black" (Finding the Main Idea, 2024 guide pp.52–53). The student's paraphrase uses the existing `text_annotations.note` field — no new column. `VALID_KINDS` allowlist + `groupByKind` (now seeded from `ANNOTATION_KIND_ORDER`) updated. Range-underline approach, not a dedicated sheet-style panel — if the prominent title→main-idea→2-CDs panel is wanted later, that's a separate larger chunk.
+- **Closed:** chunk 4.5f-3 (migration 0023 — NEEDS live Supabase apply)
+
+### Decode-the-Prompt: Background / Trigger / Task decomposition
+Added `background_text`, `trigger_text`, and `cd_source` (the "where will I find my concrete details?" answer) to `prompt_decodings` (migration `0022`) and a "Break the prompt into its parts" section above the Task field in `decode-prompt-step.tsx`. Captures the guide's three-part decode (2024 Expository guide pp.135–139). All nullable; autosave + Continue gate (Task only) unchanged. Shared across all four modes' decode step; teacher-review mapping in `combined-view.tsx` updated too.
+- **Closed:** chunk 4.5f-2 (migration 0022 — NEEDS live Supabase apply)
+
+### TLCD support on CDs (Expository T-Chart)
+Wired the "Mark as quotation" toggle + Lead-in / Citation fields + a read-only embedded-quotation preview (`lead-in "quote" (citation)`) into the Expository T-Chart via a shared `CdEditor` in `expository-chunk-grid.tsx`, backed by the new `setConcreteDetailQuotation` action (non-destructive toggle-off) and the `transitional_lead_in` / `source_citation` columns now returned by `getTChartData`. Available on both 2+:1 (`CdCmRow`) and 3+:0 (`CdCell`). Mirrors the guide's 2+:1 T-Chart (2024 Expository guide p.79). Argumentation/literary mirroring split into the Open entry "Mirror TLCD quotation UI into `cd-cm-t-chart.tsx`."
+- **Closed:** chunk 4.5f-1
 
 ### Drag-and-drop reordering of selected candidates
 Added a drag handle (`@dnd-kit/sortable`) to selected candidates on the gathering sheet and persist `selection_order` on drop via the new `reorderSelectedCandidates` server action. The PRIORITY list renders selected CDs as a sortable list with display-position priority badges (1..N, decoupled from stored `selection_order` so deselection gaps never surface); the BRAINSTORM list holds unselected candidates. Keyboard reorder fallback via `KeyboardSensor`. Same chunk also restructured the gather-cds surface from per-BP tabs to stacked per-BP cards. `selection_order` has no unique constraint (only `(gathering_sheet_id, position)` does), so the contiguous 1..N rewrite loop is collision-safe.

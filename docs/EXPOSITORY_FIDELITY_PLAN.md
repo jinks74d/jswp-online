@@ -30,7 +30,7 @@ separate P7-2 backlog item).
 | 4.5f-2 | Decode: Background / Trigger / Task | 0022 | none | ✅ Shipped (chunk 4.5f-2) · migration 0022 applied to live 2026-05-27 |
 | 4.5f-3 | Annotate: capture the Main Idea | 0023 | none | ✅ Shipped (chunk 4.5f-3) · migration 0023 applied to live 2026-05-27 |
 | 4.5f-4 | Essay frames: mode-aware thesis + intro | — | ⚠ Dr. Louis | ✅ Built on `v2` (chunk 4.5f-4) · ⚠ wording PENDING Dr. Louis before master |
-| 4.5f-5 | Shaping: the five-move checklist | 0024 | none | ✅ Shipped (chunk 4.5f-5) · ⚠ migration 0024 NEEDS live apply |
+| 4.5f-5 | Shaping: the five-move checklist | 0024 | none | ✅ Shipped (chunk 4.5f-5) · migration 0024 applied to live 2026-05-27 |
 
 Only 4.5f-4 is content-blocked; the other four are pure engineering and can
 ship independently. 4.5f-4 can slot last or pause for Dr. Louis without
