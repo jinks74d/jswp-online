@@ -21,7 +21,7 @@ import type { Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 
-const HOOK_KIND_OPTIONS: ReadonlyArray<SelectOption> = [
+const DEFAULT_HOOK_KIND_OPTIONS: ReadonlyArray<SelectOption> = [
   {
     value: "anecdote",
     label: "Anecdote",
@@ -54,6 +54,43 @@ const HOOK_KIND_OPTIONS: ReadonlyArray<SelectOption> = [
   },
 ];
 
+// Expository "Options for How to Begin" (2024 Expository guide p.119).
+// introduction_hook_kind is VARCHAR(50), so these values need no migration.
+// ⚠ PENDING DR. LOUIS — confirm labels/wording before merge to master.
+const EXPOSITORY_HOOK_KIND_OPTIONS: ReadonlyArray<SelectOption> = [
+  {
+    value: "historical_background",
+    label: "Historical background",
+    description: "Open with the history or significance of the topic.",
+  },
+  {
+    value: "current_event",
+    label: "Current event",
+    description: "A recent event that has prompted discussion of the topic.",
+  },
+  {
+    value: "quotation",
+    label: "Quotation",
+    description: "A quotation related to the topic.",
+  },
+  {
+    value: "question_problem",
+    label: "Question or problem",
+    description: "A question or problem related to the topic.",
+  },
+  {
+    value: "startling_fact",
+    label: "Startling fact",
+    description: "A dramatic or startling statistic, statement, or fact.",
+  },
+];
+
+function hookKindOptions(mode: Mode): ReadonlyArray<SelectOption> {
+  return mode === "expository"
+    ? EXPOSITORY_HOOK_KIND_OPTIONS
+    : DEFAULT_HOOK_KIND_OPTIONS;
+}
+
 interface Props {
   writingId: string;
   stepKey: string;
@@ -82,6 +119,7 @@ export async function IntroductionStep({
 
   // Narrative has no thesis step; skip the thesis context.
   const thesisContext = mode === "narrative" ? null : parts.thesis_text;
+  const isExpository = mode === "expository";
 
   return (
     <div className="space-y-5">
@@ -97,14 +135,18 @@ export async function IntroductionStep({
         stepKey={stepKey}
         pedagogyHint={pedagogyHint}
         textareaLabel="Introduction"
-        textareaHelp="Open with your hook. Set up the subject. End with your thesis (if you have one)."
+        textareaHelp={
+          isExpository
+            ? "Inverted pyramid: begin broad, then narrow. Open with your perspective, say more about it, and end with your thesis as the last sentence."
+            : "Open with your hook. Set up the subject. End with your thesis (if you have one)."
+        }
         textareaRows={8}
         initialText={parts.introduction_text ?? ""}
         thesisContext={thesisContext}
         kindSelect={{
-          label: "Hook type",
+          label: isExpository ? "How to begin" : "Hook type",
           help: "Which kind of opening will pull the reader in?",
-          options: HOOK_KIND_OPTIONS,
+          options: hookKindOptions(mode),
           initialValue: parts.introduction_hook_kind,
           onSave: async (introduction_hook_kind) => {
             await updateIntroductionFields(writingId, parts.id, {

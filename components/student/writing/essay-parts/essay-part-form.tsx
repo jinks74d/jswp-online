@@ -158,7 +158,22 @@ function KindSelect<T extends string>({
 }) {
   const { isReadOnly } = useWritingMode();
   const [value, setValue] = useState<string>(config.initialValue ?? "");
-  const selected = config.options.find((o) => o.value === value);
+  // Keep a previously-saved value selectable even if it isn't in the
+  // current (mode-specific) option list — otherwise switching option sets
+  // would silently drop a stored selection. Append it as a passthrough.
+  const options =
+    config.initialValue &&
+    !config.options.some((o) => o.value === config.initialValue)
+      ? [
+          ...config.options,
+          {
+            value: config.initialValue,
+            label: config.initialValue,
+            description: "Previously selected.",
+          },
+        ]
+      : config.options;
+  const selected = options.find((o) => o.value === value);
 
   return (
     <div>
@@ -177,7 +192,7 @@ function KindSelect<T extends string>({
         className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
       >
         <option value="">— Select —</option>
-        {config.options.map((opt) => (
+        {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
           </option>

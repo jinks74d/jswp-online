@@ -274,6 +274,7 @@ export default async function StepDispatcher({
         stepKey={target.key}
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
+        mode={mode}
       />
     );
   }

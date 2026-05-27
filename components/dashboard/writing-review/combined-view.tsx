@@ -256,7 +256,7 @@ function renderStep({
   }
 
   if (step.groupOrigin === "thesis") {
-    return <ThesisStep {...baseProps} />;
+    return <ThesisStep {...baseProps} mode={mode} />;
   }
 
   if (step.groupOrigin === "introduction") {

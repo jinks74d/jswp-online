@@ -28,8 +28,8 @@ separate P7-2 backlog item).
 |---|-------|-----------|---------------|--------|
 | 4.5f-1 | TLCD: embed quotations in the T-Chart | — | none | ✅ Shipped (chunk 4.5f-1) |
 | 4.5f-2 | Decode: Background / Trigger / Task | 0022 | none | ✅ Shipped (chunk 4.5f-2) · migration 0022 applied to live 2026-05-27 |
-| 4.5f-3 | Annotate: capture the Main Idea | 0023 | none | ✅ Shipped (chunk 4.5f-3) · ⚠ migration 0023 NEEDS live apply |
-| 4.5f-4 | Essay frames: mode-aware thesis + intro | — | ⚠ Dr. Louis | ☐ Not started |
+| 4.5f-3 | Annotate: capture the Main Idea | 0023 | none | ✅ Shipped (chunk 4.5f-3) · migration 0023 applied to live 2026-05-27 |
+| 4.5f-4 | Essay frames: mode-aware thesis + intro | — | ⚠ Dr. Louis | ✅ Built on `v2` (chunk 4.5f-4) · ⚠ wording PENDING Dr. Louis before master |
 | 4.5f-5 | Shaping: the five-move checklist | 0024 | none | ☐ Not started |
 
 Only 4.5f-4 is content-blocked; the other four are pure engineering and can
@@ -178,9 +178,13 @@ does restate-don't-repeat but is unscaffolded vs. the narrow→broad pyramid
   `three_pronged` (if a new value is required, this chunk gains a migration).
 
 **Acceptance.**
-- [ ] Expository essay shows expository frames + openers + Flip-the-Prompt helper.
-- [ ] Argumentation and narrative essays are unchanged.
-- [ ] No enum migration unless Dr. Louis requires a distinct `framed` value.
+- [x] Expository essay shows expository frames (Open / Framed) + openers (historical-background / current-event / quotation / question-or-problem / startling-fact) + Flip-the-Prompt helper + inverted-pyramid hint.
+- [x] Argumentation / literary / narrative essays are unchanged (mode-keyed option sets).
+- [x] No enum migration — expository "framed" reuses `three_pronged`; openers are free strings (`introduction_hook_kind` is VARCHAR).
+- [x] Stored out-of-list value stays selectable (`KindSelect` passthrough).
+- [x] `ThesisStep` receives `mode` at both call sites; teacher review unaffected.
+- [x] type-check + build clean.
+- [ ] **⚠ PENDING DR. LOUIS** — confirm frame/opener labels, the Flip-the-Prompt wording, and whether expository wants a dedicated `framed` enum value (→ migration) before merge to master. Tracked in BACKLOG.
 
 ---
 
