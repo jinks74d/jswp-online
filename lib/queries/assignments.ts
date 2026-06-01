@@ -44,6 +44,11 @@ export interface AssignmentForEdit {
   source_author: string | null;
   source_citation: string | null;
   source_url: string | null;
+  source_html: string | null;
+  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_file_path: string | null;
+  source_file_name: string | null;
+  source_file_mime: string | null;
   rubric: Json | null;
   due_at: string | null;
   class_period_id: string | null;
@@ -130,6 +135,8 @@ export async function getAssignmentForTeacher(
       `id, title, prompt, mode, is_essay, num_body_paragraphs,
        default_chunk_ratio, default_chunks_per_bp, has_counterargument,
        source_text, source_title, source_author, source_citation, source_url,
+       source_html, source_render_mode, source_file_path, source_file_name,
+       source_file_mime,
        rubric, due_at, class_period_id, released_at, created_at, updated_at`
     )
     .eq("id", assignmentId)

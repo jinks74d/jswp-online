@@ -39,3 +39,27 @@ export async function uploadAssignmentSource(
   if (error) return { ok: false, error: error.message };
   return { ok: true, path };
 }
+
+export type SignedUrlResult =
+  | { ok: true; url: string }
+  | { ok: false; error: string };
+
+/**
+ * Short-lived signed URL for "Open original" — the bucket's school-scoped
+ * read RLS still applies, so this only resolves for users who may read the
+ * file. Default expiry 5 minutes (enough to open in a new tab).
+ */
+export async function getAssignmentSourceSignedUrl(
+  supabase: SupabaseClient<Database>,
+  path: string,
+  expiresIn = 300
+): Promise<SignedUrlResult> {
+  const { data, error } = await supabase.storage
+    .from("assignment-sources")
+    .createSignedUrl(path, expiresIn);
+
+  if (error || !data) {
+    return { ok: false, error: error?.message ?? "Could not open file." };
+  }
+  return { ok: true, url: data.signedUrl };
+}

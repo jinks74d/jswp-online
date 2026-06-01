@@ -1,15 +1,17 @@
 "use client";
 
 /**
- * File picker for source-text upload. Parses .txt locally and PDFs via
- * a dynamic import of `unpdf` (keeps the parser out of the initial
- * bundle). On extraction the parent receives the plain text via
- * onTextExtracted and writes it to the source_text textarea.
+ * File picker for source-text upload. Resolves a render mode by file type:
+ *   - .txt → plain text (local read)
+ *   - .pdf → PDF-native; extracted text (unpdf) becomes the annotation
+ *            substrate while the stored file is opened/rendered as the PDF
+ *   - .docx → rich; mammoth converts to HTML (sanitized server-side on save)
+ * Parsers are dynamically imported to keep them out of the initial bundle.
  *
- * Storage upload is best-effort — when assignmentId is provided (edit
- * mode) we also archive the original file under
- * school-{schoolId}/assignment-{assignmentId}/. Storage failures don't
- * block the form: text extraction is the primary outcome.
+ * On extraction the parent receives an ExtractedSource payload. Storage
+ * upload is best-effort and only when assignmentId is present (edit mode);
+ * it archives the original under school-{schoolId}/assignment-{id}/ and
+ * returns the path so the parent can persist it + offer "Open original".
  */
 
 import { useState } from "react";
@@ -18,16 +20,26 @@ import { Loader2, Upload } from "lucide-react";
 import type { Database } from "@/lib/database.types";
 import { uploadAssignmentSource } from "@/lib/storage/assignment-sources";
 
+export type ExtractedSource = {
+  renderMode: "pdf" | "rich" | "plain";
+  /** Plain text for pdf/plain modes; "" for rich (server derives it). */
+  text: string;
+  /** Rich HTML for rich mode; null otherwise. */
+  html: string | null;
+  /** Stored-file reference when archival succeeded (edit mode only). */
+  file: { path: string; name: string; mime: string } | null;
+};
+
 export function SourceTextUpload({
   assignmentId,
   schoolId,
   supabase,
-  onTextExtracted,
+  onExtracted,
 }: {
   assignmentId?: string;
   schoolId: string;
   supabase: SupabaseClient<Database>;
-  onTextExtracted: (text: string) => void;
+  onExtracted: (source: ExtractedSource) => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -39,27 +51,43 @@ export function SourceTextUpload({
 
     setBusy(true);
     setError(null);
-    setStatus("Extracting text…");
+    setStatus("Reading file…");
 
     try {
-      const text = await extractText(file);
-      onTextExtracted(text);
+      const extracted = await extractSource(file);
 
       // Best-effort archival to Storage when we have an assignment id.
+      let stored: ExtractedSource["file"] = null;
       if (assignmentId) {
-        setStatus("Uploading file for archival…");
+        setStatus("Uploading file…");
         const result = await uploadAssignmentSource(supabase, {
           file,
           schoolId,
           assignmentId,
         });
-        if (!result.ok) {
+        if (result.ok) {
+          stored = {
+            path: result.path,
+            name: file.name,
+            mime: file.type || "",
+          };
+        } else {
           // Non-fatal — extraction succeeded.
           console.warn("source upload failed:", result.error);
         }
       }
 
-      setStatus(`Extracted ${text.length.toLocaleString()} characters.`);
+      onExtracted({ ...extracted, file: stored });
+
+      const detail =
+        extracted.renderMode === "rich"
+          ? "Imported formatted document."
+          : `Extracted ${extracted.text.length.toLocaleString()} characters.`;
+      setStatus(
+        assignmentId || stored
+          ? detail
+          : `${detail} Save the draft to archive the original file.`
+      );
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
@@ -77,13 +105,13 @@ export function SourceTextUpload({
         htmlFor="source_file"
         className="block text-sm font-medium text-gray-700 mb-1.5"
       >
-        Upload PDF or .txt to populate the body below
+        Upload a PDF, Word (.docx), or .txt source
       </label>
       <div className="flex items-center gap-3">
         <input
           id="source_file"
           type="file"
-          accept=".pdf,.txt,application/pdf,text/plain"
+          accept=".pdf,.txt,.docx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           onChange={handleFile}
           disabled={busy}
           className="block text-sm text-gray-900 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:disabled:opacity-50"
@@ -103,13 +131,18 @@ export function SourceTextUpload({
   );
 }
 
-async function extractText(file: File): Promise<string> {
+type ExtractResult = Pick<ExtractedSource, "renderMode" | "text" | "html">;
+
+async function extractSource(file: File): Promise<ExtractResult> {
   const ext = file.name.toLowerCase().split(".").pop() ?? "";
   const looksTxt = ext === "txt" || file.type === "text/plain";
   const looksPdf = ext === "pdf" || file.type === "application/pdf";
+  const looksDocx =
+    ext === "docx" || file.type.includes("wordprocessingml");
 
   if (looksTxt) {
-    return file.text();
+    const text = (await file.text()).trim();
+    return { renderMode: "plain", text, html: null };
   }
   if (looksPdf) {
     const buf = new Uint8Array(await file.arrayBuffer());
@@ -118,9 +151,20 @@ async function extractText(file: File): Promise<string> {
     );
     const pdf = await getDocumentProxy(buf);
     const result = await extractPdfText(pdf, { mergePages: true });
-    const text = Array.isArray(result.text) ? result.text.join("\n") : result.text;
-    return text.trim();
+    const text = Array.isArray(result.text)
+      ? result.text.join("\n")
+      : result.text;
+    return { renderMode: "pdf", text: text.trim(), html: null };
+  }
+  if (looksDocx) {
+    const arrayBuffer = await file.arrayBuffer();
+    const mammoth = (await import("mammoth/mammoth.browser")).default;
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    // Sanitized server-side on save; source_text derived from the result.
+    return { renderMode: "rich", text: "", html: result.value };
   }
 
-  throw new Error(`Unsupported file type: ${file.type || ext}. Use PDF or .txt.`);
+  throw new Error(
+    `Unsupported file type: ${file.type || ext}. Use PDF, .docx, or .txt.`
+  );
 }

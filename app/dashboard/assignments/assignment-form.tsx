@@ -53,6 +53,11 @@ export type AssignmentInitial = {
   source_author: string | null;
   source_citation: string | null;
   source_url: string | null;
+  source_html: string | null;
+  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_file_path: string | null;
+  source_file_name: string | null;
+  source_file_mime: string | null;
   rubric: unknown;
   due_at: string | null;
   class_period_id: string | null;
@@ -192,6 +197,12 @@ export function AssignmentForm({
               (multiple body paragraphs)
             </span>
           </label>
+          {!isEssay && (
+            <p className="mt-1 text-xs text-gray-600">
+              Unchecked: students write a single one-chunk paragraph (e.g. a
+              3+:0 summary).
+            </p>
+          )}
         </div>
 
         {isEssay && (
@@ -252,7 +263,7 @@ export function AssignmentForm({
                 1:2+ — single detail, multiple commentary
               </option>
               <option value="three_plus_to_zero">
-                3+:0 — summary (no commentary)
+                3+:0 — Summary (no commentary)
               </option>
             </select>
           </Field>
@@ -293,6 +304,11 @@ export function AssignmentForm({
                     source_author: initial.source_author,
                     source_citation: initial.source_citation,
                     source_url: initial.source_url,
+                    source_html: initial.source_html,
+                    source_render_mode: initial.source_render_mode,
+                    source_file_path: initial.source_file_path,
+                    source_file_name: initial.source_file_name,
+                    source_file_mime: initial.source_file_mime,
                   }
                 : undefined
             }

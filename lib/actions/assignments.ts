@@ -18,6 +18,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { validateRubric, emptyRubric } from "@/lib/rubric";
+import { sanitizeSourceHtml, sourceHtmlToSubstrate } from "@/lib/source-content";
 import type { Database, Json } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
@@ -95,6 +96,25 @@ function parseCommonFields(formData: FormData) {
   );
   const sourceUrl = emptyToNull(String(formData.get("source_url") ?? ""));
 
+  // Rich / PDF-native source fields (Chunk 1). source_html is the candidate
+  // rich body; source_render_mode + source_file_* describe how it renders and
+  // where the original lives. Sanitization + substrate derivation happen in
+  // buildSourceColumns — never trust posted HTML or client source_text for
+  // rich content.
+  const sourceHtml = emptyToNull(String(formData.get("source_html") ?? ""));
+  const sourceRenderModeRaw = String(
+    formData.get("source_render_mode") ?? ""
+  );
+  const sourceFilePath = emptyToNull(
+    String(formData.get("source_file_path") ?? "")
+  );
+  const sourceFileName = emptyToNull(
+    String(formData.get("source_file_name") ?? "")
+  );
+  const sourceFileMime = emptyToNull(
+    String(formData.get("source_file_mime") ?? "")
+  );
+
   return {
     title,
     prompt,
@@ -110,6 +130,76 @@ function parseCommonFields(formData: FormData) {
     sourceAuthor,
     sourceCitation,
     sourceUrl,
+    sourceHtml,
+    sourceRenderModeRaw,
+    sourceFilePath,
+    sourceFileName,
+    sourceFileMime,
+  };
+}
+
+const VALID_RENDER_MODES = new Set(["pdf", "rich", "plain"]);
+
+/**
+ * Resolve the full set of source_* columns for an insert/update.
+ *
+ * Narrative mode has no source → everything null. Otherwise:
+ *   - rich:  sanitize the posted HTML, then DERIVE source_text from it (the
+ *            canonical annotation substrate — see lib/source-content.ts). The
+ *            client's plain source_text is ignored for rich content.
+ *   - pdf/plain: source_text is the extracted/typed text; no source_html.
+ */
+function buildSourceColumns(
+  f: ReturnType<typeof parseCommonFields>,
+  isNarrative: boolean
+) {
+  if (isNarrative) {
+    return {
+      source_text: null,
+      source_title: null,
+      source_author: null,
+      source_citation: null,
+      source_url: null,
+      source_html: null,
+      source_render_mode: null,
+      source_file_path: null,
+      source_file_name: null,
+      source_file_mime: null,
+    };
+  }
+
+  const mode = VALID_RENDER_MODES.has(f.sourceRenderModeRaw)
+    ? (f.sourceRenderModeRaw as "pdf" | "rich" | "plain")
+    : null;
+
+  const shared = {
+    source_title: f.sourceTitle,
+    source_author: f.sourceAuthor,
+    source_citation: f.sourceCitation,
+    source_url: f.sourceUrl,
+    source_file_path: f.sourceFilePath,
+    source_file_name: f.sourceFileName,
+    source_file_mime: f.sourceFileMime,
+  };
+
+  if (mode === "rich" && f.sourceHtml) {
+    const sanitized = sanitizeSourceHtml(f.sourceHtml);
+    const substrate = sourceHtmlToSubstrate(sanitized);
+    return {
+      ...shared,
+      source_html: emptyToNull(sanitized),
+      // Stored untrimmed so it matches the rendered DOM textContent exactly
+      // (annotation offsets index into this string).
+      source_text: substrate.trim() === "" ? null : substrate,
+      source_render_mode: "rich" as const,
+    };
+  }
+
+  return {
+    ...shared,
+    source_html: null,
+    source_text: f.sourceText,
+    source_render_mode: mode ?? (f.sourceText ? "plain" : null),
   };
 }
 
@@ -271,11 +361,7 @@ export async function createDraftAssignment(
       default_chunk_ratio: v.chunkRatio,
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
-      source_text: isNarrative ? null : f.sourceText,
-      source_title: isNarrative ? null : f.sourceTitle,
-      source_author: isNarrative ? null : f.sourceAuthor,
-      source_citation: isNarrative ? null : f.sourceCitation,
-      source_url: isNarrative ? null : f.sourceUrl,
+      ...buildSourceColumns(f, isNarrative),
       rubric: r.rubric as unknown as Json,
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,
@@ -326,8 +412,9 @@ export async function updateDraftAssignment(
     // Locked after publish: mode, is_essay, num_body_paragraphs,
     // default_chunks_per_bp, default_chunk_ratio, has_counterargument,
     // source_text, source_title, source_author, source_citation,
-    // source_url, rubric. Only title/prompt/due_at/class_period_id stay
-    // editable.
+    // source_url, source_html, source_render_mode, source_file_*, rubric.
+    // Only title/prompt/due_at/class_period_id stay editable. Freezing the
+    // source after publish also guarantees annotation offsets never drift.
     update = {
       title: f.title,
       prompt: f.prompt,
@@ -351,11 +438,7 @@ export async function updateDraftAssignment(
       default_chunk_ratio: v.chunkRatio,
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
-      source_text: isNarrative ? null : f.sourceText,
-      source_title: isNarrative ? null : f.sourceTitle,
-      source_author: isNarrative ? null : f.sourceAuthor,
-      source_citation: isNarrative ? null : f.sourceCitation,
-      source_url: isNarrative ? null : f.sourceUrl,
+      ...buildSourceColumns(f, isNarrative),
       rubric: r.rubric as unknown as Json,
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,
