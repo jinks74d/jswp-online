@@ -1,8 +1,9 @@
 /**
- * Create a school admin (direct-create + one-time temp password). super_admin
- * or district_admin only. Scope is validated by reading the target school via
- * the RLS server client — a school outside the actor's scope reads back null,
- * so the action refuses before any account is created.
+ * Direct-create actions for school-scoped users (admins + teachers). Shared
+ * body; super_admin or district_admin only. Scope is validated by reading the
+ * target school via the RLS server client — an out-of-scope school reads back
+ * null, so the action refuses before any account is created. Returns a
+ * one-time temp password to surface.
  */
 
 "use server";
@@ -14,20 +15,14 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createScopedUser } from "@/lib/scoped-users";
-
-export type SchoolAdminFormState = {
-  error?: string;
-  fieldErrors?: { first_name?: string; last_name?: string; email?: string };
-  success?: { email: string; password: string };
-};
+import { createScopedUser, type ScopedUserFormState } from "@/lib/scoped-users";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export async function createSchoolAdmin(
-  _prev: SchoolAdminFormState,
+async function createSchoolUser(
+  role: "school_admin" | "teacher",
   formData: FormData
-): Promise<SchoolAdminFormState> {
+): Promise<ScopedUserFormState> {
   const actor = await requireRole(["super_admin", "district_admin"]);
 
   const schoolId = String(formData.get("school_id") ?? "");
@@ -37,16 +32,13 @@ export async function createSchoolAdmin(
     .trim()
     .toLowerCase();
 
-  const fieldErrors: NonNullable<SchoolAdminFormState["fieldErrors"]> = {};
+  const fieldErrors: NonNullable<ScopedUserFormState["fieldErrors"]> = {};
   if (!firstName) fieldErrors.first_name = "First name is required.";
   if (!lastName) fieldErrors.last_name = "Last name is required.";
   if (!EMAIL_RE.test(email)) fieldErrors.email = "Enter a valid email address.";
   if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
-
   if (!schoolId) return { error: "Missing school id." };
 
-  // Scope gate: RLS lets the actor read this school only if it's in their
-  // district (or they're a super admin).
   const supabase = await createServerClient();
   const { data: school } = await supabase
     .from("schools")
@@ -56,7 +48,7 @@ export async function createSchoolAdmin(
   if (!school) return { error: "School not found or outside your scope." };
 
   const res = await createScopedUser({
-    role: "school_admin",
+    role,
     districtId: school.district_id,
     schoolId: school.id,
     firstName,
@@ -74,7 +66,7 @@ export async function createSchoolAdmin(
     .from("audit_log")
     .insert({
       actor_id: actor.id,
-      action: "school_admin.create",
+      action: `${role}.create`,
       target_scope: { user_profile_id: res.userId, school_id: school.id },
       metadata: { email },
       district_id: school.district_id,
@@ -83,4 +75,18 @@ export async function createSchoolAdmin(
 
   revalidatePath(`/admin/districts/${school.district_id}/schools/${school.id}`);
   return { success: { email, password: res.password } };
+}
+
+export async function createSchoolAdmin(
+  _prev: ScopedUserFormState,
+  formData: FormData
+): Promise<ScopedUserFormState> {
+  return createSchoolUser("school_admin", formData);
+}
+
+export async function createTeacher(
+  _prev: ScopedUserFormState,
+  formData: FormData
+): Promise<ScopedUserFormState> {
+  return createSchoolUser("teacher", formData);
 }

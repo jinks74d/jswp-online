@@ -10,9 +10,10 @@ import { requireRole } from "@/lib/auth";
 import { getSchool } from "@/lib/queries/schools";
 import { getDistrict } from "@/lib/queries/districts";
 import { listSchoolUsersByRole } from "@/lib/queries/school-users";
+import { createSchoolAdmin, createTeacher } from "@/lib/actions/school-users";
 import { CsvImporter } from "@/components/admin/csv-importer";
 import { SchoolForm } from "../../school-form";
-import { AddSchoolAdminForm } from "./admin-form";
+import { AddSchoolUserForm } from "./add-school-user-form";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export default async function SchoolDetailPage({
 
   const district = await getDistrict(id);
   const admins = await listSchoolUsersByRole(school.id, "school_admin");
+  const teachers = await listSchoolUsersByRole(school.id, "teacher");
   const dateFmt = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 
   return (
@@ -124,7 +126,11 @@ export default async function SchoolDetailPage({
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
               Add an admin
             </h3>
-            <AddSchoolAdminForm schoolId={school.id} />
+            <AddSchoolUserForm
+              schoolId={school.id}
+              action={createSchoolAdmin}
+              roleLabel="admin"
+            />
           </div>
           <div className="space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -139,8 +145,77 @@ export default async function SchoolDetailPage({
         </div>
       </section>
 
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          Teachers
+        </h2>
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-left text-gray-500">
+              <tr>
+                <th className="px-4 py-2 font-medium">Name</th>
+                <th className="px-4 py-2 font-medium">Email</th>
+                <th className="px-4 py-2 font-medium">Status</th>
+                <th className="px-4 py-2 font-medium">Added</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {teachers.map((t) => (
+                <tr key={t.id}>
+                  <td className="px-4 py-2 text-gray-900">
+                    {[t.first_name, t.last_name].filter(Boolean).join(" ") ||
+                      "—"}
+                  </td>
+                  <td className="px-4 py-2 text-gray-700">{t.email ?? "—"}</td>
+                  <td className="px-4 py-2">
+                    {t.active ? (
+                      <span className="text-green-700">Active</span>
+                    ) : (
+                      <span className="text-gray-400">Inactive</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2 text-gray-500">
+                    {t.created_at ? dateFmt.format(new Date(t.created_at)) : "—"}
+                  </td>
+                </tr>
+              ))}
+              {teachers.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                    No teachers yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Add a teacher
+            </h3>
+            <AddSchoolUserForm
+              schoolId={school.id}
+              action={createTeacher}
+              roleLabel="teacher"
+            />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Import teachers (CSV)
+            </h3>
+            <CsvImporter
+              entity="teachers"
+              sampleHeaders={["first_name", "last_name", "email"]}
+              scope={{ schoolId: school.id }}
+            />
+          </div>
+        </div>
+      </section>
+
       <p className="text-xs text-gray-400">
-        Teachers and classes for this school arrive in the next chunks.
+        Classes for this school arrive in the next chunk.
       </p>
     </div>
   );

@@ -1,28 +1,34 @@
 "use client";
 
 /**
- * Add-school-admin form. On success it surfaces the one-time temp password
- * (shown once — the server doesn't store it), with a copy button.
+ * Generic "add a school-scoped user" form (admins + teachers). The server
+ * action is passed in, so the same UI serves every role. On success it surfaces
+ * the one-time temp password (shown once — the server doesn't store it).
  */
 
 import { useActionState } from "react";
 import { AlertCircle, Copy, KeyRound, Loader2 } from "lucide-react";
-import {
-  createSchoolAdmin,
-  type SchoolAdminFormState,
-} from "@/lib/actions/school-admins";
+import type { ScopedUserFormState } from "@/lib/scoped-users";
 
-const initialState: SchoolAdminFormState = {};
+const initialState: ScopedUserFormState = {};
 
-export function AddSchoolAdminForm({ schoolId }: { schoolId: string }) {
-  const [state, action, pending] = useActionState(
-    createSchoolAdmin,
-    initialState
-  );
+export function AddSchoolUserForm({
+  schoolId,
+  action,
+  roleLabel,
+}: {
+  schoolId: string;
+  action: (
+    prev: ScopedUserFormState,
+    formData: FormData
+  ) => Promise<ScopedUserFormState>;
+  roleLabel: string;
+}) {
+  const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
     <form
-      action={action}
+      action={formAction}
       className="space-y-3 bg-white border border-gray-200 rounded-lg p-5"
     >
       {state.error && (
@@ -39,6 +45,7 @@ export function AddSchoolAdminForm({ schoolId }: { schoolId: string }) {
         <Credentials
           email={state.success.email}
           password={state.success.password}
+          roleLabel={roleLabel}
         />
       )}
 
@@ -46,11 +53,11 @@ export function AddSchoolAdminForm({ schoolId }: { schoolId: string }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor={`first_name_${roleLabel}`} className="block text-sm font-medium text-gray-700 mb-1.5">
             First name
           </label>
           <input
-            id="first_name"
+            id={`first_name_${roleLabel}`}
             name="first_name"
             type="text"
             required
@@ -63,11 +70,11 @@ export function AddSchoolAdminForm({ schoolId }: { schoolId: string }) {
           )}
         </div>
         <div>
-          <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor={`last_name_${roleLabel}`} className="block text-sm font-medium text-gray-700 mb-1.5">
             Last name
           </label>
           <input
-            id="last_name"
+            id={`last_name_${roleLabel}`}
             name="last_name"
             type="text"
             required
@@ -82,11 +89,11 @@ export function AddSchoolAdminForm({ schoolId }: { schoolId: string }) {
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+        <label htmlFor={`email_${roleLabel}`} className="block text-sm font-medium text-gray-700 mb-1.5">
           Email
         </label>
         <input
-          id="email"
+          id={`email_${roleLabel}`}
           name="email"
           type="email"
           required
@@ -103,18 +110,27 @@ export function AddSchoolAdminForm({ schoolId }: { schoolId: string }) {
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
       >
         {pending && <Loader2 className="w-4 h-4 animate-spin" />}
-        Add admin
+        Add {roleLabel}
       </button>
     </form>
   );
 }
 
-function Credentials({ email, password }: { email: string; password: string }) {
+function Credentials({
+  email,
+  password,
+  roleLabel,
+}: {
+  email: string;
+  password: string;
+  roleLabel: string;
+}) {
   return (
     <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm">
       <div className="flex items-center gap-2 text-green-800 font-medium">
         <KeyRound className="w-4 h-4" />
-        Admin created — share these credentials now (shown once)
+        {roleLabel[0].toUpperCase() + roleLabel.slice(1)} created — share these
+        now (shown once)
       </div>
       <div className="mt-2 flex items-center justify-between gap-2 rounded bg-white border border-green-200 px-2 py-1.5 font-mono text-xs">
         <span className="truncate">

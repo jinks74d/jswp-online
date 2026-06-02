@@ -28,6 +28,13 @@ export function generateTempPassword(): string {
   return out;
 }
 
+/** Shared useActionState shape for "add a scoped user" forms (admins/teachers). */
+export type ScopedUserFormState = {
+  error?: string;
+  fieldErrors?: { first_name?: string; last_name?: string; email?: string };
+  success?: { email: string; password: string };
+};
+
 export type ScopedRole =
   | "district_admin"
   | "school_admin"
