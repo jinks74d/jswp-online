@@ -5,10 +5,10 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getSchool } from "@/lib/queries/schools";
-import { getSubject } from "@/lib/queries/subjects";
+import { getSubject, subjectHasPeriod } from "@/lib/queries/subjects";
 import { listClassesForSubject } from "@/lib/queries/classes-admin";
 import { CsvImporter } from "@/components/admin/csv-importer";
 import { SubjectForm } from "../subject-form";
@@ -33,6 +33,7 @@ export default async function SubjectDetailPage({
   if (!subject || subject.school_id !== sid) notFound();
 
   const classes = await listClassesForSubject(subject.id);
+  const hasPeriod = await subjectHasPeriod(subject.id);
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -48,6 +49,17 @@ export default async function SubjectDetailPage({
         <h1 className="text-2xl font-bold text-gray-900">{subject.name}</h1>
         <p className="text-sm text-gray-500">{school.name}</p>
       </header>
+
+      {!hasPeriod && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <p>
+            This subject has no period yet. Add a class below, then a period to
+            it — a subject can&apos;t be used for assignments until it has at
+            least one period.
+          </p>
+        </div>
+      )}
 
       <section className="space-y-3 max-w-xl">
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
