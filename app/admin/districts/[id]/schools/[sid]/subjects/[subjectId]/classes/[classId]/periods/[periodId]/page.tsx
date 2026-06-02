@@ -14,8 +14,11 @@ import {
   listAssignedTeachers,
 } from "@/lib/queries/class-periods-admin";
 import { listSchoolUsersByRole } from "@/lib/queries/school-users";
+import { listEnrolledStudents } from "@/lib/queries/period-students";
+import { CsvImporter } from "@/components/admin/csv-importer";
 import { PeriodForm } from "../../period-form";
 import { TeacherAssignment } from "./teacher-assignment";
+import { StudentEnrollment } from "./student-enrollment";
 
 export const dynamic = "force-dynamic";
 
@@ -41,9 +44,10 @@ export default async function PeriodDetailPage({
   const period = await getClassPeriod(periodId);
   if (!period || period.class_id !== classId) notFound();
 
-  const [assigned, schoolTeachers] = await Promise.all([
+  const [assigned, schoolTeachers, enrolled] = await Promise.all([
     listAssignedTeachers(period.id),
     listSchoolUsersByRole(period.school_id, "teacher"),
+    listEnrolledStudents(period.id),
   ]);
 
   const base = `/admin/districts/${id}/schools/${sid}/subjects/${subjectId}/classes/${classId}`;
@@ -94,9 +98,22 @@ export default async function PeriodDetailPage({
         />
       </section>
 
-      <p className="text-xs text-gray-400">
-        Student enrollment for this period arrives in the final chunk.
-      </p>
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          Students
+        </h2>
+        <StudentEnrollment periodId={period.id} enrolled={enrolled} />
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Import &amp; enroll students (CSV)
+          </h3>
+          <CsvImporter
+            entity="class_students"
+            sampleHeaders={["first_name", "last_name", "email", "grade_level"]}
+            scope={{ classPeriodId: period.id }}
+          />
+        </div>
+      </section>
     </div>
   );
 }

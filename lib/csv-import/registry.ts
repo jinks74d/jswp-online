@@ -16,6 +16,7 @@ import { teachersDescriptor } from "./descriptors/teachers";
 import { subjectsDescriptor } from "./descriptors/subjects";
 import { classesDescriptor } from "./descriptors/classes";
 import { classPeriodsDescriptor } from "./descriptors/class-periods";
+import { classStudentsDescriptor } from "./descriptors/class-students";
 
 // Descriptors are stored type-erased (each has a different TRow); the generic
 // core only uses the interface surface, and the typed descriptor enforces its
@@ -29,6 +30,7 @@ const REGISTRY: Record<string, ImportDescriptor<any>> = {
   subjects: subjectsDescriptor,
   classes: classesDescriptor,
   class_periods: classPeriodsDescriptor,
+  class_students: classStudentsDescriptor,
 };
 
 export function getDescriptor(
