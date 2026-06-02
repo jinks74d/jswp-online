@@ -45,9 +45,14 @@ export type CommitRowError = {
   message: string;
 };
 
+/** One-time credential surfaced by people imports (account just created). */
+export type ImportCredential = { label: string; email: string; password: string };
+
 export type CommitOutcome = {
   created: number;
   updated: number;
   skipped: number;
   errors: CommitRowError[];
+  /** Present for people imports — temp passwords to hand off, shown once. */
+  credentials?: ImportCredential[];
 };

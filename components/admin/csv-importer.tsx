@@ -97,6 +97,37 @@ export function CsvImporter({
             ))}
           </ul>
         )}
+
+        {result.credentials && result.credentials.length > 0 && (
+          <div className="rounded-md border border-green-200 bg-green-50 p-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-green-800">
+                Temp passwords (shown once — copy now)
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  navigator.clipboard?.writeText(
+                    result
+                      .credentials!.map((c) => `${c.email}\t${c.password}`)
+                      .join("\n")
+                  )
+                }
+                className="text-xs font-medium text-green-700 hover:text-green-900"
+              >
+                Copy all
+              </button>
+            </div>
+            <div className="mt-2 max-h-48 overflow-y-auto rounded bg-white border border-green-200 p-2 font-mono text-xs text-gray-700 space-y-0.5">
+              {result.credentials.map((c) => (
+                <div key={c.email}>
+                  {c.email} · {c.password}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={reset}

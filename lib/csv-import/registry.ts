@@ -11,6 +11,7 @@ import "server-only";
 import type { ImportDescriptor } from "./descriptor";
 import { districtsDescriptor } from "./descriptors/districts";
 import { schoolsDescriptor } from "./descriptors/schools";
+import { schoolAdminsDescriptor } from "./descriptors/school-admins";
 
 // Descriptors are stored type-erased (each has a different TRow); the generic
 // core only uses the interface surface, and the typed descriptor enforces its
@@ -19,6 +20,7 @@ import { schoolsDescriptor } from "./descriptors/schools";
 const REGISTRY: Record<string, ImportDescriptor<any>> = {
   districts: districtsDescriptor,
   schools: schoolsDescriptor,
+  school_admins: schoolAdminsDescriptor,
 };
 
 export function getDescriptor(

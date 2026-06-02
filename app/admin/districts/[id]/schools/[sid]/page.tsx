@@ -9,7 +9,10 @@ import { ChevronLeft } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getSchool } from "@/lib/queries/schools";
 import { getDistrict } from "@/lib/queries/districts";
+import { listSchoolUsersByRole } from "@/lib/queries/school-users";
+import { CsvImporter } from "@/components/admin/csv-importer";
 import { SchoolForm } from "../../school-form";
+import { AddSchoolAdminForm } from "./admin-form";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +31,11 @@ export default async function SchoolDetailPage({
   if (!school || school.district_id !== id) notFound();
 
   const district = await getDistrict(id);
+  const admins = await listSchoolUsersByRole(school.id, "school_admin");
+  const dateFmt = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 
   return (
-    <div className="space-y-6 max-w-xl">
+    <div className="space-y-8 max-w-3xl">
       <Link
         href={`/admin/districts/${id}`}
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
@@ -53,20 +58,89 @@ export default async function SchoolDetailPage({
         )}
       </header>
 
-      <SchoolForm
-        mode="edit"
-        districtId={id}
-        initial={{
-          id: school.id,
-          name: school.name,
-          level: school.level,
-          active: school.active,
-        }}
-      />
+      <section className="space-y-3 max-w-xl">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          School details
+        </h2>
+        <SchoolForm
+          mode="edit"
+          districtId={id}
+          initial={{
+            id: school.id,
+            name: school.name,
+            level: school.level,
+            active: school.active,
+          }}
+        />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          School admins
+        </h2>
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-left text-gray-500">
+              <tr>
+                <th className="px-4 py-2 font-medium">Name</th>
+                <th className="px-4 py-2 font-medium">Email</th>
+                <th className="px-4 py-2 font-medium">Status</th>
+                <th className="px-4 py-2 font-medium">Added</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {admins.map((a) => (
+                <tr key={a.id}>
+                  <td className="px-4 py-2 text-gray-900">
+                    {[a.first_name, a.last_name].filter(Boolean).join(" ") ||
+                      "—"}
+                  </td>
+                  <td className="px-4 py-2 text-gray-700">{a.email ?? "—"}</td>
+                  <td className="px-4 py-2">
+                    {a.active ? (
+                      <span className="text-green-700">Active</span>
+                    ) : (
+                      <span className="text-gray-400">Inactive</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2 text-gray-500">
+                    {a.created_at ? dateFmt.format(new Date(a.created_at)) : "—"}
+                  </td>
+                </tr>
+              ))}
+              {admins.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                    No school admins yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Add an admin
+            </h3>
+            <AddSchoolAdminForm schoolId={school.id} />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Import admins (CSV)
+            </h3>
+            <CsvImporter
+              entity="school_admins"
+              sampleHeaders={["first_name", "last_name", "email"]}
+              scope={{ schoolId: school.id }}
+            />
+          </div>
+        </div>
+      </section>
 
       <p className="text-xs text-gray-400">
-        Admins, teachers, and classes for this school arrive in the next
-        chunks.
+        Teachers and classes for this school arrive in the next chunks.
       </p>
     </div>
   );
