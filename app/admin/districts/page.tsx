@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { listDistricts } from "@/lib/queries/districts";
+import { CsvImporter } from "@/components/admin/csv-importer";
 import { DistrictForm } from "./district-form";
 
 export const dynamic = "force-dynamic";
@@ -99,12 +100,24 @@ export default async function DistrictsPage() {
         </div>
       </section>
 
-      <section className="space-y-3 max-w-xl">
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-          Add a district
-        </h2>
-        <DistrictForm mode="create" />
-      </section>
+      <div className="grid gap-8 lg:grid-cols-2">
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            Add a district
+          </h2>
+          <DistrictForm mode="create" />
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            Import districts (CSV)
+          </h2>
+          <CsvImporter
+            entity="districts"
+            sampleHeaders={["name", "subdomain", "contact_email"]}
+          />
+        </section>
+      </div>
     </div>
   );
 }
