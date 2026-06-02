@@ -39,12 +39,17 @@ export default async function AdminLayout({
                 Import students
               </Link>
               {profile.role === "super_admin" && (
-                <Link
-                  href="/admin/super-admins"
-                  className="hover:text-gray-900"
-                >
-                  Super admins
-                </Link>
+                <>
+                  <Link href="/admin/districts" className="hover:text-gray-900">
+                    Districts
+                  </Link>
+                  <Link
+                    href="/admin/super-admins"
+                    className="hover:text-gray-900"
+                  >
+                    Super admins
+                  </Link>
+                </>
               )}
             </nav>
           </div>
