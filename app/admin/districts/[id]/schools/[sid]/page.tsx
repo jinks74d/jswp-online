@@ -5,7 +5,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getSchool } from "@/lib/queries/schools";
 import { getDistrict } from "@/lib/queries/districts";
@@ -214,9 +214,25 @@ export default async function SchoolDetailPage({
         </div>
       </section>
 
-      <p className="text-xs text-gray-400">
-        Classes for this school arrive in the next chunk.
-      </p>
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          Subjects &amp; classes
+        </h2>
+        <Link
+          href={`/admin/districts/${id}/schools/${school.id}/subjects`}
+          className="flex items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 hover:border-gray-400 transition-colors"
+        >
+          <div>
+            <div className="text-sm font-medium text-gray-900">
+              Manage subjects, classes &amp; periods
+            </div>
+            <div className="text-xs text-gray-600 mt-0.5">
+              Build the Subject → Class → Period structure and assign teachers.
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        </Link>
+      </section>
     </div>
   );
 }
