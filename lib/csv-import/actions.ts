@@ -17,7 +17,13 @@ import "server-only";
 import { requireRole } from "@/lib/auth";
 import { readSpreadsheet } from "./parse";
 import { getDescriptor } from "./registry";
-import type { CommitOutcome, CsvParseError, ParseOutcome, PreviewRow } from "./types";
+import type {
+  CommitOutcome,
+  CsvParseError,
+  ImportScope,
+  ParseOutcome,
+  PreviewRow,
+} from "./types";
 
 function failed(entity: string, message: string, fileName = ""): ParseOutcome {
   return { entity, fileName, columns: [], rows: [], errors: [{ rowNumber: null, message }] };
@@ -25,7 +31,8 @@ function failed(entity: string, message: string, fileName = ""): ParseOutcome {
 
 export async function parseImport(
   entity: string,
-  formData: FormData
+  formData: FormData,
+  scope: ImportScope = {}
 ): Promise<ParseOutcome> {
   const descriptor = getDescriptor(entity);
   if (!descriptor) return failed(entity, "Unknown import type.");
@@ -80,7 +87,7 @@ export async function parseImport(
     typed.push(res.row);
   }
 
-  const matches = await descriptor.classify(typed);
+  const matches = await descriptor.classify(typed, scope);
 
   const rows: PreviewRow[] = typed.map((row, i) => {
     const cells: Record<string, string> = {};
@@ -108,7 +115,8 @@ export async function parseImport(
 
 export async function runImport(
   entity: string,
-  payloads: unknown[]
+  payloads: unknown[],
+  scope: ImportScope = {}
 ): Promise<CommitOutcome> {
   const descriptor = getDescriptor(entity);
   if (!descriptor) {
@@ -123,8 +131,10 @@ export async function runImport(
 
   // Payloads are the typed rows from parseImport, but treated as untrusted:
   // the descriptor's commit re-classifies against the live DB and writes under
-  // RLS, so a crafted payload can do no more than the actor's role already can.
+  // RLS, so a crafted payload (or scope) can do no more than the actor's role
+  // already permits.
   return descriptor.commit(payloads as { rowNumber: number }[], {
     actorId: actor.id,
+    scope,
   });
 }

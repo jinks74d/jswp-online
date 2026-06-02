@@ -21,9 +21,12 @@ import type { CommitOutcome, ParseOutcome } from "@/lib/csv-import/types";
 export function CsvImporter({
   entity,
   sampleHeaders,
+  scope = {},
 }: {
   entity: string;
   sampleHeaders: string[];
+  /** Parent context (e.g. { districtId }) for scoped imports. */
+  scope?: Record<string, string>;
 }) {
   const [preview, setPreview] = useState<ParseOutcome | null>(null);
   const [excluded, setExcluded] = useState<ReadonlySet<number>>(new Set());
@@ -42,7 +45,7 @@ export function CsvImporter({
     setError(null);
     setResult(null);
     start(async () => {
-      const outcome = await parseImport(entity, formData);
+      const outcome = await parseImport(entity, formData, scope);
       setPreview(outcome);
       setExcluded(new Set());
     });
@@ -68,7 +71,7 @@ export function CsvImporter({
     }
     setError(null);
     start(async () => {
-      const outcome = await runImport(entity, payloads);
+      const outcome = await runImport(entity, payloads, scope);
       setResult(outcome);
     });
   }

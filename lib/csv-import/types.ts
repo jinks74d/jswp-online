@@ -6,6 +6,14 @@
  * the wire format between the server actions and the <CsvImporter> UI.
  */
 
+/**
+ * Parent/scope context for an import, supplied by the page the importer is
+ * mounted on (e.g. { districtId } when importing a district's schools). Used
+ * by descriptors to resolve parents and scope matching. RLS is the backstop —
+ * a write outside the actor's scope is rejected at the DB regardless.
+ */
+export type ImportScope = Record<string, string>;
+
 export type CsvParseError = { rowNumber: number | null; message: string };
 
 /** Hybrid-match outcome shown in the preview, re-derived authoritatively at commit. */

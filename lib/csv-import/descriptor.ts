@@ -5,12 +5,13 @@
  */
 
 import type { Database } from "@/lib/database.types";
-import type { CommitOutcome } from "./types";
+import type { CommitOutcome, ImportScope } from "./types";
 
 type JswpRole = Database["public"]["Enums"]["jswp_role"];
 
 export interface ImportContext {
   actorId: string;
+  scope: ImportScope;
 }
 
 export interface RowMatch {
@@ -41,7 +42,7 @@ export interface ImportDescriptor<TRow extends { rowNumber: number }> {
   /** Stable key for within-file duplicate detection (null = don't dedupe). */
   dedupeKey(row: TRow): string | null;
   /** Read-only batch classification against the DB (parallel to input). */
-  classify(rows: TRow[]): Promise<RowMatch[]>;
+  classify(rows: TRow[], scope: ImportScope): Promise<RowMatch[]>;
   /** Idempotent commit. MUST treat rows as untrusted and re-classify internally. */
   commit(rows: TRow[], ctx: ImportContext): Promise<CommitOutcome>;
 }
