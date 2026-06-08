@@ -27,6 +27,8 @@ export interface AssignmentListItem {
   class_name: string | null;
   created_at: string;
   updated_at: string;
+  /** Number of student_writings rows — drives delete/unpublish warnings. */
+  student_writing_count: number;
 }
 
 export interface AssignmentForEdit {
@@ -76,6 +78,7 @@ type AssignmentListRow = {
     period_label: string;
     class: { name: string } | null;
   } | null;
+  student_writings: { count: number }[];
 };
 
 /* ─── Queries ────────────────────────────────────────────────────────── */
@@ -97,7 +100,8 @@ export async function getTeacherAssignments(
       class_period:class_period_id (
         period_label,
         class:class_id ( name )
-      )
+      ),
+      student_writings ( count )
       `
     )
     .eq("teacher_id", teacherId)
@@ -120,6 +124,7 @@ export async function getTeacherAssignments(
     updated_at: r.updated_at,
     class_period_label: r.class_period?.period_label ?? null,
     class_name: r.class_period?.class?.name ?? null,
+    student_writing_count: r.student_writings?.[0]?.count ?? 0,
   }));
 }
 

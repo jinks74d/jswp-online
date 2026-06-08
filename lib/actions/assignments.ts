@@ -15,8 +15,9 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth";
+import { requireUser, requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { validateRubric, emptyRubric } from "@/lib/rubric";
 import { sanitizeSourceHtml, sourceHtmlToSubstrate } from "@/lib/source-content";
 import type { Database, Json } from "@/lib/database.types";
@@ -534,6 +535,103 @@ export async function deleteAssignment(
   redirect("/dashboard/assignments");
 }
 
+/**
+ * Cancel + hard-delete an assignment, INCLUDING all student work.
+ *
+ * This is the destructive escape hatch for the case deleteAssignment refuses:
+ * students have already started writing. It deletes every student_writings row
+ * for the assignment (which cascades to all per-writing artifacts — chunks,
+ * CDs, CMs, t-charts, shaping sheets, etc. — via ON DELETE CASCADE), then
+ * deletes the assignment itself. Order matters: migration 0007 set the
+ * student_writings → assignments FK to ON DELETE RESTRICT, so the assignment
+ * cannot be removed until its writings are gone.
+ *
+ * Authorization: the owning teacher OR a school/district/super admin in scope
+ * (auth_user_is_admin_for_school). student_writings has no DELETE RLS policy,
+ * so the actual deletes run through the service-role admin client. The action
+ * authorizes via the RLS-scoped client first, then writes an audit_log row.
+ *
+ * IRREVERSIBLE. The UI guards with an explicit confirmation naming the count.
+ */
+export async function cancelAssignment(
+  _prev: AssignmentFormState,
+  formData: FormData
+): Promise<AssignmentFormState> {
+  const profile = await requireUser();
+
+  const assignmentId = String(formData.get("assignment_id") ?? "");
+  if (!assignmentId) return { error: "Missing assignment id." };
+
+  // Read via the RLS-scoped client. Returning a row means the caller is the
+  // owner, a co-teacher, or an admin in scope — we narrow further below.
+  const supabase = await createServerClient();
+  const { data: assignment, error: readErr } = await supabase
+    .from("assignments")
+    .select("id, title, teacher_id, district_id, school_id")
+    .eq("id", assignmentId)
+    .maybeSingle();
+
+  if (readErr) return { error: readErr.message };
+  if (!assignment) return { error: "Assignment not found." };
+
+  // Authorize: owning teacher OR school/district/super admin in scope.
+  let authorized = assignment.teacher_id === profile.id;
+  if (!authorized) {
+    const { data: isAdmin } = await supabase.rpc(
+      "auth_user_is_admin_for_school",
+      { s_id: assignment.school_id }
+    );
+    authorized = isAdmin === true;
+  }
+  if (!authorized) {
+    return {
+      error: "You don't have permission to cancel this assignment.",
+    };
+  }
+
+  // student_writings has no DELETE policy for end users — use the service role.
+  const admin = createAdminClient();
+
+  const { count: writingCount } = await admin
+    .from("student_writings")
+    .select("*", { count: "exact", head: true })
+    .eq("assignment_id", assignmentId);
+
+  // Delete writings first (cascades to all artifacts), then the assignment.
+  const { error: writingsErr } = await admin
+    .from("student_writings")
+    .delete()
+    .eq("assignment_id", assignmentId);
+  if (writingsErr) {
+    return { error: `Failed to remove student work: ${writingsErr.message}` };
+  }
+
+  const { error: assignmentErr } = await admin
+    .from("assignments")
+    .delete()
+    .eq("id", assignmentId);
+  if (assignmentErr) {
+    return { error: `Failed to delete assignment: ${assignmentErr.message}` };
+  }
+
+  // Append-only audit trail of this privileged, destructive action.
+  await admin.from("audit_log").insert({
+    actor_id: profile.id,
+    action: "assignment.cancel_delete",
+    target_scope: { assignment_id: assignmentId },
+    metadata: {
+      title: assignment.title,
+      student_writings_deleted: writingCount ?? 0,
+      acted_as: assignment.teacher_id === profile.id ? "owner" : "admin",
+    },
+    district_id: assignment.district_id,
+    school_id: assignment.school_id,
+  });
+
+  revalidatePath("/dashboard/assignments");
+  redirect("/dashboard/assignments");
+}
+
 export async function unpublishAssignment(
   _prev: AssignmentFormState,
   formData: FormData
@@ -556,14 +654,10 @@ export async function unpublishAssignment(
     return { error: "This assignment is already a draft." };
   }
 
-  const writingCount = await countStudentWritings(supabase, assignmentId);
-  if (writingCount > 0) {
-    return {
-      error:
-        "Cannot unpublish — students have already started writing and would lose access to their work.",
-    };
-  }
-
+  // Unpublishing is always permitted, even when students have started
+  // writing: setting released_at = null hides the assignment via RLS but
+  // preserves every student_writing row. Re-publishing restores access.
+  // The UI warns the teacher about temporary loss of access.
   const { error } = await supabase
     .from("assignments")
     .update({ released_at: null })
@@ -573,6 +667,7 @@ export async function unpublishAssignment(
   if (error) return { error: error.message };
 
   revalidatePath(`/dashboard/assignments/${assignmentId}`);
+  revalidatePath("/dashboard/assignments");
   return { success: "Unpublished. You can edit and re-publish." };
 }
 
@@ -613,5 +708,6 @@ export async function publishAssignment(
   if (error) return { error: error.message };
 
   revalidatePath(`/dashboard/assignments/${assignmentId}`);
+  revalidatePath("/dashboard/assignments");
   return { success: "Published." };
 }

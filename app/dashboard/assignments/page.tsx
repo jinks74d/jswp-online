@@ -4,12 +4,17 @@
  */
 
 import Link from "next/link";
-import { FileText, Plus } from "lucide-react";
+import { Eye, FileText, Pencil, Plus } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import {
   getTeacherAssignments,
   isPublished,
 } from "@/lib/queries/assignments";
+import { DeleteAssignmentButton } from "./delete-assignment-button";
+import { PublishToggleButton } from "./publish-toggle-button";
+
+const iconLink =
+  "inline-flex items-center justify-center p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +54,7 @@ export default async function AssignmentsPage() {
                   <th className="px-3 py-2 text-left font-medium">Status</th>
                   <th className="px-3 py-2 text-left font-medium">Class</th>
                   <th className="px-3 py-2 text-left font-medium">Updated</th>
+                  <th className="px-3 py-2 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-900">
@@ -76,6 +82,36 @@ export default async function AssignmentsPage() {
                     <td className="px-3 py-2 text-gray-500">
                       {new Date(a.updated_at).toLocaleDateString()}
                     </td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/dashboard/assignments/${a.id}`}
+                          title="View"
+                          aria-label={`View ${a.title || "assignment"}`}
+                          className={iconLink}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                        <Link
+                          href={`/dashboard/assignments/${a.id}#edit`}
+                          title="Edit"
+                          aria-label={`Edit ${a.title || "assignment"}`}
+                          className={iconLink}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Link>
+                        <PublishToggleButton
+                          assignmentId={a.id}
+                          title={a.title || ""}
+                          published={isPublished(a)}
+                          studentWritingCount={a.student_writing_count}
+                        />
+                        <DeleteAssignmentButton
+                          assignmentId={a.id}
+                          title={a.title || ""}
+                        />
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -85,10 +121,9 @@ export default async function AssignmentsPage() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-2">
             {assignments.map((a) => (
-              <Link
+              <div
                 key={a.id}
-                href={`/dashboard/assignments/${a.id}`}
-                className="block bg-white border border-gray-200 rounded-lg p-4"
+                className="bg-white border border-gray-200 rounded-lg p-4"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <StatusBadge published={isPublished(a)} />
@@ -96,15 +131,46 @@ export default async function AssignmentsPage() {
                     {a.mode}
                   </span>
                 </div>
-                <div className="font-medium text-gray-900">
+                <Link
+                  href={`/dashboard/assignments/${a.id}`}
+                  className="font-medium text-gray-900 hover:text-blue-700"
+                >
                   {a.title || "(untitled)"}
-                </div>
+                </Link>
                 <div className="text-xs text-gray-500 mt-1">
                   {a.class_name && a.class_period_label
                     ? `${a.class_name} · ${a.class_period_label}`
                     : "Not assigned to a class"}
                 </div>
-              </Link>
+                <div className="mt-3 flex items-center gap-3 border-t border-gray-100 pt-2 text-sm">
+                  <Link
+                    href={`/dashboard/assignments/${a.id}`}
+                    className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View
+                  </Link>
+                  <Link
+                    href={`/dashboard/assignments/${a.id}#edit`}
+                    className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                  </Link>
+                  <div className="ml-auto flex items-center gap-1">
+                    <PublishToggleButton
+                      assignmentId={a.id}
+                      title={a.title || ""}
+                      published={isPublished(a)}
+                      studentWritingCount={a.student_writing_count}
+                    />
+                    <DeleteAssignmentButton
+                      assignmentId={a.id}
+                      title={a.title || ""}
+                    />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </>

@@ -15,12 +15,20 @@
  */
 
 import { useActionState, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, Loader2, Trash2, Undo2 } from "lucide-react";
+import {
+  AlertCircle,
+  Ban,
+  CheckCircle2,
+  Loader2,
+  Trash2,
+  Undo2,
+} from "lucide-react";
 import {
   createDraftAssignment,
   updateDraftAssignment,
   publishAssignment,
   deleteAssignment,
+  cancelAssignment,
   unpublishAssignment,
   type AssignmentFormState,
 } from "@/lib/actions/assignments";
@@ -420,18 +428,87 @@ function DangerZone({
 
   return (
     <div className="space-y-2">
-      {!isPublished && !hasWritings && <PublishForm assignmentId={assignmentId} />}
+      {!isPublished && <PublishForm assignmentId={assignmentId} />}
       {!isPublished && !hasWritings && <DeleteForm assignmentId={assignmentId} />}
-      {isPublished && !hasWritings && <UnpublishForm assignmentId={assignmentId} />}
+      {isPublished && (
+        <UnpublishForm
+          assignmentId={assignmentId}
+          studentWritingCount={studentWritingCount}
+        />
+      )}
 
       {hasWritings && (
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
-          {studentWritingCount} student
-          {studentWritingCount === 1 ? " has" : "s have"} started writing on
-          this assignment. Delete and unpublish are disabled to protect their
-          work.
+        <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 space-y-3">
+          <p>
+            {studentWritingCount} student
+            {studentWritingCount === 1 ? " has" : "s have"} started writing on
+            this assignment. Plain delete is disabled to protect their work,
+            and unpublishing only hides it temporarily (their work is preserved
+            and reappears when you re-publish).
+          </p>
+          <p>
+            If you need to remove this assignment for everyone — students
+            included — <strong>cancelling permanently deletes the assignment
+            and all {studentWritingCount} student writing
+            {studentWritingCount === 1 ? "" : "s"}</strong>. This cannot be
+            undone.
+          </p>
+          <CancelForm
+            assignmentId={assignmentId}
+            studentWritingCount={studentWritingCount}
+          />
         </div>
       )}
+    </div>
+  );
+}
+
+function CancelForm({
+  assignmentId,
+  studentWritingCount,
+}: {
+  assignmentId: string;
+  studentWritingCount: number;
+}) {
+  const [state, action, pending] = useActionState(
+    cancelAssignment,
+    initialState
+  );
+
+  const confirmMessage = `Cancel this assignment? This permanently deletes the assignment and all ${studentWritingCount} student writing${
+    studentWritingCount === 1 ? "" : "s"
+  }, and cannot be undone.`;
+
+  return (
+    <div className="space-y-2">
+      {state.error && <Banner kind="error">{state.error}</Banner>}
+      <form
+        action={action}
+        onSubmit={(e) => {
+          if (!window.confirm(confirmMessage)) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <input type="hidden" name="assignment_id" value={assignmentId} />
+        <button
+          type="submit"
+          disabled={pending}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-red-600 bg-red-600 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+        >
+          {pending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Cancelling…
+            </>
+          ) : (
+            <>
+              <Ban className="w-4 h-4" />
+              Cancel assignment &amp; delete all work
+            </>
+          )}
+        </button>
+      </form>
     </div>
   );
 }
@@ -480,11 +557,26 @@ function DeleteForm({ assignmentId }: { assignmentId: string }) {
   );
 }
 
-function UnpublishForm({ assignmentId }: { assignmentId: string }) {
+function UnpublishForm({
+  assignmentId,
+  studentWritingCount,
+}: {
+  assignmentId: string;
+  studentWritingCount: number;
+}) {
   const [state, action, pending] = useActionState(
     unpublishAssignment,
     initialState
   );
+
+  const confirmMessage =
+    studentWritingCount > 0
+      ? `Unpublish this assignment? ${studentWritingCount} student${
+          studentWritingCount === 1 ? "" : "s"
+        } ${
+          studentWritingCount === 1 ? "has" : "have"
+        } already started writing and will TEMPORARILY lose access to their work until you publish again. Their work is not deleted. Continue?`
+      : "Unpublish this assignment? Students won't see it until you publish again.";
 
   return (
     <div className="space-y-2">
@@ -493,11 +585,7 @@ function UnpublishForm({ assignmentId }: { assignmentId: string }) {
       <form
         action={action}
         onSubmit={(e) => {
-          if (
-            !window.confirm(
-              "Unpublish this assignment? Students won't see it until you publish again."
-            )
-          ) {
+          if (!window.confirm(confirmMessage)) {
             e.preventDefault();
           }
         }}

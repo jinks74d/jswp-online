@@ -130,16 +130,18 @@ export default async function AssignmentDetailPage({
 
       {published && <PinnedExemplarsList pinned={pinnedExemplars} />}
 
-      <AssignmentForm
-        formMode="edit"
-        mode={assignment.mode}
-        initial={assignment}
-        classPeriods={classPeriods}
-        schoolId={profile.school_id!}
-        studentWritingCount={studentWritingCount}
-        pinnedExemplars={pinnedExemplars}
-        pinnableExemplars={pinnableExemplars}
-      />
+      <div id="edit" className="scroll-mt-6">
+        <AssignmentForm
+          formMode="edit"
+          mode={assignment.mode}
+          initial={assignment}
+          classPeriods={classPeriods}
+          schoolId={profile.school_id!}
+          studentWritingCount={studentWritingCount}
+          pinnedExemplars={pinnedExemplars}
+          pinnableExemplars={pinnableExemplars}
+        />
+      </div>
     </div>
   );
 }
