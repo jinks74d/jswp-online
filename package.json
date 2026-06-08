@@ -23,6 +23,7 @@
     "health-check": "curl -f http://localhost:3000/api/health || exit 1",
     "performance-audit": "lighthouse http://localhost:3000 --output=json --output-path=./lighthouse-report.json",
     "seed:auth": "tsx scripts/seed-auth.ts",
+    "db:check": "tsx scripts/db-check.ts",
     "test:rls": "vitest run --config __tests__/schema/vitest.config.ts"
   },
   "dependencies": {
