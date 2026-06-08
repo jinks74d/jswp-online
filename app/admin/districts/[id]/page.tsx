@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getDistrict } from "@/lib/queries/districts";
 import { listSchoolsForDistrict } from "@/lib/queries/schools";
+import { schoolLevelLabel } from "@/lib/school-levels";
 import { CsvImporter } from "@/components/admin/csv-importer";
 import { DistrictForm } from "../district-form";
 import { SchoolForm } from "./school-form";
@@ -100,8 +101,8 @@ export default async function DistrictDetailPage({
                       {s.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-2 text-gray-600 capitalize">
-                    {s.level ?? "—"}
+                  <td className="px-4 py-2 text-gray-600">
+                    {schoolLevelLabel(s.level) ?? "—"}
                   </td>
                   <td className="px-4 py-2">
                     {s.active ? (

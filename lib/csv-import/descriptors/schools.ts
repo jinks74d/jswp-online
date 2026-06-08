@@ -12,14 +12,13 @@ import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ImportContext, ImportDescriptor, RowMatch } from "../descriptor";
 import type { CommitOutcome, ImportScope } from "../types";
+import { normalizeSchoolLevel } from "@/lib/school-levels";
 
 export type SchoolRow = {
   rowNumber: number;
   name: string;
   level: string | null;
 };
-
-const LEVELS = new Set(["elementary", "middle", "high", "k12"]);
 
 async function classifySchools(
   rows: SchoolRow[],
@@ -65,11 +64,12 @@ export const schoolsDescriptor: ImportDescriptor<SchoolRow> = {
     const name = (m.name ?? "").trim();
     if (!name) return { error: "missing school name" };
 
-    const level = (m.level ?? "").trim().toLowerCase() || null;
-    if (level && !LEVELS.has(level)) {
-      return {
-        error: `invalid level "${level}" (use elementary, middle, high, or k12)`,
-      };
+    // Canonical slugs pass through; any other text is slugified and capped to
+    // the 20-char column. Only blank-after-normalize is an error.
+    const levelRaw = (m.level ?? "").trim();
+    const level = normalizeSchoolLevel(levelRaw);
+    if (levelRaw && !level) {
+      return { error: `invalid level "${levelRaw}"` };
     }
 
     return { row: { rowNumber, name, level } };

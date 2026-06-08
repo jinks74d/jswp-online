@@ -12,6 +12,7 @@ import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createScopedUser } from "@/lib/scoped-users";
+import { DEFAULT_ADMIN_KIND } from "@/lib/admin-kinds";
 import type { Database } from "@/lib/database.types";
 import type { ImportContext, ImportDescriptor, RowMatch } from "../descriptor";
 import type { CommitOutcome, ImportCredential } from "../types";
@@ -149,6 +150,9 @@ export function makeSchoolUserDescriptor(opts: {
               firstName: r.firstName,
               lastName: r.lastName,
               email: r.email,
+              // CSV-imported admins default to Administrator; a per-row kind
+              // column is a possible follow-up. Ignored for teachers.
+              adminKind: opts.role === "school_admin" ? DEFAULT_ADMIN_KIND : null,
             });
             if (!res.ok) throw new Error(res.error);
             out.created++;

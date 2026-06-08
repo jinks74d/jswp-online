@@ -6,6 +6,7 @@
 import "server-only";
 
 import { createServerClient } from "@/lib/supabase/server";
+import type { AdminKind } from "@/lib/admin-kinds";
 
 export type SchoolUserRow = {
   id: string;
@@ -14,6 +15,7 @@ export type SchoolUserRow = {
   email: string | null;
   active: boolean;
   created_at: string;
+  admin_kind: AdminKind | null;
 };
 
 export async function listSchoolUsersByRole(
@@ -23,7 +25,7 @@ export async function listSchoolUsersByRole(
   const supabase = await createServerClient();
   const { data, error } = await supabase
     .from("user_profiles")
-    .select("id, first_name, last_name, email, active, created_at")
+    .select("id, first_name, last_name, email, active, created_at, admin_kind")
     .eq("school_id", schoolId)
     .eq("role", role)
     .order("created_at", { ascending: true });

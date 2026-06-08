@@ -10,8 +10,9 @@ import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getSchool } from "@/lib/queries/schools";
 import { listSubjectsForSchool } from "@/lib/queries/subjects";
+import { listSchoolUsersByRole } from "@/lib/queries/school-users";
 import { CsvImporter } from "@/components/admin/csv-importer";
-import { SubjectForm } from "./subject-form";
+import { AddSubjectClassForm } from "./add-subject-class-form";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,17 @@ export default async function SubjectsPage({ params }: { params: Params }) {
 
   const subjects = await listSubjectsForSchool(school.id);
   const missingPeriod = subjects.filter((s) => !s.hasPeriod).length;
+
+  const teacherRows = await listSchoolUsersByRole(school.id, "teacher");
+  const teachers = teacherRows
+    .filter((t) => t.active)
+    .map((t) => ({
+      id: t.id,
+      name:
+        [t.first_name, t.last_name].filter(Boolean).join(" ") ||
+        t.email ||
+        "Unnamed teacher",
+    }));
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -110,9 +122,9 @@ export default async function SubjectsPage({ params }: { params: Params }) {
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Add a subject
+              Add a subject & class
             </h3>
-            <SubjectForm mode="create" schoolId={school.id} />
+            <AddSubjectClassForm schoolId={school.id} teachers={teachers} />
           </div>
           <div className="space-y-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">

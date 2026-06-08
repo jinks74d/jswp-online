@@ -29,9 +29,16 @@ describe("schoolsDescriptor.parseRow", () => {
     expect(schoolsDescriptor.parseRow({ name: "X" }, 2).row?.level).toBeNull();
   });
 
-  it("rejects an unknown level", () => {
+  it("accepts a custom level, slugified to fit the column", () => {
     expect(
-      schoolsDescriptor.parseRow({ name: "X", level: "university" }, 2).error
+      schoolsDescriptor.parseRow({ name: "X", level: "Vocational Academy" }, 2)
+        .row?.level
+    ).toBe("vocational_academy");
+  });
+
+  it("rejects a level that normalizes to nothing", () => {
+    expect(
+      schoolsDescriptor.parseRow({ name: "X", level: "!!!" }, 2).error
     ).toMatch(/level/i);
   });
 

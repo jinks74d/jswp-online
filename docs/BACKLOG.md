@@ -10,6 +10,21 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
+### School-admin dashboards: real content per kind
+The three school-admin dashboards (`/admin/school/{administrator,counselor,other}`, added with migration `0026`) are **scaffold shells** — each renders a role header + two `TODO` placeholder cards (`app/admin/school/_dashboard.tsx`). All three kinds share the same `school_admin` RLS permissions; the kind only selects the landing page. Fill in the actual tiles/links each role should surface (e.g. Administrator: teachers/classes/import; Counselor: students/progress). Decided with Raymond 2026-06-08: scaffold now, content later.
+- **Identified:** chunk school-admin-roles (migration 0026)
+- **Priority:** product-driven; whenever the per-role content is specified
+
+### Edit a school admin's kind after creation
+`admin_kind` is set at creation (the "Add an admin" form's Role dropdown) and backfilled to `administrator` for pre-0026 rows. There's no UI to **change** an existing admin's kind — would need an inline control on the school-admins table + an `updateSchoolAdminKind` action (audit-logged). Small lift; deferred since creation-time assignment covers the common case.
+- **Identified:** chunk school-admin-roles
+- **Priority:** polish
+
+### Per-row `admin_kind` column in the school-admins CSV import
+CSV-imported school admins all default to `administrator` (`school-user.ts` passes `DEFAULT_ADMIN_KIND`). Add an optional `admin_kind`/`role` column to the importer (alias + `resolveAdminKind` per row) so a roster can set Counselor/Other in bulk. Mirrors the form's Role dropdown.
+- **Identified:** chunk school-admin-roles
+- **Priority:** polish
+
 ### Expository step subLabels are off-by-one for 3+:0
 `jswp-modes.ts` hard-codes each Expository step's `subLabel` as a static
 `"Step N"` string ("Step 1" … "Step 5"), numbered for the 2+:1 sequence.

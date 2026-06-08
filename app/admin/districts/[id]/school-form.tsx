@@ -5,6 +5,7 @@
  * school detail page). Carries district_id so the action can scope the write.
  */
 
+import { useState } from "react";
 import { useActionState } from "react";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import {
@@ -12,16 +13,13 @@ import {
   updateSchool,
   type SchoolFormState,
 } from "@/lib/actions/schools";
+import {
+  SCHOOL_LEVELS,
+  OTHER_LEVEL,
+  isCanonicalLevel,
+} from "@/lib/school-levels";
 
 const initialState: SchoolFormState = {};
-
-const LEVELS = [
-  { value: "", label: "— level —" },
-  { value: "elementary", label: "Elementary" },
-  { value: "middle", label: "Middle" },
-  { value: "high", label: "High" },
-  { value: "k12", label: "K-12" },
-];
 
 export type SchoolInitial = {
   id: string;
@@ -43,6 +41,15 @@ export function SchoolForm({
     mode === "create" ? createSchool : updateSchool,
     initialState
   );
+
+  // A stored level is either a canonical slug, a custom one ("Other…"), or absent.
+  const initialLevel = initial?.level ?? "";
+  const startsCustom = initialLevel !== "" && !isCanonicalLevel(initialLevel);
+  const [choice, setChoice] = useState(startsCustom ? OTHER_LEVEL : initialLevel);
+  const [custom, setCustom] = useState(startsCustom ? initialLevel : "");
+
+  // The field actually submitted: canonical slug, the typed custom value, or "".
+  const submittedLevel = choice === OTHER_LEVEL ? custom : choice;
 
   return (
     <form
@@ -84,16 +91,34 @@ export function SchoolForm({
         </label>
         <select
           id="level"
-          name="level"
-          defaultValue={initial?.level ?? ""}
+          value={choice}
+          onChange={(e) => setChoice(e.target.value)}
           className={inputClass}
         >
-          {LEVELS.map((l) => (
+          <option value="">— level —</option>
+          {SCHOOL_LEVELS.map((l) => (
             <option key={l.value} value={l.value}>
               {l.label}
             </option>
           ))}
+          <option value={OTHER_LEVEL}>Other…</option>
         </select>
+
+        {choice === OTHER_LEVEL && (
+          <input
+            type="text"
+            value={custom}
+            onChange={(e) => setCustom(e.target.value)}
+            maxLength={20}
+            placeholder="e.g. Vocational Academy"
+            aria-label="Custom school level"
+            className={`${inputClass} mt-2`}
+          />
+        )}
+
+        {/* Always submit the resolved value, regardless of which control set it. */}
+        <input type="hidden" name="level" value={submittedLevel} />
+
         {state.fieldErrors?.level && (
           <p className="mt-1 text-sm text-red-600">{state.fieldErrors.level}</p>
         )}

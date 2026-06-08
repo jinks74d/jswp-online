@@ -4,11 +4,20 @@
  */
 
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Upload } from "lucide-react";
+import { requireUser } from "@/lib/auth";
+import { adminDashboardPath } from "@/lib/admin-kinds";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminHome() {
+export default async function AdminHome() {
+  // School admins have role-specific dashboards; super/district admins stay here.
+  const profile = await requireUser();
+  if (profile.role === "school_admin") {
+    redirect(adminDashboardPath(profile.admin_kind));
+  }
+
   return (
     <div className="space-y-6">
       <header>

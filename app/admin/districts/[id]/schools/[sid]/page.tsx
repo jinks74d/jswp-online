@@ -12,6 +12,8 @@ import { getDistrict } from "@/lib/queries/districts";
 import { listSchoolUsersByRole } from "@/lib/queries/school-users";
 import { createSchoolAdmin, createTeacher } from "@/lib/actions/school-users";
 import { CsvImporter } from "@/components/admin/csv-importer";
+import { schoolLevelLabel } from "@/lib/school-levels";
+import { adminKindLabel } from "@/lib/admin-kinds";
 import { SchoolForm } from "../../school-form";
 import { AddSchoolUserForm } from "./add-school-user-form";
 
@@ -56,7 +58,7 @@ export default async function SchoolDetailPage({
           )}
         </div>
         {school.level && (
-          <p className="text-sm text-gray-500 capitalize">{school.level}</p>
+          <p className="text-sm text-gray-500">{schoolLevelLabel(school.level)}</p>
         )}
       </header>
 
@@ -85,6 +87,7 @@ export default async function SchoolDetailPage({
             <thead className="bg-gray-50 text-left text-gray-500">
               <tr>
                 <th className="px-4 py-2 font-medium">Name</th>
+                <th className="px-4 py-2 font-medium">Role</th>
                 <th className="px-4 py-2 font-medium">Email</th>
                 <th className="px-4 py-2 font-medium">Status</th>
                 <th className="px-4 py-2 font-medium">Added</th>
@@ -96,6 +99,9 @@ export default async function SchoolDetailPage({
                   <td className="px-4 py-2 text-gray-900">
                     {[a.first_name, a.last_name].filter(Boolean).join(" ") ||
                       "—"}
+                  </td>
+                  <td className="px-4 py-2 text-gray-700">
+                    {adminKindLabel(a.admin_kind)}
                   </td>
                   <td className="px-4 py-2 text-gray-700">{a.email ?? "—"}</td>
                   <td className="px-4 py-2">
@@ -112,7 +118,7 @@ export default async function SchoolDetailPage({
               ))}
               {admins.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
                     No school admins yet.
                   </td>
                 </tr>
@@ -130,6 +136,7 @@ export default async function SchoolDetailPage({
               schoolId={school.id}
               action={createSchoolAdmin}
               roleLabel="admin"
+              showAdminKind
             />
           </div>
           <div className="space-y-2">

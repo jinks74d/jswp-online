@@ -16,6 +16,7 @@ import "server-only";
 import * as crypto from "crypto";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { AdminKind } from "@/lib/admin-kinds";
 
 const PASSWORD_LENGTH = 12;
 const ALPHABET =
@@ -50,6 +51,8 @@ export type CreateScopedUserInput = {
   email: string;
   gradeLevel?: string | null;
   studentIdExternal?: string | null;
+  /** School-admin dashboard discriminator; ignored for other roles. */
+  adminKind?: AdminKind | null;
 };
 
 export type CreateScopedUserResult =
@@ -87,6 +90,8 @@ export async function createScopedUser(
     email: input.email,
     grade_level: input.gradeLevel ?? null,
     student_id_external: input.studentIdExternal ?? null,
+    // Only school admins carry a kind; the column CHECK enforces this too.
+    admin_kind: input.role === "school_admin" ? input.adminKind ?? null : null,
   });
 
   if (profileErr) {

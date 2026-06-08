@@ -16,6 +16,7 @@ import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createScopedUser, type ScopedUserFormState } from "@/lib/scoped-users";
+import { resolveAdminKind } from "@/lib/admin-kinds";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -31,6 +32,11 @@ async function createSchoolUser(
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
+  // Only meaningful for admins; teachers ignore it. Unknown/blank → default.
+  const adminKind =
+    role === "school_admin"
+      ? resolveAdminKind(String(formData.get("admin_kind") ?? ""))
+      : null;
 
   const fieldErrors: NonNullable<ScopedUserFormState["fieldErrors"]> = {};
   if (!firstName) fieldErrors.first_name = "First name is required.";
@@ -54,6 +60,7 @@ async function createSchoolUser(
     firstName,
     lastName,
     email,
+    adminKind,
   });
 
   if (!res.ok) {
@@ -68,7 +75,7 @@ async function createSchoolUser(
       actor_id: actor.id,
       action: `${role}.create`,
       target_scope: { user_profile_id: res.userId, school_id: school.id },
-      metadata: { email },
+      metadata: adminKind ? { email, admin_kind: adminKind } : { email },
       district_id: school.district_id,
       school_id: school.id,
     });

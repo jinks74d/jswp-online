@@ -14,6 +14,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeSchoolLevel } from "@/lib/school-levels";
 
 export type SchoolFormState = {
   error?: string;
@@ -21,24 +22,28 @@ export type SchoolFormState = {
   success?: string;
 };
 
-const LEVELS = new Set(["elementary", "middle", "high", "k12"]);
 const MANAGE_ROLES = ["super_admin", "district_admin"] as const;
 
 function parseSchoolForm(formData: FormData) {
+  const levelRaw = String(formData.get("level") ?? "").trim();
   return {
     districtId: String(formData.get("district_id") ?? ""),
     name: String(formData.get("name") ?? "").trim(),
-    level: String(formData.get("level") ?? "").trim().toLowerCase() || null,
+    levelRaw,
+    // Canonical slugs pass through unchanged; custom "Other…" text is slugified
+    // and capped to the 20-char column. See lib/school-levels.ts.
+    level: normalizeSchoolLevel(levelRaw),
     active:
       formData.get("active") === "on" || formData.get("active") === "true",
   };
 }
 
-function validate(name: string, level: string | null): SchoolFormState["fieldErrors"] | null {
+function validate(f: ReturnType<typeof parseSchoolForm>): SchoolFormState["fieldErrors"] | null {
   const fe: NonNullable<SchoolFormState["fieldErrors"]> = {};
-  if (!name) fe.name = "School name is required.";
-  if (level && !LEVELS.has(level))
-    fe.level = "Choose elementary, middle, high, or k12.";
+  if (!f.name) fe.name = "School name is required.";
+  // The only way to fail level now: typed something that normalizes to nothing.
+  if (f.levelRaw && !f.level)
+    fe.level = "Enter a valid level name (letters and numbers).";
   return Object.keys(fe).length ? fe : null;
 }
 
@@ -54,7 +59,7 @@ export async function createSchool(
   const f = parseSchoolForm(formData);
   if (!f.districtId) return { error: "Missing district id." };
 
-  const fe = validate(f.name, f.level);
+  const fe = validate(f);
   if (fe) return { fieldErrors: fe };
 
   const supabase = await createServerClient();
@@ -99,7 +104,7 @@ export async function updateSchool(
   if (!schoolId) return { error: "Missing school id." };
 
   const f = parseSchoolForm(formData);
-  const fe = validate(f.name, f.level);
+  const fe = validate(f);
   if (fe) return { fieldErrors: fe };
 
   const supabase = await createServerClient();

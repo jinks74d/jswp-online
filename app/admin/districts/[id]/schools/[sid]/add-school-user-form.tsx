@@ -9,6 +9,7 @@
 import { useActionState } from "react";
 import { AlertCircle, Copy, KeyRound, Loader2 } from "lucide-react";
 import type { ScopedUserFormState } from "@/lib/scoped-users";
+import { ADMIN_KINDS, DEFAULT_ADMIN_KIND } from "@/lib/admin-kinds";
 
 const initialState: ScopedUserFormState = {};
 
@@ -16,6 +17,7 @@ export function AddSchoolUserForm({
   schoolId,
   action,
   roleLabel,
+  showAdminKind = false,
 }: {
   schoolId: string;
   action: (
@@ -23,6 +25,8 @@ export function AddSchoolUserForm({
     formData: FormData
   ) => Promise<ScopedUserFormState>;
   roleLabel: string;
+  /** Show the Administrator / Counselor / Other selector (admins only). */
+  showAdminKind?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
@@ -103,6 +107,32 @@ export function AddSchoolUserForm({
           <p className="mt-1 text-sm text-red-600">{state.fieldErrors.email}</p>
         )}
       </div>
+
+      {showAdminKind && (
+        <div>
+          <label
+            htmlFor={`admin_kind_${roleLabel}`}
+            className="block text-sm font-medium text-gray-700 mb-1.5"
+          >
+            Role
+          </label>
+          <select
+            id={`admin_kind_${roleLabel}`}
+            name="admin_kind"
+            defaultValue={DEFAULT_ADMIN_KIND}
+            className={inputClass}
+          >
+            {ADMIN_KINDS.map((k) => (
+              <option key={k.value} value={k.value}>
+                {k.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            Determines which dashboard this admin sees.
+          </p>
+        </div>
+      )}
 
       <button
         type="submit"

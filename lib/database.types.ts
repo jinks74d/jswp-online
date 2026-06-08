@@ -322,6 +322,7 @@ export interface Database {
         | "school_admin"
         | "teacher"
         | "student";
+      jswp_admin_kind: "administrator" | "counselor" | "other";
       jswp_writing_status:
         | "draft"
         | "in_progress"
@@ -386,6 +387,8 @@ export type UserProfiles = {
   district_id: string | null; // NULL for super_admin (platform owners, no district)
   school_id: string | null;
   role: Database["public"]["Enums"]["jswp_role"];
+  // Only set when role = 'school_admin'; drives which dashboard they land on.
+  admin_kind: Database["public"]["Enums"]["jswp_admin_kind"] | null;
   first_name: string | null;
   last_name: string | null;
   email: string | null;
@@ -406,6 +409,7 @@ export type Classes = {
   subject_id: string;
   school_id: string;
   name: string;
+  description: string | null;
 } & Timestamps;
 
 export type ClassPeriods = {
