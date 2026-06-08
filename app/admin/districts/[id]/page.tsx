@@ -260,12 +260,14 @@ function LogoTile({
 }) {
   if (logoUrl) {
     return (
-      <span className="flex items-center justify-center w-32 h-16 rounded-lg bg-white shadow-sm shrink-0 overflow-hidden">
+      <span className="inline-block p-5 rounded-lg bg-white shadow-sm shrink-0 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* Definite width anchors logos (esp. SVGs with a viewBox but no
+            intrinsic width/height); height scales by ratio, capped at 125. */}
         <img
           src={logoUrl}
           alt="District logo"
-          className="max-w-[6rem] max-h-[3rem] object-contain"
+          className="block w-[250px] h-auto max-h-[125px] object-contain"
         />
       </span>
     );
