@@ -89,6 +89,8 @@ export default async function WritingLayout({
         feedback={feedback}
         rubricScores={rubricScores}
         exemplars={exemplars}
+        gradeFormat={writing.grade_format}
+        overallGrade={writing.overall_grade}
       >
         {children}
       </WritingShell>

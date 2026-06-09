@@ -15,6 +15,7 @@ import { StepSidebar } from "./step-sidebar";
 import { RubricBreakdown } from "./rubric-breakdown";
 import { ExemplarReference } from "./exemplar-reference";
 import { FeedbackPanel } from "@/components/dashboard/writing-review/feedback-panel";
+import { formatGradeLabel, type GradeFormat } from "@/lib/grade-format";
 import type { FeedbackItemRow } from "@/lib/queries/teacher-feedback";
 import type { RubricScoreRow } from "@/lib/queries/rubric-scores";
 import type { ExemplarForStudent } from "@/lib/queries/exemplars";
@@ -44,6 +45,8 @@ export function WritingShell({
   feedback,
   rubricScores,
   exemplars,
+  gradeFormat,
+  overallGrade,
   children,
 }: {
   writingId: string;
@@ -63,6 +66,8 @@ export function WritingShell({
   feedback: readonly FeedbackItemRow[];
   rubricScores: readonly RubricScoreRow[];
   exemplars: readonly ExemplarForStudent[];
+  gradeFormat: GradeFormat;
+  overallGrade: string | null;
   children: React.ReactNode;
 }) {
   const unresolvedCount = feedback.filter((f) => !f.is_resolved).length;
@@ -71,6 +76,11 @@ export function WritingShell({
   // section); pure-empty doesn't render the column.
   const showFeedbackColumn =
     status === "returned" && feedback.length > 0;
+
+  const overallGradeLabel =
+    (status === "returned" || status === "graded") && gradeFormat !== "none"
+      ? formatGradeLabel(gradeFormat, overallGrade ?? "")
+      : "";
 
   const gridClass = showFeedbackColumn
     ? "grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)_22rem]"
@@ -100,6 +110,17 @@ export function WritingShell({
         totalScore={totalScore}
         unresolvedCount={unresolvedCount}
       />
+
+      {overallGradeLabel && (
+        <div className="flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-4 py-3 shadow-sm">
+          <span className="text-sm font-medium text-stone-700">
+            Overall grade
+          </span>
+          <span className="inline-flex items-center rounded-md border border-stone-300 bg-stone-50 px-2 py-0.5 text-sm font-semibold text-stone-800">
+            {overallGradeLabel}
+          </span>
+        </div>
+      )}
 
       {status === "graded" && rubricScores.length > 0 && (
         <RubricBreakdown scores={rubricScores} />
