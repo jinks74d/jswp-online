@@ -18,6 +18,7 @@ export interface FeedbackItemRow {
   target_kind: FeedbackTarget;
   target_id: string;
   body: string;
+  step_key: string | null;
   rubric_score: number | null;
   is_resolved: boolean;
   created_at: string;
@@ -67,7 +68,7 @@ export async function listFeedback(
     .select(
       `
       id, student_writing_id, teacher_id, target_kind, target_id,
-      body, rubric_score, is_resolved, created_at, updated_at,
+      body, step_key, rubric_score, is_resolved, created_at, updated_at,
       author:teacher_id ( id, first_name, last_name )
       `
     )
