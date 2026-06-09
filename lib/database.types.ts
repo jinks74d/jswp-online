@@ -357,6 +357,7 @@ export interface Database {
         | "paragraph_form"
         | "essay_parts"
         | "final_draft";
+      jswp_grade_format: "none" | "number" | "letter" | "check";
     };
   };
 }
@@ -485,6 +486,9 @@ export type StudentWritings = {
   returned_at: string | null;
   graded_at: string | null;
   total_score: number | null;
+  // Feedback-area grading (migration 0031) — independent of total_score.
+  grade_format: Database["public"]["Enums"]["jswp_grade_format"];
+  overall_grade: string | null;
 } & Timestamps;
 
 export type PromptDecodings = {
@@ -674,6 +678,8 @@ export type TeacherFeedback = {
   // Section anchor: step key a section note targets; NULL = overall
   // whole-writing comment (the threaded panel). Migration 0030.
   step_key: string | null;
+  // Per-section feedback grade (migration 0031); interpreted per grade_format.
+  grade_value: string | null;
   rubric_score: number | null;
   is_resolved: boolean;
 } & Timestamps;
