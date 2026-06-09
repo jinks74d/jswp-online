@@ -21,6 +21,7 @@ export function OverallGradeControl({
         format={format}
         value={value}
         onSave={(v) => setOverallGrade(writingId, v)}
+        ariaLabel="Overall grade"
       />
     </div>
   );

@@ -9,7 +9,7 @@
  *  - check          → ✓ / ✗ toggle buttons (click active to clear).
  */
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import {
   LETTER_GRADES,
@@ -22,14 +22,23 @@ export function GradeInput({
   value,
   onSave,
   readOnly = false,
+  ariaLabel,
 }: {
   format: GradeFormat;
   value: string;
   onSave?: (value: string) => Promise<void>;
   readOnly?: boolean;
+  ariaLabel?: string;
 }) {
   const [pending, start] = useTransition();
   const [local, setLocal] = useState(value);
+
+  // Re-sync the number field when the server value changes (after a save +
+  // revalidate, or a format switch). Letter/check read `value` directly, so
+  // this only affects the number variant.
+  useEffect(() => {
+    setLocal(value);
+  }, [value]);
 
   if (format === "none") return null;
 
@@ -88,7 +97,7 @@ export function GradeInput({
         disabled={pending}
         onChange={(e) => save(e.target.value)}
         className="rounded-md border border-stone-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        aria-label="Grade"
+        aria-label={ariaLabel ?? "Grade"}
       >
         <option value="">—</option>
         {LETTER_GRADES.map((g) => (
@@ -114,7 +123,7 @@ export function GradeInput({
         if (local.trim() !== value.trim()) save(local.trim());
       }}
       placeholder="0–100"
-      aria-label="Grade"
+      aria-label={ariaLabel ?? "Grade"}
       className="w-20 rounded-md border border-stone-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
     />
   );

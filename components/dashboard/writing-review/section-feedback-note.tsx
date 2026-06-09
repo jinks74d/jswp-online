@@ -123,6 +123,7 @@ function TeacherNote({
               format={gradeFormat}
               value={gradeValue}
               onSave={(v) => setSectionGrade(writingId, stepKey, v)}
+              ariaLabel="Section grade"
             />
           )}
           <span className="text-xs text-gray-500" aria-live="polite">
