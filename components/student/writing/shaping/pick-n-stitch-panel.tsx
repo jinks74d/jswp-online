@@ -54,7 +54,7 @@ export function PickNStitchPanel({
         <div className="text-xs font-semibold uppercase tracking-wide text-gray-700">
           Pick-n-stitch
         </div>
-        <p className="text-[11px] text-gray-500 leading-snug">
+        <p className="text-base text-gray-500 leading-snug">
           Toggle TS / CM / CS to mark where you used each phrase.
           Once you use it, you lose it.
         </p>
@@ -103,17 +103,17 @@ function CmRow({
           </div>
           <div className="flex items-center gap-1 mt-0.5 flex-wrap">
             {isBestForTs && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-medium">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-base font-medium">
                 TS-best
               </span>
             )}
             {isBestForChunk && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700 text-[10px] font-medium">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700 text-base font-medium">
                 Chunk-best
               </span>
             )}
             {usedLabel && (
-              <span className="text-[10px] text-gray-500 italic">
+              <span className="text-base text-gray-500 italic">
                 {usedLabel}
               </span>
             )}
@@ -165,7 +165,7 @@ function FlagToggle({
       disabled={pending || isReadOnly}
       title={`Mark as used in ${long}`}
       aria-pressed={active}
-      className={`inline-flex items-center justify-center w-7 h-7 rounded-md border text-[10px] font-semibold transition-colors disabled:opacity-50 ${
+      className={`inline-flex items-center justify-center w-7 h-7 rounded-md border text-base font-semibold transition-colors disabled:opacity-50 ${
         active
           ? "border-gray-900 bg-gray-900 text-white"
           : "border-gray-300 text-gray-500 hover:border-gray-500 hover:text-gray-700"

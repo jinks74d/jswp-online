@@ -176,7 +176,7 @@ export function SheetEditor({
           <div className="space-y-4">
             {orderedSelected.length > 0 && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-red-700">
+                <div className="flex items-center gap-2 text-base font-semibold uppercase tracking-wide text-red-700">
                   <span>Priority</span>
                   {orderedSelected.length > 1 && (
                     <span className="text-gray-500 font-normal normal-case tracking-normal">
@@ -211,7 +211,7 @@ export function SheetEditor({
 
             {unselected.length > 0 && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                <div className="flex items-center gap-2 text-base font-semibold uppercase tracking-wide text-gray-500">
                   <span>Brainstorm</span>
                   <span className="font-normal normal-case tracking-normal">
                     — not yet selected

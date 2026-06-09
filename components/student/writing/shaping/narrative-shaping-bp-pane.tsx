@@ -363,11 +363,11 @@ function ShapeField({
           isFocusedRef.current = true;
         }}
         onBlur={handleBlur}
-        style={{ fontSize: 13, fontFamily: "inherit", textAlign: align, ...style }}
+        style={{ fontSize: 16, fontFamily: "inherit", textAlign: align, ...style }}
         className={`absolute inset-0 h-full w-full resize-none bg-transparent placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400 disabled:opacity-60 ${colorClass}`}
       />
       <span
-        className="absolute right-1 top-1 text-[10px] pointer-events-none"
+        className="absolute right-1 top-1 text-base pointer-events-none"
         aria-live="polite"
       >
         {status === "saving" && <span className="text-gray-400">…</span>}

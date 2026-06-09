@@ -148,7 +148,7 @@ function Composer({ writingId }: { writingId: string }) {
         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] text-gray-500">
+        <p className="text-base text-gray-500">
           ⌘/Ctrl + Enter to submit
         </p>
         <button

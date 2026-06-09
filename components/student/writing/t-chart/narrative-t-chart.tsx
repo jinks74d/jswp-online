@@ -62,7 +62,7 @@ export function NarrativeTChart({
       {/* ─── Header: BP# box + centered title ─────────────────────── */}
       <div className="flex items-stretch gap-3">
         <div className="shrink-0 flex flex-col items-center justify-center border-2 border-gray-900 px-3 py-1.5 leading-none">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-900">
+          <span className="text-base font-bold uppercase tracking-wide text-gray-900">
             BP #
           </span>
           <span className="mt-0.5 text-xl font-bold text-gray-900">
@@ -410,7 +410,7 @@ function WowField({
         />
       )}
       <span
-        className="absolute right-1 top-0.5 text-[10px] pointer-events-none"
+        className="absolute right-1 top-0.5 text-base pointer-events-none"
         aria-live="polite"
       >
         {status === "saving" && <span className="text-gray-400">…</span>}

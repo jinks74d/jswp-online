@@ -251,7 +251,7 @@ function ReadOnlyMaterial({
           <dl className="space-y-1">
             {wowFilled.map(([label, value, kind]) => (
               <div key={label}>
-                <dt className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                <dt className="text-base font-semibold uppercase tracking-wide text-gray-500">
                   {label}
                 </dt>
                 <dd
@@ -296,7 +296,7 @@ function Section({
   return (
     <section className="space-y-1.5">
       <div
-        className={`text-[11px] font-semibold uppercase tracking-wide ${accentClass}`}
+        className={`text-base font-semibold uppercase tracking-wide ${accentClass}`}
       >
         {title}
       </div>
@@ -309,7 +309,7 @@ function SentenceBlock({ text, draft }: { text: string; draft: boolean }) {
   return (
     <div className="text-sm text-gray-900 whitespace-pre-wrap">
       {draft && (
-        <span className="inline-flex items-center px-1.5 py-0.5 mr-1 rounded-full bg-amber-100 text-amber-700 text-[10px] font-medium align-middle">
+        <span className="inline-flex items-center px-1.5 py-0.5 mr-1 rounded-full bg-amber-100 text-amber-700 text-base font-medium align-middle">
           draft
         </span>
       )}
@@ -330,7 +330,7 @@ function BackLinkNotice({
       <p className="text-amber-900">{message}</p>
       <Link
         href={`/student/writings/${writingId}/shaping-sheet`}
-        className="mt-1 inline-flex items-center px-2 py-0.5 rounded-md border border-amber-300 bg-white text-[11px] text-amber-900 hover:bg-amber-50"
+        className="mt-1 inline-flex items-center px-2 py-0.5 rounded-md border border-amber-300 bg-white text-base text-amber-900 hover:bg-amber-50"
       >
         ← Back to Shaping Sheet
       </Link>

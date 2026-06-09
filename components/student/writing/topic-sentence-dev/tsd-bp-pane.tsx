@@ -150,7 +150,7 @@ function CandidateRow({
     <li className="bg-white border border-gray-200 rounded-md p-3 flex items-start gap-3">
       <div className="flex-1 min-w-0">
         {candidate.selection_order !== null && (
-          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold mr-2 align-text-bottom">
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-base font-semibold mr-2 align-text-bottom">
             {candidate.selection_order}
           </span>
         )}

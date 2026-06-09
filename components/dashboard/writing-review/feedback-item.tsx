@@ -92,7 +92,7 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
         <div className="text-xs font-medium text-gray-700 truncate">
           {authorName}
         </div>
-        <div className="text-[11px] text-gray-500 whitespace-nowrap">
+        <div className="text-base text-gray-500 whitespace-nowrap">
           {timestamp}
           {wasEdited && " · edited"}
         </div>

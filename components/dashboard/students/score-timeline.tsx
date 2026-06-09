@@ -48,7 +48,7 @@ export function ScoreTimeline({ points }: Props) {
                   className="flex-1 min-w-0 flex flex-col items-center justify-end gap-1"
                   title={`${p.assignmentTitle} — ${p.score} / ${p.maxScore} (${pct.toFixed(0)}%) on ${formatDate(p.gradedAt)}`}
                 >
-                  <span className="text-[10px] text-gray-600 tabular-nums">
+                  <span className="text-base text-gray-600 tabular-nums">
                     {pct.toFixed(0)}%
                   </span>
                   <div
@@ -65,7 +65,7 @@ export function ScoreTimeline({ points }: Props) {
             {points.map((p) => (
               <li
                 key={`${p.assignmentId}-${p.gradedAt}-label`}
-                className="flex-1 min-w-0 text-[10px] text-gray-500 text-center truncate"
+                className="flex-1 min-w-0 text-base text-gray-500 text-center truncate"
               >
                 {formatDateShort(p.gradedAt)}
               </li>

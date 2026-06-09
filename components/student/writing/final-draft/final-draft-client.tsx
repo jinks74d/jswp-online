@@ -210,13 +210,13 @@ function SourceSection({
     <section className="space-y-1">
       <div className="flex items-center justify-between gap-2">
         <div
-          className={`text-[11px] font-semibold uppercase tracking-wide ${accentClass}`}
+          className={`text-base font-semibold uppercase tracking-wide ${accentClass}`}
         >
           {label}
         </div>
         <Link
           href={backLink.href}
-          className="text-[11px] text-gray-500 hover:text-gray-900 underline-offset-2 hover:underline"
+          className="text-base text-gray-500 hover:text-gray-900 underline-offset-2 hover:underline"
         >
           ← {backLink.label}
         </Link>

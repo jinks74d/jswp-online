@@ -292,7 +292,7 @@ function ChainCircle({
             disabled={disabled}
             onSave={onSave}
             className="h-full w-full resize-none bg-transparent text-center text-gray-900 placeholder:text-gray-300 focus:outline-none"
-            style={{ fontSize: 12, lineHeight: "16px" }}
+            style={{ fontSize: 16, lineHeight: "20px" }}
           />
         </div>
       </div>
@@ -432,7 +432,7 @@ function AutoText({
       )}
       {status !== "idle" && (
         <span
-          className="absolute -right-1 -top-1 text-[9px] pointer-events-none"
+          className="absolute -right-1 -top-1 text-base pointer-events-none"
           aria-live="polite"
         >
           {status === "saving" && <span className="text-gray-400">…</span>}

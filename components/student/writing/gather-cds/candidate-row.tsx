@@ -118,7 +118,7 @@ export function CandidateRow({
         />
         {candidate.is_selected && priorityNumber !== undefined && (
           <span
-            className="mt-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-semibold"
+            className="mt-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-base font-semibold"
             title={`Priority ${priorityNumber}`}
           >
             {priorityNumber}
