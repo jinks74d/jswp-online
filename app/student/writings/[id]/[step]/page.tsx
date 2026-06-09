@@ -9,11 +9,15 @@
  * current.
  */
 
+import type { ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { getWriting } from "@/lib/queries/student-writings";
 import { getPromptDecoding } from "@/lib/queries/prompt-decoding";
 import { getSteps, getNextStep, type JswpMode } from "@/lib/jswp-modes";
+import { listFeedback } from "@/lib/queries/teacher-feedback";
+import { groupSectionFeedback } from "@/lib/section-feedback";
+import { SectionFeedbackNote } from "@/components/dashboard/writing-review/section-feedback-note";
 import { DecodePromptStep } from "../_steps/decode-prompt-step";
 import { PlaceholderStep } from "../_steps/placeholder-step";
 import { AnnotateTextStep } from "../_steps/annotate-text-step";
@@ -73,11 +77,38 @@ export default async function StepDispatcher({
 
   const isTerminal = getNextStep(target.key, visible) === null;
 
+  // Surface the teacher's section note for this step (read-only) once the
+  // writing is returned or graded. RLS lets the owning student read
+  // feedback on their own writing.
+  let sectionNote = "";
+  if (writing.status === "returned" || writing.status === "graded") {
+    const { byStep } = groupSectionFeedback(await listFeedback(id));
+    sectionNote = byStep.get(target.key)?.body ?? "";
+  }
+  const noteEl =
+    sectionNote.trim().length > 0 ? (
+      <SectionFeedbackNote
+        writingId={id}
+        stepKey={target.key}
+        initialBody={sectionNote}
+        readOnly
+      />
+    ) : null;
+
+  function withNote(el: ReactNode): ReactNode {
+    return (
+      <>
+        {noteEl}
+        {el}
+      </>
+    );
+  }
+
   // Real step UIs: decode_prompt, annotate_text. Others render the
   // placeholder shim until their chunks land (4.4-4.6).
   if (target.groupOrigin === "decode_prompt") {
     const decoding = await getPromptDecoding(id);
-    return (
+    return withNote(
       <DecodePromptStep
         writingId={id}
         assignmentPrompt={a.prompt}
@@ -99,12 +130,13 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "annotate_text") {
-    return (
+    return withNote(
       <AnnotateTextStep
         writingId={id}
         stepKey={target.key}
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
+        required={target.required}
         sourceText={a.source_text}
         sourceTitle={a.source_title}
         sourceAuthor={a.source_author}
@@ -117,7 +149,7 @@ export default async function StepDispatcher({
     // Narrative's topic-sentences (chunk 4.5c) share this groupOrigin
     // but render different UIs. Disambiguate by mode.
     if (mode === "argumentation") {
-      return (
+      return withNote(
         <TopicSentenceDevStep
           writingId={id}
           stepKey={target.key}
@@ -130,7 +162,7 @@ export default async function StepDispatcher({
       );
     }
     if (mode === "narrative") {
-      return (
+      return withNote(
         <TopicSentencesStep
           writingId={id}
           stepKey={target.key}
@@ -145,7 +177,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "narrative_discovery") {
-    return (
+    return withNote(
       <DiscoveryStep
         writingId={id}
         stepKey={target.key}
@@ -156,7 +188,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "literary_cm_dev") {
-    return (
+    return withNote(
       <CmDevStep
         writingId={id}
         stepKey={target.key}
@@ -170,7 +202,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "literary_decisions") {
-    return (
+    return withNote(
       <DecisionsStep
         writingId={id}
         stepKey={target.key}
@@ -184,7 +216,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "literary_elaboration") {
-    return (
+    return withNote(
       <ElaborationStep
         writingId={id}
         stepKey={target.key}
@@ -198,7 +230,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "gathering_cds") {
-    return (
+    return withNote(
       <GatherCdsStep
         writingId={id}
         stepKey={target.key}
@@ -216,7 +248,7 @@ export default async function StepDispatcher({
     // (slug "t-chart") and Argumentation's counterargument step
     // (slug "counterargument"). Disambiguate by slug.
     if (target.slug === "counterargument") {
-      return (
+      return withNote(
         <CounterargumentStep
           writingId={id}
           stepKey={target.key}
@@ -225,7 +257,7 @@ export default async function StepDispatcher({
         />
       );
     }
-    return (
+    return withNote(
       <TChartStep
         writingId={id}
         stepKey={target.key}
@@ -241,7 +273,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "shaping_sheet") {
-    return (
+    return withNote(
       <ShapingSheetStep
         writingId={id}
         stepKey={target.key}
@@ -254,7 +286,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "paragraph_form") {
-    return (
+    return withNote(
       <ParagraphFormStep
         writingId={id}
         stepKey={target.key}
@@ -268,7 +300,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "thesis") {
-    return (
+    return withNote(
       <ThesisStep
         writingId={id}
         stepKey={target.key}
@@ -280,7 +312,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "introduction") {
-    return (
+    return withNote(
       <IntroductionStep
         writingId={id}
         stepKey={target.key}
@@ -292,7 +324,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "conclusion") {
-    return (
+    return withNote(
       <ConclusionStep
         writingId={id}
         stepKey={target.key}
@@ -304,7 +336,7 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "final_draft") {
-    return (
+    return withNote(
       <FinalDraftStep
         writingId={id}
         stepKey={target.key}
@@ -315,7 +347,7 @@ export default async function StepDispatcher({
     );
   }
 
-  return (
+  return withNote(
     <PlaceholderStep
       writingId={id}
       stepKey={target.key}
