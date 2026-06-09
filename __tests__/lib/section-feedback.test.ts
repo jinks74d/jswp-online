@@ -16,6 +16,7 @@ function row(partial: Partial<FeedbackItemRow>): FeedbackItemRow {
     target_id: "w",
     body: "x",
     step_key: null,
+    grade_value: null,
     rubric_score: null,
     is_resolved: false,
     created_at: "2026-01-01T00:00:00Z",

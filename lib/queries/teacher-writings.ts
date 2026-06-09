@@ -39,6 +39,8 @@ export interface WritingForTeacherReview {
   returned_at: string | null;
   graded_at: string | null;
   total_score: number | null;
+  grade_format: Database["public"]["Enums"]["jswp_grade_format"];
+  overall_grade: string | null;
   current_step: string | null;
   chunk_ratio: Database["public"]["Enums"]["jswp_chunk_ratio"];
   student: {
@@ -131,7 +133,7 @@ export async function getWritingForTeacherReview(
     .select(
       `
       id, assignment_id, status, draft_number, submitted_at, returned_at,
-      graded_at, total_score, current_step, chunk_ratio,
+      graded_at, total_score, grade_format, overall_grade, current_step, chunk_ratio,
       student:student_id ( id, first_name, last_name, email ),
       assignment:assignment_id (
         id, title, prompt, mode, is_essay, has_counterargument,
@@ -164,6 +166,8 @@ export async function getWritingForTeacherReview(
     returned_at: row.returned_at,
     graded_at: row.graded_at,
     total_score: row.total_score,
+    grade_format: row.grade_format,
+    overall_grade: row.overall_grade,
     current_step: row.current_step,
     chunk_ratio: row.chunk_ratio,
     student: row.student,
