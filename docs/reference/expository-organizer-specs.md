@@ -82,11 +82,14 @@ In the printed organizers the role-label *shapes* (blue trapezoid "TS", red rect
 - **No `Revised TS` line at all.** TS revision pulls from unused CM words; 3+:0 has no
   CMs, so there is nothing to revise from. One TS row only.
 - Bottom label is the full word **`CONCLUDING SENTENCE:`** (not `CS:`).
-- The printed guide still prints the `CMs` column *header* for layout symmetry, but it
-  carries no content. **Per chunk 4.5d-1, the digital UI suppresses the CM column
-  entirely for 3+:0** — keep that behavior; do not render an empty CMs column.
-- Net 3+:0 layout: `TOPIC SENTENCE:` (full width) → single `CDs` column holding 3+ CD
-  rows → `CONCLUDING SENTENCE:` (full width). Color: blue / red / blue.
+- The printed guide prints the `CMs` column *header* for layout symmetry, but it
+  carries no content. **Decision (Raymond, 2026-06-08): match the print — render the
+  empty `CMs` column header beside the CDs so the two-column "T" shape is preserved.**
+  No CM inputs (a summary has zero commentary); the CMs side shows a muted "no
+  commentary at 3+:0" note and is hidden on mobile. This supersedes the original
+  chunk 4.5d-1 decision to suppress the column entirely.
+- Net 3+:0 layout: `TOPIC SENTENCE:` (full width) → two-column `CDs` (3+ CD rows) |
+  empty `CMs` header → `CONCLUDING SENTENCE:` (full width). Color: blue / red / blue.
 
 ---
 

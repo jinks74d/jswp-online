@@ -125,7 +125,12 @@ export function TChartClient({
   const gate = computeGate(mode, bodyParagraphs);
   const activeBp = bodyParagraphs[activeIdx] ?? bodyParagraphs[0];
   const isNarrative = mode === "narrative";
-  const showReference = sourceText !== null;
+  // Expository drops the source-text reference panel on the T-Chart —
+  // the student already read & annotated in the prior step, so the
+  // T-Chart gets the full width. Argumentation/literary keep it (they
+  // cite the source while building the chart). Decision: Raymond,
+  // 2026-06-08.
+  const showReference = sourceText !== null && mode !== "expository";
 
   const onContinue = () => {
     setError(null);

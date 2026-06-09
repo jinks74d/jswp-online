@@ -42,7 +42,7 @@ type Mode = Database["public"]["Enums"]["jswp_mode"];
 export function OrderBadge({ n }: { n: number }) {
   return (
     <span
-      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-900 text-[10px] font-semibold text-white"
+      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-900 text-base font-semibold text-white"
       aria-hidden="true"
     >
       {n}
@@ -97,25 +97,41 @@ export function ExpositoryChunkGrid({
       )}
 
       {isSummaryRatio ? (
-        /* 3+:0 — single CDs column, no CM column */
-        <div className="space-y-2">
+        /* 3+:0 — two-column grid matching printed p.54: the CDs column
+           plus an EMPTY CMs column header (no inputs). A summary has
+           zero commentary by definition, but the guide prints the CMs
+           header for layout symmetry, so the two-column "T" shape is
+           preserved. (Decision: Raymond, 2026-06-08 — show the empty
+           header rather than suppress the column.) The CMs side is
+           hidden on mobile so phones don't show a dangling empty box. */
+        <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
           <ColumnHeader badge={cdsBadge} role="cd" label="CDs" />
-          {cds.map((cd) => (
-            <CdCell
-              key={cd.id}
-              writingId={writingId}
-              cd={cd}
-              disabled={isReadOnly}
-            />
-          ))}
-          {!isReadOnly && (
-            <AddCdButton
-              writingId={writingId}
-              chunkId={chunk.id}
-              mode={mode}
-              ratio={chunk.ratio}
-            />
-          )}
+          <div className="hidden sm:block">
+            <ColumnHeader role="cm" label="CMs" />
+          </div>
+
+          <div className="space-y-2">
+            {cds.map((cd) => (
+              <CdCell
+                key={cd.id}
+                writingId={writingId}
+                cd={cd}
+                disabled={isReadOnly}
+              />
+            ))}
+            {!isReadOnly && (
+              <AddCdButton
+                writingId={writingId}
+                chunkId={chunk.id}
+                mode={mode}
+                ratio={chunk.ratio}
+              />
+            )}
+          </div>
+
+          <div className="hidden rounded-md border border-dashed border-gray-200 bg-gray-50/60 p-3 text-xs italic text-gray-400 sm:block">
+            No commentary in a 3+:0 summary — the CMs column stays empty.
+          </div>
         </div>
       ) : (
         /* 2+:1 — two-column CD | CM grid, rows aligned per CD */
@@ -276,7 +292,7 @@ function CdEditor({
 
       {isQuotation && (
         <div className="space-y-1.5 rounded-md border border-dashed border-gray-300 bg-gray-50/60 p-2">
-          <div className="text-[11px] font-medium text-gray-600">
+          <div className="text-base font-medium text-gray-600">
             Lead-in{" "}
             <span className="font-normal text-gray-400">
               (After, Although, Before, Because, If, Since, When, While…)
@@ -295,7 +311,7 @@ function CdEditor({
               });
             }}
           />
-          <div className="text-[11px] font-medium text-gray-600">Citation</div>
+          <div className="text-base font-medium text-gray-600">Citation</div>
           <AutoSaveInput
             initialValue={cd.source_citation ?? ""}
             placeholder="(Author 78)"
@@ -315,7 +331,7 @@ function CdEditor({
           className="rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs"
           aria-label="Embedded quotation preview"
         >
-          <span className="mr-1 text-[10px] uppercase tracking-wide text-gray-400">
+          <span className="mr-1 text-base uppercase tracking-wide text-gray-400">
             Embedded
           </span>
           <span className="text-gray-700">
