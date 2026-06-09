@@ -27,6 +27,9 @@ interface Props {
   feedback: readonly FeedbackItemRow[];
   mode: "teacher" | "student";
   currentUserId: string;
+  /** Hide the internal "Feedback (N)" header — used when an outer
+   *  container (e.g. the student's collapsible) already provides one. */
+  hideHeader?: boolean;
 }
 
 export function FeedbackPanel({
@@ -34,6 +37,7 @@ export function FeedbackPanel({
   feedback,
   mode,
   currentUserId,
+  hideHeader = false,
 }: Props) {
   const unresolved = feedback.filter((f) => !f.is_resolved);
   const resolved = feedback.filter((f) => f.is_resolved);
@@ -41,14 +45,16 @@ export function FeedbackPanel({
 
   return (
     <aside className="space-y-3">
-      <div className="flex items-center gap-2">
-        <MessageSquare className="w-4 h-4 text-gray-700" />
-        <h2 className="text-sm font-semibold text-gray-900">Feedback</h2>
-        <span className="text-xs text-gray-500">
-          ({unresolved.length} open
-          {resolved.length > 0 && ` · ${resolved.length} resolved`})
-        </span>
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-4 h-4 text-gray-700" />
+          <h2 className="text-sm font-semibold text-gray-900">Feedback</h2>
+          <span className="text-xs text-gray-500">
+            ({unresolved.length} open
+            {resolved.length > 0 && ` · ${resolved.length} resolved`})
+          </span>
+        </div>
+      )}
 
       {mode === "teacher" && (
         <Composer writingId={writingId} />

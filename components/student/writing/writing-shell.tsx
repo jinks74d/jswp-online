@@ -82,9 +82,9 @@ export function WritingShell({
       ? formatGradeLabel(gradeFormat, overallGrade ?? "")
       : "";
 
-  const gridClass = showFeedbackColumn
-    ? "grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)_22rem]"
-    : "grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)]";
+  // Feedback now lives in a full-width collapsible above the grid (below),
+  // so the step content always gets the 2-column layout — no right rail.
+  const gridClass = "grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)]";
 
   return (
     <div className="space-y-4">
@@ -128,6 +128,36 @@ export function WritingShell({
 
       <ExemplarReference exemplars={exemplars} />
 
+      {showFeedbackColumn && (
+        <details
+          open
+          className="group rounded-lg border border-gray-200 bg-white"
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+            <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+              <MessageSquare className="h-4 w-4 text-gray-700" />
+              Teacher feedback
+              <span className="text-xs font-normal text-gray-500">
+                ({unresolvedCount} to review)
+              </span>
+            </span>
+            <span className="text-xs text-gray-500 group-open:hidden">Show</span>
+            <span className="hidden text-xs text-gray-500 group-open:inline">
+              Hide
+            </span>
+          </summary>
+          <div className="border-t border-gray-100 px-4 pb-4 pt-3">
+            <FeedbackPanel
+              writingId={writingId}
+              feedback={feedback}
+              mode="student"
+              currentUserId={currentUserId}
+              hideHeader
+            />
+          </div>
+        </details>
+      )}
+
       <div className={gridClass}>
         <StepSidebar
           writingId={writingId}
@@ -137,17 +167,6 @@ export function WritingShell({
         />
 
         <div className="min-w-0">{children}</div>
-
-        {showFeedbackColumn && (
-          <div className="md:sticky md:top-20 md:self-start">
-            <FeedbackPanel
-              writingId={writingId}
-              feedback={feedback}
-              mode="student"
-              currentUserId={currentUserId}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
