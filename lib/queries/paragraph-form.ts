@@ -19,6 +19,7 @@ type NarrativeSubject = Database["public"]["Enums"]["jswp_narrative_subject"];
 export interface ParagraphFormRowData {
   id: string;
   final_text: string;
+  final_text_customized: boolean;
 }
 
 export interface ShapingContextData {
@@ -91,6 +92,7 @@ interface RawShapingSheet {
 interface RawParagraphForm {
   id: string;
   final_text: string;
+  final_text_customized: boolean;
 }
 
 interface RawBp {
@@ -112,7 +114,7 @@ export async function getParagraphFormData(
     .select(
       `
       id, position,
-      paragraph_form:paragraph_forms ( id, final_text ),
+      paragraph_form:paragraph_forms ( id, final_text, final_text_customized ),
       t_chart:t_charts (
         working_topic_sentence, concluding_sentence,
         narrative_kind, narrative_subject,

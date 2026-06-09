@@ -8,7 +8,10 @@
  * to the client orchestrator.
  */
 
-import { bootstrapParagraphForms } from "@/lib/actions/paragraph-form";
+import {
+  bootstrapParagraphForms,
+  syncParagraphForms,
+} from "@/lib/actions/paragraph-form";
 import { getParagraphFormData } from "@/lib/queries/paragraph-form";
 import { ParagraphFormClient } from "@/components/student/writing/paragraph-form/paragraph-form-client";
 import type { Database } from "@/lib/database.types";
@@ -35,6 +38,10 @@ export async function ParagraphFormStep({
   hasCounterargument,
 }: Props) {
   await bootstrapParagraphForms(writingId);
+  // Keep final_text in sync with the composed paragraph for any row the
+  // student hasn't hand-edited (fixes the stale-seed "first and last CD"
+  // bug). Runs before the read below so the render shows fresh text.
+  await syncParagraphForms(writingId);
   const bps = await getParagraphFormData(writingId);
 
   return (
