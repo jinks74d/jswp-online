@@ -21,9 +21,11 @@ const NAV_ITEMS = [
 export function TeacherSidebar({
   mobileOpen,
   onClose,
+  brandName,
 }: {
   mobileOpen: boolean;
   onClose: () => void;
+  brandName: string;
 }) {
   const pathname = usePathname();
 
@@ -39,11 +41,17 @@ export function TeacherSidebar({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-800 border-r border-slate-900 shadow-lg transform transition-transform duration-200 md:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="h-16 border-b border-gray-200" aria-hidden="true" />
+        <Link
+          href="/dashboard"
+          onClick={onClose}
+          className="flex h-16 items-center border-b border-slate-700 px-4 text-lg font-semibold tracking-tight text-white truncate"
+        >
+          {brandName}
+        </Link>
         <nav className="p-3 space-y-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
@@ -54,10 +62,10 @@ export function TeacherSidebar({
                 href={item.href}
                 onClick={onClose}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors border-l-2 ${
                   active
-                    ? "bg-gray-100 text-gray-900 border-l-2"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-50 border-l-2 border-transparent"
+                    ? "bg-slate-700 text-white"
+                    : "border-transparent text-slate-300 hover:text-white hover:bg-slate-700/50"
                 }`}
                 style={
                   active

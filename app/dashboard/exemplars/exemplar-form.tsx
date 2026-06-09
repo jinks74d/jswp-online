@@ -194,7 +194,7 @@ export function ExemplarForm({
           defaultValue={initial?.title ?? ""}
           maxLength={255}
           placeholder="e.g. Sample Expository — Sports & Teamwork"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </Field>
 
@@ -206,7 +206,7 @@ export function ExemplarForm({
           defaultValue={initial?.description ?? ""}
           maxLength={500}
           placeholder="What does this exemplar demonstrate?"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </Field>
 
@@ -217,7 +217,7 @@ export function ExemplarForm({
           required
           value={mode}
           onChange={(e) => setMode(e.target.value as Mode)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           {MODES.map((m) => (
             <option key={m.value} value={m.value}>
@@ -256,7 +256,7 @@ export function ExemplarForm({
           </label>
         </div>
         {contentFormat === "html" && (
-          <p className="mt-2 text-xs text-gray-600">
+          <p className="mt-2 text-xs text-stone-600">
             Select text in the editor, then click a toolbar button to
             mark it. Character count includes markup. Invalid tags or
             classes are rejected at save time.
@@ -272,7 +272,7 @@ export function ExemplarForm({
         hint={
           <span
             className={
-              overLimit ? "text-red-700 font-medium" : "text-gray-500"
+              overLimit ? "text-red-700 font-medium" : "text-stone-600"
             }
           >
             {wordCount.toLocaleString()} word{wordCount === 1 ? "" : "s"}{" "}
@@ -297,7 +297,7 @@ export function ExemplarForm({
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={18}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder={
             contentFormat === "html"
               ? "Type the exemplar text, then select passages and click toolbar buttons to mark them."
@@ -309,9 +309,9 @@ export function ExemplarForm({
       {contentFormat === "html" && (
         <section
           aria-label="Exemplar preview"
-          className="border border-gray-200 rounded-md bg-gray-50 p-3"
+          className="border border-stone-200 rounded-md bg-stone-50 p-3"
         >
-          <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+          <h3 className="text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2">
             Preview
           </h3>
           {text.trim().length > 0 ? (
@@ -321,7 +321,7 @@ export function ExemplarForm({
               className="text-sm text-gray-900"
             />
           ) : (
-            <p className="text-sm text-gray-500 italic">
+            <p className="text-sm text-stone-600 italic">
               Preview appears here once you start typing.
             </p>
           )}
@@ -331,11 +331,11 @@ export function ExemplarForm({
       <fieldset>
         <legend className="block text-sm font-medium text-gray-800 mb-1">
           Step tags{" "}
-          <span className="font-normal text-gray-500">
+          <span className="font-normal text-stone-600">
             (optional — which JSWP steps does this exemplar illustrate?)
           </span>
         </legend>
-        <p className="text-xs text-gray-600 mb-2">
+        <p className="text-xs text-stone-600 mb-2">
           Students on a matching step see tagged exemplars first. Leave
           empty for "general" — appears as fallback on every step.
         </p>
@@ -351,7 +351,7 @@ export function ExemplarForm({
                 className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
                   selected
                     ? "border-blue-600 bg-blue-50 text-blue-800"
-                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                    : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
                 }`}
               >
                 {STEP_TAG_LABELS[tag]}

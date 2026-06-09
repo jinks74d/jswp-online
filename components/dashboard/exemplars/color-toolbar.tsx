@@ -147,7 +147,7 @@ export function ColorToolbar({ textareaRef, value, onChange, mode }: Props) {
     <div
       role="toolbar"
       aria-label="Color-code marks"
-      className="flex flex-wrap gap-1.5 mb-2 pb-2 border-b border-gray-200"
+      className="flex flex-wrap gap-1.5 mb-2 pb-2 border-b border-stone-200"
     >
       {visibleClasses.map((cls) => {
         const label = JSWP_CONTENT_LABELS[cls];
@@ -163,7 +163,7 @@ export function ColorToolbar({ textareaRef, value, onChange, mode }: Props) {
                 ? "Select text first"
                 : `Mark selection as ${label}`
             }
-            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md border border-stone-300 bg-white text-gray-800 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span
               aria-hidden

@@ -64,7 +64,7 @@ export function PublishToggleButton({
         disabled={pending}
         title={published ? "Unpublish" : "Publish"}
         aria-label={`${published ? "Unpublish" : "Publish"} ${label}`}
-        className="inline-flex items-center justify-center p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+        className="inline-flex items-center justify-center p-1.5 rounded-md text-stone-600 hover:bg-stone-100 hover:text-stone-700 disabled:opacity-50"
       >
         {pending ? (
           <Loader2 className="w-4 h-4 animate-spin" />

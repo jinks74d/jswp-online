@@ -73,7 +73,7 @@ function OwnerView({
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Edit exemplar</h1>
-          <p className="text-gray-600">{exemplar.title}</p>
+          <p className="text-stone-600">{exemplar.title}</p>
         </div>
         <DeleteExemplarButton action={deleteBound} />
       </header>
@@ -99,7 +99,7 @@ function ReadOnlyView({
       </Link>
 
       <header className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-gray-500">
+        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-stone-600">
           {MODE_LABELS[exemplar.mode]}
           <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-purple-50 text-purple-800">
             <Users className="w-3 h-3" />
@@ -108,11 +108,11 @@ function ReadOnlyView({
         </div>
         <h1 className="text-2xl font-bold text-gray-900">{exemplar.title}</h1>
         {exemplar.description && (
-          <p className="text-gray-700">{exemplar.description}</p>
+          <p className="text-stone-700">{exemplar.description}</p>
         )}
       </header>
 
-      <section className="bg-white border border-gray-200 rounded-lg p-5">
+      <section className="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">
           Exemplar text
         </h2>
@@ -123,7 +123,7 @@ function ReadOnlyView({
         />
       </section>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-stone-600">
         Read-only — only the author can edit this exemplar. Pin it from
         your own assignments to reuse it with your students.
       </p>

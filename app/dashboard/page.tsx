@@ -30,19 +30,19 @@ export default async function DashboardHome() {
       <div className="space-y-6">
         <header>
           <h1 className="text-2xl font-bold text-gray-900">{greeting}</h1>
-          <p className="text-gray-600">
+          <p className="text-stone-600">
             Let&apos;s get you set up. The JSWP method walks students through
             a structured writing flow — your classes and assignments live
             here.
           </p>
         </header>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+        <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
           <Sparkles className="w-10 h-10 text-blue-600 mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-gray-900">
             You&apos;re ready to start
           </h2>
-          <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+          <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
             Create your first assignment to get started. Once your admin
             assigns you to a class period, your students will appear here
             too.
@@ -63,7 +63,7 @@ export default async function DashboardHome() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold text-gray-900">{greeting}</h1>
-        <p className="text-gray-600">
+        <p className="text-stone-600">
           Quick overview of your classes, students, and assignments.
         </p>
       </header>
@@ -106,13 +106,23 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="block bg-white border border-gray-200 rounded-lg p-5 hover:border-gray-400"
+      className="block bg-white border border-stone-200 rounded-xl p-5 shadow-sm transition-shadow hover:shadow-md hover:border-stone-300"
     >
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500 mb-2">
-        <Icon className="w-4 h-4" />
-        {label}
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium uppercase tracking-wide text-stone-600">
+          {label}
+        </span>
+        <span
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg"
+          style={{
+            backgroundColor: "var(--dash-brand-tint)",
+            color: "var(--district-primary)",
+          }}
+        >
+          <Icon className="w-5 h-5" />
+        </span>
       </div>
-      <div className="text-3xl font-semibold text-gray-900">{value}</div>
+      <div className="mt-3 text-3xl font-semibold text-stone-900">{value}</div>
     </Link>
   );
 }

@@ -56,7 +56,7 @@ export default async function AssignmentAnalyticsPage({
       </Link>
 
       <header>
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500 mb-2">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-stone-600 mb-2">
           <BarChart3 className="w-3.5 h-3.5" />
           Analytics
         </div>
@@ -66,15 +66,15 @@ export default async function AssignmentAnalyticsPage({
       </header>
 
       {result.state === "not_found" ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-5 text-sm text-gray-700">
+        <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-5 text-sm text-stone-700">
           Couldn&apos;t load analytics for this assignment.
         </div>
       ) : result.state === "no_class_period" ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-5">
+        <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
           <h2 className="text-sm font-semibold text-gray-900 mb-2">
             Assign a class to see analytics
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-stone-600">
             This assignment isn&apos;t attached to a class period yet.
             Edit the assignment and pick a class period — students will
             then be able to start writing, and the analytics surface

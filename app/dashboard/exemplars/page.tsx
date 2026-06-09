@@ -61,7 +61,7 @@ export default async function ExemplarsListPage({
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Exemplars</h1>
-          <p className="text-gray-600">
+          <p className="text-stone-600">
             Reference essays and paragraphs you can publish to your students.
             Colleagues at your school can share theirs with you to use.
           </p>
@@ -80,14 +80,14 @@ export default async function ExemplarsListPage({
       {exemplars.length === 0 ? (
         <FilteredEmptyState filter={stepFilter} />
       ) : (
-        <ul className="divide-y divide-gray-100 border border-gray-200 rounded-lg bg-white">
+        <ul className="divide-y divide-stone-100 border border-stone-200 rounded-xl shadow-sm bg-white">
           {exemplars.map((e) => (
             <li key={e.id}>
               <Link
                 href={`/dashboard/exemplars/${e.id}`}
-                className="block hover:bg-gray-50 px-4 py-3"
+                className="block hover:bg-stone-50 px-4 py-3"
               >
-                <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-gray-500 mb-1">
+                <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-stone-600 mb-1">
                   {MODE_LABELS[e.mode]}
                   {e.ownedByViewer ? (
                     <>
@@ -102,11 +102,11 @@ export default async function ExemplarsListPage({
                   {e.title}
                 </div>
                 {e.description && (
-                  <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">
+                  <p className="text-xs text-stone-600 mt-0.5 line-clamp-1">
                     {e.description}
                   </p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-stone-600 mt-1">
                   Updated {formatDate(e.updated_at)}
                 </p>
               </Link>
@@ -144,7 +144,7 @@ function FilterChips({ current }: { current: StepFilter }) {
             className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
               active
                 ? "border-blue-600 bg-blue-50 text-blue-800"
-                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
             }`}
           >
             {c.label}
@@ -160,7 +160,7 @@ function FilteredEmptyState({ filter }: { filter: StepFilter }) {
     return <EmptyState />;
   }
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-sm text-gray-700">
+    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-6 text-center text-sm text-stone-700">
       No exemplars match this filter.{" "}
       <Link
         href="/dashboard/exemplars"
@@ -178,7 +178,7 @@ function PublishedPill({ published }: { published: boolean }) {
       className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${
         published
           ? "bg-green-100 text-green-800"
-          : "bg-gray-100 text-gray-700"
+          : "bg-stone-100 text-stone-700"
       }`}
     >
       {published ? "Published" : "Draft"}
@@ -206,12 +206,12 @@ function SharedByChip({ name }: { name: string | null }) {
 
 function EmptyState() {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
       <Library className="w-10 h-10 text-gray-400 mx-auto mb-3" />
       <h2 className="text-lg font-semibold text-gray-900">
         No exemplars yet
       </h2>
-      <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+      <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
         Create an exemplar to give your students a model essay or
         paragraph to reference while they write. Or wait for a
         colleague to share one with you.

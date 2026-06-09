@@ -38,7 +38,7 @@ export function TeacherShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-stone-100">
       <TeacherHeader
         profile={profile}
         branding={branding}
@@ -48,6 +48,7 @@ export function TeacherShell({
       <TeacherSidebar
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
+        brandName={branding.name}
       />
 
       <main className="md:pl-64">

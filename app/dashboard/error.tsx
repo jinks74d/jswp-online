@@ -33,12 +33,12 @@ export default function DashboardError({
             Something went wrong
           </h1>
         </div>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-stone-600">
           We hit an unexpected error loading this page. Try again — if it
           keeps happening, contact support and share the error ID below.
         </p>
         {error.digest && (
-          <p className="text-xs font-mono text-gray-500">
+          <p className="text-xs font-mono text-stone-600">
             Error ID: {error.digest}
           </p>
         )}

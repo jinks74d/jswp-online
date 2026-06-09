@@ -23,20 +23,20 @@ const TIER_COLORS: Record<string, string> = {
 
 export function ScoreDistribution({ stats }: Props) {
   return (
-    <section className="bg-white border border-gray-200 rounded-lg p-5">
+    <section className="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
       <header className="mb-3 flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
           Score distribution
         </h2>
         {stats.rubricMax !== null && (
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-stone-600">
             out of {stats.rubricMax}
           </span>
         )}
       </header>
 
       {stats.count === 0 ? (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-stone-600">
           No graded writings yet — score distribution will appear once
           you grade submissions.
         </p>
@@ -59,11 +59,11 @@ export function ScoreDistribution({ stats }: Props) {
                     <div className="text-sm font-medium text-gray-900 truncate">
                       {bucket.tier}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-stone-600">
                       {bucket.percentRange[0]}–{bucket.percentRange[1]}%
                     </div>
                   </div>
-                  <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-3 w-full bg-stone-100 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${
                         TIER_COLORS[bucket.tier] ?? "bg-gray-400"
@@ -80,7 +80,7 @@ export function ScoreDistribution({ stats }: Props) {
             })}
           </ul>
 
-          <p className="mt-3 text-xs text-gray-500">
+          <p className="mt-3 text-xs text-stone-600">
             Based on {stats.count} graded writing
             {stats.count === 1 ? "" : "s"} (most recent draft per student).
           </p>
@@ -99,7 +99,7 @@ function Stat({
 }) {
   return (
     <div>
-      <dt className="text-xs text-gray-500">{label}</dt>
+      <dt className="text-xs text-stone-600">{label}</dt>
       <dd className="text-lg font-semibold text-gray-900">{value}</dd>
     </div>
   );

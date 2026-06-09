@@ -47,7 +47,7 @@ export default async function NewAssignmentPage({
           <h1 className="text-2xl font-bold text-gray-900">
             Pick a writing mode
           </h1>
-          <p className="text-gray-600">
+          <p className="text-stone-600">
             The mode determines the chunk ratio, paragraph structure, and
             which extra fields appear on the assignment.
           </p>
@@ -75,7 +75,7 @@ export default async function NewAssignmentPage({
         <h1 className="text-2xl font-bold text-gray-900 capitalize">
           New {mode} assignment
         </h1>
-        <p className="text-gray-600">
+        <p className="text-stone-600">
           Save as a draft. You can edit and publish later.
         </p>
       </header>

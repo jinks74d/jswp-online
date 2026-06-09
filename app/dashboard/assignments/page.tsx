@@ -14,7 +14,7 @@ import { DeleteAssignmentButton } from "./delete-assignment-button";
 import { PublishToggleButton } from "./publish-toggle-button";
 
 const iconLink =
-  "inline-flex items-center justify-center p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700";
+  "inline-flex items-center justify-center p-1.5 rounded-md text-stone-600 hover:bg-stone-100 hover:text-stone-700";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export default async function AssignmentsPage() {
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Assignments</h1>
-          <p className="text-gray-600">
+          <p className="text-stone-600">
             Drafts and published assignments you&apos;ve authored.
           </p>
         </div>
@@ -45,9 +45,9 @@ export default async function AssignmentsPage() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="hidden md:block bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
             <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 text-gray-700">
+              <thead className="bg-stone-50 text-stone-700">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium">Title</th>
                   <th className="px-3 py-2 text-left font-medium">Mode</th>
@@ -57,7 +57,7 @@ export default async function AssignmentsPage() {
                   <th className="px-3 py-2 text-right font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 text-gray-900">
+              <tbody className="divide-y divide-stone-200 text-gray-900">
                 {assignments.map((a) => (
                   <tr key={a.id}>
                     <td className="px-3 py-2">
@@ -68,18 +68,18 @@ export default async function AssignmentsPage() {
                         {a.title || "(untitled)"}
                       </Link>
                     </td>
-                    <td className="px-3 py-2 text-gray-600 capitalize">
+                    <td className="px-3 py-2 text-stone-600 capitalize">
                       {a.mode}
                     </td>
                     <td className="px-3 py-2">
                       <StatusBadge published={isPublished(a)} />
                     </td>
-                    <td className="px-3 py-2 text-gray-600">
+                    <td className="px-3 py-2 text-stone-600">
                       {a.class_name && a.class_period_label
                         ? `${a.class_name} · ${a.class_period_label}`
                         : "—"}
                     </td>
-                    <td className="px-3 py-2 text-gray-500">
+                    <td className="px-3 py-2 text-stone-600">
                       {new Date(a.updated_at).toLocaleDateString()}
                     </td>
                     <td className="px-3 py-2">
@@ -123,11 +123,11 @@ export default async function AssignmentsPage() {
             {assignments.map((a) => (
               <div
                 key={a.id}
-                className="bg-white border border-gray-200 rounded-lg p-4"
+                className="bg-white border border-stone-200 rounded-xl shadow-sm p-4"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <StatusBadge published={isPublished(a)} />
-                  <span className="text-xs uppercase tracking-wide text-gray-500">
+                  <span className="text-xs uppercase tracking-wide text-stone-600">
                     {a.mode}
                   </span>
                 </div>
@@ -137,22 +137,22 @@ export default async function AssignmentsPage() {
                 >
                   {a.title || "(untitled)"}
                 </Link>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-stone-600 mt-1">
                   {a.class_name && a.class_period_label
                     ? `${a.class_name} · ${a.class_period_label}`
                     : "Not assigned to a class"}
                 </div>
-                <div className="mt-3 flex items-center gap-3 border-t border-gray-100 pt-2 text-sm">
+                <div className="mt-3 flex items-center gap-3 border-t border-stone-100 pt-2 text-sm">
                   <Link
                     href={`/dashboard/assignments/${a.id}`}
-                    className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                    className="inline-flex items-center gap-1 text-stone-600 hover:text-gray-900"
                   >
                     <Eye className="w-4 h-4" />
                     View
                   </Link>
                   <Link
                     href={`/dashboard/assignments/${a.id}#edit`}
-                    className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                    className="inline-flex items-center gap-1 text-stone-600 hover:text-gray-900"
                   >
                     <Pencil className="w-4 h-4" />
                     Edit
@@ -181,12 +181,12 @@ export default async function AssignmentsPage() {
 
 function EmptyState() {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
       <FileText className="w-10 h-10 text-gray-400 mx-auto mb-4" />
       <h2 className="text-lg font-semibold text-gray-900">
         No assignments yet
       </h2>
-      <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+      <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
         Create your first assignment to get started. The mode picker walks
         you through Expository, Argumentation, Literary, or Narrative — each
         with the right structural defaults from the JSWP guides.
@@ -208,7 +208,7 @@ function StatusBadge({ published }: { published: boolean }) {
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
         published
           ? "bg-green-100 text-green-800"
-          : "bg-gray-100 text-gray-700"
+          : "bg-stone-100 text-stone-700"
       }`}
     >
       {published ? "Published" : "Draft"}

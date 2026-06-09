@@ -47,7 +47,7 @@ export function UserMenu({ profile }: { profile: ShellProfile }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-gray-700 hover:bg-gray-100"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-stone-700 hover:bg-stone-100"
       >
         <span className="font-medium">{displayName}</span>
         <ChevronDown
@@ -60,18 +60,18 @@ export function UserMenu({ profile }: { profile: ShellProfile }) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden"
+          className="absolute right-0 mt-2 w-64 bg-white border border-stone-200 rounded-md shadow-lg overflow-hidden"
         >
-          <div className="px-4 py-3 border-b border-gray-100">
+          <div className="px-4 py-3 border-b border-stone-100">
             <div className="text-sm font-medium text-gray-900">
               {displayName}
             </div>
             {profile.email && (
-              <div className="text-xs text-gray-500 truncate">
+              <div className="text-xs text-stone-600 truncate">
                 {profile.email}
               </div>
             )}
-            <div className="text-xs text-gray-500 mt-1 capitalize">
+            <div className="text-xs text-stone-600 mt-1 capitalize">
               {profile.role.replace("_", " ")}
             </div>
           </div>
@@ -80,7 +80,7 @@ export function UserMenu({ profile }: { profile: ShellProfile }) {
             <button
               type="submit"
               role="menuitem"
-              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
             >
               <LogOut className="w-4 h-4" />
               Log out

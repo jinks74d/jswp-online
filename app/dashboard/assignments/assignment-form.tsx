@@ -145,7 +145,7 @@ export function AssignmentForm({
 
       <form
         action={formMode === "create" ? createAction : updateAction}
-        className="space-y-5 bg-white border border-gray-200 rounded-lg p-6"
+        className="space-y-5 bg-white border border-stone-200 rounded-xl shadow-sm p-6"
       >
         <input type="hidden" name="mode" value={mode} />
         {initial && (
@@ -168,7 +168,7 @@ export function AssignmentForm({
             required
             maxLength={255}
             defaultValue={initial?.title ?? ""}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="e.g. Sports & Teamwork"
           />
         </Field>
@@ -185,7 +185,7 @@ export function AssignmentForm({
             rows={5}
             maxLength={5000}
             defaultValue={initial?.prompt ?? ""}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="Write the question or task students will respond to."
           />
         </Field>
@@ -201,12 +201,12 @@ export function AssignmentForm({
               className="text-blue-600 focus:ring-blue-500"
             />
             <span className="font-medium text-gray-900">Essay format</span>
-            <span className="text-gray-600">
+            <span className="text-stone-600">
               (multiple body paragraphs)
             </span>
           </label>
           {!isEssay && (
-            <p className="mt-1 text-xs text-gray-600">
+            <p className="mt-1 text-xs text-stone-600">
               Unchecked: students write a single one-chunk paragraph (e.g. a
               3+:0 summary).
             </p>
@@ -230,7 +230,7 @@ export function AssignmentForm({
                 value={numBP}
                 onChange={(e) => setNumBP(Number(e.target.value))}
                 disabled={isPublished}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 disabled:bg-gray-50"
+                className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 disabled:bg-stone-50"
               />
             </Field>
             <Field
@@ -248,7 +248,7 @@ export function AssignmentForm({
                 value={chunksPerBP}
                 onChange={(e) => setChunksPerBP(Number(e.target.value))}
                 disabled={isPublished}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 disabled:bg-gray-50"
+                className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 disabled:bg-stone-50"
               />
             </Field>
           </div>
@@ -262,7 +262,7 @@ export function AssignmentForm({
               value={chunkRatio}
               onChange={(e) => setChunkRatio(e.target.value as ChunkRatio)}
               disabled={isPublished}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 disabled:bg-gray-50"
+              className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 disabled:bg-stone-50"
             >
               <option value="two_plus_to_one">
                 2+:1 — multiple details, single commentary
@@ -278,7 +278,7 @@ export function AssignmentForm({
         )}
 
         {isLiterary && (
-          <p className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded p-3">
+          <p className="text-xs text-stone-600 bg-stone-50 border border-stone-200 rounded p-3">
             Literary mode uses a fixed 1:2+ ratio (one detail with at least
             two commentary moves).
           </p>
@@ -358,7 +358,7 @@ export function AssignmentForm({
             defaultValue={
               initial?.due_at ? formatForDateTimeInput(initial.due_at) : ""
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900"
           />
         </Field>
 
@@ -367,7 +367,7 @@ export function AssignmentForm({
             id="class_period_id"
             name="class_period_id"
             defaultValue={initial?.class_period_id ?? ""}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+            className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900"
           >
             <option value="">— Not assigned to a class —</option>
             {classPeriods.map((p) => (
@@ -438,7 +438,7 @@ function DangerZone({
       )}
 
       {hasWritings && (
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 space-y-3">
+        <div className="rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700 space-y-3">
           <p>
             {studentWritingCount} student
             {studentWritingCount === 1 ? " has" : "s have"} started writing on
@@ -594,7 +594,7 @@ function UnpublishForm({
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-stone-300 bg-white text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
         >
           {pending ? (
             <>
@@ -674,10 +674,10 @@ function Field({
   return (
     <div>
       <div className="flex items-baseline justify-between mb-2">
-        <label htmlFor={htmlFor} className="text-sm font-medium text-gray-700">
+        <label htmlFor={htmlFor} className="text-sm font-medium text-stone-700">
           {label}
         </label>
-        {hint && <span className="text-xs text-gray-500">{hint}</span>}
+        {hint && <span className="text-xs text-stone-600">{hint}</span>}
       </div>
       {children}
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}

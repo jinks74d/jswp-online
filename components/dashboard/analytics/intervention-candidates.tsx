@@ -29,20 +29,20 @@ export function InterventionCandidates({ candidates }: Props) {
     candidates.belowThreshold.length;
 
   return (
-    <section className="bg-white border border-gray-200 rounded-lg p-5">
+    <section className="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
       <header className="mb-3">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
           Intervention candidates
         </h2>
         {total > 0 && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-stone-600 mt-1">
             {total} student{total === 1 ? "" : "s"} flagged
           </p>
         )}
       </header>
 
       {total === 0 ? (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-stone-600">
           Nothing flagged — every enrolled student has a graded writing
           at or above 50% of max.
         </p>
@@ -50,7 +50,7 @@ export function InterventionCandidates({ candidates }: Props) {
         <div className="space-y-4">
           {candidates.notSubmitted.length > 0 && (
             <GroupBlock
-              icon={<Clock className="w-4 h-4 text-gray-500" />}
+              icon={<Clock className="w-4 h-4 text-stone-600" />}
               title="Not yet submitted"
               students={candidates.notSubmitted}
             />
@@ -90,15 +90,15 @@ function GroupBlock({
         {icon}
         <h3 className="text-sm font-medium text-gray-900">
           {title}{" "}
-          <span className="text-gray-500 font-normal">({students.length})</span>
+          <span className="text-stone-600 font-normal">({students.length})</span>
         </h3>
       </div>
-      <ul className="divide-y divide-gray-100 border border-gray-100 rounded-md">
+      <ul className="divide-y divide-stone-100 border border-stone-100 rounded-md">
         {students.map((s) => (
           <li key={s.id}>
             <Link
               href={`/dashboard/students/${s.id}`}
-              className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+              className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-stone-50"
             >
               <span className="text-gray-900 truncate">
                 {studentDisplayName(s)}
@@ -127,21 +127,21 @@ function ThresholdBlock({
         {icon}
         <h3 className="text-sm font-medium text-gray-900">
           {title}{" "}
-          <span className="text-gray-500 font-normal">({entries.length})</span>
+          <span className="text-stone-600 font-normal">({entries.length})</span>
         </h3>
       </div>
-      <ul className="divide-y divide-gray-100 border border-gray-100 rounded-md">
+      <ul className="divide-y divide-stone-100 border border-stone-100 rounded-md">
         {entries.map((e) => (
           <li key={e.student.id}>
             <Link
               href={`/dashboard/students/${e.student.id}`}
-              className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+              className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-stone-50"
             >
               <span className="text-gray-900 truncate">
                 {studentDisplayName(e.student)}
               </span>
               <span className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-xs text-gray-600 tabular-nums">
+                <span className="text-xs text-stone-600 tabular-nums">
                   {e.score}
                 </span>
                 <ChevronRight className="w-4 h-4 text-gray-400" />

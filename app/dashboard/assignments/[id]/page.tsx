@@ -68,12 +68,12 @@ export default async function AssignmentDetailPage({
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
               published
                 ? "bg-green-100 text-green-800"
-                : "bg-gray-100 text-gray-700"
+                : "bg-stone-100 text-stone-700"
             }`}
           >
             {published ? "Published" : "Draft"}
           </span>
-          <span className="text-xs uppercase tracking-wide text-gray-500">
+          <span className="text-xs uppercase tracking-wide text-stone-600">
             {assignment.mode}
           </span>
         </div>
@@ -81,7 +81,7 @@ export default async function AssignmentDetailPage({
           {assignment.title || "(untitled)"}
         </h1>
         {published && assignment.released_at && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-stone-600 mt-1">
             Published {new Date(assignment.released_at).toLocaleString()}
           </p>
         )}
@@ -91,15 +91,15 @@ export default async function AssignmentDetailPage({
         <div className="grid gap-3 sm:grid-cols-2">
           <Link
             href={`/dashboard/assignments/${assignment.id}/writings`}
-            className="flex items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 hover:border-gray-400 transition-colors"
+            className="flex items-center justify-between gap-3 bg-white border border-stone-200 rounded-xl shadow-sm px-4 py-3 hover:border-gray-400 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <Inbox className="w-5 h-5 text-gray-700 flex-shrink-0" />
+              <Inbox className="w-5 h-5 text-stone-700 flex-shrink-0" />
               <div className="min-w-0">
                 <div className="text-sm font-medium text-gray-900">
                   Submissions
                 </div>
-                <div className="text-xs text-gray-600 mt-0.5">
+                <div className="text-xs text-stone-600 mt-0.5">
                   {submissionsBlurb(writingCounts, totalWritings)}
                 </div>
               </div>
@@ -109,15 +109,15 @@ export default async function AssignmentDetailPage({
 
           <Link
             href={`/dashboard/assignments/${assignment.id}/analytics`}
-            className="flex items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 hover:border-gray-400 transition-colors"
+            className="flex items-center justify-between gap-3 bg-white border border-stone-200 rounded-xl shadow-sm px-4 py-3 hover:border-gray-400 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <BarChart3 className="w-5 h-5 text-gray-700 flex-shrink-0" />
+              <BarChart3 className="w-5 h-5 text-stone-700 flex-shrink-0" />
               <div className="min-w-0">
                 <div className="text-sm font-medium text-gray-900">
                   Analytics
                 </div>
-                <div className="text-xs text-gray-600 mt-0.5">
+                <div className="text-xs text-stone-600 mt-0.5">
                   Submission rate, score distribution, and intervention
                   candidates.
                 </div>

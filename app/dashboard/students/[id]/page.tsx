@@ -57,7 +57,7 @@ export default async function StudentDetailPage({
 
       <header className="space-y-1">
         <h1 className="text-2xl font-bold text-gray-900">{displayName}</h1>
-        <p className="text-gray-600">{student.email ?? "—"}</p>
+        <p className="text-stone-600">{student.email ?? "—"}</p>
         {progress.state === "ok" && (
           <ProgressSummaryLine
             totalAssignments={progress.data.summary.totalAssignments}
@@ -76,26 +76,26 @@ export default async function StudentDetailPage({
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium text-gray-700">
+        <h2 className="text-sm font-medium text-stone-700">
           Enrolled in your classes
         </h2>
         <ul className="space-y-2">
           {student.enrollments.map((e) => (
             <li
               key={e.class_period_id}
-              className="bg-white border border-gray-200 rounded-lg p-4"
+              className="bg-white border border-stone-200 rounded-xl shadow-sm p-4"
             >
               <Link
                 href={`/dashboard/classes/${e.class_period_id}`}
                 className="block group"
               >
-                <div className="text-xs uppercase tracking-wide text-gray-500">
+                <div className="text-xs uppercase tracking-wide text-stone-600">
                   {e.subjectName}
                 </div>
                 <div className="font-medium text-gray-900 group-hover:text-blue-700">
                   {e.className}
                 </div>
-                <div className="text-sm text-gray-600 mt-0.5">
+                <div className="text-sm text-stone-600 mt-0.5">
                   {e.period_label}
                   {e.academic_year ? ` · ${e.academic_year}` : ""}
                   {" · "}
@@ -122,8 +122,8 @@ export default async function StudentDetailPage({
 
 function DetailCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
-      <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-4">
+      <div className="text-xs uppercase tracking-wide text-stone-600 mb-1">
         {label}
       </div>
       <div className="text-sm text-gray-900">{value}</div>
@@ -142,7 +142,7 @@ function ProgressSummaryLine({
 }) {
   if (totalAssignments === 0) {
     return (
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-stone-600">
         No assignments released to this student&apos;s class period yet.
       </p>
     );
@@ -154,5 +154,5 @@ function ProgressSummaryLine({
   if (averagePercentage !== null) {
     parts.push(`avg ${averagePercentage.toFixed(0)}%`);
   }
-  return <p className="text-sm text-gray-500">{parts.join(" · ")}</p>;
+  return <p className="text-sm text-stone-600">{parts.join(" · ")}</p>;
 }

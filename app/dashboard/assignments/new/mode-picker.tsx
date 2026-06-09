@@ -27,7 +27,7 @@ export function ModePicker() {
           <Link
             key={m}
             href={`/dashboard/assignments/new?mode=${m}`}
-            className="group block bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-500 hover:shadow-sm transition"
+            className="group block bg-white border border-stone-200 rounded-xl shadow-sm p-5 hover:border-blue-500 hover:shadow-sm transition"
           >
             <div className="flex items-start gap-3">
               <Icon className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
@@ -35,7 +35,7 @@ export function ModePicker() {
                 <h2 className="font-semibold text-gray-900">
                   {cfg.displayName}
                 </h2>
-                <p className="text-sm text-gray-600 mt-1">{cfg.description}</p>
+                <p className="text-sm text-stone-600 mt-1">{cfg.description}</p>
               </div>
             </div>
           </Link>

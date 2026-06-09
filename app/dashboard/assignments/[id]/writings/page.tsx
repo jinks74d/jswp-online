@@ -70,13 +70,13 @@ export default async function AssignmentWritingsPage({
       </Link>
 
       <header>
-        <div className="text-xs uppercase tracking-wide text-gray-500">
+        <div className="text-xs uppercase tracking-wide text-stone-600">
           Submissions
         </div>
         <h1 className="text-2xl font-bold text-gray-900">
           {assignment.title || "(untitled)"}
         </h1>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-stone-600 mt-1">
           {writings.length} {writings.length === 1 ? "writing" : "writings"} from your students.
         </p>
       </header>
@@ -90,9 +90,9 @@ export default async function AssignmentWritingsPage({
             if (items.length === 0) return null;
             return (
               <section key={status} className="space-y-3">
-                <h2 className="text-sm font-semibold text-gray-700">
+                <h2 className="text-sm font-semibold text-stone-700">
                   {SECTION_LABELS[status]}
-                  <span className="ml-2 text-xs text-gray-500 font-normal">
+                  <span className="ml-2 text-xs text-stone-600 font-normal">
                     ({items.length})
                   </span>
                 </h2>
@@ -133,12 +133,12 @@ function WritingCard({
   return (
     <Link
       href={`/dashboard/assignments/${assignmentId}/writings/${writing.id}`}
-      className="flex items-center justify-between gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 hover:border-gray-400 transition-colors"
+      className="flex items-center justify-between gap-3 bg-white border border-stone-200 rounded-xl shadow-sm px-4 py-3 hover:border-gray-400 transition-colors"
     >
       <div className="min-w-0">
         <div className="font-medium text-gray-900 truncate">{name}</div>
         {activity && (
-          <div className="text-xs text-gray-500 mt-0.5">{activity}</div>
+          <div className="text-xs text-stone-600 mt-0.5">{activity}</div>
         )}
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
@@ -187,12 +187,12 @@ function formatRelative(iso: string): string {
 
 function EmptyState() {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-10 text-center">
+    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-10 text-center">
       <FileText className="w-10 h-10 text-gray-400 mx-auto mb-4" />
       <h2 className="text-lg font-semibold text-gray-900">
         No submissions yet
       </h2>
-      <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+      <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
         Your students haven&apos;t started this assignment, or their writings
         haven&apos;t reached you yet. Check back later.
       </p>

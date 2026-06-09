@@ -21,21 +21,30 @@ export function TeacherHeader({
   onToggleSidebar: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
+    <header
+      className="sticky top-0 z-20 border-b shadow-sm"
+      style={{
+        backgroundColor: "var(--dash-brand-tint)",
+        borderColor: "var(--dash-brand-edge)",
+      }}
+    >
       <div className="h-16 flex items-center justify-between px-4 md:pl-64">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-md text-gray-700 hover:bg-gray-100"
+            className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-md text-stone-700 hover:bg-white/60"
             aria-label="Open navigation"
           >
             <Menu className="w-5 h-5" />
           </button>
 
+          {/* Brand shows on mobile only — the closed drawer hides the
+              sidebar's brand, so keep it visible here. On desktop the
+              brand lives at the top of the slate sidebar. */}
           <Link
             href="/dashboard"
-            className="text-lg font-semibold tracking-tight"
+            className="md:hidden text-lg font-semibold tracking-tight"
             style={{ color: "var(--district-primary)" }}
           >
             {branding.name}

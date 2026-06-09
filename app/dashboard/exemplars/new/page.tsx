@@ -81,7 +81,7 @@ export default async function NewExemplarPage({
 
       <header>
         <h1 className="text-2xl font-bold text-gray-900">New exemplar</h1>
-        <p className="text-gray-600">
+        <p className="text-stone-600">
           {prefill
             ? "Edit the pre-filled draft below before saving."
             : "Save as draft first; toggle Published when you're ready to share with students."}

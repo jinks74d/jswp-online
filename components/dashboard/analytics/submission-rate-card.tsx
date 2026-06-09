@@ -31,12 +31,12 @@ export function SubmissionRateCard({
     {
       label: "Not started",
       count: statusBreakdown.notStarted,
-      className: "bg-gray-100 text-gray-700",
+      className: "bg-stone-100 text-stone-700",
     },
     {
       label: "Draft",
       count: statusBreakdown.draft,
-      className: "bg-gray-100 text-gray-700",
+      className: "bg-stone-100 text-stone-700",
     },
     {
       label: "In progress",
@@ -61,7 +61,7 @@ export function SubmissionRateCard({
   ];
 
   return (
-    <section className="bg-white border border-gray-200 rounded-lg p-5">
+    <section className="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
       <header className="mb-3">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
           Submission rate
@@ -69,7 +69,7 @@ export function SubmissionRateCard({
       </header>
 
       {enrolledCount === 0 ? (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-stone-600">
           No students currently enrolled in this class period.
         </p>
       ) : (
@@ -78,13 +78,13 @@ export function SubmissionRateCard({
             <span className="text-3xl font-bold text-gray-900">
               {submitted}
             </span>
-            <span className="text-sm text-gray-600">/ {total} submitted</span>
-            <span className="ml-2 text-sm font-medium text-gray-700">
+            <span className="text-sm text-stone-600">/ {total} submitted</span>
+            <span className="ml-2 text-sm font-medium text-stone-700">
               ({pct}%)
             </span>
           </div>
 
-          <div className="mt-2 h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+          <div className="mt-2 h-2 w-full bg-stone-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-green-600"
               style={{ width: `${pct}%` }}
@@ -105,7 +105,7 @@ export function SubmissionRateCard({
           </ul>
 
           {formerWithSubmissions > 0 && (
-            <p className="mt-3 text-xs text-gray-500">
+            <p className="mt-3 text-xs text-stone-600">
               {formerWithSubmissions} former student
               {formerWithSubmissions === 1 ? "" : "s"} with submissions
               hidden from totals.

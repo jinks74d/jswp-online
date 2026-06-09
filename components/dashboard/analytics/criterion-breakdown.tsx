@@ -20,13 +20,13 @@ interface Props {
 
 export function CriterionBreakdown({ hasRubric, breakdown }: Props) {
   return (
-    <section className="bg-white border border-gray-200 rounded-lg p-5">
+    <section className="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
       <header className="mb-3">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
           Criterion breakdown
         </h2>
         {hasRubric && breakdown.length > 0 && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-stone-600 mt-1">
             Weakest criteria first. Based on most-recent graded draft per
             student.
           </p>
@@ -34,12 +34,12 @@ export function CriterionBreakdown({ hasRubric, breakdown }: Props) {
       </header>
 
       {!hasRubric ? (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-stone-600">
           This assignment doesn&apos;t use a rubric. Criterion breakdown
           not available.
         </p>
       ) : breakdown.length === 0 ? (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-stone-600">
           No graded writings yet — criterion data will appear once you
           score submissions.
         </p>
@@ -60,22 +60,22 @@ export function CriterionBreakdown({ hasRubric, breakdown }: Props) {
             return (
               <li
                 key={c.criterionName}
-                className="border border-gray-200 rounded-md p-3"
+                className="border border-stone-200 rounded-md p-3"
               >
                 <div className="flex items-baseline justify-between gap-3 mb-2">
                   <h3 className="text-sm font-medium text-gray-900">
                     {c.criterionName}
                   </h3>
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-stone-700">
                     <span className="font-semibold">
                       {c.avgScore.toFixed(1)}
                     </span>
-                    <span className="text-gray-500"> / {c.maxScore}</span>
-                    <span className="text-gray-500 ml-1">({pct}%)</span>
+                    <span className="text-stone-600"> / {c.maxScore}</span>
+                    <span className="text-stone-600 ml-1">({pct}%)</span>
                   </span>
                 </div>
 
-                <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
                   <div
                     className={`h-full ${barColor}`}
                     style={{ width: `${pct}%` }}
@@ -88,7 +88,7 @@ export function CriterionBreakdown({ hasRubric, breakdown }: Props) {
                     {c.levelDistribution.map((l) => (
                       <li
                         key={l.label}
-                        className="inline-flex items-center gap-1 text-xs text-gray-700 bg-gray-50 rounded-full px-2 py-0.5"
+                        className="inline-flex items-center gap-1 text-xs text-stone-700 bg-stone-50 rounded-full px-2 py-0.5"
                       >
                         <span>{l.label}</span>
                         <span className="font-semibold">{l.count}</span>

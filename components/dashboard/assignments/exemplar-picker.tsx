@@ -90,7 +90,7 @@ export function ExemplarPicker({
       <legend className="block text-sm font-medium text-gray-800 mb-1">
         Reference exemplars
       </legend>
-      <p className="text-xs text-gray-600">
+      <p className="text-xs text-stone-600">
         Pin published {MODE_LABELS[mode]} exemplars you&apos;ve authored.
         Students viewing this assignment will see pinned exemplars first.
         If you don&apos;t pin any, students see all your published{" "}
@@ -104,7 +104,7 @@ export function ExemplarPicker({
       )}
 
       {pinned.length > 0 && (
-        <ul className="divide-y divide-gray-100 border border-gray-200 rounded-md bg-white">
+        <ul className="divide-y divide-stone-100 border border-stone-200 rounded-md bg-white">
           {pinned.map((p) => (
             <li
               key={p.exemplar_id}
@@ -116,7 +116,7 @@ export function ExemplarPicker({
                   <div className="text-sm font-medium text-gray-900 truncate">
                     {p.title}
                     {!p.is_published && (
-                      <span className="ml-2 inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                      <span className="ml-2 inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-stone-100 text-stone-700">
                         Draft
                       </span>
                     )}
@@ -127,7 +127,7 @@ export function ExemplarPicker({
                     </p>
                   )}
                   {p.description && (
-                    <p className="text-xs text-gray-600 truncate">
+                    <p className="text-xs text-stone-600 truncate">
                       {p.description}
                     </p>
                   )}
@@ -137,7 +137,7 @@ export function ExemplarPicker({
                 type="button"
                 onClick={() => onUnpin(p.exemplar_id)}
                 disabled={pending}
-                className="inline-flex items-center gap-1 text-xs text-gray-700 hover:text-red-700 disabled:opacity-50"
+                className="inline-flex items-center gap-1 text-xs text-stone-700 hover:text-red-700 disabled:opacity-50"
               >
                 {pending ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -161,7 +161,7 @@ export function ExemplarPicker({
               if (v) onPin(v);
             }}
             disabled={pending}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className="flex-1 px-3 py-2 border border-stone-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
           >
             <option value="">
               {pinned.length > 0
@@ -179,7 +179,7 @@ export function ExemplarPicker({
           </select>
         </div>
       ) : pinned.length === 0 ? (
-        <div className="text-sm text-gray-600 border border-dashed border-gray-300 rounded-md px-3 py-3">
+        <div className="text-sm text-stone-600 border border-dashed border-stone-300 rounded-md px-3 py-3">
           No {MODE_LABELS[mode]} exemplars available yet.{" "}
           <Link
             href="/dashboard/exemplars/new"
@@ -191,7 +191,7 @@ export function ExemplarPicker({
           or ask a colleague to share theirs.
         </div>
       ) : (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-stone-600">
           All available {MODE_LABELS[mode]} exemplars are pinned.
         </p>
       )}

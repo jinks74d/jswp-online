@@ -61,6 +61,13 @@ body {
   --jswp-color-concession: var(--jswp-purple);
   --jswp-color-counterargument: var(--jswp-orange);
   --jswp-color-refutation: var(--jswp-teal);
+
+  /* Dashboard chrome — subtle brand-tinted header band derived from the
+   * district color (set per-request on <html> by the branding middleware).
+   * color-mix keeps the tint readable regardless of the chosen brand hue;
+   * falls back to a deep blue when no district brand is set. */
+  --dash-brand-tint: color-mix(in srgb, var(--district-primary, #1e3a8a) 6%, #ffffff);
+  --dash-brand-edge: color-mix(in srgb, var(--district-primary, #1e3a8a) 18%, #ffffff);
 }
 
 .jswp-ts,

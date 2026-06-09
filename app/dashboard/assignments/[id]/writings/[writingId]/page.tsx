@@ -77,12 +77,12 @@ export default async function TeacherWritingReviewPage({
           <h1 className="text-2xl font-bold text-gray-900">{studentName}</h1>
           <TeacherStatusBadge status={writing.status} />
           {writing.status === "graded" && writing.total_score !== null && (
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-stone-700">
               Score: <span className="font-semibold">{writing.total_score}</span>
             </span>
           )}
         </div>
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-stone-600">
           {writing.assignment.title}
         </div>
         <ReviewActions
@@ -112,7 +112,7 @@ export default async function TeacherWritingReviewPage({
 
         <section
           aria-labelledby="overall-feedback-heading"
-          className="border-t border-gray-200 pt-6"
+          className="border-t border-stone-200 pt-6"
         >
           <h2
             id="overall-feedback-heading"

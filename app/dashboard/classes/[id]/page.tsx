@@ -33,11 +33,11 @@ export default async function ClassDetailPage({ params }: { params: Params }) {
       </Link>
 
       <header>
-        <div className="text-xs uppercase tracking-wide text-gray-500">
+        <div className="text-xs uppercase tracking-wide text-stone-600">
           {period.subjectName}
         </div>
         <h1 className="text-2xl font-bold text-gray-900">{period.className}</h1>
-        <p className="text-gray-600">
+        <p className="text-stone-600">
           {period.period_label}
           {period.academic_year ? ` · ${period.academic_year}` : ""}
           {" · "}
@@ -46,14 +46,14 @@ export default async function ClassDetailPage({ params }: { params: Params }) {
       </header>
 
       <section className="space-y-3">
-        <div className="flex items-center gap-2 text-sm text-gray-700">
+        <div className="flex items-center gap-2 text-sm text-stone-700">
           <Users className="w-4 h-4" />
           <span className="font-medium">{period.roster.length}</span> student
           {period.roster.length === 1 ? "" : "s"}
         </div>
 
         {period.roster.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center text-sm text-gray-600">
+          <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center text-sm text-stone-600">
             No students are enrolled in this class period yet.
           </div>
         ) : (
@@ -68,9 +68,9 @@ function Roster({ students }: { students: RosterStudent[] }) {
   return (
     <>
       {/* Desktop table */}
-      <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="hidden md:block bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-gray-700">
+          <thead className="bg-stone-50 text-stone-700">
             <tr>
               <th className="px-3 py-2 text-left font-medium">Name</th>
               <th className="px-3 py-2 text-left font-medium">Email</th>
@@ -78,12 +78,12 @@ function Roster({ students }: { students: RosterStudent[] }) {
               <th className="px-3 py-2 text-right font-medium" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 text-gray-900">
+          <tbody className="divide-y divide-stone-200 text-gray-900">
             {students.map((s) => (
               <tr key={s.id}>
                 <td className="px-3 py-2">{displayName(s)}</td>
-                <td className="px-3 py-2 text-gray-600">{s.email ?? "—"}</td>
-                <td className="px-3 py-2 text-gray-600">
+                <td className="px-3 py-2 text-stone-600">{s.email ?? "—"}</td>
+                <td className="px-3 py-2 text-stone-600">
                   {s.grade_level ?? "—"}
                 </td>
                 <td className="px-3 py-2 text-right">
@@ -106,13 +106,13 @@ function Roster({ students }: { students: RosterStudent[] }) {
           <Link
             key={s.id}
             href={`/dashboard/students/${s.id}`}
-            className="block bg-white border border-gray-200 rounded-lg p-4"
+            className="block bg-white border border-stone-200 rounded-xl shadow-sm p-4"
           >
             <div className="font-medium text-gray-900">{displayName(s)}</div>
-            <div className="text-sm text-gray-600 truncate mt-0.5">
+            <div className="text-sm text-stone-600 truncate mt-0.5">
               {s.email ?? "—"}
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-stone-600 mt-1">
               Grade {s.grade_level ?? "—"}
             </div>
           </Link>

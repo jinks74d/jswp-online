@@ -25,13 +25,13 @@ interface Props {
 
 export function CriterionTrends({ trends }: Props) {
   return (
-    <section className="bg-white border border-gray-200 rounded-lg p-5">
+    <section className="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
       <header className="mb-3">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
           Criterion trends
         </h2>
         {trends.length > 0 && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-stone-600 mt-1">
             Weakest criteria on top. Bars are chronological — leftmost
             is the earliest graded assignment with that criterion.
           </p>
@@ -39,7 +39,7 @@ export function CriterionTrends({ trends }: Props) {
       </header>
 
       {trends.length === 0 ? (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-stone-600">
           No rubric-scored writings yet — once you grade an assignment
           with a rubric, per-criterion trends will appear here.
         </p>
@@ -51,12 +51,12 @@ export function CriterionTrends({ trends }: Props) {
                 <h3 className="text-sm font-medium text-gray-900 truncate">
                   {trend.criterionName}
                 </h3>
-                <span className="text-xs text-gray-700">
+                <span className="text-xs text-stone-700">
                   avg{" "}
                   <span className="font-semibold">
                     {trend.averagePercentage.toFixed(0)}%
                   </span>
-                  <span className="text-gray-500">
+                  <span className="text-stone-600">
                     {" "}
                     ({trend.dataPoints.length} writing
                     {trend.dataPoints.length === 1 ? "" : "s"})

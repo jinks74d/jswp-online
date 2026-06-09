@@ -30,13 +30,13 @@ interface Props {
 
 export function AssignmentList({ assignments }: Props) {
   return (
-    <section className="bg-white border border-gray-200 rounded-lg p-5">
+    <section className="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
       <header className="mb-3">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
           Assignments
         </h2>
         {assignments.length > 0 && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-stone-600 mt-1">
             All assignments you&apos;ve released that this student is in
             scope for. Most recent first.
           </p>
@@ -44,12 +44,12 @@ export function AssignmentList({ assignments }: Props) {
       </header>
 
       {assignments.length === 0 ? (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-stone-600">
           You haven&apos;t released any assignments to this student&apos;s
           class period yet.
         </p>
       ) : (
-        <ul className="divide-y divide-gray-100 border border-gray-100 rounded-md">
+        <ul className="divide-y divide-stone-100 border border-stone-100 rounded-md">
           {assignments.map((a) => (
             <li key={a.id}>
               <AssignmentRow assignment={a} />
@@ -86,17 +86,17 @@ function AssignmentRow({
   const body = (
     <div className="flex items-center justify-between gap-3 px-3 py-3">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-stone-600">
           <FileText className="w-3.5 h-3.5" />
           {MODE_LABELS[assignment.mode]}
         </div>
         <div className="text-sm font-medium text-gray-900 truncate mt-0.5">
           {assignment.title || "(untitled)"}
         </div>
-        <div className="text-xs text-gray-600 mt-0.5">
+        <div className="text-xs text-stone-600 mt-0.5">
           <StatusPill status={status} />
           {stamp && (
-            <span className="ml-2 text-gray-500">
+            <span className="ml-2 text-stone-600">
               {stampLabel} {formatDate(stamp)}
             </span>
           )}
@@ -109,14 +109,14 @@ function AssignmentRow({
             <div className="text-sm font-semibold text-gray-900 tabular-nums">
               {assignment.totalScore}
               {assignment.rubricMaxScore !== null && (
-                <span className="text-gray-500 font-normal">
+                <span className="text-stone-600 font-normal">
                   {" "}
                   / {assignment.rubricMaxScore}
                 </span>
               )}
             </div>
             {pct !== null && (
-              <div className="text-xs text-gray-600">{pct}%</div>
+              <div className="text-xs text-stone-600">{pct}%</div>
             )}
           </div>
         )}
@@ -131,7 +131,7 @@ function AssignmentRow({
     return (
       <Link
         href={`/dashboard/assignments/${assignment.id}/writings/${assignment.writingId}`}
-        className="block hover:bg-gray-50"
+        className="block hover:bg-stone-50"
       >
         {body}
       </Link>
@@ -143,7 +143,7 @@ function AssignmentRow({
 function StatusPill({ status }: { status: WritingStatus | null }) {
   if (status === null) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-gray-700 bg-gray-100 rounded-full px-2 py-0.5">
+      <span className="inline-flex items-center gap-1 text-xs text-stone-700 bg-stone-100 rounded-full px-2 py-0.5">
         Not started
       </span>
     );
