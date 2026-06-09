@@ -109,9 +109,13 @@ When teacher returns a submission, clone all artifacts (`body_paragraphs`, `t_ch
 - **Identified:** chunk 4.7a (commit `fe41809`)
 - **Priority:** Phase 5+; not load-bearing for the basic submit/revise loop
 
-### Inline-anchored teacher feedback
-`teacher_feedback.target_kind` enum supports 13 target types (`student_writing`, `prompt_decoding`, `gathering_sheet`, `candidate_cd`, `body_paragraph`, `t_chart`, `chunk`, `concrete_detail`, `commentary_item`, `shaping_sheet`, `paragraph_form`, `essay_parts`, `final_draft`). Chunk 4.7b implemented only `target_kind='student_writing'` (whole-writing). Inline anchoring would let teachers click a specific artifact (e.g., a CD or a thesis) and leave a comment scoped to it. UX work: click-to-anchor on each artifact type, popover composer, persistent comment indicators on the read-only review surface, student-side surfacing on the matching step pages. Schema is ready; UX is the lift.
-- **Identified:** chunk 4.7a (commit `fe41809`)
+### Inline-anchored teacher feedback (finer-than-step)
+`teacher_feedback.target_kind` enum supports 13 target types (`student_writing`, `prompt_decoding`, `gathering_sheet`, `candidate_cd`, `body_paragraph`, `t_chart`, `chunk`, `concrete_detail`, `commentary_item`, `shaping_sheet`, `paragraph_form`, `essay_parts`, `final_draft`).
+
+**Done (chunk per-section-feedback, 2026-06-09):** the **step-granularity** slice. A new `teacher_feedback.step_key` column (migration `0030`) anchors one editable note per step; the teacher review surface renders a `SectionFeedbackNote` under each step, the overall threaded panel moved to the end of the page, and the student sees each section note read-only on the matching step page when returned/graded. Anchored by `step_key` (config-driven, covers every step in every mode) rather than the artifact-typed `target_kind`. Spec: `docs/superpowers/specs/2026-06-09-per-section-teacher-feedback-design.md`.
+
+**Still deferred:** (1) **finer-than-step anchoring** (per-CD / per-chunk / per-commentary) using the artifact-typed `target_kind` + `target_id` columns — click-to-anchor on a specific artifact, popover composer, persistent indicators; (2) **per-section resolve** (section notes are simple text today; the resolve loop lives only on the overall thread).
+- **Identified:** chunk 4.7a (commit `fe41809`); step-granularity shipped chunk per-section-feedback
 - **Priority:** Phase 5+ territory
 
 ### Combined view refetches annotations 3x per page render
