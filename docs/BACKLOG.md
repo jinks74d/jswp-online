@@ -10,6 +10,13 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
+### Feedback-area grading: error feedback + deferred extensions
+Shipped (chunk feedback-grading, 2026-06-09): per-writing `grade_format` (number/letter/check) on `student_writings` (migration `0031`), a grade on each section (`teacher_feedback.grade_value`) and one overall grade (`student_writings.overall_grade`), with read-only badges for the student. Independent of the formal rubric/`total_score`/"Mark graded" flow. Spec/plan: `docs/superpowers/specs/2026-06-09-feedback-grading-design.md`, `docs/superpowers/plans/2026-06-09-feedback-grading.md`.
+Deferred: (1) **error feedback** on the grade controls — `GradeInput`/`GradeFormatBar` currently `console.error` on a failed save with no inline/toast surface (consistent with the app-wide "Storage upload UI failure surface" gap; fix together). (2) Reconciling the feedback grade with `total_score` (locked independent during design). (3) Per-section weighting / auto-aggregating section grades into the overall. (4) Check-plus/check/check-minus (3-state) — `✓`/`✗` only today.
+- **Identified:** chunk feedback-grading
+- **Priority:** polish; before production cutover (Phase 7)
+
+
 ### School-admin dashboards: real content per kind
 The three school-admin dashboards (`/admin/school/{administrator,counselor,other}`, added with migration `0026`) are **scaffold shells** — each renders a role header + two `TODO` placeholder cards (`app/admin/school/_dashboard.tsx`). All three kinds share the same `school_admin` RLS permissions; the kind only selects the landing page. Fill in the actual tiles/links each role should surface (e.g. Administrator: teachers/classes/import; Counselor: students/progress). Decided with Raymond 2026-06-08: scaffold now, content later.
 - **Identified:** chunk school-admin-roles (migration 0026)
