@@ -35,6 +35,7 @@ import { useWritingMode } from "./use-writing-mode";
 interface Props {
   writingId: string;
   stepKey: string;
+  required: boolean;
   sourceText: string;
   sourceTitle: string | null;
   sourceAuthor: string | null;
@@ -44,6 +45,7 @@ interface Props {
 export function AnnotateTextClient({
   writingId,
   stepKey,
+  required,
   sourceText,
   sourceTitle,
   sourceAuthor,
@@ -94,7 +96,12 @@ export function AnnotateTextClient({
     setTimeout(() => setScrollTargetId(null), 800);
   };
 
-  const canContinue = initialAnnotations.length >= 1;
+  // When the step is required (e.g. Literary), at least one annotation is
+  // needed to advance. When optional (Expository, Argumentation), the
+  // student may continue without annotating. Flag comes from the step
+  // config in lib/jswp-modes.ts.
+  const hasAnnotations = initialAnnotations.length >= 1;
+  const canContinue = required ? hasAnnotations : true;
 
   const onContinue = () => {
     setContinueError(null);
@@ -166,9 +173,11 @@ export function AnnotateTextClient({
       {!isReadOnly && (
         <div className="flex items-center justify-between gap-3">
           <div className="text-xs text-gray-500">
-            {canContinue
+            {hasAnnotations
               ? `${initialAnnotations.length} annotation${initialAnnotations.length === 1 ? "" : "s"} saved`
-              : "Add at least one annotation to continue."}
+              : required
+                ? "Add at least one annotation to continue."
+                : "Annotating is optional — add notes if they help, or continue."}
           </div>
           <div className="flex items-center gap-3">
             {continueError && (

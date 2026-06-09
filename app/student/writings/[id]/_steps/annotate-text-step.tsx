@@ -18,6 +18,7 @@ interface Props {
   stepKey: string;
   stepLabel: string;
   pedagogyHint: string | null;
+  required: boolean;
   sourceText: string | null;
   sourceTitle: string | null;
   sourceAuthor: string | null;
@@ -28,6 +29,7 @@ export async function AnnotateTextStep({
   stepKey,
   stepLabel,
   pedagogyHint,
+  required,
   sourceText,
   sourceTitle,
   sourceAuthor,
@@ -76,6 +78,7 @@ export async function AnnotateTextStep({
       <AnnotateTextClient
         writingId={writingId}
         stepKey={stepKey}
+        required={required}
         sourceText={sourceText}
         sourceTitle={sourceTitle}
         sourceAuthor={sourceAuthor}
