@@ -38,6 +38,8 @@ import { IntroductionStep } from "@/app/student/writings/[id]/_steps/introductio
 import { ConclusionStep } from "@/app/student/writings/[id]/_steps/conclusion-step";
 import { ParagraphFormStep } from "@/app/student/writings/[id]/_steps/paragraph-form-step";
 import { FinalDraftStep } from "@/app/student/writings/[id]/_steps/final-draft-step";
+import { SectionFeedbackNote } from "./section-feedback-note";
+import type { FeedbackItemRow } from "@/lib/queries/teacher-feedback";
 import type { Database } from "@/lib/database.types";
 
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -46,6 +48,7 @@ interface Props {
   writingId: string;
   mode: JswpMode;
   chunkRatio: ChunkRatio;
+  feedbackByStep: ReadonlyMap<string, FeedbackItemRow>;
   assignment: {
     prompt: string;
     is_essay: boolean;
@@ -60,6 +63,7 @@ export async function CombinedView({
   writingId,
   mode,
   chunkRatio,
+  feedbackByStep,
   assignment,
 }: Props) {
   const visible = getSteps(mode, {
@@ -90,6 +94,11 @@ export async function CombinedView({
               assignment,
               decoding,
             })}
+            <SectionFeedbackNote
+              writingId={writingId}
+              stepKey={step.key}
+              initialBody={feedbackByStep.get(step.key)?.body ?? ""}
+            />
           </section>
         ))}
       </div>
@@ -147,6 +156,7 @@ function renderStep({
     return (
       <AnnotateTextStep
         {...baseProps}
+        required={step.required}
         sourceText={assignment.source_text}
         sourceTitle={assignment.source_title}
         sourceAuthor={assignment.source_author}

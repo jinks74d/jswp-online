@@ -23,6 +23,7 @@ import { ChevronLeft } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getWritingForTeacherReview } from "@/lib/queries/teacher-writings";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
+import { groupSectionFeedback } from "@/lib/section-feedback";
 import { hasFinalDraftForPromotion } from "@/lib/queries/exemplars";
 import { CombinedView } from "@/components/dashboard/writing-review/combined-view";
 import { FeedbackPanel } from "@/components/dashboard/writing-review/feedback-panel";
@@ -50,7 +51,9 @@ export default async function TeacherWritingReviewPage({
     listFeedback(writingId),
     hasFinalDraftForPromotion(writingId),
   ]);
-  const unresolvedCount = feedback.filter((f) => !f.is_resolved).length;
+  const { byStep: feedbackByStep, overall: overallFeedback } =
+    groupSectionFeedback(feedback);
+  const unresolvedCount = overallFeedback.filter((f) => !f.is_resolved).length;
 
   const studentName =
     [writing.student.first_name, writing.student.last_name]
@@ -91,31 +94,33 @@ export default async function TeacherWritingReviewPage({
         />
       </header>
 
-      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="min-w-0">
-          <CombinedView
-            writingId={writing.id}
-            mode={writing.assignment.mode}
-            chunkRatio={writing.chunk_ratio}
-            assignment={{
-              prompt: writing.assignment.prompt,
-              is_essay: writing.assignment.is_essay,
-              has_counterargument: writing.assignment.has_counterargument,
-              source_text: writing.assignment.source_text,
-              source_title: writing.assignment.source_title,
-              source_author: writing.assignment.source_author,
-            }}
-          />
-        </div>
+      <div className="space-y-8">
+        <CombinedView
+          writingId={writing.id}
+          mode={writing.assignment.mode}
+          chunkRatio={writing.chunk_ratio}
+          feedbackByStep={feedbackByStep}
+          assignment={{
+            prompt: writing.assignment.prompt,
+            is_essay: writing.assignment.is_essay,
+            has_counterargument: writing.assignment.has_counterargument,
+            source_text: writing.assignment.source_text,
+            source_title: writing.assignment.source_title,
+            source_author: writing.assignment.source_author,
+          }}
+        />
 
-        <div className="md:sticky md:top-20 md:self-start">
+        <section className="border-t border-gray-200 pt-6">
+          <h2 className="mb-3 text-lg font-semibold text-gray-900">
+            Overall feedback
+          </h2>
           <FeedbackPanel
             writingId={writing.id}
-            feedback={feedback}
+            feedback={overallFeedback}
             mode="teacher"
             currentUserId={profile.id}
           />
-        </div>
+        </section>
       </div>
     </div>
   );
