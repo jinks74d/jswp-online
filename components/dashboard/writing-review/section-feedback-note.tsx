@@ -6,6 +6,7 @@
  *  - Teacher (readOnly=false): a single textarea pre-filled with the
  *    existing note. Saves on blur via upsertSectionFeedback; clearing it
  *    and blurring deletes the note. Status indicator. One note per step.
+ *    When gradeFormat !== 'none' a GradeInput sits beside the status span.
  *  - Student (readOnly=true): renders the note text read-only, or nothing
  *    when there is no note. Shown on the matching step page after return.
  */
@@ -13,28 +14,44 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageSquare } from "lucide-react";
 import { upsertSectionFeedback } from "@/lib/actions/teacher-feedback";
+import { GradeInput } from "./grade-input";
+import { setSectionGrade } from "@/lib/actions/feedback-grades";
+import { formatGradeLabel, type GradeFormat } from "@/lib/grade-format";
 
 export function SectionFeedbackNote({
   writingId,
   stepKey,
   initialBody,
   readOnly = false,
+  gradeFormat,
+  gradeValue,
 }: {
   writingId: string;
   stepKey: string;
   initialBody: string;
   readOnly?: boolean;
+  gradeFormat: GradeFormat;
+  gradeValue: string;
 }) {
   if (readOnly) {
     const text = initialBody.trim();
-    if (text.length === 0) return null;
+    const gradeLabel =
+      gradeFormat !== "none" ? formatGradeLabel(gradeFormat, gradeValue) : "";
+    if (text.length === 0 && gradeLabel.length === 0) return null;
     return (
       <div className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3">
-        <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-blue-800">
-          <MessageSquare className="h-3.5 w-3.5" />
-          Teacher feedback
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-blue-800">
+            <MessageSquare className="h-3.5 w-3.5" />
+            Teacher feedback
+          </span>
+          {gradeLabel.length > 0 && (
+            <GradeInput format={gradeFormat} value={gradeValue} readOnly />
+          )}
         </div>
-        <p className="whitespace-pre-wrap text-sm text-gray-900">{text}</p>
+        {text.length > 0 && (
+          <p className="whitespace-pre-wrap text-sm text-gray-900">{text}</p>
+        )}
       </div>
     );
   }
@@ -44,6 +61,8 @@ export function SectionFeedbackNote({
       writingId={writingId}
       stepKey={stepKey}
       initialBody={initialBody}
+      gradeFormat={gradeFormat}
+      gradeValue={gradeValue}
     />
   );
 }
@@ -52,10 +71,14 @@ function TeacherNote({
   writingId,
   stepKey,
   initialBody,
+  gradeFormat,
+  gradeValue,
 }: {
   writingId: string;
   stepKey: string;
   initialBody: string;
+  gradeFormat: GradeFormat;
+  gradeValue: string;
 }) {
   const [value, setValue] = useState(initialBody);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
@@ -89,16 +112,25 @@ function TeacherNote({
 
   return (
     <div className="mt-3 rounded-md border border-blue-200 bg-blue-50/60 p-3">
-      <div className="mb-1.5 flex items-center justify-between">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-blue-800">
           <MessageSquare className="h-3.5 w-3.5" />
           Feedback on this section
         </span>
-        <span className="text-xs text-gray-500" aria-live="polite">
-          {status === "saving" && "Saving…"}
-          {status === "saved" && <span className="text-green-600">Saved</span>}
-          {status === "error" && <span className="text-red-600">Retry?</span>}
-        </span>
+        <div className="flex items-center gap-2">
+          {gradeFormat !== "none" && (
+            <GradeInput
+              format={gradeFormat}
+              value={gradeValue}
+              onSave={(v) => setSectionGrade(writingId, stepKey, v)}
+            />
+          )}
+          <span className="text-xs text-gray-500" aria-live="polite">
+            {status === "saving" && "Saving…"}
+            {status === "saved" && <span className="text-green-600">Saved</span>}
+            {status === "error" && <span className="text-red-600">Retry?</span>}
+          </span>
+        </div>
       </div>
       <textarea
         value={value}

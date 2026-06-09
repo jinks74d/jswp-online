@@ -80,20 +80,24 @@ export default async function StepDispatcher({
   // Surface the teacher's section note for this step (read-only) once the
   // writing is returned or graded. RLS lets the owning student read
   // feedback on their own writing.
-  let sectionNote = "";
+  let sectionFeedbackItem: { body: string; grade_value: string | null } | null = null;
   if (writing.status === "returned" || writing.status === "graded") {
     const { byStep } = groupSectionFeedback(await listFeedback(id));
-    sectionNote = byStep.get(target.key)?.body ?? "";
+    const item = byStep.get(target.key);
+    if (item) {
+      sectionFeedbackItem = { body: item.body, grade_value: item.grade_value };
+    }
   }
-  const noteEl =
-    sectionNote.trim().length > 0 ? (
-      <SectionFeedbackNote
-        writingId={id}
-        stepKey={target.key}
-        initialBody={sectionNote}
-        readOnly
-      />
-    ) : null;
+  const noteEl = (
+    <SectionFeedbackNote
+      writingId={id}
+      stepKey={target.key}
+      initialBody={sectionFeedbackItem?.body ?? ""}
+      gradeFormat={writing.grade_format}
+      gradeValue={sectionFeedbackItem?.grade_value ?? ""}
+      readOnly
+    />
+  );
 
   function withNote(el: ReactNode): ReactNode {
     return (

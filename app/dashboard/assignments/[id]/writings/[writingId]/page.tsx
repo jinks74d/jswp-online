@@ -27,6 +27,8 @@ import { CombinedView } from "@/components/dashboard/writing-review/combined-vie
 import { FeedbackPanel } from "@/components/dashboard/writing-review/feedback-panel";
 import { ReviewActions } from "@/components/dashboard/writing-review/review-actions";
 import { TeacherStatusBadge } from "@/components/dashboard/writing-review/teacher-status-badge";
+import { GradeFormatBar } from "@/components/dashboard/writing-review/grade-format-bar";
+import { OverallGradeControl } from "@/components/dashboard/writing-review/overall-grade-control";
 
 export const dynamic = "force-dynamic";
 
@@ -95,11 +97,14 @@ export default async function TeacherWritingReviewPage({
       </header>
 
       <div className="space-y-8">
+        <GradeFormatBar writingId={writing.id} format={writing.grade_format} />
+
         <CombinedView
           writingId={writing.id}
           mode={writing.assignment.mode}
           chunkRatio={writing.chunk_ratio}
           feedbackByStep={feedbackByStep}
+          gradeFormat={writing.grade_format}
           assignment={{
             prompt: writing.assignment.prompt,
             is_essay: writing.assignment.is_essay,
@@ -120,6 +125,11 @@ export default async function TeacherWritingReviewPage({
           >
             Overall feedback
           </h2>
+          <OverallGradeControl
+            writingId={writing.id}
+            format={writing.grade_format}
+            value={writing.overall_grade ?? ""}
+          />
           <FeedbackPanel
             writingId={writing.id}
             feedback={overallFeedback}

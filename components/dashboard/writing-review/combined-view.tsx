@@ -40,6 +40,7 @@ import { ParagraphFormStep } from "@/app/student/writings/[id]/_steps/paragraph-
 import { FinalDraftStep } from "@/app/student/writings/[id]/_steps/final-draft-step";
 import { SectionFeedbackNote } from "./section-feedback-note";
 import type { FeedbackItemRow } from "@/lib/queries/teacher-feedback";
+import type { GradeFormat } from "@/lib/grade-format";
 import type { Database } from "@/lib/database.types";
 
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -49,6 +50,7 @@ interface Props {
   mode: JswpMode;
   chunkRatio: ChunkRatio;
   feedbackByStep: ReadonlyMap<string, FeedbackItemRow>;
+  gradeFormat: GradeFormat;
   assignment: {
     prompt: string;
     is_essay: boolean;
@@ -64,6 +66,7 @@ export async function CombinedView({
   mode,
   chunkRatio,
   feedbackByStep,
+  gradeFormat,
   assignment,
 }: Props) {
   const visible = getSteps(mode, {
@@ -98,6 +101,8 @@ export async function CombinedView({
               writingId={writingId}
               stepKey={step.key}
               initialBody={feedbackByStep.get(step.key)?.body ?? ""}
+              gradeFormat={gradeFormat}
+              gradeValue={feedbackByStep.get(step.key)?.grade_value ?? ""}
             />
           </section>
         ))}
