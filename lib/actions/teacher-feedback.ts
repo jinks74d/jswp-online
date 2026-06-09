@@ -77,6 +77,64 @@ export async function addWritingFeedback(
 }
 
 /**
+ * Upsert the teacher's single section note for one step. Empty body
+ * deletes the note (clearing the box removes it). One row per
+ * (writing, teacher, step_key) — the unique index ux_teacher_feedback_section
+ * (migration 0030) makes the upsert collision-safe and lets an edit
+ * replace rather than duplicate. RLS still enforces write scoping.
+ */
+export async function upsertSectionFeedback(
+  writingId: string,
+  stepKey: string,
+  body: string
+): Promise<void> {
+  const profile = await requireRole(TEACHER_ROLES);
+  const supabase = await createServerClient();
+  const trimmed = body.trim();
+
+  const { data: writing } = await supabase
+    .from("student_writings")
+    .select("assignment_id")
+    .eq("id", writingId)
+    .maybeSingle();
+
+  if (trimmed.length === 0) {
+    const { error } = await supabase
+      .from("teacher_feedback")
+      .delete()
+      .eq("student_writing_id", writingId)
+      .eq("teacher_id", profile.id)
+      .eq("step_key", stepKey);
+    if (error) {
+      throw new Error(`upsertSectionFeedback delete: ${error.message}`);
+    }
+  } else {
+    const { error } = await supabase.from("teacher_feedback").upsert(
+      {
+        student_writing_id: writingId,
+        teacher_id: profile.id,
+        target_kind: "student_writing",
+        target_id: writingId,
+        step_key: stepKey,
+        body: trimmed,
+        is_resolved: false,
+      },
+      { onConflict: "student_writing_id,teacher_id,step_key" }
+    );
+    if (error) {
+      throw new Error(`upsertSectionFeedback upsert: ${error.message}`);
+    }
+  }
+
+  if (writing?.assignment_id) {
+    revalidatePath(
+      `/dashboard/assignments/${writing.assignment_id}/writings/${writingId}`
+    );
+  }
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
+/**
  * Updates the body of an existing feedback row. RLS allows only the
  * authoring teacher.
  */
