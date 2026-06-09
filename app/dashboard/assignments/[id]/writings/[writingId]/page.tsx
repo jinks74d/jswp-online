@@ -2,16 +2,14 @@
  * /dashboard/assignments/[id]/writings/[writingId] — teacher review
  * surface for a single student writing.
  *
- * Layout:
+ * Layout (single column):
  *   [back-link to submissions]   Student name · status badge   [Return] [Mark Graded]
  *   ─────────────────────────────────────────────────────────────────
- *   Left  (md:2/3): combined read-only view (every step's component
- *                   stacked top-to-bottom, wrapped in
- *                   <WritingModeProvider isReadOnly={true}>).
- *   Right (md:1/3): sticky <FeedbackPanel mode="teacher">.
- *
- * Mobile (< md): stacked, feedback panel at top. Polish ticket
- * tracks a drawer-based mobile experience (see docs/BACKLOG.md).
+ *   Combined read-only view — every step stacked top-to-bottom, each
+ *   step followed by a SectionFeedbackNote textarea (per-section
+ *   teacher feedback), wrapped in <WritingModeProvider isReadOnly>.
+ *   ─────────────────────────────────────────────────────────────────
+ *   "Overall feedback" heading + threaded <FeedbackPanel mode="teacher">.
  *
  * RLS scopes everything via getWritingForTeacherReview — the page
  * notFound()s for writings the teacher can't see.
@@ -53,7 +51,9 @@ export default async function TeacherWritingReviewPage({
   ]);
   const { byStep: feedbackByStep, overall: overallFeedback } =
     groupSectionFeedback(feedback);
-  const unresolvedCount = overallFeedback.filter((f) => !f.is_resolved).length;
+  // Return-for-revision is enabled once the teacher has left ANY unresolved
+  // feedback — per-section notes OR overall comments both count.
+  const unresolvedCount = feedback.filter((f) => !f.is_resolved).length;
 
   const studentName =
     [writing.student.first_name, writing.student.last_name]
@@ -110,8 +110,14 @@ export default async function TeacherWritingReviewPage({
           }}
         />
 
-        <section className="border-t border-gray-200 pt-6">
-          <h2 className="mb-3 text-lg font-semibold text-gray-900">
+        <section
+          aria-labelledby="overall-feedback-heading"
+          className="border-t border-gray-200 pt-6"
+        >
+          <h2
+            id="overall-feedback-heading"
+            className="mb-3 text-lg font-semibold text-gray-900"
+          >
             Overall feedback
           </h2>
           <FeedbackPanel

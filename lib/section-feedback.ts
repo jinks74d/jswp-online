@@ -11,7 +11,7 @@
 import type { FeedbackItemRow } from "@/lib/queries/teacher-feedback";
 
 export interface GroupedFeedback {
-  readonly byStep: Map<string, FeedbackItemRow>;
+  readonly byStep: ReadonlyMap<string, FeedbackItemRow>;
   readonly overall: FeedbackItemRow[];
 }
 
