@@ -640,6 +640,10 @@ export type ParagraphForms = {
   id: string;
   body_paragraph_id: string;
   final_text: string;
+  // False = final_text auto-syncs from the composed paragraph on each
+  // Paragraph Form visit. True = student hand-edited the fine-tune box;
+  // preserve their wording. Migration 0029.
+  final_text_customized: boolean;
   word_count: number | null;
 } & Timestamps;
 
@@ -667,6 +671,9 @@ export type TeacherFeedback = {
   target_kind: Database["public"]["Enums"]["jswp_feedback_target"];
   target_id: string;
   body: string;
+  // Section anchor: step key a section note targets; NULL = overall
+  // whole-writing comment (the threaded panel). Migration 0030.
+  step_key: string | null;
   rubric_score: number | null;
   is_resolved: boolean;
 } & Timestamps;
