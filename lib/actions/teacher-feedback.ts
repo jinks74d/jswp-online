@@ -99,14 +99,26 @@ export async function upsertSectionFeedback(
     .maybeSingle();
 
   if (trimmed.length === 0) {
-    const { error } = await supabase
+    // Empty note: delete the row only if it has no grade either; otherwise
+    // just clear the body and keep the row (the section grade lives on it).
+    const { data: existing } = await supabase
       .from("teacher_feedback")
-      .delete()
+      .select("id, grade_value")
       .eq("student_writing_id", writingId)
       .eq("teacher_id", profile.id)
-      .eq("step_key", stepKey);
-    if (error) {
-      throw new Error(`upsertSectionFeedback delete: ${error.message}`);
+      .eq("step_key", stepKey)
+      .maybeSingle();
+    if (existing) {
+      const hasGrade = (existing.grade_value ?? "").trim().length > 0;
+      const { error } = hasGrade
+        ? await supabase
+            .from("teacher_feedback")
+            .update({ body: "" })
+            .eq("id", existing.id)
+        : await supabase.from("teacher_feedback").delete().eq("id", existing.id);
+      if (error) {
+        throw new Error(`upsertSectionFeedback clear: ${error.message}`);
+      }
     }
   } else {
     const { error } = await supabase.from("teacher_feedback").upsert(
