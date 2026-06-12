@@ -27,6 +27,8 @@ interface Props {
   sourceText: string | null;
   sourceTitle: string | null;
   sourceAuthor: string | null;
+  sourceFilePath: string | null;
+  sourceFileName: string | null;
   annotations: readonly TextAnnotationRow[];
 }
 
@@ -57,6 +59,8 @@ export function TsdClient({
   sourceText,
   sourceTitle,
   sourceAuthor,
+  sourceFilePath,
+  sourceFileName,
   annotations,
 }: Props) {
   const { isReadOnly } = useWritingMode();
@@ -141,9 +145,12 @@ export function TsdClient({
           </summary>
           <div className="px-4 pb-4 border-t border-gray-100 pt-3">
             <ReferencePanel
+              writingId={writingId}
               sourceText={sourceText}
               sourceTitle={sourceTitle}
               sourceAuthor={sourceAuthor}
+              sourceFilePath={sourceFilePath}
+              sourceFileName={sourceFileName}
               annotations={annotations}
             />
           </div>
@@ -162,9 +169,12 @@ export function TsdClient({
         {showReference && sourceText && (
           <aside className="hidden lg:block lg:sticky lg:top-20 lg:self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
             <ReferencePanel
+              writingId={writingId}
               sourceText={sourceText}
               sourceTitle={sourceTitle}
               sourceAuthor={sourceAuthor}
+              sourceFilePath={sourceFilePath}
+              sourceFileName={sourceFileName}
               annotations={annotations}
             />
           </aside>

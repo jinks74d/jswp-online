@@ -16,6 +16,8 @@ interface Props {
   sourceText: string | null;
   sourceTitle: string | null;
   sourceAuthor: string | null;
+  sourceFilePath: string | null;
+  sourceFileName: string | null;
 }
 
 export async function ElaborationStep({
@@ -26,6 +28,8 @@ export async function ElaborationStep({
   sourceText,
   sourceTitle,
   sourceAuthor,
+  sourceFilePath,
+  sourceFileName,
 }: Props) {
   const [bps, annotations] = await Promise.all([
     getCommentaryByWriting(writingId),
@@ -51,6 +55,8 @@ export async function ElaborationStep({
         sourceText={sourceText}
         sourceTitle={sourceTitle}
         sourceAuthor={sourceAuthor}
+        sourceFilePath={sourceFilePath}
+        sourceFileName={sourceFileName}
         annotations={annotations}
       />
     </div>

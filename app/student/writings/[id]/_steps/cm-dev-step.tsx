@@ -26,6 +26,8 @@ interface Props {
   sourceText: string | null;
   sourceTitle: string | null;
   sourceAuthor: string | null;
+  sourceFilePath: string | null;
+  sourceFileName: string | null;
 }
 
 export async function CmDevStep({
@@ -36,6 +38,8 @@ export async function CmDevStep({
   sourceText,
   sourceTitle,
   sourceAuthor,
+  sourceFilePath,
+  sourceFileName,
 }: Props) {
   await bootstrapWritingStructure(writingId);
 
@@ -63,6 +67,8 @@ export async function CmDevStep({
         sourceText={sourceText}
         sourceTitle={sourceTitle}
         sourceAuthor={sourceAuthor}
+        sourceFilePath={sourceFilePath}
+        sourceFileName={sourceFileName}
         annotations={annotations}
       />
     </div>

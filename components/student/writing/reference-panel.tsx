@@ -14,6 +14,7 @@
 
 import { useState } from "react";
 import { SourceTextViewer } from "./source-text-viewer";
+import { OpenOriginalButton } from "./open-original-button";
 import {
   ANNOTATION_KINDS,
   ANNOTATION_KIND_ORDER,
@@ -22,16 +23,22 @@ import {
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 
 interface Props {
+  writingId: string;
   sourceText: string;
   sourceTitle: string | null;
   sourceAuthor: string | null;
+  sourceFilePath: string | null;
+  sourceFileName: string | null;
   annotations: readonly TextAnnotationRow[];
 }
 
 export function ReferencePanel({
+  writingId,
   sourceText,
   sourceTitle,
   sourceAuthor,
+  sourceFilePath,
+  sourceFileName,
   annotations,
 }: Props) {
   const [visibleKinds, setVisibleKinds] = useState<ReadonlySet<AnnotationKind>>(
@@ -55,7 +62,7 @@ export function ReferencePanel({
 
   return (
     <div className="space-y-3">
-      <header>
+      <header className="space-y-1.5">
         <div className="text-xs uppercase tracking-wide text-gray-500">
           Reference
         </div>
@@ -67,6 +74,9 @@ export function ReferencePanel({
             {sourceTitle && sourceAuthor && " · "}
             {sourceAuthor && <span className="text-gray-700">{sourceAuthor}</span>}
           </div>
+        )}
+        {sourceFilePath && (
+          <OpenOriginalButton writingId={writingId} fileName={sourceFileName} />
         )}
       </header>
 

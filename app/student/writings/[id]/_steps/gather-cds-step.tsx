@@ -23,6 +23,8 @@ interface Props {
   sourceText: string | null;
   sourceTitle: string | null;
   sourceAuthor: string | null;
+  sourceFilePath: string | null;
+  sourceFileName: string | null;
 }
 
 export async function GatherCdsStep({
@@ -33,6 +35,8 @@ export async function GatherCdsStep({
   sourceText,
   sourceTitle,
   sourceAuthor,
+  sourceFilePath,
+  sourceFileName,
 }: Props) {
   // Idempotent: safe to call on every visit. Race-safe via UNIQUE
   // (student_writing_id, body_paragraph_position) + ignoreDuplicates.
@@ -62,6 +66,8 @@ export async function GatherCdsStep({
         sourceText={sourceText}
         sourceTitle={sourceTitle}
         sourceAuthor={sourceAuthor}
+        sourceFilePath={sourceFilePath}
+        sourceFileName={sourceFileName}
         annotations={annotations}
       />
     </div>
