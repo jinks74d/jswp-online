@@ -48,16 +48,17 @@ export default async function StudentAssignmentDetail({
   const ctaLabel = ctaLabelFor(item.status);
   const rubric = loadRubric(item.rubric);
 
-  // For a PDF source, mint a signed URL server-side so the viewer can embed
-  // it on first render. (Non-pdf modes don't need it.)
-  let pdfUrl: string | null = null;
-  if (item.source_render_mode === "pdf" && item.source_file_path) {
+  // Mint a signed URL server-side for any uploaded source file so the viewer
+  // can embed the PDF or render the .docx faithfully on first paint. (Typed/
+  // pasted rich + plain sources have no file and don't need one.)
+  let fileUrl: string | null = null;
+  if (item.source_file_path) {
     const supabase = await createServerClient();
     const res = await getAssignmentSourceSignedUrl(
       supabase,
       item.source_file_path
     );
-    if (res.ok) pdfUrl = res.url;
+    if (res.ok) fileUrl = res.url;
   }
 
   return (
@@ -118,7 +119,7 @@ export default async function StudentAssignmentDetail({
               renderMode={item.source_render_mode}
               plainText={item.source_text}
               html={item.source_html}
-              pdfUrl={pdfUrl}
+              fileUrl={fileUrl}
               fileName={item.source_file_name}
             />
             {item.source_citation && (
