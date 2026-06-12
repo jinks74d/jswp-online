@@ -91,7 +91,8 @@ rides the existing **school-scoped** `assignment-sources` bucket.
 | Dep | Purpose | Chunk |
 |---|---|---|
 | `pdfjs-dist` | PDF render + text-layer annotation | 2 (student), 3 (teacher review) |
-| `mammoth` | `.docx` → clean HTML for rich mode | 1 |
+| `mammoth` | `.docx` → text for the annotation substrate (`source_text`) | 1 |
+| `docx-preview` | faithful `.docx` *display* (images/tables/fonts/layout) | 2 display slice (approved 2026-06-12) |
 | *(none)* | rich-text editor = minimal `contentEditable`, reusing `sanitizeExemplarHtml` | 1 |
 
 Already present and reused: `unpdf` (PDF→text), `dompurify` + `jsdom`
@@ -117,10 +118,14 @@ Already present and reused: `unpdf` (PDF→text), `dompurify` + `jsdom`
 **Display-only slice — ✅ DONE (2026-06-12).** Students now *see* the formatted
 source (they previously only ever saw the flattened `source_text`):
 - `SourceDocViewer` (`components/student/writing/source-doc-viewer.tsx`,
-  display-only, server-renderable): `pdf` → inline signed-URL `<iframe>` +
-  "Open original" link; `rich` → sanitized `source_html` (`.source-doc` styles in
-  globals.css); `plain` → unchanged. Falls back to plain text if the file/html is
-  missing.
+  display-only, server-renderable): `pdf` → inline signed-URL `<iframe>`
+  (pixel-perfect) + "Open original"; `rich` + **`.docx` file** → `DocxViewer`
+  (docx-preview: faithful images/tables/headings/fonts/page layout); `rich`
+  typed/pasted (no file) → sanitized `source_html` (`.source-doc` styles);
+  `plain` → unchanged. Falls back to plain text if the file/html is missing.
+  **The doc "appears as the original"** — the requirement that drove the
+  docx-preview addition. `mammoth` output is now used *only* as the annotation
+  substrate, not for display.
 - Wired into student **assignment-detail** (signed URL minted server-side).
 - Annotate step + all downstream **reference panels** keep the plain
   highlightable `SourceTextViewer` as the annotation substrate (no highlight
