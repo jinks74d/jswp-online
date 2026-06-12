@@ -113,12 +113,29 @@ Already present and reused: `unpdf` (PDF→text), `dompurify` + `jsdom`
   projection of `source_html` — *no injected newlines* (offsets must align).
 
 ### Chunk 2 — Student render + annotation — *the hard one; needs `pdfjs-dist`*
+
+**Display-only slice — ✅ DONE (2026-06-12).** Students now *see* the formatted
+source (they previously only ever saw the flattened `source_text`):
+- `SourceDocViewer` (`components/student/writing/source-doc-viewer.tsx`,
+  display-only, server-renderable): `pdf` → inline signed-URL `<iframe>` +
+  "Open original" link; `rich` → sanitized `source_html` (`.source-doc` styles in
+  globals.css); `plain` → unchanged. Falls back to plain text if the file/html is
+  missing.
+- Wired into student **assignment-detail** (signed URL minted server-side).
+- Annotate step + all downstream **reference panels** keep the plain
+  highlightable `SourceTextViewer` as the annotation substrate (no highlight
+  regression) and gain an **"Open original"** button
+  (`OpenOriginalButton` → `getWritingSourceUrl` mints a fresh signed URL on
+  click). `source_render_mode/html/file_path/file_name` added to `getWriting`,
+  `getWritingForTeacherReview`, and `getStudentAssignmentDetail`.
+
+**Still deferred (the genuinely hard part — needs `pdfjs-dist`):**
 - PDF mode: PDF.js canvas + text layer; selection → offset via the
   `getTextContent()` concatenation that produced `source_text`;
   offset → highlight overlay rectangles over covered text items.
 - Rich mode: render `source_html`; rich-aware `<mark>` wrapping **across element
   boundaries**; offsets via the existing TreeWalker.
-- Plain mode: unchanged.
+- Plain mode: unchanged (already annotatable today).
 - All three feed `text_annotations` unchanged.
 
 ### Chunk 3 — Teacher review render
