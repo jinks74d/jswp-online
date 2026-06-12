@@ -112,6 +112,8 @@ export default async function TeacherWritingReviewPage({
             source_text: writing.assignment.source_text,
             source_title: writing.assignment.source_title,
             source_author: writing.assignment.source_author,
+            source_file_path: writing.assignment.source_file_path,
+            source_file_name: writing.assignment.source_file_name,
           }}
         />
 

@@ -15,6 +15,9 @@ import { Calendar, FileText } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getStudentAssignmentDetail } from "@/lib/queries/student-assignments";
 import { loadRubric } from "@/lib/rubric";
+import { createServerClient } from "@/lib/supabase/server";
+import { getAssignmentSourceSignedUrl } from "@/lib/storage/assignment-sources";
+import { SourceDocViewer } from "@/components/student/writing/source-doc-viewer";
 import { StatusBadge } from "@/components/student/status-badge";
 import { StartWritingButton } from "./start-writing-button";
 import { startWriting } from "@/lib/actions/student-writings";
@@ -44,6 +47,18 @@ export default async function StudentAssignmentDetail({
   const dueText = formatDue(item.due_at);
   const ctaLabel = ctaLabelFor(item.status);
   const rubric = loadRubric(item.rubric);
+
+  // For a PDF source, mint a signed URL server-side so the viewer can embed
+  // it on first render. (Non-pdf modes don't need it.)
+  let pdfUrl: string | null = null;
+  if (item.source_render_mode === "pdf" && item.source_file_path) {
+    const supabase = await createServerClient();
+    const res = await getAssignmentSourceSignedUrl(
+      supabase,
+      item.source_file_path
+    );
+    if (res.ok) pdfUrl = res.url;
+  }
 
   return (
     <div className="space-y-6">
@@ -99,9 +114,13 @@ export default async function StudentAssignmentDetail({
             </span>
           </summary>
           <div className="px-5 pb-5 border-t border-gray-100 pt-4">
-            <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
-              {item.source_text}
-            </p>
+            <SourceDocViewer
+              renderMode={item.source_render_mode}
+              plainText={item.source_text}
+              html={item.source_html}
+              pdfUrl={pdfUrl}
+              fileName={item.source_file_name}
+            />
             {item.source_citation && (
               <p className="mt-4 text-xs text-gray-500 italic">
                 {item.source_citation}

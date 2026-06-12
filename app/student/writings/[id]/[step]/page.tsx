@@ -144,6 +144,8 @@ export default async function StepDispatcher({
         sourceText={a.source_text}
         sourceTitle={a.source_title}
         sourceAuthor={a.source_author}
+        sourceFilePath={a.source_file_path}
+        sourceFileName={a.source_file_name}
       />
     );
   }

@@ -60,6 +60,10 @@ export interface StudentAssignmentDetail {
   source_author: string | null;
   source_citation: string | null;
   source_url: string | null;
+  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_html: string | null;
+  source_file_path: string | null;
+  source_file_name: string | null;
   rubric: Database["public"]["Tables"]["assignments"]["Row"]["rubric"];
   due_at: string | null;
   released_at: string | null;
@@ -178,7 +182,8 @@ export async function getStudentAssignmentDetail(
     .select(
       `id, title, prompt, mode, is_essay, num_body_paragraphs,
        has_counterargument, source_text, source_title, source_author,
-       source_citation, source_url, rubric, due_at, released_at`
+       source_citation, source_url, source_render_mode, source_html,
+       source_file_path, source_file_name, rubric, due_at, released_at`
     )
     .eq("id", assignmentId)
     .maybeSingle();

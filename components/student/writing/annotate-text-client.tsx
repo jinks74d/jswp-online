@@ -18,6 +18,7 @@
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { SourceTextViewer, type SelectionPayload } from "./source-text-viewer";
+import { OpenOriginalButton } from "./open-original-button";
 import { AnnotationPopover } from "./annotation-popover";
 import {
   AnnotationForm,
@@ -39,6 +40,8 @@ interface Props {
   sourceText: string;
   sourceTitle: string | null;
   sourceAuthor: string | null;
+  sourceFilePath: string | null;
+  sourceFileName: string | null;
   initialAnnotations: readonly TextAnnotationRow[];
 }
 
@@ -49,6 +52,8 @@ export function AnnotateTextClient({
   sourceText,
   sourceTitle,
   sourceAuthor,
+  sourceFilePath,
+  sourceFileName,
   initialAnnotations,
 }: Props) {
   const { isReadOnly } = useWritingMode();
@@ -120,15 +125,23 @@ export function AnnotateTextClient({
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-2 min-w-0">
-          {(sourceTitle || sourceAuthor) && (
-            <div className="text-sm text-gray-600">
-              {sourceTitle && (
-                <span className="font-medium text-gray-800">{sourceTitle}</span>
-              )}
-              {sourceTitle && sourceAuthor && " · "}
-              {sourceAuthor && <span>{sourceAuthor}</span>}
-            </div>
-          )}
+          <div className="flex items-start justify-between gap-3">
+            {(sourceTitle || sourceAuthor) && (
+              <div className="text-sm text-gray-600">
+                {sourceTitle && (
+                  <span className="font-medium text-gray-800">{sourceTitle}</span>
+                )}
+                {sourceTitle && sourceAuthor && " · "}
+                {sourceAuthor && <span>{sourceAuthor}</span>}
+              </div>
+            )}
+            {sourceFilePath && (
+              <OpenOriginalButton
+                writingId={writingId}
+                fileName={sourceFileName}
+              />
+            )}
+          </div>
           {initialAnnotations.length === 0 && (
             <div className="text-xs text-gray-500 italic">
               Tip: select any passage to add your first annotation.

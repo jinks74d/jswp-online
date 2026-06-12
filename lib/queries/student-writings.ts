@@ -32,6 +32,10 @@ export type WritingForStepEngine = WritingRow & {
     | "source_text"
     | "source_title"
     | "source_author"
+    | "source_render_mode"
+    | "source_html"
+    | "source_file_path"
+    | "source_file_name"
     | "default_chunk_ratio"
     | "num_body_paragraphs"
     | "default_chunks_per_bp"
@@ -54,7 +58,8 @@ export async function getWriting(
       *,
       assignment:assignment_id (
         id, title, prompt, mode, is_essay, has_counterargument,
-        source_text, source_title, source_author, default_chunk_ratio,
+        source_text, source_title, source_author, source_render_mode,
+        source_html, source_file_path, source_file_name, default_chunk_ratio,
         num_body_paragraphs, default_chunks_per_bp
       )
       `

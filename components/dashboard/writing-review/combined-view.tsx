@@ -58,6 +58,8 @@ interface Props {
     source_text: string | null;
     source_title: string | null;
     source_author: string | null;
+    source_file_path: string | null;
+    source_file_name: string | null;
   };
 }
 
@@ -165,6 +167,8 @@ function renderStep({
         sourceText={assignment.source_text}
         sourceTitle={assignment.source_title}
         sourceAuthor={assignment.source_author}
+        sourceFilePath={assignment.source_file_path}
+        sourceFileName={assignment.source_file_name}
       />
     );
   }
