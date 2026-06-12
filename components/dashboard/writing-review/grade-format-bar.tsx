@@ -5,7 +5,7 @@
  * student_writings.grade_format; all section + overall grade inputs follow.
  */
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { setGradeFormat } from "@/lib/actions/feedback-grades";
 import type { GradeFormat } from "@/lib/grade-format";
@@ -25,14 +25,17 @@ export function GradeFormatBar({
   format: GradeFormat;
 }) {
   const [pending, start] = useTransition();
+  const [failed, setFailed] = useState(false);
 
   const choose = (f: GradeFormat) => {
     if (f === format) return;
+    setFailed(false);
     start(async () => {
       try {
         await setGradeFormat(writingId, f);
       } catch (e) {
         console.error("set grade format:", e);
+        setFailed(true);
       }
     });
   };
@@ -61,6 +64,11 @@ export function GradeFormatBar({
         })}
       </div>
       {pending && <Loader2 className="h-4 w-4 animate-spin text-stone-400" />}
+      {!pending && failed && (
+        <span role="alert" className="text-sm font-semibold text-red-600">
+          ⚠ Not saved — try again
+        </span>
+      )}
       <span className="text-xs text-stone-500">
         Applies to every section grade and the overall grade.
       </span>

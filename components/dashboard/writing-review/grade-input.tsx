@@ -32,6 +32,7 @@ export function GradeInput({
 }) {
   const [pending, start] = useTransition();
   const [local, setLocal] = useState(value);
+  const [failed, setFailed] = useState(false);
 
   // Re-sync the number field when the server value changes (after a save +
   // revalidate, or a format switch). Letter/check read `value` directly, so
@@ -54,14 +55,29 @@ export function GradeInput({
 
   const save = (next: string) => {
     if (!onSave) return;
+    setFailed(false);
     start(async () => {
       try {
         await onSave(next);
       } catch (e) {
         console.error("grade save:", e);
+        setFailed(true);
       }
     });
   };
+
+  // Inline indicator: spinner while saving, red "not saved" mark on failure.
+  const statusMark = pending ? (
+    <Loader2 className="h-3.5 w-3.5 animate-spin text-stone-400" />
+  ) : failed ? (
+    <span
+      role="alert"
+      title="Couldn’t save — try again"
+      className="text-sm font-bold text-red-600"
+    >
+      ⚠ Not saved
+    </span>
+  ) : null;
 
   if (format === "check") {
     return (
@@ -85,46 +101,52 @@ export function GradeInput({
             </button>
           );
         })}
-        {pending && <Loader2 className="h-3.5 w-3.5 animate-spin text-stone-400" />}
+        {statusMark}
       </span>
     );
   }
 
   if (format === "letter") {
     return (
-      <select
-        value={value}
-        disabled={pending}
-        onChange={(e) => save(e.target.value)}
-        className="rounded-md border border-stone-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        aria-label={ariaLabel ?? "Grade"}
-      >
-        <option value="">—</option>
-        {LETTER_GRADES.map((g) => (
-          <option key={g} value={g}>
-            {g}
-          </option>
-        ))}
-      </select>
+      <span className="inline-flex items-center gap-1.5">
+        <select
+          value={value}
+          disabled={pending}
+          onChange={(e) => save(e.target.value)}
+          className="rounded-md border border-stone-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label={ariaLabel ?? "Grade"}
+        >
+          <option value="">—</option>
+          {LETTER_GRADES.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+        {statusMark}
+      </span>
     );
   }
 
   // number
   return (
-    <input
-      type="number"
-      min={0}
-      max={100}
-      inputMode="numeric"
-      value={local}
-      disabled={pending}
-      onChange={(e) => setLocal(e.target.value)}
-      onBlur={() => {
-        if (local.trim() !== value.trim()) save(local.trim());
-      }}
-      placeholder="0–100"
-      aria-label={ariaLabel ?? "Grade"}
-      className="w-20 rounded-md border border-stone-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
+    <span className="inline-flex items-center gap-1.5">
+      <input
+        type="number"
+        min={0}
+        max={100}
+        inputMode="numeric"
+        value={local}
+        disabled={pending}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={() => {
+          if (local.trim() !== value.trim()) save(local.trim());
+        }}
+        placeholder="0–100"
+        aria-label={ariaLabel ?? "Grade"}
+        className="w-20 rounded-md border border-stone-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      {statusMark}
+    </span>
   );
 }
