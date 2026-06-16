@@ -24,6 +24,7 @@
     "performance-audit": "lighthouse http://localhost:3000 --output=json --output-path=./lighthouse-report.json",
     "seed:auth": "tsx scripts/seed-auth.ts",
     "db:check": "tsx scripts/db-check.ts",
+    "backfill:source-html": "tsx scripts/backfill-source-html.ts",
     "test:rls": "vitest run --config __tests__/schema/vitest.config.ts"
   },
   "dependencies": {
