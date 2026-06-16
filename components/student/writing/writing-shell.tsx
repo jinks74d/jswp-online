@@ -54,6 +54,7 @@ export function WritingShell({
   assignment: {
     id: string;
     title: string;
+    prompt: string;
     mode: keyof typeof MODE_LABELS;
   };
   steps: readonly StepConfig[];
@@ -102,6 +103,19 @@ export function WritingShell({
         </div>
         <h1 className="text-2xl font-bold text-gray-900">{assignment.title}</h1>
       </header>
+
+      {/* The prompt rides at the top of every step so the student never loses
+          sight of what they're writing about. */}
+      {assignment.prompt.trim() && (
+        <section className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Prompt
+          </div>
+          <p className="whitespace-pre-wrap text-sm text-gray-800">
+            {assignment.prompt}
+          </p>
+        </section>
+      )}
 
       <StatusBanner
         status={status}

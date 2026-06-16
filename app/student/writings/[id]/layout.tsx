@@ -77,6 +77,7 @@ export default async function WritingLayout({
         assignment={{
           id: a.id,
           title: a.title,
+          prompt: a.prompt,
           mode: a.mode as JswpMode,
         }}
         steps={visibleSteps}
