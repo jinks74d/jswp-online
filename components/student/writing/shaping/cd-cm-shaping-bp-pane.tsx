@@ -26,9 +26,9 @@
  */
 
 import { useState, useTransition } from "react";
-import { Loader2, Plus, Trash2 } from "lucide-react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { PickNStitchPanel } from "./pick-n-stitch-panel";
+import { SentenceList, ROLE_COLOR_VAR } from "./sentence-list";
 import { RoleShapeLabel, type ShapeRole } from "@/components/jswp-color/role-shape";
 import { findRepeatedContentWords } from "@/lib/once-you-lose-it";
 import {
@@ -44,22 +44,6 @@ import type {
 import type { Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
-
-const ROLE_COLOR_VAR: Record<ShapeRole, string> = {
-  ts: "var(--jswp-color-ts)",
-  cd: "var(--jswp-color-cd)",
-  cm: "var(--jswp-color-cm)",
-  cs: "var(--jswp-color-cs)",
-};
-
-// Static literal classes so Tailwind's content scanner generates them
-// (a dynamically built `text-[color:${var}]` string would not register).
-const ROLE_TEXT_CLASS: Record<ShapeRole, string> = {
-  ts: "text-[color:var(--jswp-color-ts)]",
-  cd: "text-[color:var(--jswp-color-cd)]",
-  cm: "text-[color:var(--jswp-color-cm)]",
-  cs: "text-[color:var(--jswp-color-cs)]",
-};
 
 export function CdCmShapingBpPane({
   writingId,
@@ -392,102 +376,6 @@ function RepeatNudge({ words }: { words: readonly string[] }) {
       {words.length > shown.length && `(+${words.length - shown.length} more) `}
       appear{shown.length === 1 && words.length === 1 ? "s" : ""} in more than
       one sentence. Consider rewording.
-    </div>
-  );
-}
-
-function SentenceList({
-  role,
-  label,
-  helpText,
-  sentences,
-  onSave,
-}: {
-  role: ShapeRole;
-  label: string;
-  helpText: string;
-  sentences: readonly string[];
-  onSave: (next: string[]) => Promise<void>;
-}) {
-  const { isReadOnly } = useWritingMode();
-  const [pending, start] = useTransition();
-  const colorVar = ROLE_COLOR_VAR[role];
-  const textClass = ROLE_TEXT_CLASS[role];
-
-  const updateAt = (i: number, value: string): string[] => {
-    const next = sentences.slice();
-    next[i] = value;
-    return next;
-  };
-  const removeAt = (i: number): string[] => {
-    const next = sentences.slice();
-    next.splice(i, 1);
-    return next;
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <RoleShapeLabel role={role} />
-        <span
-          className="text-xs font-semibold uppercase tracking-wide"
-          style={{ color: colorVar }}
-        >
-          {label}
-        </span>
-      </div>
-      <p className="text-xs text-gray-500">{helpText}</p>
-      {sentences.length === 0 && (
-        <p className="text-xs text-gray-500 italic">
-          No sentences yet. Click [Add sentence] to start.
-        </p>
-      )}
-      {sentences.map((s, i) => (
-        <div key={i} className="flex items-start gap-2">
-          <div className="flex-1 min-w-0">
-            <AutoSaveInput
-              multiline
-              rows={2}
-              initialValue={s}
-              disabled={isReadOnly}
-              className={textClass}
-              onSave={async (value) => {
-                await onSave(updateAt(i, value));
-              }}
-            />
-          </div>
-          {!isReadOnly && (
-            <button
-              type="button"
-              onClick={() => start(async () => onSave(removeAt(i)))}
-              disabled={pending}
-              title="Remove sentence"
-              className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
-            >
-              {pending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-            </button>
-          )}
-        </div>
-      ))}
-      {!isReadOnly && (
-        <button
-          type="button"
-          onClick={() => start(async () => onSave([...sentences, ""]))}
-          disabled={pending}
-          className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-gray-300 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-        >
-          {pending ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <Plus className="w-3.5 h-3.5" />
-          )}
-          Add sentence
-        </button>
-      )}
     </div>
   );
 }
