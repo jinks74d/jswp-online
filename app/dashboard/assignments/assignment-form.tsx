@@ -14,7 +14,7 @@
  * After publish, structural fields lock; only title/prompt/due_at/class_period_id stay editable.
  */
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   Ban,
@@ -118,6 +118,19 @@ export function AssignmentForm({
 
   // Browser supabase client for the storage upload — created once.
   const supabase = useMemo(() => createBrowserClient(), []);
+
+  // Source-file archival needs an assignment id BEFORE the row exists (the
+  // file is uploaded client-side at pick time, not via the server action). On
+  // create we mint a stable id up front so the upload lands under
+  // assignment-{id}/ and source_file_path persists. Generated in an effect
+  // (not during render) so SSR and first client render agree — avoids a
+  // hydration mismatch. The id is a storage-folder key only; the DB row keeps
+  // its own generated id (no cleanup keys on this folder, so they need not match).
+  const [draftSourceId, setDraftSourceId] = useState<string | null>(null);
+  useEffect(() => {
+    if (formMode === "create") setDraftSourceId(crypto.randomUUID());
+  }, [formMode]);
+  const sourceAssignmentId = initial?.id ?? draftSourceId ?? undefined;
 
   const [createState, createAction, creating] = useActionState(
     createDraftAssignment,
@@ -322,7 +335,7 @@ export function AssignmentForm({
             }
             disabled={isPublished}
             schoolId={schoolId}
-            assignmentId={initial?.id}
+            assignmentId={sourceAssignmentId}
             supabase={supabase}
           />
         )}

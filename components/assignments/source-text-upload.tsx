@@ -72,8 +72,14 @@ export function SourceTextUpload({
             mime: file.type || "",
           };
         } else {
-          // Non-fatal — extraction succeeded.
+          // Extraction succeeded but archival failed. Surface it — without the
+          // stored original the assignment can only show extracted text, not
+          // the formatted PDF/.docx, so the teacher must know it didn't land.
           console.warn("source upload failed:", result.error);
+          setError(
+            `The text was extracted, but archiving the original file failed (${result.error}). ` +
+              `The formatted document won't display until the upload succeeds — try re-selecting the file.`
+          );
         }
       }
 
@@ -86,7 +92,7 @@ export function SourceTextUpload({
       setStatus(
         assignmentId || stored
           ? detail
-          : `${detail} Save the draft to archive the original file.`
+          : `${detail} Save the draft, then re-open it to archive the original file.`
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
