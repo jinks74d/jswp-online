@@ -42,6 +42,7 @@ interface Props {
   sourceAuthor: string | null;
   sourceFilePath: string | null;
   sourceFileName: string | null;
+  sourceHtml: string | null;
   initialAnnotations: readonly TextAnnotationRow[];
 }
 
@@ -54,6 +55,7 @@ export function AnnotateTextClient({
   sourceAuthor,
   sourceFilePath,
   sourceFileName,
+  sourceHtml,
   initialAnnotations,
 }: Props) {
   const { isReadOnly } = useWritingMode();
@@ -149,6 +151,7 @@ export function AnnotateTextClient({
           )}
           <SourceTextViewer
             sourceText={sourceText}
+            sourceHtml={sourceHtml}
             annotations={initialAnnotations}
             visibleKinds={visibleKinds}
             scrollToAnnotationId={scrollTargetId}

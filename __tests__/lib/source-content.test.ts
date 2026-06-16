@@ -70,3 +70,58 @@ describe("sanitizeSourceHtml — prose allowlist", () => {
     expect(sourceHtmlToSubstrate(sanitized)).toBe("good");
   });
 });
+
+describe("sanitizeSourceHtml — formatted source allowlist", () => {
+  it("keeps tables, blockquotes, links, images, and all heading levels", () => {
+    const out = sanitizeSourceHtml(
+      "<h1>H1</h1><h4>H4</h4>" +
+        "<blockquote>q</blockquote>" +
+        '<a href="https://x.test">link</a>' +
+        '<img src="data:image/png;base64,AAA" alt="fig">' +
+        "<table><thead><tr><th>H</th></tr></thead>" +
+        "<tbody><tr><td>C</td></tr></tbody></table>"
+    );
+    for (const tag of [
+      "<h1>",
+      "<h4>",
+      "<blockquote>",
+      "<a ",
+      "<img",
+      "<table>",
+      "<thead>",
+      "<th>",
+      "<tbody>",
+      "<td>",
+    ]) {
+      expect(out).toContain(tag);
+    }
+  });
+
+  it("forces target=_blank and rel=noopener noreferrer on links", () => {
+    const out = sanitizeSourceHtml('<a href="https://x.test">link</a>');
+    expect(out).toMatch(/target="_blank"/);
+    expect(out).toMatch(/rel="noopener noreferrer"/);
+  });
+
+  it("drops javascript: URLs on links", () => {
+    const out = sanitizeSourceHtml('<a href="javascript:alert(1)">x</a>');
+    expect(out).not.toMatch(/javascript:/i);
+  });
+
+  it("keeps data: image sources", () => {
+    const out = sanitizeSourceHtml('<img src="data:image/png;base64,AAA" alt="f">');
+    expect(out).toMatch(/src="data:image\/png;base64,AAA"/);
+  });
+
+  it("drops image sources outside data: and https:", () => {
+    const out = sanitizeSourceHtml('<img src="http://evil.test/x.png" alt="f">');
+    expect(out).not.toMatch(/http:\/\/evil/);
+  });
+
+  it("projects table cell text into the substrate in document order", () => {
+    const sanitized = sanitizeSourceHtml(
+      "<table><tbody><tr><td>A</td><td>B</td></tr></tbody></table>"
+    );
+    expect(sourceHtmlToSubstrate(sanitized)).toBe("AB");
+  });
+});

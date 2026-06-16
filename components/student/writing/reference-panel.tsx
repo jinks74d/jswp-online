@@ -29,6 +29,7 @@ interface Props {
   sourceAuthor: string | null;
   sourceFilePath: string | null;
   sourceFileName: string | null;
+  sourceHtml: string | null;
   annotations: readonly TextAnnotationRow[];
 }
 
@@ -39,6 +40,7 @@ export function ReferencePanel({
   sourceAuthor,
   sourceFilePath,
   sourceFileName,
+  sourceHtml,
   annotations,
 }: Props) {
   const [visibleKinds, setVisibleKinds] = useState<ReadonlySet<AnnotationKind>>(
@@ -119,6 +121,7 @@ export function ReferencePanel({
 
       <SourceTextViewer
         sourceText={sourceText}
+        sourceHtml={sourceHtml}
         annotations={annotations}
         visibleKinds={visibleKinds}
         scrollToAnnotationId={scrollTargetId}

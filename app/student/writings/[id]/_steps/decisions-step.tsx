@@ -20,6 +20,7 @@ interface Props {
   sourceAuthor: string | null;
   sourceFilePath: string | null;
   sourceFileName: string | null;
+  sourceHtml: string | null;
 }
 
 export async function DecisionsStep({
@@ -32,6 +33,7 @@ export async function DecisionsStep({
   sourceAuthor,
   sourceFilePath,
   sourceFileName,
+  sourceHtml,
 }: Props) {
   const [bps, annotations] = await Promise.all([
     getCommentaryByWriting(writingId),
@@ -59,6 +61,7 @@ export async function DecisionsStep({
         sourceAuthor={sourceAuthor}
         sourceFilePath={sourceFilePath}
         sourceFileName={sourceFileName}
+        sourceHtml={sourceHtml}
         annotations={annotations}
       />
     </div>

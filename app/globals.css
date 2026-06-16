@@ -172,3 +172,83 @@ body {
 .source-doc li { margin-bottom: 0.25em; }
 .source-doc strong { font-weight: 600; }
 .source-doc em { font-style: italic; }
+
+/* Formatted source on the Reading & Annotation step + reference panels
+ * (SourceTextViewer rich mode). Same prose surface as .source-doc, plus tables,
+ * blockquotes, links, and images. Tailwind preflight strips these defaults. */
+.source-rich p {
+  margin-bottom: 0.75em;
+}
+.source-rich p:last-child {
+  margin-bottom: 0;
+}
+.source-rich h1,
+.source-rich h2,
+.source-rich h3,
+.source-rich h4,
+.source-rich h5,
+.source-rich h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1em 0 0.5em;
+}
+.source-rich h1:first-child,
+.source-rich h2:first-child,
+.source-rich h3:first-child {
+  margin-top: 0;
+}
+.source-rich h1 { font-size: 1.375rem; }
+.source-rich h2 { font-size: 1.2rem; }
+.source-rich h3 { font-size: 1.05rem; }
+.source-rich h4,
+.source-rich h5,
+.source-rich h6 { font-size: 1rem; }
+.source-rich ul,
+.source-rich ol {
+  margin: 0.5em 0 0.75em 1.5em;
+}
+.source-rich ul { list-style: disc; }
+.source-rich ol { list-style: decimal; }
+.source-rich li { margin-bottom: 0.25em; }
+.source-rich strong { font-weight: 600; }
+.source-rich em { font-style: italic; }
+.source-rich u { text-decoration: underline; }
+.source-rich a {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+.source-rich blockquote {
+  margin: 0.75em 0;
+  padding-left: 1em;
+  border-left: 3px solid #d1d5db;
+  color: #374151;
+  font-style: italic;
+}
+.source-rich table {
+  border-collapse: collapse;
+  margin: 0.75em 0;
+  width: 100%;
+  font-size: 0.95em;
+}
+.source-rich th,
+.source-rich td {
+  border: 1px solid #d1d5db;
+  padding: 0.375em 0.625em;
+  text-align: left;
+  vertical-align: top;
+}
+.source-rich th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+.source-rich caption {
+  caption-side: top;
+  font-size: 0.85em;
+  color: #6b7280;
+  margin-bottom: 0.25em;
+}
+.source-rich img {
+  max-width: 100%;
+  height: auto;
+  margin: 0.5em 0;
+}

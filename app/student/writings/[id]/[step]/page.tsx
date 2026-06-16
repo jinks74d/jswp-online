@@ -146,6 +146,7 @@ export default async function StepDispatcher({
         sourceAuthor={a.source_author}
         sourceFilePath={a.source_file_path}
         sourceFileName={a.source_file_name}
+        sourceHtml={a.source_html}
       />
     );
   }
@@ -166,6 +167,7 @@ export default async function StepDispatcher({
           sourceAuthor={a.source_author}
           sourceFilePath={a.source_file_path}
           sourceFileName={a.source_file_name}
+          sourceHtml={a.source_html}
         />
       );
     }
@@ -207,6 +209,7 @@ export default async function StepDispatcher({
         sourceAuthor={a.source_author}
         sourceFilePath={a.source_file_path}
         sourceFileName={a.source_file_name}
+        sourceHtml={a.source_html}
       />
     );
   }
@@ -223,6 +226,7 @@ export default async function StepDispatcher({
         sourceAuthor={a.source_author}
         sourceFilePath={a.source_file_path}
         sourceFileName={a.source_file_name}
+        sourceHtml={a.source_html}
       />
     );
   }
@@ -239,6 +243,7 @@ export default async function StepDispatcher({
         sourceAuthor={a.source_author}
         sourceFilePath={a.source_file_path}
         sourceFileName={a.source_file_name}
+        sourceHtml={a.source_html}
       />
     );
   }
@@ -255,6 +260,7 @@ export default async function StepDispatcher({
         sourceAuthor={a.source_author}
         sourceFilePath={a.source_file_path}
         sourceFileName={a.source_file_name}
+        sourceHtml={a.source_html}
       />
     );
   }
@@ -286,6 +292,7 @@ export default async function StepDispatcher({
         sourceAuthor={a.source_author}
         sourceFilePath={a.source_file_path}
         sourceFileName={a.source_file_name}
+        sourceHtml={a.source_html}
       />
     );
   }

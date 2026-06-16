@@ -25,6 +25,7 @@ interface Props {
   sourceAuthor: string | null;
   sourceFilePath: string | null;
   sourceFileName: string | null;
+  sourceHtml: string | null;
 }
 
 export async function TopicSentenceDevStep({
@@ -37,6 +38,7 @@ export async function TopicSentenceDevStep({
   sourceAuthor,
   sourceFilePath,
   sourceFileName,
+  sourceHtml,
 }: Props) {
   // Idempotent: bootstraps if the student arrived here via URL hack
   // without visiting gather-cds. Race-safe via UNIQUE constraint.
@@ -68,6 +70,7 @@ export async function TopicSentenceDevStep({
         sourceAuthor={sourceAuthor}
         sourceFilePath={sourceFilePath}
         sourceFileName={sourceFileName}
+        sourceHtml={sourceHtml}
         annotations={annotations}
       />
     </div>

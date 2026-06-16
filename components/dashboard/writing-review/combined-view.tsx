@@ -169,6 +169,7 @@ function renderStep({
         sourceAuthor={assignment.source_author}
         sourceFilePath={assignment.source_file_path}
         sourceFileName={assignment.source_file_name}
+        sourceHtml={null}
       />
     );
   }
@@ -183,6 +184,7 @@ function renderStep({
           sourceAuthor={assignment.source_author}
           sourceFilePath={assignment.source_file_path}
           sourceFileName={assignment.source_file_name}
+          sourceHtml={null}
         />
       );
     }
@@ -204,6 +206,7 @@ function renderStep({
         sourceAuthor={assignment.source_author}
         sourceFilePath={assignment.source_file_path}
         sourceFileName={assignment.source_file_name}
+        sourceHtml={null}
       />
     );
   }
@@ -217,6 +220,7 @@ function renderStep({
         sourceAuthor={assignment.source_author}
         sourceFilePath={assignment.source_file_path}
         sourceFileName={assignment.source_file_name}
+        sourceHtml={null}
       />
     );
   }
@@ -230,6 +234,7 @@ function renderStep({
         sourceAuthor={assignment.source_author}
         sourceFilePath={assignment.source_file_path}
         sourceFileName={assignment.source_file_name}
+        sourceHtml={null}
       />
     );
   }
@@ -243,6 +248,7 @@ function renderStep({
         sourceAuthor={assignment.source_author}
         sourceFilePath={assignment.source_file_path}
         sourceFileName={assignment.source_file_name}
+        sourceHtml={null}
       />
     );
   }
@@ -261,6 +267,7 @@ function renderStep({
         sourceAuthor={assignment.source_author}
         sourceFilePath={assignment.source_file_path}
         sourceFileName={assignment.source_file_name}
+        sourceHtml={null}
       />
     );
   }

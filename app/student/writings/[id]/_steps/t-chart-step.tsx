@@ -30,6 +30,7 @@ interface Props {
   sourceAuthor: string | null;
   sourceFilePath: string | null;
   sourceFileName: string | null;
+  sourceHtml: string | null;
 }
 
 export async function TChartStep({
@@ -44,6 +45,7 @@ export async function TChartStep({
   sourceAuthor,
   sourceFilePath,
   sourceFileName,
+  sourceHtml,
 }: Props) {
   // Bootstrap is idempotent: safe to call on every visit. Concurrent
   // tabs racing through this won't create duplicates — see the
@@ -88,6 +90,7 @@ export async function TChartStep({
         sourceAuthor={sourceAuthor}
         sourceFilePath={sourceFilePath}
         sourceFileName={sourceFileName}
+        sourceHtml={sourceHtml}
         annotations={annotations}
       />
     </div>

@@ -24,6 +24,7 @@ interface Props {
   sourceAuthor: string | null;
   sourceFilePath: string | null;
   sourceFileName: string | null;
+  sourceHtml: string | null;
 }
 
 export async function AnnotateTextStep({
@@ -37,6 +38,7 @@ export async function AnnotateTextStep({
   sourceAuthor,
   sourceFilePath,
   sourceFileName,
+  sourceHtml,
 }: Props) {
   if (!sourceText) {
     return (
@@ -88,6 +90,7 @@ export async function AnnotateTextStep({
         sourceAuthor={sourceAuthor}
         sourceFilePath={sourceFilePath}
         sourceFileName={sourceFileName}
+        sourceHtml={sourceHtml}
         initialAnnotations={annotations}
       />
     </div>

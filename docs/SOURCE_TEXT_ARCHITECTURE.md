@@ -134,14 +134,32 @@ source (they previously only ever saw the flattened `source_text`):
   click). `source_render_mode/html/file_path/file_name` added to `getWriting`,
   `getWritingForTeacherReview`, and `getStudentAssignmentDetail`.
 
+**Rich-mode annotation render — ✅ DONE (2026-06-16).** The annotate step + all
+downstream reference panels now render `source_html` *formatted* (headings,
+paragraphs, lists, tables, blockquotes, links, images) instead of flat text,
+with annotation highlights wrapped **across element boundaries**:
+- `rich-source-tree.ts` (pure, unit-tested): parses `source_html`, splits text
+  nodes into marked/unmarked runs at annotation boundaries, first-wins overlap,
+  kind filtering, render-safe attr allowlist. Concatenated run text === the
+  `textContent` projection === `source_text`, so offsets never move.
+- `rich-source-body.tsx`: maps the tree to React, delegating `<mark>` back to
+  `SourceTextViewer` so flat/rich highlights are identical.
+- `SourceTextViewer` keys off `sourceHtml` presence; the build is mount-gated
+  (DOMParser is browser-only; SSR shows the flat substrate, then formatting
+  swaps in — no hydration mismatch). `sourceHtml` threaded through the annotate
+  step + 6 reference clients; teacher combined-review passes `null` (Chunk 3).
+- Sanitizer allowlist widened (tables/blockquote/links/images + h1–h6) with a
+  hook forcing link `rel`/`target` and clamping `<img src>` to `data:`/`https:`.
+- **Backfill:** `scripts/backfill-source-html.ts` rebuilds `source_html` for
+  previously-added `.docx` assignments (see the spec at
+  docs/superpowers/specs/2026-06-16-formatted-annotate-source-design.md §9).
+
 **Still deferred (the genuinely hard part — needs `pdfjs-dist`):**
 - PDF mode: PDF.js canvas + text layer; selection → offset via the
   `getTextContent()` concatenation that produced `source_text`;
   offset → highlight overlay rectangles over covered text items.
-- Rich mode: render `source_html`; rich-aware `<mark>` wrapping **across element
-  boundaries**; offsets via the existing TreeWalker.
 - Plain mode: unchanged (already annotatable today).
-- All three feed `text_annotations` unchanged.
+- Rich + PDF + plain all feed `text_annotations` unchanged.
 
 ### Chunk 3 — Teacher review render
 - Reuse Chunk 2 renderers to paint student annotations on the review surface.

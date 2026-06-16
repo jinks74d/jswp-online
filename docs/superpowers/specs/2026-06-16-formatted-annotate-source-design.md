@@ -151,13 +151,31 @@ components.
   architecture doc); the teacher combined-review surface (Chunk 3 — a later
   pass can reuse this renderer); any backfill of existing assignments.
 
-## 9. Data caveat (operational, not code)
+## 9. Data caveat + backfill (operational)
 
 Existing rich assignments were sanitized under the **old** allowlist, so their
 stored `source_html` / `source_text` already had tables, images, and links
-stripped at save time. They will render with whatever survived. To recover
-tables/images/links, the teacher must **re-save (re-upload)** that assignment;
-new uploads carry everything. No backfill script is planned unless requested.
+stripped at save time. The structure can only be recovered from the original
+`.docx` in the `assignment-sources` bucket, re-run through the same
+mammoth → sanitize → substrate pipeline.
+
+**Backfill: `scripts/backfill-source-html.ts`** (`npm run backfill:source-html`,
+`-- --apply` to write; dry-run by default; idempotent). For every `rich`
+assignment with a stored `.docx`, it re-converts and rewrites `source_html`
+(+ `source_text`). Because the old sanitizer used `KEEP_CONTENT`, the
+re-derived substrate normally equals the stored `source_text`, so annotation
+offsets do not move. Policy (operator-chosen): **force-update** every
+re-convertible `.docx`; if the substrate *did* change and annotations already
+exist, the run lists those assignments so shifted highlights can be reviewed.
+The data-safety decision logic is the pure, unit-tested `scripts/backfill-plan.ts`.
+
+**Live-DB reality (checked 2026-06-16 against `hcdvypzfzrzevkwkssiw`):** no
+assignment currently has a stored source file or `source_html` — the
+text-bearing ones are plain-text (`render_mode=null`) and one is a PDF, all
+predating file persistence. So the backfill has nothing to act on yet; existing
+assignments gain formatting only when the teacher **re-uploads a `.docx`** (or
+rich-edits), after which the script also catches future re-uploads. Plain-text
+sources have no structure to recover; the PDF needs the deferred PDF path.
 
 ## 10. Testing
 

@@ -27,6 +27,7 @@ interface Props {
   sourceAuthor: string | null;
   sourceFilePath: string | null;
   sourceFileName: string | null;
+  sourceHtml: string | null;
   annotations: readonly TextAnnotationRow[];
 }
 
@@ -63,6 +64,7 @@ export function CmDevClient({
   sourceAuthor,
   sourceFilePath,
   sourceFileName,
+  sourceHtml,
   annotations,
 }: Props) {
   const { isReadOnly } = useWritingMode();
@@ -153,6 +155,7 @@ export function CmDevClient({
               sourceAuthor={sourceAuthor}
               sourceFilePath={sourceFilePath}
               sourceFileName={sourceFileName}
+              sourceHtml={sourceHtml}
               annotations={annotations}
             />
           </div>
@@ -177,6 +180,7 @@ export function CmDevClient({
               sourceAuthor={sourceAuthor}
               sourceFilePath={sourceFilePath}
               sourceFileName={sourceFileName}
+              sourceHtml={sourceHtml}
               annotations={annotations}
             />
           </aside>

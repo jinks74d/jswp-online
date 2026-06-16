@@ -22,11 +22,13 @@
  *   position represent?"
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ANNOTATION_KINDS,
   type AnnotationKind,
 } from "./annotation-kind-config";
+import { buildRichTree } from "./rich-source-tree";
+import { RichSourceBody } from "./rich-source-body";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 
 export interface SelectionPayload {
@@ -39,6 +41,13 @@ export interface SelectionPayload {
 
 interface Props {
   sourceText: string;
+  /**
+   * Sanitized rich source HTML. When present (rich mode), the source renders
+   * formatted (headings, paragraphs, lists, tables, blockquotes, links,
+   * images) instead of flat plain text. Annotation offsets stay valid because
+   * sourceText is the exact textContent projection of this HTML.
+   */
+  sourceHtml?: string | null;
   annotations: readonly TextAnnotationRow[];
   visibleKinds: ReadonlySet<AnnotationKind>;
   /** Annotation id to scroll into view; cleared by parent after use. */
@@ -126,6 +135,7 @@ function getAbsoluteOffset(
 
 export function SourceTextViewer({
   sourceText,
+  sourceHtml,
   annotations,
   visibleKinds,
   scrollToAnnotationId,
@@ -135,6 +145,22 @@ export function SourceTextViewer({
   readOnly = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // buildRichTree uses DOMParser (browser-only); a "use client" component
+  // still server-renders, so gate the rich build behind mount. SSR + first
+  // client render show the flat substrate (readable, no hydration mismatch),
+  // then the formatted render swaps in.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const isRich = typeof sourceHtml === "string" && sourceHtml.length > 0;
+  const richTree = useMemo(
+    () =>
+      mounted && isRich
+        ? buildRichTree(sourceHtml as string, annotations, visibleKinds)
+        : null,
+    [mounted, isRich, sourceHtml, annotations, visibleKinds]
+  );
 
   // Smooth-scroll an annotation into view when the parent asks.
   useEffect(() => {
@@ -198,38 +224,58 @@ export function SourceTextViewer({
     });
   };
 
+  // Shared <mark> renderer so the flat and rich paths produce identical
+  // highlights (color, click-to-edit, data-annotation-id, accessible title).
+  const renderMark = (
+    annotation: TextAnnotationRow,
+    text: ReactNode,
+    key: string
+  ): ReactNode => {
+    const cfg = ANNOTATION_KINDS[annotation.kind];
+    return (
+      <mark
+        key={key}
+        data-annotation-id={annotation.id}
+        className={`${cfg.highlightBg} rounded px-0.5 ${readOnly ? "" : "cursor-pointer"} text-inherit`}
+        onClick={(e) => {
+          if (readOnly) return;
+          e.stopPropagation();
+          onAnnotationClick?.(annotation);
+        }}
+        title={cfg.label}
+      >
+        {text}
+      </mark>
+    );
+  };
+
+  // Rich mode: drop pre-wrap (block elements supply structure) and apply the
+  // scoped prose stylesheet. Flat mode keeps the verbatim whitespace render.
+  const containerClass = richTree
+    ? "source-rich bg-white border border-gray-200 rounded-lg p-5 leading-relaxed text-gray-900 select-text"
+    : "bg-white border border-gray-200 rounded-lg p-5 leading-relaxed text-gray-900 whitespace-pre-wrap select-text";
+
   const segments = buildSegments(sourceText, annotations, visibleKinds);
 
   return (
-    <div
-      ref={containerRef}
-      onMouseUp={handleMouseUp}
-      className="bg-white border border-gray-200 rounded-lg p-5 leading-relaxed text-gray-900 whitespace-pre-wrap select-text"
-    >
-      {segments.map((seg, i) => {
-        if (seg.kind === "plain") {
-          // Use a stable-ish key per-position; React keys based on index
-          // are fine here because the segment list rebuilds on every
-          // annotation change.
-          return <span key={`p-${i}`}>{seg.text}</span>;
-        }
-        const cfg = ANNOTATION_KINDS[seg.annotation.kind];
-        return (
-          <mark
-            key={`a-${seg.annotation.id}-${i}`}
-            data-annotation-id={seg.annotation.id}
-            className={`${cfg.highlightBg} rounded px-0.5 ${readOnly ? "" : "cursor-pointer"} text-inherit`}
-            onClick={(e) => {
-              if (readOnly) return;
-              e.stopPropagation();
-              onAnnotationClick?.(seg.annotation);
-            }}
-            title={cfg.label}
-          >
-            {seg.text}
-          </mark>
-        );
-      })}
+    <div ref={containerRef} onMouseUp={handleMouseUp} className={containerClass}>
+      {richTree ? (
+        <RichSourceBody nodes={richTree} renderMark={renderMark} />
+      ) : (
+        segments.map((seg, i) => {
+          if (seg.kind === "plain") {
+            // Use a stable-ish key per-position; React keys based on index
+            // are fine here because the segment list rebuilds on every
+            // annotation change.
+            return <span key={`p-${i}`}>{seg.text}</span>;
+          }
+          return renderMark(
+            seg.annotation,
+            seg.text,
+            `a-${seg.annotation.id}-${i}`
+          );
+        })
+      )}
     </div>
   );
 }
