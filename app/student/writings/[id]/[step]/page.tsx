@@ -99,11 +99,16 @@ export default async function StepDispatcher({
     />
   );
 
+  // Note renders AFTER the step content: the student reads their own work,
+  // then the teacher's note about it (natural reading order, and consistent
+  // with the teacher review surface, which also stacks the note under each
+  // step). readOnly SectionFeedbackNote returns null when there's no note, so
+  // steps without feedback are unaffected.
   function withNote(el: ReactNode): ReactNode {
     return (
       <>
-        {noteEl}
         {el}
+        {noteEl}
       </>
     );
   }
