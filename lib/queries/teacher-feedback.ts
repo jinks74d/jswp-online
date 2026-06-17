@@ -85,7 +85,7 @@ export async function listFeedback(
 /**
  * Counts unresolved teacher_feedback for a batch of writings. Returns
  * a Map keyed by writing id. Used by /student/assignments to annotate
- * "Needs Revision" cards with their pending feedback count without
+ * returned ("Feedback") cards with their pending feedback count without
  * an N+1.
  */
 export async function countTeacherFeedbackByWriting(

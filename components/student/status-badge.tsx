@@ -10,7 +10,11 @@ const LABELS: Record<DerivedStatus, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
   submitted: "Submitted",
-  returned: "Needs Revision",
+  // The teacher returned the writing with comments. Students respond to
+  // "Feedback" (what they got) better than "Needs Revision" (a verdict); the
+  // amber pill still signals action is needed. Teacher side keeps its own
+  // vocabulary — see components/dashboard/writing-review/teacher-status-badge.
+  returned: "Feedback",
   graded: "Graded",
 };
 

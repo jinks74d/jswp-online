@@ -1,7 +1,7 @@
 /**
  * Pill badge for the teacher's view of a student writing's status.
  * Different vocabulary from the student-side StatusBadge — the
- * student sees "Needs Revision" for `returned` (their POV), the
+ * student sees "Feedback" for `returned` (their POV), the
  * teacher sees "Returned" (theirs).
  *
  * Pure render, no client logic.

@@ -57,7 +57,7 @@ export default async function StudentHome() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="To do" value={todoCount} />
         <StatCard label="In progress" value={inProgressCount} />
-        <StatCard label="Needs revision" value={needsRevisionCount} />
+        <StatCard label="Feedback" value={needsRevisionCount} />
         <StatCard label="Submitted" value={submittedCount} />
         <StatCard label="Graded" value={gradedCount} />
       </div>

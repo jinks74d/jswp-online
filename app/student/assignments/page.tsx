@@ -21,7 +21,7 @@ const FILTERS: { value: DerivedStatus | "all"; label: string }[] = [
   { value: "all", label: "All" },
   { value: "not_started", label: "To do" },
   { value: "in_progress", label: "In progress" },
-  { value: "returned", label: "Needs revision" },
+  { value: "returned", label: "Feedback" },
   { value: "submitted", label: "Submitted" },
   { value: "graded", label: "Graded" },
 ];
