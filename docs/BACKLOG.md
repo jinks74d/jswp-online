@@ -32,6 +32,17 @@ CSV-imported school admins all default to `administrator` (`school-user.ts` pass
 - **Identified:** chunk school-admin-roles
 - **Priority:** polish
 
+### PDF extraction: separator heuristic edge cases
+`buildPdfText`'s separator rule (`lib/pdf-text.ts`, `SPACE_RATIO = 0.3`) produces
+readable substrate on real JSWP PDFs, but glues a few cross-region tokens — e.g.
+a footer page number abutting preceding text (`"LLC38"`) and column/heading
+boundaries (`"Writing COPYRIGHT"`). The offset invariant is unaffected (verified
+`true` on live data); this is cosmetic spacing only. Refinement candidates:
+line-grouping by `y` before applying the horizontal-gap test, and a column/region
+break heuristic. Tune against several real guides.
+- **Identified:** chunk pdf-annotate Phase 2 (commit 42a483f)
+- **Priority:** polish (Phase 7); not a blocker for annotation
+
 ### Expository step subLabels are off-by-one for 3+:0
 `jswp-modes.ts` hard-codes each Expository step's `subLabel` as a static
 `"Step N"` string ("Step 1" … "Step 5"), numbered for the 2+:1 sequence.
