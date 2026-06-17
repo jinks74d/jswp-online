@@ -15,6 +15,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildPdfText,
   itemsCoveringRange,
+  pageFromPdfJsItems,
   type PdfPage,
 } from "@/lib/pdf-text";
 
@@ -104,6 +105,66 @@ describe("buildPdfText — empty / scanned PDF", () => {
   it("returns empty text when no pages have items", () => {
     expect(buildPdfText([page(), page()]).text).toBe("");
     expect(buildPdfText([]).text).toBe("");
+  });
+});
+
+describe("pageFromPdfJsItems — pdf.js TextContent → PdfPage", () => {
+  // pdf.js TextItem geometry lives in transform = [a,b,c,d,e,f]; e=x (index 4),
+  // f=y (index 5). This mapping is the silent-failure-prone seam between
+  // pdfjs-dist and the pure buildPdfText pipeline, so it gets its own coverage.
+  it("maps str / hasEOL / width and pulls x,y from transform[4],[5]", () => {
+    const pdfItem = {
+      str: "Hello",
+      hasEOL: true,
+      width: 50,
+      height: 12,
+      dir: "ltr",
+      transform: [12, 0, 0, 12, 72, 700],
+      fontName: "g_d0_f1",
+    };
+    const pageOut = pageFromPdfJsItems([pdfItem]);
+    expect(pageOut.items).toEqual([
+      { str: "Hello", hasEOL: true, x: 72, y: 700, width: 50 },
+    ]);
+  });
+
+  it("drops TextMarkedContent markers (no str / transform)", () => {
+    const items = [
+      { type: "beginMarkedContent" },
+      {
+        str: "Body",
+        hasEOL: false,
+        width: 40,
+        transform: [12, 0, 0, 12, 10, 500],
+      },
+      { type: "endMarkedContent" },
+    ];
+    const pageOut = pageFromPdfJsItems(items);
+    expect(pageOut.items).toHaveLength(1);
+    expect(pageOut.items[0].str).toBe("Body");
+  });
+
+  it("defaults hasEOL to false when the item omits it", () => {
+    const pageOut = pageFromPdfJsItems([
+      { str: "x", width: 5, transform: [1, 0, 0, 1, 0, 0] },
+    ]);
+    expect(pageOut.items[0].hasEOL).toBe(false);
+  });
+
+  it("feeds buildPdfText to keep offsets aligned with source_text", () => {
+    // The whole point: the page this yields, run through buildPdfText, is the
+    // exact text stored as source_text at upload.
+    const items = [
+      { str: "Jane", hasEOL: false, width: 40, transform: [12, 0, 0, 12, 0, 0] },
+      {
+        str: "Schaffer",
+        hasEOL: false,
+        width: 80,
+        transform: [12, 0, 0, 12, 60, 0],
+      },
+    ];
+    const { text } = buildPdfText([pageFromPdfJsItems(items)]);
+    expect(text).toBe("Jane Schaffer");
   });
 });
 

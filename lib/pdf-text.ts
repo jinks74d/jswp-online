@@ -86,6 +86,52 @@ export function itemsCoveringRange(
   return out;
 }
 
+/**
+ * Minimal structural shape of a pdf.js `TextItem` we read. Declared here (rather
+ * than imported from pdfjs-dist) so this module stays dependency-free and the
+ * mapping is unit-testable with plain objects. pdf.js geometry lives in
+ * `transform = [a, b, c, d, e, f]`, where e (index 4) is x and f (index 5) is y.
+ */
+interface PdfJsTextItemLike {
+  readonly str: string;
+  readonly width: number;
+  readonly transform: readonly number[];
+  readonly hasEOL?: boolean;
+}
+
+function isPositionedTextItem(it: unknown): it is PdfJsTextItemLike {
+  if (typeof it !== "object" || it === null) return false;
+  const o = it as Record<string, unknown>;
+  return (
+    typeof o.str === "string" &&
+    typeof o.width === "number" &&
+    Array.isArray(o.transform) &&
+    o.transform.length >= 6
+  );
+}
+
+/**
+ * Map one pdf.js `getTextContent().items` array into a `PdfPage`, dropping
+ * `TextMarkedContent` marker entries (which carry no `str`/`transform`). This is
+ * the only seam coupling rendering to pdfjs-dist; everything downstream consumes
+ * the pure `PdfPage`/`buildPdfText` types. Keeping it pure (items in, page out)
+ * means the offset pipeline can be exercised without loading a PDF.
+ */
+export function pageFromPdfJsItems(items: readonly unknown[]): PdfPage {
+  const out: PdfTextItem[] = [];
+  for (const it of items) {
+    if (!isPositionedTextItem(it)) continue;
+    out.push({
+      str: it.str,
+      hasEOL: it.hasEOL === true,
+      x: it.transform[4],
+      y: it.transform[5],
+      width: it.width,
+    });
+  }
+  return { items: out };
+}
+
 interface Placed {
   readonly item: PdfTextItem;
   readonly pageIndex: number;

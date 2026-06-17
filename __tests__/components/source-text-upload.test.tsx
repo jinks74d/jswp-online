@@ -7,7 +7,7 @@
  *     while extraction still succeeds.
  *
  * Uses a .txt file so extractSource takes the local-read path (no dynamic
- * unpdf/mammoth import to mock).
+ * pdf.js/mammoth import to mock).
  */
 
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";

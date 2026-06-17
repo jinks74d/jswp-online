@@ -3,7 +3,7 @@
 /**
  * File picker for source-text upload. Resolves a render mode by file type:
  *   - .txt → plain text (local read)
- *   - .pdf → PDF-native; extracted text (unpdf) becomes the annotation
+ *   - .pdf → PDF-native; pdf.js text (via buildPdfText) becomes the annotation
  *            substrate while the stored file is opened/rendered as the PDF
  *   - .docx → rich; mammoth converts to HTML (sanitized server-side on save)
  * Parsers are dynamically imported to keep them out of the initial bundle.
@@ -152,15 +152,25 @@ async function extractSource(file: File): Promise<ExtractResult> {
   }
   if (looksPdf) {
     const buf = new Uint8Array(await file.arrayBuffer());
-    const { extractText: extractPdfText, getDocumentProxy } = await import(
-      "unpdf"
-    );
-    const pdf = await getDocumentProxy(buf);
-    const result = await extractPdfText(pdf, { mergePages: true });
-    const text = Array.isArray(result.text)
-      ? result.text.join("\n")
-      : result.text;
-    return { renderMode: "pdf", text: text.trim(), html: null };
+    // pdf.js (not unpdf) is the single source of truth: the same buildPdfText
+    // that drives the on-screen annotate text layer (Phase 3) produces the
+    // stored substrate here, so a selection maps to a stable char offset by
+    // construction. See docs/superpowers/specs/2026-06-16-pdf-annotate-design.md.
+    const [{ loadPdfjs }, { buildPdfText, pageFromPdfJsItems }] =
+      await Promise.all([import("@/lib/pdf-worker"), import("@/lib/pdf-text")]);
+    const pdfjs = await loadPdfjs();
+    const pdf = await pdfjs.getDocument({ data: buf }).promise;
+    const pages = [];
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const page = await pdf.getPage(n);
+      const content = await page.getTextContent();
+      pages.push(pageFromPdfJsItems(content.items));
+      page.cleanup();
+    }
+    const { text } = buildPdfText(pages);
+    // Verbatim — NO trim. source_text must equal buildPdfText().text exactly so
+    // annotation offsets, created against this string at render, never drift.
+    return { renderMode: "pdf", text, html: null };
   }
   if (looksDocx) {
     const arrayBuffer = await file.arrayBuffer();

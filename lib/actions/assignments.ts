@@ -90,6 +90,14 @@ function parseCommonFields(formData: FormData) {
   // action coerces missing/empty values to null. Explicit empty-to-null
   // conversion so accidental whitespace doesn't pollute the column.
   const sourceText = emptyToNull(String(formData.get("source_text") ?? ""));
+  // Untrimmed variant for the PDF substrate: source_text MUST equal the
+  // pdf.js buildPdfText() output byte-for-byte, because annotation offsets are
+  // created against that exact string at render. Trimming (as emptyToNull does)
+  // would shift every offset if the first/last item carried whitespace. Only
+  // empty→null is applied; the characters are otherwise preserved.
+  const sourceTextRawVal = String(formData.get("source_text") ?? "");
+  const sourceTextRaw =
+    sourceTextRawVal.trim() === "" ? null : sourceTextRawVal;
   const sourceTitle = emptyToNull(String(formData.get("source_title") ?? ""));
   const sourceAuthor = emptyToNull(String(formData.get("source_author") ?? ""));
   const sourceCitation = emptyToNull(
@@ -127,6 +135,7 @@ function parseCommonFields(formData: FormData) {
     dueAt,
     classPeriodId,
     sourceText,
+    sourceTextRaw,
     sourceTitle,
     sourceAuthor,
     sourceCitation,
@@ -193,6 +202,18 @@ function buildSourceColumns(
       // (annotation offsets index into this string).
       source_text: substrate.trim() === "" ? null : substrate,
       source_render_mode: "rich" as const,
+    };
+  }
+
+  if (mode === "pdf") {
+    return {
+      ...shared,
+      source_html: null,
+      // Verbatim pdf.js substrate (untrimmed) — equal byte-for-byte to the
+      // buildPdfText() output the annotate text layer reproduces at render, so
+      // offsets never drift. See the sourceTextRaw note in parseCommonFields.
+      source_text: f.sourceTextRaw,
+      source_render_mode: "pdf" as const,
     };
   }
 
