@@ -53,9 +53,6 @@ export default async function TeacherWritingReviewPage({
   ]);
   const { byStep: feedbackByStep, overall: overallFeedback } =
     groupSectionFeedback(feedback);
-  // Return-for-revision is enabled once the teacher has left ANY unresolved
-  // feedback — per-section notes OR overall comments both count.
-  const unresolvedCount = feedback.filter((f) => !f.is_resolved).length;
 
   const studentName =
     [writing.student.first_name, writing.student.last_name]
@@ -90,7 +87,6 @@ export default async function TeacherWritingReviewPage({
         <ReviewActions
           writingId={writing.id}
           status={writing.status}
-          unresolvedCount={unresolvedCount}
           rubric={writing.assignment.rubric}
           hasFinalDraft={hasFinalDraft}
         />

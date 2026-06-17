@@ -3,10 +3,10 @@
 /**
  * Action bar for the teacher review surface. Two buttons:
  *
- *   - [Return for revision]: pre-flight gated. Disabled when 0
- *     unresolved feedback rows exist. Tooltip explains. Click →
- *     native confirm() → returnWriting(writingId). Status becomes
- *     'returned'.
+ *   - [Return for revision]: click → native confirm() →
+ *     returnWriting(writingId). Status becomes 'returned'. Feedback is
+ *     OPTIONAL — a teacher may return without leaving any comment (the
+ *     per-section notes and overall thread are both elective).
  *
  *   - [Mark Graded]: click expands an inline composer. When the
  *     assignment has a non-empty rubric (rubric.criteria.length > 0),
@@ -34,7 +34,6 @@ type WritingStatus = Database["public"]["Enums"]["jswp_writing_status"];
 interface Props {
   writingId: string;
   status: WritingStatus;
-  unresolvedCount: number;
   rubric: Json | null;
   /** Whether the writing has a non-empty final_drafts row. Drives
    *  [Promote to Exemplar] visibility (chunk 6.4). */
@@ -44,7 +43,6 @@ interface Props {
 export function ReviewActions({
   writingId,
   status,
-  unresolvedCount,
   rubric,
   hasFinalDraft,
 }: Props) {
@@ -55,14 +53,12 @@ export function ReviewActions({
   const parsedRubric = loadRubric(rubric);
   const hasRubric = parsedRubric.criteria.length > 0;
 
-  const canReturn = unresolvedCount > 0 && status !== "graded";
   // Return + Grade controls hide on graded writings (graded is terminal).
   // Promote-to-exemplar stays available regardless of status as long as
   // a final_draft exists — graded writings are the primary promote target.
   const showStatusActions = status !== "graded";
 
   const onReturn = () => {
-    if (!canReturn) return;
     if (
       !window.confirm(
         "Return this writing for revision? The student will be notified."
@@ -87,12 +83,7 @@ export function ReviewActions({
           <button
             type="button"
             onClick={onReturn}
-            disabled={!canReturn || pending}
-            title={
-              !canReturn
-                ? "Add at least one feedback comment before returning."
-                : undefined
-            }
+            disabled={pending}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {pending ? (
