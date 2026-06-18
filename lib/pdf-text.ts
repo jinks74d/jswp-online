@@ -92,14 +92,20 @@ export function itemsCoveringRange(
  * mapping is unit-testable with plain objects. pdf.js geometry lives in
  * `transform = [a, b, c, d, e, f]`, where e (index 4) is x and f (index 5) is y.
  */
-interface PdfJsTextItemLike {
+export interface PdfJsTextItemLike {
   readonly str: string;
   readonly width: number;
   readonly transform: readonly number[];
   readonly hasEOL?: boolean;
 }
 
-function isPositionedTextItem(it: unknown): it is PdfJsTextItemLike {
+/**
+ * Type guard for a positioned pdf.js text item (vs a `TextMarkedContent`
+ * marker). Exported so the render layer can filter `getTextContent().items`
+ * with the EXACT predicate `pageFromPdfJsItems` uses — guaranteeing the
+ * rendered spans align 1:1 with `buildPdfText`'s segments (and thus offsets).
+ */
+export function isPositionedTextItem(it: unknown): it is PdfJsTextItemLike {
   if (typeof it !== "object" || it === null) return false;
   const o = it as Record<string, unknown>;
   return (
