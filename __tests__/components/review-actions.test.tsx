@@ -28,7 +28,6 @@ describe("ReviewActions — feedback optional on return", () => {
         writingId="w1"
         status="submitted"
         rubric={null}
-        hasFinalDraft={false}
       />
     );
     const btn = screen.getByRole("button", { name: /return for revision/i });
@@ -43,7 +42,6 @@ describe("ReviewActions — feedback optional on return", () => {
         writingId="w1"
         status="graded"
         rubric={null}
-        hasFinalDraft={false}
       />
     );
     expect(

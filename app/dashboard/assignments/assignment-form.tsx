@@ -36,11 +36,6 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import { loadRubric, type Rubric } from "@/lib/rubric";
 import { SourceTextFields } from "@/components/assignments/source-text-fields";
 import { RubricEditor } from "@/components/assignments/rubric-editor";
-import { ExemplarPicker } from "@/components/dashboard/assignments/exemplar-picker";
-import type {
-  PinnedExemplarRow,
-  PinnableExemplarOption,
-} from "@/lib/queries/assignment-exemplars";
 
 type Mode = "expository" | "argumentation" | "literary" | "narrative";
 type ChunkRatio = "two_plus_to_one" | "one_to_two_plus" | "three_plus_to_zero";
@@ -81,8 +76,6 @@ export function AssignmentForm({
   classPeriods,
   schoolId,
   studentWritingCount = 0,
-  pinnedExemplars = [],
-  pinnableExemplars = [],
 }: {
   formMode: "create" | "edit";
   mode: Mode;
@@ -90,8 +83,6 @@ export function AssignmentForm({
   classPeriods: ClassPeriodOption[];
   schoolId: string;
   studentWritingCount?: number;
-  pinnedExemplars?: readonly PinnedExemplarRow[];
-  pinnableExemplars?: readonly PinnableExemplarOption[];
 }) {
   const isPublished = initial?.released_at != null;
   const isLiterary = mode === "literary";
@@ -348,19 +339,6 @@ export function AssignmentForm({
         <input type="hidden" name="rubric" value={JSON.stringify(rubric)} />
         {state.fieldErrors?.rubric && (
           <p className="text-sm text-red-600">{state.fieldErrors.rubric}</p>
-        )}
-
-        {/* Exemplar pinning lives on edit pages only — needs an
-            assignment id to bind to. Pin/unpin happens via server
-            action; submitting the surrounding form has no effect on
-            pins. */}
-        {formMode === "edit" && initial && (
-          <ExemplarPicker
-            assignmentId={initial.id}
-            mode={mode}
-            pinned={pinnedExemplars}
-            pinnable={pinnableExemplars}
-          />
         )}
 
         <Field label="Due date (optional)" htmlFor="due_at">

@@ -22,7 +22,6 @@ import { requireRole } from "@/lib/auth";
 import { getWritingForTeacherReview } from "@/lib/queries/teacher-writings";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { groupSectionFeedback } from "@/lib/section-feedback";
-import { hasFinalDraftForPromotion } from "@/lib/queries/exemplars";
 import { CombinedView } from "@/components/dashboard/writing-review/combined-view";
 import { FeedbackPanel } from "@/components/dashboard/writing-review/feedback-panel";
 import { ReviewActions } from "@/components/dashboard/writing-review/review-actions";
@@ -47,10 +46,7 @@ export default async function TeacherWritingReviewPage({
     notFound();
   }
 
-  const [feedback, hasFinalDraft] = await Promise.all([
-    listFeedback(writingId),
-    hasFinalDraftForPromotion(writingId),
-  ]);
+  const feedback = await listFeedback(writingId);
   const { byStep: feedbackByStep, overall: overallFeedback } =
     groupSectionFeedback(feedback);
 
@@ -88,7 +84,6 @@ export default async function TeacherWritingReviewPage({
           writingId={writing.id}
           status={writing.status}
           rubric={writing.assignment.rubric}
-          hasFinalDraft={hasFinalDraft}
         />
       </header>
 

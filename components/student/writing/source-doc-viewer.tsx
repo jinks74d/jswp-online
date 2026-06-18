@@ -11,8 +11,7 @@
  *               file faithfully — images, tables, headings, fonts, layout.
  *   - 'rich' (typed/pasted, no file) → the sanitized `source_html` via
  *               dangerouslySetInnerHTML. HTML is sanitized at save time
- *               (sanitizeExemplarHtml) — the DB column is the choke point,
- *               same contract as ExemplarRender.
+ *               (lib/source-content) — the DB column is the choke point.
  *   - 'plain' → today's whitespace-pre-wrap projection of `source_text`.
  *
  * This component does NOT render annotation highlights and does NOT detect
@@ -95,8 +94,8 @@ export function SourceDocViewer({
     return (
       <div
         className="source-doc leading-relaxed text-gray-900"
-        // Sanitized at save time by sanitizeExemplarHtml; the DB column is
-        // the choke point (same trust contract as ExemplarRender).
+        // Sanitized at save time by lib/source-content (DOMPurify); the DB
+        // column is the choke point.
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );

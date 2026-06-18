@@ -2,7 +2,7 @@
  * Minimal ambient declaration for jsdom.
  *
  * We use jsdom only as a DOM provider for DOMPurify's server-side
- * sanitization in lib/exemplar-content.ts. The full @types/jsdom
+ * sanitization in lib/source-content-core.ts. The full @types/jsdom
  * package isn't installed (CLAUDE.md §3 — no new deps without
  * approval); this stub covers the one surface we touch.
  *

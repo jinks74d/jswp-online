@@ -13,12 +13,10 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Award, MessageSquare } from "lucide-react";
 import { StepSidebar } from "./step-sidebar";
 import { RubricBreakdown } from "./rubric-breakdown";
-import { ExemplarReference } from "./exemplar-reference";
 import { FeedbackPanel } from "@/components/dashboard/writing-review/feedback-panel";
 import { formatGradeLabel, type GradeFormat } from "@/lib/grade-format";
 import type { FeedbackItemRow } from "@/lib/queries/teacher-feedback";
 import type { RubricScoreRow } from "@/lib/queries/rubric-scores";
-import type { ExemplarForStudent } from "@/lib/queries/exemplars";
 import type { StepConfig } from "@/lib/jswp-modes";
 import type { Database } from "@/lib/database.types";
 
@@ -44,7 +42,6 @@ export function WritingShell({
   totalScore,
   feedback,
   rubricScores,
-  exemplars,
   gradeFormat,
   overallGrade,
   children,
@@ -66,7 +63,6 @@ export function WritingShell({
   totalScore: number | null;
   feedback: readonly FeedbackItemRow[];
   rubricScores: readonly RubricScoreRow[];
-  exemplars: readonly ExemplarForStudent[];
   gradeFormat: GradeFormat;
   overallGrade: string | null;
   children: React.ReactNode;
@@ -139,8 +135,6 @@ export function WritingShell({
       {status === "graded" && rubricScores.length > 0 && (
         <RubricBreakdown scores={rubricScores} />
       )}
-
-      <ExemplarReference exemplars={exemplars} />
 
       {showFeedbackColumn && (
         <details

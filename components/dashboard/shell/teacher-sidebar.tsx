@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Left rail with the three v2 nav items. Active state matches by route
+ * Left rail with the v2 nav items. Active state matches by route
  * prefix (so /dashboard/classes/123 still highlights "My Classes"). On
  * desktop it's a fixed-position rail (always visible). On phones it
  * slides in from the left over a backdrop; backdrop click closes it.
@@ -9,13 +9,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, FileText, GraduationCap, Library } from "lucide-react";
+import { BookOpen, FileText, GraduationCap } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard/classes", label: "My Classes", icon: BookOpen },
   { href: "/dashboard/assignments", label: "My Assignments", icon: FileText },
   { href: "/dashboard/students", label: "My Students", icon: GraduationCap },
-  { href: "/dashboard/exemplars", label: "Exemplars", icon: Library },
 ] as const;
 
 export function TeacherSidebar({

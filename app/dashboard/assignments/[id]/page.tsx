@@ -15,11 +15,6 @@ import {
   isPublished,
 } from "@/lib/queries/assignments";
 import { countAssignmentWritingsByStatus } from "@/lib/queries/teacher-writings";
-import {
-  listPinnedForAssignment,
-  listPinnableForTeacher,
-} from "@/lib/queries/assignment-exemplars";
-import { PinnedExemplarsList } from "@/components/dashboard/assignments/pinned-exemplars-list";
 import { AssignmentForm } from "../assignment-form";
 
 export const dynamic = "force-dynamic";
@@ -40,10 +35,6 @@ export default async function AssignmentDetailPage({
   const classPeriods = await getTeacherClassPeriodsForPicker(profile.id);
   const studentWritingCount = await getStudentWritingCount(assignment.id);
   const writingCounts = await countAssignmentWritingsByStatus(assignment.id);
-  const [pinnedExemplars, pinnableExemplars] = await Promise.all([
-    listPinnedForAssignment(assignment.id, profile.id),
-    listPinnableForTeacher(profile.id, assignment.mode),
-  ]);
   const published = isPublished(assignment);
   const totalWritings =
     writingCounts.draft +
@@ -128,8 +119,6 @@ export default async function AssignmentDetailPage({
         </div>
       )}
 
-      {published && <PinnedExemplarsList pinned={pinnedExemplars} />}
-
       <div id="edit" className="scroll-mt-6">
         <AssignmentForm
           formMode="edit"
@@ -138,8 +127,6 @@ export default async function AssignmentDetailPage({
           classPeriods={classPeriods}
           schoolId={profile.school_id!}
           studentWritingCount={studentWritingCount}
-          pinnedExemplars={pinnedExemplars}
-          pinnableExemplars={pinnableExemplars}
         />
       </div>
     </div>

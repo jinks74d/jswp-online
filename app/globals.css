@@ -135,15 +135,6 @@ body {
 }
 .jswp-refutation::before { content: "✕ "; }
 
-/* Rendered exemplar wrapper: preserve paragraph spacing without
- * relying on Tailwind's preflight (which collapses <p> margins). */
-.exemplar-content p {
-  margin-bottom: 0.75em;
-}
-.exemplar-content p:last-child {
-  margin-bottom: 0;
-}
-
 /* Rich source document wrapper (SourceDocViewer 'rich' mode). The source
  * HTML carries its own structure — headings, bold, lists — so restore the
  * spacing Tailwind's preflight strips. */

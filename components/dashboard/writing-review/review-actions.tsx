@@ -21,9 +21,8 @@
  * UX; re-grade is Phase 5+ per spec).
  */
 
-import Link from "next/link";
 import { useState, useTransition } from "react";
-import { Loader2, ArrowLeftCircle, Award, Sparkles } from "lucide-react";
+import { Loader2, ArrowLeftCircle, Award } from "lucide-react";
 import { returnWriting, gradeWriting } from "@/lib/actions/teacher-review";
 import { loadRubric } from "@/lib/rubric";
 import { RubricScoringPanel } from "./rubric-scoring-panel";
@@ -35,16 +34,12 @@ interface Props {
   writingId: string;
   status: WritingStatus;
   rubric: Json | null;
-  /** Whether the writing has a non-empty final_drafts row. Drives
-   *  [Promote to Exemplar] visibility (chunk 6.4). */
-  hasFinalDraft: boolean;
 }
 
 export function ReviewActions({
   writingId,
   status,
   rubric,
-  hasFinalDraft,
 }: Props) {
   const [grading, setGrading] = useState(false);
   const [pending, start] = useTransition();
@@ -54,8 +49,6 @@ export function ReviewActions({
   const hasRubric = parsedRubric.criteria.length > 0;
 
   // Return + Grade controls hide on graded writings (graded is terminal).
-  // Promote-to-exemplar stays available regardless of status as long as
-  // a final_draft exists — graded writings are the primary promote target.
   const showStatusActions = status !== "graded";
 
   const onReturn = () => {
@@ -121,16 +114,6 @@ export function ReviewActions({
             onError={setError}
           />
         ))}
-
-      {hasFinalDraft && (
-        <Link
-          href={`/dashboard/exemplars/new?from=${writingId}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-amber-300 bg-amber-50 text-sm font-medium text-amber-900 hover:bg-amber-100"
-        >
-          <Sparkles className="w-4 h-4" />
-          Promote to Exemplar
-        </Link>
-      )}
 
       {error && (
         <div className="text-sm text-red-700" role="alert">
