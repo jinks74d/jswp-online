@@ -56,6 +56,12 @@ interface Props {
   onAnnotationClick?: (annotation: TextAnnotationRow) => void;
   /** Render highlights but disable selection + click-to-edit (reference panels). */
   readOnly?: boolean;
+  /**
+   * Called when pdf.js can't render (load/worker/fetch/render failure or an
+   * expired URL). The parent should swap to the flat SourceTextViewer over the
+   * same source_text — annotation never depends on pdf.js succeeding (spec §6).
+   */
+  onLoadError?: () => void;
 }
 
 /** Clamp a fit-to-width scale so canvases never get absurdly large/small. */
@@ -181,12 +187,16 @@ export function PdfSourceViewer({
   onClearSelection,
   onAnnotationClick,
   readOnly = false,
+  onLoadError,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const renderStateRef = useRef<RenderState | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">(
-    "loading"
-  );
+  // "scanned": image-only PDF with no text layer — canvas is readable but
+  // there's nothing to select, so annotation is impossible (surfaced, not
+  // silently broken). "error": pdf.js failed; the parent falls back to flat.
+  const [status, setStatus] = useState<
+    "loading" | "ready" | "scanned" | "error"
+  >("loading");
 
   // Heavy render: runs once per fileUrl. Annotation edits do NOT repaint here.
   useEffect(() => {
@@ -290,6 +300,14 @@ export function PdfSourceViewer({
           rendered.map((p) => pageFromPdfJsItems(p.items))
         );
 
+        // Scanned/image PDF: canvas rendered fine but there's no text layer.
+        // Leave the (readable) canvases up, skip the text layer, and tell the
+        // student annotation isn't possible on an image. Not an error.
+        if (!fullText.trim()) {
+          if (!cancelled) setStatus("scanned");
+          return;
+        }
+
         const Util = pdfjs.Util;
         const spanByOffset = new Map<
           number,
@@ -346,7 +364,12 @@ export function PdfSourceViewer({
         setStatus("ready");
       } catch (e) {
         console.error("pdf render:", e);
-        if (!cancelled) setStatus("error");
+        if (!cancelled) {
+          setStatus("error");
+          // Hand control back so the parent can fall back to the flat,
+          // still-annotatable viewer over the same source_text (spec §6).
+          onLoadError?.();
+        }
       }
     })();
 
@@ -432,6 +455,15 @@ export function PdfSourceViewer({
       {status === "loading" && (
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading PDF…
+        </div>
+      )}
+      {status === "scanned" && (
+        <div
+          role="status"
+          className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+        >
+          This PDF has no selectable text (it looks scanned), so it can’t be
+          highlighted. You can still read it below or use “Open original.”
         </div>
       )}
       {status === "error" && (

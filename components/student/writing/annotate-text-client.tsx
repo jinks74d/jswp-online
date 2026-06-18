@@ -188,6 +188,7 @@ export function AnnotateTextClient({
                 onClearSelection={() => setSelection(null)}
                 onAnnotationClick={onAnnotationClick}
                 readOnly={isReadOnly}
+                onLoadError={() => setPdfFailed(true)}
               />
             ) : (
               <div className="flex items-center gap-2 text-sm text-gray-500">
