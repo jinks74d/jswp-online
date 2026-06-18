@@ -181,6 +181,7 @@ export function AnnotateTextClient({
             pdfUrl ? (
               <PdfSourceViewer
                 fileUrl={pdfUrl}
+                sourceText={sourceText}
                 annotations={initialAnnotations}
                 visibleKinds={visibleKinds}
                 scrollToAnnotationId={scrollTargetId}

@@ -40,13 +40,20 @@ import {
   type PdfJsTextItemLike,
   type PdfTextSegment,
 } from "@/lib/pdf-text";
-import type { AnnotationKind } from "./annotation-kind-config";
+import { ANNOTATION_KINDS, type AnnotationKind } from "./annotation-kind-config";
 import type { SelectionPayload } from "./source-text-viewer";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 
 interface Props {
   /** Short-lived signed URL to the stored PDF (minted server-side). */
   fileUrl: string;
+  /**
+   * The authoritative annotation substrate (stored at upload by buildPdfText).
+   * We re-derive text from the live PDF at render and assert it MATCHES this;
+   * a mismatch (e.g. a pdfjs-dist version bump changed extraction) would mean
+   * offsets no longer line up, so we fall back rather than mis-highlight.
+   */
+  sourceText: string;
   annotations: readonly TextAnnotationRow[];
   visibleKinds: ReadonlySet<AnnotationKind>;
   /** Annotation id to scroll into view; cleared by parent after use. */
@@ -160,13 +167,17 @@ function drawHighlights(
       for (const r of Array.from(range.getClientRects())) {
         const div = document.createElement("div");
         div.dataset.annotationId = a.id;
+        // Non-color signal (CLAUDE.md §9), matching SourceTextViewer's <mark
+        // title>: the kind name is exposed for hover + assistive tech.
+        div.title = ANNOTATION_KINDS[a.kind].label;
         div.style.position = "absolute";
         div.style.left = `${r.left - wrap.left}px`;
         div.style.top = `${r.top - wrap.top}px`;
         div.style.width = `${r.width}px`;
         div.style.height = `${r.height}px`;
         if (overlay.underline) {
-          div.style.borderBottom = "2px solid #1f2937";
+          // main_idea: underline-in-black convention; gray-800 token (no hex).
+          div.className = "border-b-2 border-gray-800";
         } else {
           div.className = overlay.className;
           div.style.mixBlendMode = "multiply";
@@ -180,6 +191,7 @@ function drawHighlights(
 
 export function PdfSourceViewer({
   fileUrl,
+  sourceText,
   annotations,
   visibleKinds,
   scrollToAnnotationId,
@@ -305,6 +317,23 @@ export function PdfSourceViewer({
         // student annotation isn't possible on an image. Not an error.
         if (!fullText.trim()) {
           if (!cancelled) setStatus("scanned");
+          return;
+        }
+
+        // Offset-invariant guard: the live extraction MUST equal the stored
+        // substrate, or every annotation offset is miscalibrated and we'd
+        // highlight the wrong characters. If they diverge (e.g. a pdfjs-dist
+        // bump changed extraction since this PDF was uploaded), bail to the
+        // flat viewer over the authoritative source_text — a wrong highlight
+        // is worse than a plain one. The log makes drift diagnosable.
+        if (fullText !== sourceText) {
+          console.warn(
+            `pdf text/source_text mismatch (live ${fullText.length} vs stored ${sourceText.length}); falling back to flat viewer`
+          );
+          if (!cancelled) {
+            setStatus("error");
+            onLoadError?.();
+          }
           return;
         }
 
