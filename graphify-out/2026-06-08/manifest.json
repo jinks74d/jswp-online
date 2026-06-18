@@ -1,2567 +1,2642 @@
 {
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.kiro\\settings\\mcp.json": {
+  ".kiro/settings/mcp.json": {
     "mtime": 1778188008.3162384,
     "ast_hash": "068ac01b5b6d1f96c8384175254d6310",
     "semantic_hash": "068ac01b5b6d1f96c8384175254d6310"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.remember\\tmp\\last-ndc.ts": {
-    "mtime": 1780852909.42069,
-    "ast_hash": "7dbb6220d6c8ac10480fbcd9db4c88c5",
-    "semantic_hash": "7dbb6220d6c8ac10480fbcd9db4c88c5"
+  ".remember/tmp/last-ndc.ts": {
+    "mtime": 1780929273.6839828,
+    "ast_hash": "0d1a5ddfb4c5c2097aa1cb3920dddc5d",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.remember\\tmp\\last-save.json": {
-    "mtime": 1780852906.363078,
-    "ast_hash": "bf545f39d06aebde7a0ac70f2a4a5ef4",
-    "semantic_hash": "bf545f39d06aebde7a0ac70f2a4a5ef4"
+  ".remember/tmp/last-save.json": {
+    "mtime": 1780930763.7582507,
+    "ast_hash": "c66e541aac8923f81c159241c31a4d2d",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.vscode\\settings.json": {
+  ".vscode/settings.json": {
     "mtime": 1778188008.3233902,
     "ast_hash": "028cfd273329f1d3e3f8bc5dce72ebd9",
     "semantic_hash": "028cfd273329f1d3e3f8bc5dce72ebd9"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\compose-paragraph.test.ts": {
+  "__tests__/lib/compose-paragraph.test.ts": {
     "mtime": 1779748075.136247,
     "ast_hash": "879211b3debbeaac162910b3311d7a05",
     "semantic_hash": "879211b3debbeaac162910b3311d7a05"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\csv-import-class-periods.test.ts": {
+  "__tests__/lib/csv-import-class-periods.test.ts": {
     "mtime": 1780404368.8054943,
     "ast_hash": "044835cbe3af658f9746173cbeefa959",
     "semantic_hash": "044835cbe3af658f9746173cbeefa959"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\csv-import-class-students.test.ts": {
+  "__tests__/lib/csv-import-class-students.test.ts": {
     "mtime": 1780405264.0387938,
     "ast_hash": "c1e0b36668d99a0add6107576b173376",
     "semantic_hash": "c1e0b36668d99a0add6107576b173376"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\csv-import-classes.test.ts": {
+  "__tests__/lib/csv-import-classes.test.ts": {
     "mtime": 1780401469.9426033,
     "ast_hash": "3640bc148c9cdd82198668500ed97f77",
     "semantic_hash": "3640bc148c9cdd82198668500ed97f77"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\csv-import-districts.test.ts": {
+  "__tests__/lib/csv-import-districts.test.ts": {
     "mtime": 1780394940.4860635,
     "ast_hash": "b8145c42c3185c553635f36f59465e49",
     "semantic_hash": "b8145c42c3185c553635f36f59465e49"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\csv-import-school-admins.test.ts": {
+  "__tests__/lib/csv-import-school-admins.test.ts": {
     "mtime": 1780397139.7165723,
     "ast_hash": "48f768f08598e62cd9d5cf9cf4d4a75e",
     "semantic_hash": "48f768f08598e62cd9d5cf9cf4d4a75e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\csv-import-schools.test.ts": {
-    "mtime": 1780396313.8372288,
-    "ast_hash": "07d1c3083d45d5e1b98cad2abce41d70",
-    "semantic_hash": "07d1c3083d45d5e1b98cad2abce41d70"
+  "__tests__/lib/csv-import-schools.test.ts": {
+    "mtime": 1780918172.9814923,
+    "ast_hash": "26799398cbca49d8c29fd41b9e3799e7",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\csv-import-subjects.test.ts": {
+  "__tests__/lib/csv-import-subjects.test.ts": {
     "mtime": 1780400476.228508,
     "ast_hash": "a4f73005503407bb1d23bed0ddff3ea6",
     "semantic_hash": "a4f73005503407bb1d23bed0ddff3ea6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\csv-import-teachers.test.ts": {
+  "__tests__/lib/csv-import-teachers.test.ts": {
     "mtime": 1780397924.0160992,
     "ast_hash": "e4bae12492ba3c184b3017ea4df53658",
     "semantic_hash": "e4bae12492ba3c184b3017ea4df53658"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\expository-t-chart-spec.test.ts": {
+  "__tests__/lib/expository-t-chart-spec.test.ts": {
     "mtime": 1778795962.0504463,
     "ast_hash": "3f381b87e84823f1c2db524f50bb6452",
     "semantic_hash": "3f381b87e84823f1c2db524f50bb6452"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\jswp-modes.test.ts": {
+  "__tests__/lib/jswp-modes.test.ts": {
     "mtime": 1779918222.5972106,
     "ast_hash": "88967c4f391fa7f0e1a0107b7871d2c4",
     "semantic_hash": "88967c4f391fa7f0e1a0107b7871d2c4"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\once-you-lose-it.test.ts": {
+  "__tests__/lib/once-you-lose-it.test.ts": {
     "mtime": 1779747907.2986953,
     "ast_hash": "276731ab1e7f7fad5d017ce68d19ca19",
     "semantic_hash": "276731ab1e7f7fad5d017ce68d19ca19"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\lib\\source-content.test.ts": {
+  "__tests__/lib/source-content.test.ts": {
     "mtime": 1780253885.0337224,
     "ast_hash": "067c07d2b8394680a6bf24b81136a3b2",
     "semantic_hash": "067c07d2b8394680a6bf24b81136a3b2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\schema\\_helpers\\clients.ts": {
+  "__tests__/schema/_helpers/clients.ts": {
     "mtime": 1778514373.135628,
     "ast_hash": "ffa629f08a67424b85405ad7a5da6007",
     "semantic_hash": "ffa629f08a67424b85405ad7a5da6007"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\schema\\_helpers\\jwt.ts": {
+  "__tests__/schema/_helpers/jwt.ts": {
     "mtime": 1778239647.389896,
     "ast_hash": "1dfa5f01032471c8ac248e50488e5b1f",
     "semantic_hash": "1dfa5f01032471c8ac248e50488e5b1f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\schema\\rls.test.ts": {
+  "__tests__/schema/rls.test.ts": {
     "mtime": 1778527115.3811314,
     "ast_hash": "f70260e64b5eaead0d24b68b4eb759dc",
     "semantic_hash": "f70260e64b5eaead0d24b68b4eb759dc"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\__tests__\\schema\\vitest.config.ts": {
+  "__tests__/schema/vitest.config.ts": {
     "mtime": 1778239896.6114974,
     "ast_hash": "98a369e10753de09723e1ba871864e07",
     "semantic_hash": "98a369e10753de09723e1ba871864e07"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\(auth)\\layout.tsx": {
+  "app/(auth)/layout.tsx": {
     "mtime": 1778272111.8327017,
     "ast_hash": "036fd411eeb761a22344024c3d94bcf0",
     "semantic_hash": "036fd411eeb761a22344024c3d94bcf0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\(auth)\\login\\login-form.tsx": {
+  "app/(auth)/login/login-form.tsx": {
     "mtime": 1778275619.1305983,
     "ast_hash": "2a2f8f39f47bdc3a455a7eabae1af271",
     "semantic_hash": "2a2f8f39f47bdc3a455a7eabae1af271"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\(auth)\\login\\page.tsx": {
+  "app/(auth)/login/page.tsx": {
     "mtime": 1778501668.3960967,
     "ast_hash": "79394ccfd77c4d457cc6bede00996043",
     "semantic_hash": "79394ccfd77c4d457cc6bede00996043"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\(auth)\\reset-password\\page.tsx": {
+  "app/(auth)/reset-password/page.tsx": {
     "mtime": 1778272120.288457,
     "ast_hash": "61bac426421fb06af54a1e9f24e90723",
     "semantic_hash": "61bac426421fb06af54a1e9f24e90723"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\(auth)\\reset-password\\request-form.tsx": {
+  "app/(auth)/reset-password/request-form.tsx": {
     "mtime": 1778275636.3155296,
     "ast_hash": "45fcd40425c7dd067a9641bbd9f9ba83",
     "semantic_hash": "45fcd40425c7dd067a9641bbd9f9ba83"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\(auth)\\signup\\page.tsx": {
+  "app/(auth)/signup/page.tsx": {
     "mtime": 1778282026.3107102,
     "ast_hash": "70af9abe74b21bf262078753dd2c5263",
     "semantic_hash": "70af9abe74b21bf262078753dd2c5263"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\(auth)\\signup\\signup-form.tsx": {
+  "app/(auth)/signup/signup-form.tsx": {
     "mtime": 1778282042.4531224,
     "ast_hash": "2d45ca83b4f8fd0e04750253fa37f07d",
     "semantic_hash": "2d45ca83b4f8fd0e04750253fa37f07d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\page.tsx": {
-    "mtime": 1780396252.0988793,
-    "ast_hash": "24f8bf500ca9afe8973b9bca1af67cd2",
-    "semantic_hash": "24f8bf500ca9afe8973b9bca1af67cd2"
+  "app/admin/districts/[id]/page.tsx": {
+    "mtime": 1780931020.5942247,
+    "ast_hash": "642fd136c2d7e0f115d872ca39026821",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\school-form.tsx": {
-    "mtime": 1780396204.0498102,
-    "ast_hash": "14b580060ef079c77fc500b9bc4e7fb5",
-    "semantic_hash": "14b580060ef079c77fc500b9bc4e7fb5"
+  "app/admin/districts/[id]/school-form.tsx": {
+    "mtime": 1780917961.7150495,
+    "ast_hash": "b6c729e0cd5de51bd4eae66843a77ace",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\add-school-user-form.tsx": {
-    "mtime": 1780397718.205915,
-    "ast_hash": "ab734a2bb9f372d1c319fdc01e6d07d8",
-    "semantic_hash": "ab734a2bb9f372d1c319fdc01e6d07d8"
+  "app/admin/districts/[id]/schools/[sid]/add-school-user-form.tsx": {
+    "mtime": 1780918941.479566,
+    "ast_hash": "2a0de626784dc87e324c19a013682e8b",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\page.tsx": {
-    "mtime": 1780400546.4197083,
-    "ast_hash": "1f2a86107e6e059fe932b4ade0e33d1f",
-    "semantic_hash": "1f2a86107e6e059fe932b4ade0e33d1f"
+  "app/admin/districts/[id]/schools/[sid]/page.tsx": {
+    "mtime": 1780919007.1075282,
+    "ast_hash": "3fd65577266b2e488cf0ac7c72009535",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\subjects\\[subjectId]\\class-form.tsx": {
+  "app/admin/districts/[id]/schools/[sid]/subjects/[subjectId]/class-form.tsx": {
     "mtime": 1780401396.9109893,
     "ast_hash": "1d38b4aeb7069b586daaaba78153399a",
     "semantic_hash": "1d38b4aeb7069b586daaaba78153399a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\subjects\\[subjectId]\\classes\\[classId]\\page.tsx": {
+  "app/admin/districts/[id]/schools/[sid]/subjects/[subjectId]/classes/[classId]/page.tsx": {
     "mtime": 1780404352.0512078,
     "ast_hash": "e279ef0558e9b5b2fb70b2ad40d479b6",
     "semantic_hash": "e279ef0558e9b5b2fb70b2ad40d479b6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\subjects\\[subjectId]\\classes\\[classId]\\period-form.tsx": {
+  "app/admin/districts/[id]/schools/[sid]/subjects/[subjectId]/classes/[classId]/period-form.tsx": {
     "mtime": 1780404263.5740106,
     "ast_hash": "b3f17664e18a40b239c8f509e384511e",
     "semantic_hash": "b3f17664e18a40b239c8f509e384511e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\subjects\\[subjectId]\\classes\\[classId]\\periods\\[periodId]\\page.tsx": {
+  "app/admin/districts/[id]/schools/[sid]/subjects/[subjectId]/classes/[classId]/periods/[periodId]/page.tsx": {
     "mtime": 1780405247.1267178,
     "ast_hash": "5e5e7cabf477524f5d14df1225eea841",
     "semantic_hash": "5e5e7cabf477524f5d14df1225eea841"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\subjects\\[subjectId]\\classes\\[classId]\\periods\\[periodId]\\student-enrollment.tsx": {
+  "app/admin/districts/[id]/schools/[sid]/subjects/[subjectId]/classes/[classId]/periods/[periodId]/student-enrollment.tsx": {
     "mtime": 1780405205.1054893,
     "ast_hash": "6c7f0c57f33db21ef86747b163c3851f",
     "semantic_hash": "6c7f0c57f33db21ef86747b163c3851f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\subjects\\[subjectId]\\classes\\[classId]\\periods\\[periodId]\\teacher-assignment.tsx": {
+  "app/admin/districts/[id]/schools/[sid]/subjects/[subjectId]/classes/[classId]/periods/[periodId]/teacher-assignment.tsx": {
     "mtime": 1780404286.9402719,
     "ast_hash": "17574df60abeb98ed5d12fce5c8d8540",
     "semantic_hash": "17574df60abeb98ed5d12fce5c8d8540"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\subjects\\[subjectId]\\page.tsx": {
+  "app/admin/districts/[id]/schools/[sid]/subjects/[subjectId]/page.tsx": {
     "mtime": 1780408897.6641932,
     "ast_hash": "f136fbb0532c87a4bcf3d6c2eeb57be6",
     "semantic_hash": "f136fbb0532c87a4bcf3d6c2eeb57be6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\subjects\\page.tsx": {
-    "mtime": 1780408829.2240405,
-    "ast_hash": "14ee7cb3765d37cde296a645bc3a6338",
-    "semantic_hash": "14ee7cb3765d37cde296a645bc3a6338"
+  "app/admin/districts/[id]/schools/[sid]/subjects/page.tsx": {
+    "mtime": 1780922737.8375194,
+    "ast_hash": "ab48cba382d3356a50c0ee6b8fa9369b",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\[id]\\schools\\[sid]\\subjects\\subject-form.tsx": {
+  "app/admin/districts/[id]/schools/[sid]/subjects/subject-form.tsx": {
     "mtime": 1780400408.6767766,
     "ast_hash": "097b03c1382d122a91bb19cb9d0ac926",
     "semantic_hash": "097b03c1382d122a91bb19cb9d0ac926"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\district-form.tsx": {
+  "app/admin/districts/district-form.tsx": {
     "mtime": 1780393910.050369,
     "ast_hash": "8045b20b0eb07c4f45176f1b0f77322e",
     "semantic_hash": "8045b20b0eb07c4f45176f1b0f77322e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\districts\\page.tsx": {
+  "app/admin/districts/page.tsx": {
     "mtime": 1780394699.4798548,
     "ast_hash": "7c994e8e7099e1e591b54cae8e6272ee",
     "semantic_hash": "7c994e8e7099e1e591b54cae8e6272ee"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\error.tsx": {
+  "app/admin/error.tsx": {
     "mtime": 1778292736.2823608,
     "ast_hash": "33a0b23a3acf95ae4a41266153c2e4c7",
     "semantic_hash": "33a0b23a3acf95ae4a41266153c2e4c7"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\import\\students\\import-form.tsx": {
+  "app/admin/import/students/import-form.tsx": {
     "mtime": 1778278626.8994932,
     "ast_hash": "78e8c61c3b963b4051b4eab153a4101a",
     "semantic_hash": "78e8c61c3b963b4051b4eab153a4101a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\import\\students\\page.tsx": {
+  "app/admin/import/students/page.tsx": {
     "mtime": 1778278582.1924036,
     "ast_hash": "a269c416f406d379929f8216253ef46f",
     "semantic_hash": "a269c416f406d379929f8216253ef46f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\layout.tsx": {
+  "app/admin/layout.tsx": {
     "mtime": 1780393969.8677213,
     "ast_hash": "3da22f664e5882b0a376abaeeeab88f6",
     "semantic_hash": "3da22f664e5882b0a376abaeeeab88f6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\page.tsx": {
-    "mtime": 1778278571.0477989,
-    "ast_hash": "a829beed714d2ff3fbc9e9f0b2e83384",
-    "semantic_hash": "a829beed714d2ff3fbc9e9f0b2e83384"
+  "app/admin/page.tsx": {
+    "mtime": 1780919022.8786874,
+    "ast_hash": "088ba899793c2587e19e37f9eef78cf8",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\signups\\[id]\\decision-form.tsx": {
+  "app/admin/signups/[id]/decision-form.tsx": {
     "mtime": 1778282122.0539148,
     "ast_hash": "cbf65e0c458f6d417016b5b1928381c0",
     "semantic_hash": "cbf65e0c458f6d417016b5b1928381c0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\signups\\[id]\\page.tsx": {
+  "app/admin/signups/[id]/page.tsx": {
     "mtime": 1778282091.8178394,
     "ast_hash": "48b2ac1a430155ac6175c1b8d2f573ba",
     "semantic_hash": "48b2ac1a430155ac6175c1b8d2f573ba"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\signups\\page.tsx": {
+  "app/admin/signups/page.tsx": {
     "mtime": 1778282077.1988127,
     "ast_hash": "f559bcfe2376973f84f65dd70c2ade15",
     "semantic_hash": "f559bcfe2376973f84f65dd70c2ade15"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\super-admins\\add-form.tsx": {
+  "app/admin/super-admins/add-form.tsx": {
     "mtime": 1779880400.7963946,
     "ast_hash": "67a265aa86f1649c40f87e8d554d6fcd",
     "semantic_hash": "67a265aa86f1649c40f87e8d554d6fcd"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\admin\\super-admins\\page.tsx": {
+  "app/admin/super-admins/page.tsx": {
     "mtime": 1779880374.309185,
     "ast_hash": "91679ed96f35c4bb3f20b05e349bc023",
     "semantic_hash": "91679ed96f35c4bb3f20b05e349bc023"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\analytics\\enhanced\\route.ts": {
+  "app/api/analytics/enhanced/route.ts": {
     "mtime": 1778188008.3910356,
     "ast_hash": "c843c1bdb1d14abb852886a6e1e35e54",
     "semantic_hash": "c843c1bdb1d14abb852886a6e1e35e54"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\analytics\\session\\activity\\route.ts": {
+  "app/api/analytics/session/activity/route.ts": {
     "mtime": 1778188008.4064596,
     "ast_hash": "cc621b9e5f6a200bf010fad30201777b",
     "semantic_hash": "cc621b9e5f6a200bf010fad30201777b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\analytics\\session\\end\\route.ts": {
+  "app/api/analytics/session/end/route.ts": {
     "mtime": 1778188008.4148257,
     "ast_hash": "bee9cfdf5dcdde50808f296742e962e6",
     "semantic_hash": "bee9cfdf5dcdde50808f296742e962e6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\analytics\\session\\start\\route.ts": {
+  "app/api/analytics/session/start/route.ts": {
     "mtime": 1778188008.4237292,
     "ast_hash": "484979432f4b6334dd902589cc3dbfa2",
     "semantic_hash": "484979432f4b6334dd902589cc3dbfa2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\assignments\\route.ts": {
+  "app/api/assignments/route.ts": {
     "mtime": 1778188008.4308658,
     "ast_hash": "182f1a589792168719573014614ba535",
     "semantic_hash": "182f1a589792168719573014614ba535"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\auth\\session\\route.ts": {
+  "app/api/auth/session/route.ts": {
     "mtime": 1778188008.4400175,
     "ast_hash": "ad9141ce3bb0192989deeef8121b5319",
     "semantic_hash": "ad9141ce3bb0192989deeef8121b5319"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\auth\\signout\\route.ts": {
+  "app/api/auth/signout/route.ts": {
     "mtime": 1778188008.448818,
     "ast_hash": "f0908fdfbd10ac260a2854955f4a1ac1",
     "semantic_hash": "f0908fdfbd10ac260a2854955f4a1ac1"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\dashboard\\classes\\[id]\\assign-teacher\\route.ts": {
+  "app/api/dashboard/classes/[id]/assign-teacher/route.ts": {
     "mtime": 1778188008.4591615,
     "ast_hash": "2777622711b1d017c422736a3439c06f",
     "semantic_hash": "2777622711b1d017c422736a3439c06f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\dashboard\\classes\\[id]\\enroll-student\\route.ts": {
+  "app/api/dashboard/classes/[id]/enroll-student/route.ts": {
     "mtime": 1778188008.4687378,
     "ast_hash": "28214eb5621257d75454fa64f5080000",
     "semantic_hash": "28214eb5621257d75454fa64f5080000"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\dashboard\\classes\\create\\route.ts": {
+  "app/api/dashboard/classes/create/route.ts": {
     "mtime": 1778188008.4778492,
     "ast_hash": "e101e21d72f2832dbe667a1b7bdf8104",
     "semantic_hash": "e101e21d72f2832dbe667a1b7bdf8104"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\dashboard\\users\\[id]\\edit\\route.ts": {
+  "app/api/dashboard/users/[id]/edit/route.ts": {
     "mtime": 1778188008.4881325,
     "ast_hash": "d6b60dabf0e43dabfd6d4815f271f7de",
     "semantic_hash": "d6b60dabf0e43dabfd6d4815f271f7de"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\dashboard\\users\\create\\route.ts": {
+  "app/api/dashboard/users/create/route.ts": {
     "mtime": 1778188008.5019946,
     "ast_hash": "89f4353b02c0f9364352c6626c1d1748",
     "semantic_hash": "89f4353b02c0f9364352c6626c1d1748"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\debug\\profile\\route.ts": {
+  "app/api/debug/profile/route.ts": {
     "mtime": 1778188008.518427,
     "ast_hash": "ddfebf189bd42e457c6b1d124742d699",
     "semantic_hash": "ddfebf189bd42e457c6b1d124742d699"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\debug\\user-profile\\route.ts": {
+  "app/api/debug/user-profile/route.ts": {
     "mtime": 1778188008.523087,
     "ast_hash": "1143eae336c9802d18e4abcb37722959",
     "semantic_hash": "1143eae336c9802d18e4abcb37722959"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\districts\\[districtId]\\logo\\route.ts": {
+  "app/api/districts/[districtId]/logo/route.ts": {
     "mtime": 1778188008.5352018,
     "ast_hash": "e58945636559aefa919f7a65eb6aef68",
     "semantic_hash": "e58945636559aefa919f7a65eb6aef68"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\districts\\[districtId]\\settings\\route.ts": {
+  "app/api/districts/[districtId]/settings/route.ts": {
     "mtime": 1778188008.5427916,
     "ast_hash": "3ad24424c619a0ad9c7a9c99c9391871",
     "semantic_hash": "3ad24424c619a0ad9c7a9c99c9391871"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\districts\\[districtId]\\upload-logo\\route.ts": {
+  "app/api/districts/[districtId]/upload-logo/route.ts": {
     "mtime": 1778188008.5497167,
     "ast_hash": "12812167d6ace229c895f6b8abe833d5",
     "semantic_hash": "12812167d6ace229c895f6b8abe833d5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\health\\route.ts": {
+  "app/api/health/route.ts": {
     "mtime": 1778245086.5108855,
     "ast_hash": "61b95306857050a3fee584c9d8a97edf",
     "semantic_hash": "61b95306857050a3fee584c9d8a97edf"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\logs\\route.ts": {
+  "app/api/logs/route.ts": {
     "mtime": 1778188008.5721579,
     "ast_hash": "e0fd5d7086c50ff14aa0de32576679d2",
     "semantic_hash": "e0fd5d7086c50ff14aa0de32576679d2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\school-admin\\classes\\bulk-upload-sheets\\route.ts": {
+  "app/api/school-admin/classes/bulk-upload-sheets/route.ts": {
     "mtime": 1778188008.5808084,
     "ast_hash": "b052b38ff1f050b71ea3b0f3de211df3",
     "semantic_hash": "b052b38ff1f050b71ea3b0f3de211df3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\school-admin\\classes\\bulk-upload\\route.ts": {
+  "app/api/school-admin/classes/bulk-upload/route.ts": {
     "mtime": 1778188008.5909233,
     "ast_hash": "dc7cf7fdb7a5e9a8b3cd1fdee3e80fd4",
     "semantic_hash": "dc7cf7fdb7a5e9a8b3cd1fdee3e80fd4"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\school-admin\\students\\bulk-upload-sheets\\route.ts": {
+  "app/api/school-admin/students/bulk-upload-sheets/route.ts": {
     "mtime": 1778188008.5990052,
     "ast_hash": "90033f5a5d8fc970c8a4f8de1c465819",
     "semantic_hash": "90033f5a5d8fc970c8a4f8de1c465819"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\school-admin\\students\\bulk-upload\\route.ts": {
+  "app/api/school-admin/students/bulk-upload/route.ts": {
     "mtime": 1778188008.6062574,
     "ast_hash": "bd699ab67724ee5f2aea34aaa89113b7",
     "semantic_hash": "bd699ab67724ee5f2aea34aaa89113b7"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\schools\\[schoolId]\\settings\\route.ts": {
+  "app/api/schools/[schoolId]/settings/route.ts": {
     "mtime": 1778188008.6147912,
     "ast_hash": "c7b974972573e613012ecdb3003c9be4",
     "semantic_hash": "c7b974972573e613012ecdb3003c9be4"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\schools\\[schoolId]\\upload-logo\\route.ts": {
+  "app/api/schools/[schoolId]/upload-logo/route.ts": {
     "mtime": 1778188008.621429,
     "ast_hash": "0751fd282d0fd5aa5334aab386020b22",
     "semantic_hash": "0751fd282d0fd5aa5334aab386020b22"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\student-progress\\route.ts": {
+  "app/api/student-progress/route.ts": {
     "mtime": 1778188008.6282992,
     "ast_hash": "10b25f54e73d639a3aa75f8dac8a7fcf",
     "semantic_hash": "10b25f54e73d639a3aa75f8dac8a7fcf"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\api\\teacher-feedback\\route.ts": {
+  "app/api/teacher-feedback/route.ts": {
     "mtime": 1778188008.677941,
     "ast_hash": "f5ec45a5002fc56a6bda6bbbd70ccf05",
     "semantic_hash": "f5ec45a5002fc56a6bda6bbbd70ccf05"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\auth\\callback\\route.ts": {
+  "app/auth/callback/route.ts": {
     "mtime": 1778272142.5478642,
     "ast_hash": "17dbe1b14d6bf3a9cee053b95d0bb12c",
     "semantic_hash": "17dbe1b14d6bf3a9cee053b95d0bb12c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\assignments\\[id]\\analytics\\page.tsx": {
+  "app/dashboard/assignments/[id]/analytics/page.tsx": {
     "mtime": 1778509991.6151896,
     "ast_hash": "62151569dc4f73f8fdecf5bc883daa18",
     "semantic_hash": "62151569dc4f73f8fdecf5bc883daa18"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\assignments\\[id]\\page.tsx": {
+  "app/dashboard/assignments/[id]/page.tsx": {
     "mtime": 1778519377.3798182,
     "ast_hash": "bb1d41ddd1f39553dc4121d56a1143e0",
     "semantic_hash": "bb1d41ddd1f39553dc4121d56a1143e0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\assignments\\[id]\\writings\\[writingId]\\page.tsx": {
+  "app/dashboard/assignments/[id]/writings/[writingId]/page.tsx": {
     "mtime": 1778522790.7749882,
     "ast_hash": "6ee644f14b8d86d03fcde1aa5e671484",
     "semantic_hash": "6ee644f14b8d86d03fcde1aa5e671484"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\assignments\\[id]\\writings\\page.tsx": {
+  "app/dashboard/assignments/[id]/writings/page.tsx": {
     "mtime": 1778446051.4979272,
     "ast_hash": "4b896340d16c9eebb29177db2e1c5921",
     "semantic_hash": "4b896340d16c9eebb29177db2e1c5921"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\assignments\\assignment-form.tsx": {
+  "app/dashboard/assignments/assignment-form.tsx": {
     "mtime": 1780247282.8737566,
     "ast_hash": "e1b51f4e766ffd2b4bf61fcf2b39f766",
     "semantic_hash": "e1b51f4e766ffd2b4bf61fcf2b39f766"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\assignments\\new\\mode-picker.tsx": {
+  "app/dashboard/assignments/new/mode-picker.tsx": {
     "mtime": 1778288822.7244556,
     "ast_hash": "83f03d2550e0170559babcb89aa6e591",
     "semantic_hash": "83f03d2550e0170559babcb89aa6e591"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\assignments\\new\\page.tsx": {
+  "app/dashboard/assignments/new/page.tsx": {
     "mtime": 1778290663.424757,
     "ast_hash": "0b6ccd885b28d050b5a60713ed40fd43",
     "semantic_hash": "0b6ccd885b28d050b5a60713ed40fd43"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\assignments\\page.tsx": {
+  "app/dashboard/assignments/page.tsx": {
     "mtime": 1778292772.8816755,
     "ast_hash": "4338b64854a2b9a8d8d58321b90de27c",
     "semantic_hash": "4338b64854a2b9a8d8d58321b90de27c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\classes\\[id]\\page.tsx": {
+  "app/dashboard/classes/[id]/page.tsx": {
     "mtime": 1778287247.8018775,
     "ast_hash": "83baeeeeb02d690cdc88d06d7026c222",
     "semantic_hash": "83baeeeeb02d690cdc88d06d7026c222"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\classes\\page.tsx": {
+  "app/dashboard/classes/page.tsx": {
     "mtime": 1778292759.5781236,
     "ast_hash": "85ec3d69862fb5a34b3b4fda726236b5",
     "semantic_hash": "85ec3d69862fb5a34b3b4fda726236b5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\error.tsx": {
+  "app/dashboard/error.tsx": {
     "mtime": 1778292731.4583232,
     "ast_hash": "91892f0f2b666c29d71a4a13dac0caea",
     "semantic_hash": "91892f0f2b666c29d71a4a13dac0caea"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\exemplars\\[id]\\delete-button.tsx": {
+  "app/dashboard/exemplars/[id]/delete-button.tsx": {
     "mtime": 1778513449.0472176,
     "ast_hash": "53f6b9b9f4dd72d0e898a07dc3146e3f",
     "semantic_hash": "53f6b9b9f4dd72d0e898a07dc3146e3f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\exemplars\\[id]\\page.tsx": {
+  "app/dashboard/exemplars/[id]/page.tsx": {
     "mtime": 1778527027.2271988,
     "ast_hash": "899d31f8d8c48d22e2022bdce89dd4c0",
     "semantic_hash": "899d31f8d8c48d22e2022bdce89dd4c0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\exemplars\\exemplar-form.tsx": {
+  "app/dashboard/exemplars/exemplar-form.tsx": {
     "mtime": 1778527906.984807,
     "ast_hash": "46c9e9c9dff051eb36f46f3019d1df49",
     "semantic_hash": "46c9e9c9dff051eb36f46f3019d1df49"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\exemplars\\new\\page.tsx": {
+  "app/dashboard/exemplars/new/page.tsx": {
     "mtime": 1778522677.835629,
     "ast_hash": "49426c0d383198a1a8276383c8f28650",
     "semantic_hash": "49426c0d383198a1a8276383c8f28650"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\exemplars\\page.tsx": {
+  "app/dashboard/exemplars/page.tsx": {
     "mtime": 1778525648.7629364,
     "ast_hash": "09cb77a8ab977d2b2691c19303c14cc1",
     "semantic_hash": "09cb77a8ab977d2b2691c19303c14cc1"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\layout.tsx": {
+  "app/dashboard/layout.tsx": {
     "mtime": 1778284830.1164315,
     "ast_hash": "0978f71dcfba6d00e19dc09056c2dddd",
     "semantic_hash": "0978f71dcfba6d00e19dc09056c2dddd"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\page.tsx": {
+  "app/dashboard/page.tsx": {
     "mtime": 1778292753.0740194,
     "ast_hash": "119798fe3f3efa83e49967590b72c2dc",
     "semantic_hash": "119798fe3f3efa83e49967590b72c2dc"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\students\\[id]\\page.tsx": {
+  "app/dashboard/students/[id]/page.tsx": {
     "mtime": 1778511311.521697,
     "ast_hash": "5e62291468e265fdc87034872e6eccf3",
     "semantic_hash": "5e62291468e265fdc87034872e6eccf3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\dashboard\\students\\page.tsx": {
+  "app/dashboard/students/page.tsx": {
     "mtime": 1778292765.580592,
     "ast_hash": "53d90bf56418c0edf620659828a0ef52",
     "semantic_hash": "53d90bf56418c0edf620659828a0ef52"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\forbidden\\page.tsx": {
+  "app/forbidden/page.tsx": {
     "mtime": 1778279448.2728894,
     "ast_hash": "67a67c6c677764808e546452b65a77b6",
     "semantic_hash": "67a67c6c677764808e546452b65a77b6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\layout.tsx": {
+  "app/layout.tsx": {
     "mtime": 1778501717.8259466,
     "ast_hash": "dd3693848e9b877fd9f582c4ca121cf0",
     "semantic_hash": "dd3693848e9b877fd9f582c4ca121cf0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\logout\\route.ts": {
+  "app/logout/route.ts": {
     "mtime": 1778272458.4993606,
     "ast_hash": "c20d8cd1dad0919f01e1618149f5db53",
     "semantic_hash": "c20d8cd1dad0919f01e1618149f5db53"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\not-found.tsx": {
+  "app/not-found.tsx": {
     "mtime": 1778188009.05497,
     "ast_hash": "4400a05b98ebf3b33065dac20466c391",
     "semantic_hash": "4400a05b98ebf3b33065dac20466c391"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\page.tsx": {
+  "app/page.tsx": {
     "mtime": 1778272149.007676,
     "ast_hash": "b55c584706c1d84164cc2f8c16d71ed8",
     "semantic_hash": "b55c584706c1d84164cc2f8c16d71ed8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\pending\\page.tsx": {
+  "app/pending/page.tsx": {
     "mtime": 1778282064.2205124,
     "ast_hash": "5280c264399b5ea61cefaab333c3246e",
     "semantic_hash": "5280c264399b5ea61cefaab333c3246e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\assignments\\[id]\\page.tsx": {
+  "app/student/assignments/[id]/page.tsx": {
     "mtime": 1778505543.1991377,
     "ast_hash": "0f7e19436cec3018b008915fa9b96c9f",
     "semantic_hash": "0f7e19436cec3018b008915fa9b96c9f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\assignments\\[id]\\start-writing-button.tsx": {
+  "app/student/assignments/[id]/start-writing-button.tsx": {
     "mtime": 1778328893.7304716,
     "ast_hash": "32c5c82976d3ac9607a0d9b9848b4a9a",
     "semantic_hash": "32c5c82976d3ac9607a0d9b9848b4a9a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\assignments\\page.tsx": {
+  "app/student/assignments/page.tsx": {
     "mtime": 1778444076.5007408,
     "ast_hash": "91c0efa486749ce901edf19372e70cc6",
     "semantic_hash": "91c0efa486749ce901edf19372e70cc6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\layout.tsx": {
+  "app/student/layout.tsx": {
     "mtime": 1778328821.5152555,
     "ast_hash": "77af5e86c5baf4222ee07f61a1a3dbcd",
     "semantic_hash": "77af5e86c5baf4222ee07f61a1a3dbcd"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\page.tsx": {
+  "app/student/page.tsx": {
     "mtime": 1778328840.4045098,
     "ast_hash": "421af6fabb60971e21556599b333e891",
     "semantic_hash": "421af6fabb60971e21556599b333e891"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\[step]\\page.tsx": {
+  "app/student/writings/[id]/[step]/page.tsx": {
     "mtime": 1779917606.5285432,
     "ast_hash": "3b976fa346f8dd2941ff8893eb5a2db5",
     "semantic_hash": "3b976fa346f8dd2941ff8893eb5a2db5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\annotate-text-step.tsx": {
+  "app/student/writings/[id]/_steps/annotate-text-step.tsx": {
     "mtime": 1778334326.0207484,
     "ast_hash": "a238965ff888f9b6d06ac0ca254840f8",
     "semantic_hash": "a238965ff888f9b6d06ac0ca254840f8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\cm-dev-step.tsx": {
+  "app/student/writings/[id]/_steps/cm-dev-step.tsx": {
     "mtime": 1778350747.9497962,
     "ast_hash": "064d816b6f7ef87b1c937a511509fa13",
     "semantic_hash": "064d816b6f7ef87b1c937a511509fa13"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\conclusion-step.tsx": {
+  "app/student/writings/[id]/_steps/conclusion-step.tsx": {
     "mtime": 1778436311.7612767,
     "ast_hash": "501b4bb1f2453d44bbcbcc945f4effc1",
     "semantic_hash": "501b4bb1f2453d44bbcbcc945f4effc1"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\counterargument-step.tsx": {
+  "app/student/writings/[id]/_steps/counterargument-step.tsx": {
     "mtime": 1778428291.6068623,
     "ast_hash": "5a2ac0051d156aa3211cbfd5787258a0",
     "semantic_hash": "5a2ac0051d156aa3211cbfd5787258a0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\decisions-step.tsx": {
+  "app/student/writings/[id]/_steps/decisions-step.tsx": {
     "mtime": 1778424028.6505177,
     "ast_hash": "7792f5a9848d36c56ff777fab511bc22",
     "semantic_hash": "7792f5a9848d36c56ff777fab511bc22"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\decode-prompt-step.tsx": {
+  "app/student/writings/[id]/_steps/decode-prompt-step.tsx": {
     "mtime": 1779914672.0988736,
     "ast_hash": "00b790daaed179ead1e59d06aac56f03",
     "semantic_hash": "00b790daaed179ead1e59d06aac56f03"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\discovery-step.tsx": {
+  "app/student/writings/[id]/_steps/discovery-step.tsx": {
     "mtime": 1778426053.9811614,
     "ast_hash": "e6c15ca548c8128f20de1c1f1db12fd2",
     "semantic_hash": "e6c15ca548c8128f20de1c1f1db12fd2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\elaboration-step.tsx": {
+  "app/student/writings/[id]/_steps/elaboration-step.tsx": {
     "mtime": 1778424100.30003,
     "ast_hash": "ac65f43b2f73d9fdc0301832fe0808b6",
     "semantic_hash": "ac65f43b2f73d9fdc0301832fe0808b6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\final-draft-step.tsx": {
+  "app/student/writings/[id]/_steps/final-draft-step.tsx": {
     "mtime": 1778442974.5375292,
     "ast_hash": "5e17e9d1056f61565fa5616b49f0a43a",
     "semantic_hash": "5e17e9d1056f61565fa5616b49f0a43a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\gather-cds-step.tsx": {
+  "app/student/writings/[id]/_steps/gather-cds-step.tsx": {
     "mtime": 1778337825.5523252,
     "ast_hash": "0fe0c4f59c30badd1ba20b2d63106565",
     "semantic_hash": "0fe0c4f59c30badd1ba20b2d63106565"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\introduction-step.tsx": {
+  "app/student/writings/[id]/_steps/introduction-step.tsx": {
     "mtime": 1779917567.6391323,
     "ast_hash": "34eeaaf9e47a6d4522e30f1523f8da1d",
     "semantic_hash": "34eeaaf9e47a6d4522e30f1523f8da1d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\paragraph-form-step.tsx": {
+  "app/student/writings/[id]/_steps/paragraph-form-step.tsx": {
     "mtime": 1778442966.273418,
     "ast_hash": "b7507bba3622aa37578f7370919797bb",
     "semantic_hash": "b7507bba3622aa37578f7370919797bb"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\placeholder-step.tsx": {
+  "app/student/writings/[id]/_steps/placeholder-step.tsx": {
     "mtime": 1778443968.5591302,
     "ast_hash": "58e9aa874bd525670ccb9670a38e00a8",
     "semantic_hash": "58e9aa874bd525670ccb9670a38e00a8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\shaping-sheet-step.tsx": {
+  "app/student/writings/[id]/_steps/shaping-sheet-step.tsx": {
     "mtime": 1778428204.2341845,
     "ast_hash": "a2753842ea80280e8579fba06e38b582",
     "semantic_hash": "a2753842ea80280e8579fba06e38b582"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\skip-step-button.tsx": {
+  "app/student/writings/[id]/_steps/skip-step-button.tsx": {
     "mtime": 1778443983.9227393,
     "ast_hash": "cd9c988f8da6d7d00a20d0b566b3ba52",
     "semantic_hash": "cd9c988f8da6d7d00a20d0b566b3ba52"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\t-chart-step.tsx": {
+  "app/student/writings/[id]/_steps/t-chart-step.tsx": {
     "mtime": 1778796212.5504582,
     "ast_hash": "677bdafa769fa4a56980e3265c349145",
     "semantic_hash": "677bdafa769fa4a56980e3265c349145"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\thesis-step.tsx": {
+  "app/student/writings/[id]/_steps/thesis-step.tsx": {
     "mtime": 1779917523.856679,
     "ast_hash": "e4852f5c3a615c4c2cee15a2d1240d11",
     "semantic_hash": "e4852f5c3a615c4c2cee15a2d1240d11"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\topic-sentence-dev-step.tsx": {
+  "app/student/writings/[id]/_steps/topic-sentence-dev-step.tsx": {
     "mtime": 1778348475.197908,
     "ast_hash": "38423fff51cdde2df2d292c9cef9db66",
     "semantic_hash": "38423fff51cdde2df2d292c9cef9db66"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\_steps\\topic-sentences-step.tsx": {
+  "app/student/writings/[id]/_steps/topic-sentences-step.tsx": {
     "mtime": 1778426125.9103506,
     "ast_hash": "195bd5282f840772934958bfa00d60a4",
     "semantic_hash": "195bd5282f840772934958bfa00d60a4"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\layout.tsx": {
+  "app/student/writings/[id]/layout.tsx": {
     "mtime": 1778789504.3190699,
     "ast_hash": "d88522e174021af98d6829fa42f93fc3",
     "semantic_hash": "d88522e174021af98d6829fa42f93fc3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\student\\writings\\[id]\\page.tsx": {
+  "app/student/writings/[id]/page.tsx": {
     "mtime": 1778330642.5082202,
     "ast_hash": "617264936769878b96974a21e8650aa8",
     "semantic_hash": "617264936769878b96974a21e8650aa8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\app\\welcome\\page.tsx": {
+  "app/welcome/page.tsx": {
     "mtime": 1778279444.1027558,
     "ast_hash": "bb4b520870e190527018224eb5e7d89a",
     "semantic_hash": "bb4b520870e190527018224eb5e7d89a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\check-db-tables.js": {
+  "check-db-tables.js": {
     "mtime": 1778188009.1617506,
     "ast_hash": "745a656fedfc4e1caefdafc6e7400957",
     "semantic_hash": "745a656fedfc4e1caefdafc6e7400957"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\DevTools.tsx": {
+  "components/DevTools.tsx": {
     "mtime": 1778188009.174025,
     "ast_hash": "ed2d91e0aaff2e8be230af2995da868b",
     "semantic_hash": "ed2d91e0aaff2e8be230af2995da868b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\ErrorBoundary.tsx": {
+  "components/ErrorBoundary.tsx": {
     "mtime": 1778188009.1829522,
     "ast_hash": "5a1d59be3e24a87344d61490816d0a5b",
     "semantic_hash": "5a1d59be3e24a87344d61490816d0a5b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\admin\\csv-importer.tsx": {
+  "components/admin/csv-importer.tsx": {
     "mtime": 1780397074.497769,
     "ast_hash": "cc50419222fdc544c5ad0b086e0a6533",
     "semantic_hash": "cc50419222fdc544c5ad0b086e0a6533"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\assignments\\rich-source-editor.tsx": {
+  "components/assignments/rich-source-editor.tsx": {
     "mtime": 1780247096.0530877,
     "ast_hash": "9e424633f611026601fef4e9966457b2",
     "semantic_hash": "9e424633f611026601fef4e9966457b2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\assignments\\rubric-editor.tsx": {
+  "components/assignments/rubric-editor.tsx": {
     "mtime": 1778290551.0563643,
     "ast_hash": "73adf01a8a36c09756a0fbc7c320b563",
     "semantic_hash": "73adf01a8a36c09756a0fbc7c320b563"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\assignments\\source-text-fields.tsx": {
+  "components/assignments/source-text-fields.tsx": {
     "mtime": 1780247254.616632,
     "ast_hash": "0a603871ea00384c71da2d693b8958ab",
     "semantic_hash": "0a603871ea00384c71da2d693b8958ab"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\assignments\\source-text-upload.tsx": {
+  "components/assignments/source-text-upload.tsx": {
     "mtime": 1780247189.2400372,
     "ast_hash": "d986fa5c7d52ce444692da5f304d857d",
     "semantic_hash": "d986fa5c7d52ce444692da5f304d857d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\auth\\logout-button.tsx": {
+  "components/auth/logout-button.tsx": {
     "mtime": 1778272463.278648,
     "ast_hash": "032566e73712e7e870ab8f4818e9dda9",
     "semantic_hash": "032566e73712e7e870ab8f4818e9dda9"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\analytics\\criterion-breakdown.tsx": {
+  "components/dashboard/analytics/criterion-breakdown.tsx": {
     "mtime": 1778509686.1645513,
     "ast_hash": "0d1f476784b34ee7045d6a66cd8a1c36",
     "semantic_hash": "0d1f476784b34ee7045d6a66cd8a1c36"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\analytics\\intervention-candidates.tsx": {
+  "components/dashboard/analytics/intervention-candidates.tsx": {
     "mtime": 1778509710.5476635,
     "ast_hash": "2e4c9b159d535f674c0837361262edd7",
     "semantic_hash": "2e4c9b159d535f674c0837361262edd7"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\analytics\\score-distribution.tsx": {
+  "components/dashboard/analytics/score-distribution.tsx": {
     "mtime": 1778509670.938706,
     "ast_hash": "5cf1c411b4b401cff21932b869e0482b",
     "semantic_hash": "5cf1c411b4b401cff21932b869e0482b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\analytics\\submission-rate-card.tsx": {
+  "components/dashboard/analytics/submission-rate-card.tsx": {
     "mtime": 1778509657.0993066,
     "ast_hash": "c882ddf6ed4d016009c210098a9f25e0",
     "semantic_hash": "c882ddf6ed4d016009c210098a9f25e0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\assignments\\exemplar-picker.tsx": {
+  "components/dashboard/assignments/exemplar-picker.tsx": {
     "mtime": 1778519406.8517256,
     "ast_hash": "7ba41e4b9fed4c7c45247676245cffba",
     "semantic_hash": "7ba41e4b9fed4c7c45247676245cffba"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\assignments\\pinned-exemplars-list.tsx": {
+  "components/dashboard/assignments/pinned-exemplars-list.tsx": {
     "mtime": 1778515914.3595283,
     "ast_hash": "8a1e2ee230c51dc159727c74483ffc7e",
     "semantic_hash": "8a1e2ee230c51dc159727c74483ffc7e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\exemplars\\color-toolbar.tsx": {
+  "components/dashboard/exemplars/color-toolbar.tsx": {
     "mtime": 1778527925.9594927,
     "ast_hash": "7ee88cc4309bfb9f40d6f02971a887ba",
     "semantic_hash": "7ee88cc4309bfb9f40d6f02971a887ba"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\shell\\teacher-header.tsx": {
+  "components/dashboard/shell/teacher-header.tsx": {
     "mtime": 1778284886.7384827,
     "ast_hash": "8cdee6826517706a7cdcdcc88384824e",
     "semantic_hash": "8cdee6826517706a7cdcdcc88384824e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\shell\\teacher-shell.tsx": {
+  "components/dashboard/shell/teacher-shell.tsx": {
     "mtime": 1778284872.058969,
     "ast_hash": "78b59316e10d37dd262c02cc36b4e29f",
     "semantic_hash": "78b59316e10d37dd262c02cc36b4e29f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\shell\\teacher-sidebar.tsx": {
+  "components/dashboard/shell/teacher-sidebar.tsx": {
     "mtime": 1778513377.8906748,
     "ast_hash": "5f30bb766797685003e17ad9cb9f608b",
     "semantic_hash": "5f30bb766797685003e17ad9cb9f608b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\shell\\user-menu.tsx": {
+  "components/dashboard/shell/user-menu.tsx": {
     "mtime": 1778284895.773324,
     "ast_hash": "24074bb46e54911045ae53840a0d2c5c",
     "semantic_hash": "24074bb46e54911045ae53840a0d2c5c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\students\\assignment-list.tsx": {
+  "components/dashboard/students/assignment-list.tsx": {
     "mtime": 1778512381.5454862,
     "ast_hash": "0661f7f17f663a57a8186c4323b8664d",
     "semantic_hash": "0661f7f17f663a57a8186c4323b8664d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\students\\criterion-trends.tsx": {
+  "components/dashboard/students/criterion-trends.tsx": {
     "mtime": 1778511274.4670367,
     "ast_hash": "a411c6ef1fc8a8122a0d3f0921bbb3a1",
     "semantic_hash": "a411c6ef1fc8a8122a0d3f0921bbb3a1"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\students\\score-timeline.tsx": {
+  "components/dashboard/students/score-timeline.tsx": {
     "mtime": 1778511260.4855375,
     "ast_hash": "e5ccf9c5901ebaaebd2b0f5fcb2e2290",
     "semantic_hash": "e5ccf9c5901ebaaebd2b0f5fcb2e2290"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\writing-review\\combined-view.tsx": {
+  "components/dashboard/writing-review/combined-view.tsx": {
     "mtime": 1779917614.7316308,
     "ast_hash": "e6cfbbebacff3eae4dbf5d2346d11c8c",
     "semantic_hash": "e6cfbbebacff3eae4dbf5d2346d11c8c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\writing-review\\feedback-item.tsx": {
+  "components/dashboard/writing-review/feedback-item.tsx": {
     "mtime": 1778445933.949165,
     "ast_hash": "46e48301c3561d3a74d16029fcb6ae66",
     "semantic_hash": "46e48301c3561d3a74d16029fcb6ae66"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\writing-review\\feedback-panel.tsx": {
+  "components/dashboard/writing-review/feedback-panel.tsx": {
     "mtime": 1778445953.9978511,
     "ast_hash": "85ce70ae76f3cc403b01e083a8786ac7",
     "semantic_hash": "85ce70ae76f3cc403b01e083a8786ac7"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\writing-review\\review-actions.tsx": {
+  "components/dashboard/writing-review/review-actions.tsx": {
     "mtime": 1778522772.808642,
     "ast_hash": "ae033ce7fc958c15a325c508bc3e3fdc",
     "semantic_hash": "ae033ce7fc958c15a325c508bc3e3fdc"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\writing-review\\rubric-scoring-panel.tsx": {
+  "components/dashboard/writing-review/rubric-scoring-panel.tsx": {
     "mtime": 1778503941.690617,
     "ast_hash": "9acd18556cf20cf6354cc76d19656019",
     "semantic_hash": "9acd18556cf20cf6354cc76d19656019"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\dashboard\\writing-review\\teacher-status-badge.tsx": {
+  "components/dashboard/writing-review/teacher-status-badge.tsx": {
     "mtime": 1778445908.3123956,
     "ast_hash": "897875daed4567716195341cea190182",
     "semantic_hash": "897875daed4567716195341cea190182"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\error\\ErrorBoundary.tsx": {
+  "components/error/ErrorBoundary.tsx": {
     "mtime": 1778188009.9701686,
     "ast_hash": "2dd81e85b859bd276849dc7badf47bd3",
     "semantic_hash": "2dd81e85b859bd276849dc7badf47bd3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\error\\ErrorProvider.tsx": {
+  "components/error/ErrorProvider.tsx": {
     "mtime": 1778188009.976322,
     "ast_hash": "a561df9b9994b2d481d51b5957bd2871",
     "semantic_hash": "a561df9b9994b2d481d51b5957bd2871"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\exemplar-render.tsx": {
+  "components/exemplar-render.tsx": {
     "mtime": 1778527005.862649,
     "ast_hash": "3619f57266994828617aa9010a235285",
     "semantic_hash": "3619f57266994828617aa9010a235285"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\jswp-color\\role-shape.tsx": {
+  "components/jswp-color/role-shape.tsx": {
     "mtime": 1779747863.1054466,
     "ast_hash": "205a1dedf99a6538f562a5e26975af6c",
     "semantic_hash": "205a1dedf99a6538f562a5e26975af6c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\assignment-card.tsx": {
+  "components/student/assignment-card.tsx": {
     "mtime": 1778444091.564188,
     "ast_hash": "3eb9f26f6f3b81d473bed8491af7655b",
     "semantic_hash": "3eb9f26f6f3b81d473bed8491af7655b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\shell\\student-header.tsx": {
+  "components/student/shell/student-header.tsx": {
     "mtime": 1778328772.0337255,
     "ast_hash": "1ba7251a1df0656a1d8d47d58398158a",
     "semantic_hash": "1ba7251a1df0656a1d8d47d58398158a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\shell\\student-shell.tsx": {
+  "components/student/shell/student-shell.tsx": {
     "mtime": 1778328764.6929998,
     "ast_hash": "932a058e3d2b4dafbd5dec9694503e7c",
     "semantic_hash": "932a058e3d2b4dafbd5dec9694503e7c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\shell\\student-sidebar.tsx": {
+  "components/student/shell/student-sidebar.tsx": {
     "mtime": 1778328781.6008403,
     "ast_hash": "a1aa06dc295034a8fdaaa64e7157155f",
     "semantic_hash": "a1aa06dc295034a8fdaaa64e7157155f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\shell\\user-menu.tsx": {
+  "components/student/shell/user-menu.tsx": {
     "mtime": 1778328793.3121555,
     "ast_hash": "cd818201f9adf75e6c22fd559abbf6d9",
     "semantic_hash": "cd818201f9adf75e6c22fd559abbf6d9"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\status-badge.tsx": {
+  "components/student/status-badge.tsx": {
     "mtime": 1778328801.133902,
     "ast_hash": "f3930235cff28dd04fd509b1e4ad4c32",
     "semantic_hash": "f3930235cff28dd04fd509b1e4ad4c32"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\annotate-text-client.tsx": {
+  "components/student/writing/annotate-text-client.tsx": {
     "mtime": 1778443818.1017506,
     "ast_hash": "4e2d812745c67ec798495fbd4bc5002e",
     "semantic_hash": "4e2d812745c67ec798495fbd4bc5002e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\annotation-form.tsx": {
+  "components/student/writing/annotation-form.tsx": {
     "mtime": 1778443874.9350002,
     "ast_hash": "ff0a2bacf134fdb406c3033554d817bc",
     "semantic_hash": "ff0a2bacf134fdb406c3033554d817bc"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\annotation-kind-config.ts": {
+  "components/student/writing/annotation-kind-config.ts": {
     "mtime": 1779916697.7968113,
     "ast_hash": "004724f47336932631aab28eb24f443f",
     "semantic_hash": "004724f47336932631aab28eb24f443f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\annotation-popover.tsx": {
+  "components/student/writing/annotation-popover.tsx": {
     "mtime": 1778443889.0335772,
     "ast_hash": "d2a2c2df3afe98a7837867a35da1f047",
     "semantic_hash": "d2a2c2df3afe98a7837867a35da1f047"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\annotation-sidebar.tsx": {
+  "components/student/writing/annotation-sidebar.tsx": {
     "mtime": 1779916757.1457694,
     "ast_hash": "f82019fa30c74dbb43e1de271be55272",
     "semantic_hash": "f82019fa30c74dbb43e1de271be55272"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\cm-dev\\cm-dev-bp-pane.tsx": {
+  "components/student/writing/cm-dev/cm-dev-bp-pane.tsx": {
     "mtime": 1778443327.6366816,
     "ast_hash": "cb1a5076398b8db7b9ad2cdaca38cf4d",
     "semantic_hash": "cb1a5076398b8db7b9ad2cdaca38cf4d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\cm-dev\\cm-dev-client.tsx": {
+  "components/student/writing/cm-dev/cm-dev-client.tsx": {
     "mtime": 1778443302.4404745,
     "ast_hash": "2de69ec273a90b1dd45a35260ef5cb3b",
     "semantic_hash": "2de69ec273a90b1dd45a35260ef5cb3b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\counterargument\\counterargument-bp-pane.tsx": {
+  "components/student/writing/counterargument/counterargument-bp-pane.tsx": {
     "mtime": 1778443571.9317937,
     "ast_hash": "d2f85f582edbb0d6fd072df56b7348f0",
     "semantic_hash": "d2f85f582edbb0d6fd072df56b7348f0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\counterargument\\counterargument-client.tsx": {
+  "components/student/writing/counterargument/counterargument-client.tsx": {
     "mtime": 1778443549.0631447,
     "ast_hash": "810c844cf78643610e15aa3da51ffc35",
     "semantic_hash": "810c844cf78643610e15aa3da51ffc35"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\decisions\\decisions-bp-pane.tsx": {
+  "components/student/writing/decisions/decisions-bp-pane.tsx": {
     "mtime": 1778443370.4362292,
     "ast_hash": "a6eff55bd81a185613e43079169b0e14",
     "semantic_hash": "a6eff55bd81a185613e43079169b0e14"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\decisions\\decisions-client.tsx": {
+  "components/student/writing/decisions/decisions-client.tsx": {
     "mtime": 1778443353.917758,
     "ast_hash": "bfb3dfa52025461393bb11681e170c42",
     "semantic_hash": "bfb3dfa52025461393bb11681e170c42"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\discovery\\discovery-bp-pane.tsx": {
+  "components/student/writing/discovery/discovery-bp-pane.tsx": {
     "mtime": 1778443483.8296685,
     "ast_hash": "3edeb6bfddffce8c4d7599d3b2181278",
     "semantic_hash": "3edeb6bfddffce8c4d7599d3b2181278"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\discovery\\discovery-client.tsx": {
+  "components/student/writing/discovery/discovery-client.tsx": {
     "mtime": 1778763120.29197,
     "ast_hash": "187eb0d399363aefeacf127640d38294",
     "semantic_hash": "187eb0d399363aefeacf127640d38294"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\elaboration\\elaboration-bp-pane.tsx": {
+  "components/student/writing/elaboration/elaboration-bp-pane.tsx": {
     "mtime": 1778443409.325782,
     "ast_hash": "1d32a1829af855536d40e08abe3a4bfa",
     "semantic_hash": "1d32a1829af855536d40e08abe3a4bfa"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\elaboration\\elaboration-client.tsx": {
+  "components/student/writing/elaboration/elaboration-client.tsx": {
     "mtime": 1778443387.9726162,
     "ast_hash": "f213b44189db296a2cf0d97dd8e03684",
     "semantic_hash": "f213b44189db296a2cf0d97dd8e03684"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\essay-parts\\essay-part-form.tsx": {
+  "components/student/writing/essay-parts/essay-part-form.tsx": {
     "mtime": 1779917590.5911946,
     "ast_hash": "dda37a61cfef0eaec9d165ce1b2f5df3",
     "semantic_hash": "dda37a61cfef0eaec9d165ce1b2f5df3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\exemplar-reference.tsx": {
+  "components/student/writing/exemplar-reference.tsx": {
     "mtime": 1778527046.515686,
     "ast_hash": "514e4a9d74a7a619d1994e8e0a7a70ed",
     "semantic_hash": "514e4a9d74a7a619d1994e8e0a7a70ed"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\final-draft\\final-draft-client.tsx": {
+  "components/student/writing/final-draft/final-draft-client.tsx": {
     "mtime": 1778763188.8413968,
     "ast_hash": "6aec2f1da4d5a79da238a7a5c41c79c2",
     "semantic_hash": "6aec2f1da4d5a79da238a7a5c41c79c2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\gather-cds\\candidate-row.tsx": {
+  "components/student/writing/gather-cds/candidate-row.tsx": {
     "mtime": 1779203199.1627734,
     "ast_hash": "2d1a5f6cf9a936285b654b24d776c54a",
     "semantic_hash": "2d1a5f6cf9a936285b654b24d776c54a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\gather-cds\\gather-cds-client.tsx": {
+  "components/student/writing/gather-cds/gather-cds-client.tsx": {
     "mtime": 1779203163.7421107,
     "ast_hash": "d375e9ee81ea148ac2fa281e178e5a45",
     "semantic_hash": "d375e9ee81ea148ac2fa281e178e5a45"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\gather-cds\\sheet-editor.tsx": {
+  "components/student/writing/gather-cds/sheet-editor.tsx": {
     "mtime": 1779748140.1642303,
     "ast_hash": "81bbf36f215b72a2bd16fb0ce054d4cb",
     "semantic_hash": "81bbf36f215b72a2bd16fb0ce054d4cb"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\paragraph-form\\cd-cm-paragraph-form-bp-pane.tsx": {
+  "components/student/writing/paragraph-form/cd-cm-paragraph-form-bp-pane.tsx": {
     "mtime": 1779748133.3226564,
     "ast_hash": "cbc5cee1419f1f4a681edc58e02627ef",
     "semantic_hash": "cbc5cee1419f1f4a681edc58e02627ef"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\paragraph-form\\narrative-paragraph-form-bp-pane.tsx": {
+  "components/student/writing/paragraph-form/narrative-paragraph-form-bp-pane.tsx": {
     "mtime": 1778756838.6048808,
     "ast_hash": "109a6b59dd34bad892add7d278841d1e",
     "semantic_hash": "109a6b59dd34bad892add7d278841d1e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\paragraph-form\\paragraph-form-client.tsx": {
+  "components/student/writing/paragraph-form/paragraph-form-client.tsx": {
     "mtime": 1778763157.1840124,
     "ast_hash": "d264e83c8712aeae1df7067997871e3f",
     "semantic_hash": "d264e83c8712aeae1df7067997871e3f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\reference-panel.tsx": {
+  "components/student/writing/reference-panel.tsx": {
     "mtime": 1778337612.6135604,
     "ast_hash": "c93f2410c15c993568b11f9577a42163",
     "semantic_hash": "c93f2410c15c993568b11f9577a42163"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\rubric-breakdown.tsx": {
+  "components/student/writing/rubric-breakdown.tsx": {
     "mtime": 1778503952.926124,
     "ast_hash": "1982edcf26a33bd5bcf8b2e09be823a1",
     "semantic_hash": "1982edcf26a33bd5bcf8b2e09be823a1"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\shaping\\cd-cm-shaping-bp-pane.tsx": {
+  "components/student/writing/shaping/cd-cm-shaping-bp-pane.tsx": {
     "mtime": 1779918179.02308,
     "ast_hash": "a5cc6e357aae117cfbaf4950f161eb22",
     "semantic_hash": "a5cc6e357aae117cfbaf4950f161eb22"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\shaping\\narrative-shaping-bp-pane.tsx": {
+  "components/student/writing/shaping/narrative-shaping-bp-pane.tsx": {
     "mtime": 1778757979.786142,
     "ast_hash": "5d68e132fa32b2e02533831250749930",
     "semantic_hash": "5d68e132fa32b2e02533831250749930"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\shaping\\pick-n-stitch-panel.tsx": {
+  "components/student/writing/shaping/pick-n-stitch-panel.tsx": {
     "mtime": 1778443686.7135844,
     "ast_hash": "17e0f49ddb8eb2c97fa9400ac7dc3d19",
     "semantic_hash": "17e0f49ddb8eb2c97fa9400ac7dc3d19"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\shaping\\shaping-client.tsx": {
+  "components/student/writing/shaping/shaping-client.tsx": {
     "mtime": 1778790316.678463,
     "ast_hash": "8f1d928cedc0cbccd5a34d07b4b58b10",
     "semantic_hash": "8f1d928cedc0cbccd5a34d07b4b58b10"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\source-text-viewer.tsx": {
+  "components/student/writing/source-text-viewer.tsx": {
     "mtime": 1778335885.0143764,
     "ast_hash": "f985407e955f1a31d5c9fbc0a8fd5562",
     "semantic_hash": "f985407e955f1a31d5c9fbc0a8fd5562"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\step-sidebar.tsx": {
+  "components/student/writing/step-sidebar.tsx": {
     "mtime": 1778330615.6304278,
     "ast_hash": "f85f096f06b52d9b4d5981996cf6cbf8",
     "semantic_hash": "f85f096f06b52d9b4d5981996cf6cbf8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\t-chart\\auto-save-input.tsx": {
+  "components/student/writing/t-chart/auto-save-input.tsx": {
     "mtime": 1778335851.5727222,
     "ast_hash": "f26ccc855b3f110b4affeb8d0ddb8f44",
     "semantic_hash": "f26ccc855b3f110b4affeb8d0ddb8f44"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\t-chart\\cd-cm-t-chart.tsx": {
+  "components/student/writing/t-chart/cd-cm-t-chart.tsx": {
     "mtime": 1778443124.7213244,
     "ast_hash": "8c974ecaba49dad525b3338b00c13a1d",
     "semantic_hash": "8c974ecaba49dad525b3338b00c13a1d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\t-chart\\chunk-editor.tsx": {
+  "components/student/writing/t-chart/chunk-editor.tsx": {
     "mtime": 1778789743.8321452,
     "ast_hash": "ea694168307fc4ce1827221639849314",
     "semantic_hash": "ea694168307fc4ce1827221639849314"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\t-chart\\expository-chunk-grid.tsx": {
+  "components/student/writing/t-chart/expository-chunk-grid.tsx": {
     "mtime": 1779912265.1447916,
     "ast_hash": "d61e9ec066f628fbf3d61020a4bd6db3",
     "semantic_hash": "d61e9ec066f628fbf3d61020a4bd6db3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\t-chart\\expository-t-chart.tsx": {
+  "components/student/writing/t-chart/expository-t-chart.tsx": {
     "mtime": 1778796183.0396087,
     "ast_hash": "eeed5459dfb72a075e8843dd6c30d0a6",
     "semantic_hash": "eeed5459dfb72a075e8843dd6c30d0a6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\t-chart\\fictional-abc-plan.tsx": {
+  "components/student/writing/t-chart/fictional-abc-plan.tsx": {
     "mtime": 1778759440.9919648,
     "ast_hash": "b02d05c90102648c55ca72a324c01027",
     "semantic_hash": "b02d05c90102648c55ca72a324c01027"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\t-chart\\narrative-t-chart.tsx": {
+  "components/student/writing/t-chart/narrative-t-chart.tsx": {
     "mtime": 1778758572.394995,
     "ast_hash": "bebd1536d55adab4591a9226e3b8f8f5",
     "semantic_hash": "bebd1536d55adab4591a9226e3b8f8f5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\t-chart\\t-chart-client.tsx": {
+  "components/student/writing/t-chart/t-chart-client.tsx": {
     "mtime": 1778796200.5440123,
     "ast_hash": "458d4c4c99639da73d15842332ed200b",
     "semantic_hash": "458d4c4c99639da73d15842332ed200b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\topic-sentence-dev\\tsd-bp-pane.tsx": {
+  "components/student/writing/topic-sentence-dev/tsd-bp-pane.tsx": {
     "mtime": 1778443284.4762275,
     "ast_hash": "cfcaaf67847dee1fbc04ffa52e273782",
     "semantic_hash": "cfcaaf67847dee1fbc04ffa52e273782"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\topic-sentence-dev\\tsd-client.tsx": {
+  "components/student/writing/topic-sentence-dev/tsd-client.tsx": {
     "mtime": 1778443271.3734455,
     "ast_hash": "f47d56214d3639616897a6ecb1c9d359",
     "semantic_hash": "f47d56214d3639616897a6ecb1c9d359"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\topic-sentences\\topic-sentences-client.tsx": {
+  "components/student/writing/topic-sentences/topic-sentences-client.tsx": {
     "mtime": 1778763221.3263497,
     "ast_hash": "d90bae0f9c40f036195a97be896d9588",
     "semantic_hash": "d90bae0f9c40f036195a97be896d9588"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\use-writing-mode.ts": {
+  "components/student/writing/use-writing-mode.ts": {
     "mtime": 1778442688.0662324,
     "ast_hash": "fd842fa3341e454010fc0c1838227f22",
     "semantic_hash": "fd842fa3341e454010fc0c1838227f22"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\writing-mode-provider.tsx": {
+  "components/student/writing/writing-mode-provider.tsx": {
     "mtime": 1778442683.235436,
     "ast_hash": "38b79b2241fe4a11ad308ccf14e0eda6",
     "semantic_hash": "38b79b2241fe4a11ad308ccf14e0eda6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\student\\writing\\writing-shell.tsx": {
+  "components/student/writing/writing-shell.tsx": {
     "mtime": 1778513503.4625633,
     "ast_hash": "84beb6fab3c5b7c659b61c078b361b1b",
     "semantic_hash": "84beb6fab3c5b7c659b61c078b361b1b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\ui\\DeleteConfirmationModal.tsx": {
+  "components/ui/DeleteConfirmationModal.tsx": {
     "mtime": 1778188010.0471885,
     "ast_hash": "5511bcfafbeb1066eba1fca745732264",
     "semantic_hash": "5511bcfafbeb1066eba1fca745732264"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\ui\\DistrictLogo.tsx": {
+  "components/ui/DistrictLogo.tsx": {
     "mtime": 1778188010.048679,
     "ast_hash": "d79b2995a78c04ec891281fbe28adf10",
     "semantic_hash": "d79b2995a78c04ec891281fbe28adf10"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\ui\\ImageWithFallback.tsx": {
+  "components/ui/ImageWithFallback.tsx": {
     "mtime": 1778188010.0811274,
     "ast_hash": "1b543db87716cc57d0bf6dbbfaf5f668",
     "semantic_hash": "1b543db87716cc57d0bf6dbbfaf5f668"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\components\\ui\\LoadingStates.tsx": {
+  "components/ui/LoadingStates.tsx": {
     "mtime": 1778188010.0916975,
     "ast_hash": "b22ee912778b959d851b5c379bbc73fa",
     "semantic_hash": "b22ee912778b959d851b5c379bbc73fa"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\eslint.config.mjs": {
+  "eslint.config.mjs": {
     "mtime": 1778188010.3813858,
     "ast_hash": "dc2375bfcd14ea96f0843d76f93f25b2",
     "semantic_hash": "dc2375bfcd14ea96f0843d76f93f25b2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\assignment-exemplars.ts": {
+  "lib/actions/assignment-exemplars.ts": {
     "mtime": 1778515849.7482464,
     "ast_hash": "ee181e2465e771ba8139cdb56edb44e3",
     "semantic_hash": "ee181e2465e771ba8139cdb56edb44e3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\assignments.ts": {
+  "lib/actions/assignments.ts": {
     "mtime": 1780247009.3355136,
     "ast_hash": "5250cf1667e1248c4b211bfc83cc5daf",
     "semantic_hash": "5250cf1667e1248c4b211bfc83cc5daf"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\auth.ts": {
+  "lib/actions/auth.ts": {
     "mtime": 1779880485.066621,
     "ast_hash": "ef34a388ca9961120e930a64001128ae",
     "semantic_hash": "ef34a388ca9961120e930a64001128ae"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\candidate-cds.ts": {
+  "lib/actions/candidate-cds.ts": {
     "mtime": 1779203124.7268896,
     "ast_hash": "37714302ba99cbb4b18c2a17abc2d2dd",
     "semantic_hash": "37714302ba99cbb4b18c2a17abc2d2dd"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\class-periods.ts": {
+  "lib/actions/class-periods.ts": {
     "mtime": 1780404189.311515,
     "ast_hash": "3a4bbfe4888dc6a6e3c96bef9feb4b3c",
     "semantic_hash": "3a4bbfe4888dc6a6e3c96bef9feb4b3c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\classes.ts": {
+  "lib/actions/classes.ts": {
     "mtime": 1780401327.9760883,
     "ast_hash": "d9347e710bdd2e4f883a4ba70a9cf960",
     "semantic_hash": "d9347e710bdd2e4f883a4ba70a9cf960"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\commentary.ts": {
+  "lib/actions/commentary.ts": {
     "mtime": 1778423958.280702,
     "ast_hash": "36dcb066278761da24d5b73b3f798f88",
     "semantic_hash": "36dcb066278761da24d5b73b3f798f88"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\districts.ts": {
+  "lib/actions/districts.ts": {
     "mtime": 1780393856.6843908,
     "ast_hash": "39e3f135e7c9a792d0d7b012785cf944",
     "semantic_hash": "39e3f135e7c9a792d0d7b012785cf944"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\enrollments.ts": {
+  "lib/actions/enrollments.ts": {
     "mtime": 1780405159.5273952,
     "ast_hash": "54528f4eb3c0fb0c45c35379cf43a532",
     "semantic_hash": "54528f4eb3c0fb0c45c35379cf43a532"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\essay-parts.ts": {
+  "lib/actions/essay-parts.ts": {
     "mtime": 1778524422.2442105,
     "ast_hash": "f437bdf8442a53eca53654da41f31fd5",
     "semantic_hash": "f437bdf8442a53eca53654da41f31fd5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\exemplars.ts": {
+  "lib/actions/exemplars.ts": {
     "mtime": 1779880499.0124254,
     "ast_hash": "f91dd0adf19a6c90e47efc45bf8b7ff8",
     "semantic_hash": "f91dd0adf19a6c90e47efc45bf8b7ff8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\final-draft.ts": {
+  "lib/actions/final-draft.ts": {
     "mtime": 1778524479.206323,
     "ast_hash": "7e7cb306f1e4b9cd192d056cbca75b74",
     "semantic_hash": "7e7cb306f1e4b9cd192d056cbca75b74"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\paragraph-form.ts": {
+  "lib/actions/paragraph-form.ts": {
     "mtime": 1778524363.1151514,
     "ast_hash": "f41f64bd24e132f9d21cbd10f0397dbf",
     "semantic_hash": "f41f64bd24e132f9d21cbd10f0397dbf"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\prompt-decoding.ts": {
+  "lib/actions/prompt-decoding.ts": {
     "mtime": 1779914632.4659445,
     "ast_hash": "2cb4564436ff6cdb01a5b62de7dfc783",
     "semantic_hash": "2cb4564436ff6cdb01a5b62de7dfc783"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\roster-import.ts": {
+  "lib/actions/roster-import.ts": {
     "mtime": 1778278699.9567728,
     "ast_hash": "350a45a059f28df95bb50e40d01bd100",
     "semantic_hash": "350a45a059f28df95bb50e40d01bd100"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\rubric-grading.ts": {
+  "lib/actions/rubric-grading.ts": {
     "mtime": 1778503919.9837945,
     "ast_hash": "669bc4355da093a0bab6bfc3e702c3c3",
     "semantic_hash": "669bc4355da093a0bab6bfc3e702c3c3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\school-users.ts": {
-    "mtime": 1780397694.245672,
-    "ast_hash": "858df1307607a5c51821b8372073d283",
-    "semantic_hash": "858df1307607a5c51821b8372073d283"
+  "lib/actions/school-users.ts": {
+    "mtime": 1780918911.2468882,
+    "ast_hash": "6efbb0529b9e175c13a3f0f1b3e967e6",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\schools.ts": {
-    "mtime": 1780396173.3757157,
-    "ast_hash": "15856efdb3ac850b7dbdcdd48bd4455f",
-    "semantic_hash": "15856efdb3ac850b7dbdcdd48bd4455f"
+  "lib/actions/schools.ts": {
+    "mtime": 1780918002.0164063,
+    "ast_hash": "f82354bdbd809ca0179b6e6f00379172",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\shaping.ts": {
+  "lib/actions/shaping.ts": {
     "mtime": 1779918096.5740054,
     "ast_hash": "3f68c98af62f23c6ff4463f919478db9",
     "semantic_hash": "3f68c98af62f23c6ff4463f919478db9"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\signups.ts": {
+  "lib/actions/signups.ts": {
     "mtime": 1778281989.2390451,
     "ast_hash": "cf8125230016cd9d66522119f22a0429",
     "semantic_hash": "cf8125230016cd9d66522119f22a0429"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\student-writings.ts": {
+  "lib/actions/student-writings.ts": {
     "mtime": 1778789637.6139288,
     "ast_hash": "1432f50f155159e5eea47d8ebcaedb3e",
     "semantic_hash": "1432f50f155159e5eea47d8ebcaedb3e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\subjects.ts": {
+  "lib/actions/subjects.ts": {
     "mtime": 1780400336.412377,
     "ast_hash": "0c62b53a530615e4ed0fee9947333ae6",
     "semantic_hash": "0c62b53a530615e4ed0fee9947333ae6"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\super-admins.ts": {
+  "lib/actions/super-admins.ts": {
     "mtime": 1779880358.0416386,
     "ast_hash": "99c92c7c372a2fa5588bfe41b6388649",
     "semantic_hash": "99c92c7c372a2fa5588bfe41b6388649"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\t-charts.ts": {
+  "lib/actions/t-charts.ts": {
     "mtime": 1779912179.0569577,
     "ast_hash": "f2aa9da2daf6ff150eee699f19f9de51",
     "semantic_hash": "f2aa9da2daf6ff150eee699f19f9de51"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\teacher-feedback.ts": {
+  "lib/actions/teacher-feedback.ts": {
     "mtime": 1778445877.0958383,
     "ast_hash": "784d06d9a84638c76223b013d58bfce0",
     "semantic_hash": "784d06d9a84638c76223b013d58bfce0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\teacher-review.ts": {
+  "lib/actions/teacher-review.ts": {
     "mtime": 1778445896.9035695,
     "ast_hash": "08a6af72c1e35d87f99d77a1b3a38c58",
     "semantic_hash": "08a6af72c1e35d87f99d77a1b3a38c58"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\text-annotations.ts": {
+  "lib/actions/text-annotations.ts": {
     "mtime": 1779916668.289715,
     "ast_hash": "f5645efa5b338245dfb1705e6dbfde7a",
     "semantic_hash": "f5645efa5b338245dfb1705e6dbfde7a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\actions\\writing-structure.ts": {
+  "lib/actions/writing-structure.ts": {
     "mtime": 1778789678.4545398,
     "ast_hash": "644699681fd929313166ef2c2f9671e2",
     "semantic_hash": "644699681fd929313166ef2c2f9671e2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\api-client.ts": {
+  "lib/api-client.ts": {
     "mtime": 1778188010.4185114,
     "ast_hash": "00d4cf4c70173638f0877daa7d458538",
     "semantic_hash": "00d4cf4c70173638f0877daa7d458538"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\assignment-configs\\argumentation.config.ts": {
+  "lib/assignment-configs/argumentation.config.ts": {
     "mtime": 1778188010.4253154,
     "ast_hash": "1d8b75a6f8008e0dfc21b2df5d0435a5",
     "semantic_hash": "1d8b75a6f8008e0dfc21b2df5d0435a5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\assignment-configs\\expository.config.ts": {
+  "lib/assignment-configs/expository.config.ts": {
     "mtime": 1778188010.430341,
     "ast_hash": "61b1b68fcc55944c19b30b744af2e3e5",
     "semantic_hash": "61b1b68fcc55944c19b30b744af2e3e5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\assignment-configs\\index.ts": {
+  "lib/assignment-configs/index.ts": {
     "mtime": 1778188010.4397826,
     "ast_hash": "15d3aa61cd73b7a41a9cf8935604983d",
     "semantic_hash": "15d3aa61cd73b7a41a9cf8935604983d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\assignment-configs\\literary.config.ts": {
+  "lib/assignment-configs/literary.config.ts": {
     "mtime": 1778188010.443804,
     "ast_hash": "bd29ba1c5605fd5fdf840f65a14cdbbb",
     "semantic_hash": "bd29ba1c5605fd5fdf840f65a14cdbbb"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\assignment-configs\\narrative.config.ts": {
+  "lib/assignment-configs/narrative.config.ts": {
     "mtime": 1778188010.4483805,
     "ast_hash": "1d2db8af4bfb3b1d5686470966181145",
     "semantic_hash": "1d2db8af4bfb3b1d5686470966181145"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\assignment-configs\\types.ts": {
+  "lib/assignment-configs/types.ts": {
     "mtime": 1778188010.452734,
     "ast_hash": "8cfb50a522ec234732cc98e32bfb0a2d",
     "semantic_hash": "8cfb50a522ec234732cc98e32bfb0a2d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\async-handler.ts": {
+  "lib/async-handler.ts": {
     "mtime": 1778188010.457479,
     "ast_hash": "649a46c1e9680fd931830b7e6715636a",
     "semantic_hash": "649a46c1e9680fd931830b7e6715636a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\auth-cache.ts": {
+  "lib/auth-cache.ts": {
     "mtime": 1778188010.4624498,
     "ast_hash": "7345851c64c13ac130a8f88cacdbf8a7",
     "semantic_hash": "7345851c64c13ac130a8f88cacdbf8a7"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\auth.ts": {
+  "lib/auth.ts": {
     "mtime": 1779880337.0493453,
     "ast_hash": "a681f3cf72ad0d409ccde4ab2f7b306a",
     "semantic_hash": "a681f3cf72ad0d409ccde4ab2f7b306a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\branding-headers.ts": {
+  "lib/branding-headers.ts": {
     "mtime": 1778276853.6988451,
     "ast_hash": "60c70b74bf8ad5f542c10f86a6831317",
     "semantic_hash": "60c70b74bf8ad5f542c10f86a6831317"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\compose-paragraph.ts": {
+  "lib/compose-paragraph.ts": {
     "mtime": 1779748058.231894,
     "ast_hash": "9f60b1ac7c18b96249e8827cddf45f20",
     "semantic_hash": "9f60b1ac7c18b96249e8827cddf45f20"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\actions.ts": {
+  "lib/csv-import/actions.ts": {
     "mtime": 1780396041.6556423,
     "ast_hash": "a32b2a716068838ffcb6b62e7831a756",
     "semantic_hash": "a32b2a716068838ffcb6b62e7831a756"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptor.ts": {
+  "lib/csv-import/descriptor.ts": {
     "mtime": 1780395995.4898689,
     "ast_hash": "11743f756ecfff38c53c9f29a269b1fb",
     "semantic_hash": "11743f756ecfff38c53c9f29a269b1fb"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptors\\class-periods.ts": {
+  "lib/csv-import/descriptors/class-periods.ts": {
     "mtime": 1780404215.4626074,
     "ast_hash": "4c827495e60b7dbd9454a25c74079adb",
     "semantic_hash": "4c827495e60b7dbd9454a25c74079adb"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptors\\class-students.ts": {
+  "lib/csv-import/descriptors/class-students.ts": {
     "mtime": 1780405093.9006138,
     "ast_hash": "a8ce8a7121b91fb57654f9a9f87d2edd",
     "semantic_hash": "a8ce8a7121b91fb57654f9a9f87d2edd"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptors\\classes.ts": {
+  "lib/csv-import/descriptors/classes.ts": {
     "mtime": 1780401349.0226445,
     "ast_hash": "83c48e3b482b3f3d0299e1aa2624c705",
     "semantic_hash": "83c48e3b482b3f3d0299e1aa2624c705"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptors\\districts.ts": {
+  "lib/csv-import/descriptors/districts.ts": {
     "mtime": 1780394556.884452,
     "ast_hash": "b30e52e6fbafc7f33248bbc56bead929",
     "semantic_hash": "b30e52e6fbafc7f33248bbc56bead929"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptors\\school-admins.ts": {
+  "lib/csv-import/descriptors/school-admins.ts": {
     "mtime": 1780397785.598214,
     "ast_hash": "bdff294d2be2ae05e55e020bdc5549bd",
     "semantic_hash": "bdff294d2be2ae05e55e020bdc5549bd"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptors\\school-user.ts": {
-    "mtime": 1780397768.890603,
-    "ast_hash": "c01aae6b43d2d626389502cd89c984be",
-    "semantic_hash": "c01aae6b43d2d626389502cd89c984be"
+  "lib/csv-import/descriptors/school-user.ts": {
+    "mtime": 1780919161.351828,
+    "ast_hash": "9c750001e2372388af965ad8f822adf9",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptors\\schools.ts": {
-    "mtime": 1780396107.624642,
-    "ast_hash": "4d74c6401e49d26065084e248a094ce6",
-    "semantic_hash": "4d74c6401e49d26065084e248a094ce6"
+  "lib/csv-import/descriptors/schools.ts": {
+    "mtime": 1780918034.3280592,
+    "ast_hash": "7913634f6cebbbf4c74310651ab7b5c7",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptors\\subjects.ts": {
+  "lib/csv-import/descriptors/subjects.ts": {
     "mtime": 1780400367.3062608,
     "ast_hash": "19b955eeb061521527cc99855365858e",
     "semantic_hash": "19b955eeb061521527cc99855365858e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\descriptors\\teachers.ts": {
+  "lib/csv-import/descriptors/teachers.ts": {
     "mtime": 1780397800.67625,
     "ast_hash": "e53d0af4b874b9892714b13c956ec43e",
     "semantic_hash": "e53d0af4b874b9892714b13c956ec43e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\parse.ts": {
+  "lib/csv-import/parse.ts": {
     "mtime": 1780394532.047544,
     "ast_hash": "b988e49cb7634e8836c1faf95168c112",
     "semantic_hash": "b988e49cb7634e8836c1faf95168c112"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\registry.ts": {
+  "lib/csv-import/registry.ts": {
     "mtime": 1780405117.0563407,
     "ast_hash": "a5ecb2d06cc9d0523989f6bedb1b158d",
     "semantic_hash": "a5ecb2d06cc9d0523989f6bedb1b158d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\csv-import\\types.ts": {
+  "lib/csv-import/types.ts": {
     "mtime": 1780396861.626705,
     "ast_hash": "960e2491e75525cc7deadc6908f2fe02",
     "semantic_hash": "960e2491e75525cc7deadc6908f2fe02"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\database.types.ts": {
-    "mtime": 1780246868.0672262,
-    "ast_hash": "e31e985fde7b92d078c6719c03d2a9d3",
-    "semantic_hash": "e31e985fde7b92d078c6719c03d2a9d3"
+  "lib/database.types.ts": {
+    "mtime": 1780922599.542262,
+    "ast_hash": "15a6067d0c8c947f8b87b223e8a4682a",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\district-branding.types.ts": {
+  "lib/district-branding.types.ts": {
     "mtime": 1778188010.4744165,
     "ast_hash": "fffa73e92c31373a3df44e095e82664f",
     "semantic_hash": "fffa73e92c31373a3df44e095e82664f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\district-branding.utils.ts": {
+  "lib/district-branding.utils.ts": {
     "mtime": 1778188010.4805913,
     "ast_hash": "09666c16a23ff2be3c376db9f559d0a0",
     "semantic_hash": "09666c16a23ff2be3c376db9f559d0a0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\district-logo-utils.ts": {
+  "lib/district-logo-utils.ts": {
     "mtime": 1778188010.4856236,
     "ast_hash": "144592ae9e25c6062219e03cefb93a5f",
     "semantic_hash": "144592ae9e25c6062219e03cefb93a5f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\email\\client.ts": {
+  "lib/email/client.ts": {
     "mtime": 1778281935.0139823,
     "ast_hash": "34c669fe34d5a265673441f08013fbe2",
     "semantic_hash": "34c669fe34d5a265673441f08013fbe2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\email\\templates\\account-approved.ts": {
+  "lib/email/templates/account-approved.ts": {
     "mtime": 1778281946.5820103,
     "ast_hash": "b8eac7f28d12ce3b520c42a22fcd9219",
     "semantic_hash": "b8eac7f28d12ce3b520c42a22fcd9219"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\email\\templates\\account-denied.ts": {
+  "lib/email/templates/account-denied.ts": {
     "mtime": 1778281955.269797,
     "ast_hash": "cb0b9509f9ecf98263bb4de06a32afb0",
     "semantic_hash": "cb0b9509f9ecf98263bb4de06a32afb0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\errors.ts": {
+  "lib/errors.ts": {
     "mtime": 1778188010.4890838,
     "ast_hash": "d876a77d5bfb8bd8dcd5a53db37f83e8",
     "semantic_hash": "d876a77d5bfb8bd8dcd5a53db37f83e8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\exemplar-content-shared.ts": {
+  "lib/exemplar-content-shared.ts": {
     "mtime": 1778527859.0499885,
     "ast_hash": "f4763bf6bcd57028c2998f2c4149c891",
     "semantic_hash": "f4763bf6bcd57028c2998f2c4149c891"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\exemplar-content.ts": {
+  "lib/exemplar-content.ts": {
     "mtime": 1778527878.85353,
     "ast_hash": "8655600a89e4499a7b52567ff34dbfa0",
     "semantic_hash": "8655600a89e4499a7b52567ff34dbfa0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\exemplar-limits.ts": {
+  "lib/exemplar-limits.ts": {
     "mtime": 1778525374.8136292,
     "ast_hash": "0252084e459a2be2fbc1e238a42196a3",
     "semantic_hash": "0252084e459a2be2fbc1e238a42196a3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\expository-t-chart-spec.ts": {
+  "lib/expository-t-chart-spec.ts": {
     "mtime": 1778795950.2695577,
     "ast_hash": "3fa2b0d0b7dc999001ed64aa1c648864",
     "semantic_hash": "3fa2b0d0b7dc999001ed64aa1c648864"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\jswp-grammar-rules.ts": {
+  "lib/jswp-grammar-rules.ts": {
     "mtime": 1778194816.530788,
     "ast_hash": "0f8b3f02842d7ec77d06163c2c7180a3",
     "semantic_hash": "0f8b3f02842d7ec77d06163c2c7180a3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\jswp-modes.ts": {
+  "lib/jswp-modes.ts": {
     "mtime": 1779748150.5058258,
     "ast_hash": "5adba602da49c521e81ed2bd53600ddf",
     "semantic_hash": "5adba602da49c521e81ed2bd53600ddf"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\logger-react.tsx": {
+  "lib/logger-react.tsx": {
     "mtime": 1778188010.4955232,
     "ast_hash": "fb48ea828befaeb3e5bc87a6637d13ce",
     "semantic_hash": "fb48ea828befaeb3e5bc87a6637d13ce"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\logger.ts": {
+  "lib/logger.ts": {
     "mtime": 1778188010.4990695,
     "ast_hash": "b922f2182989b3117580e82878301ad0",
     "semantic_hash": "b922f2182989b3117580e82878301ad0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\monitoring.ts": {
+  "lib/monitoring.ts": {
     "mtime": 1778188010.5034742,
     "ast_hash": "e57b147e5b30f77025595f36f444f93e",
     "semantic_hash": "e57b147e5b30f77025595f36f444f93e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\narrative-bp-labels.ts": {
+  "lib/narrative-bp-labels.ts": {
     "mtime": 1778763604.1409798,
     "ast_hash": "ee1f634a45c31e5431c019dc552bb0e3",
     "semantic_hash": "ee1f634a45c31e5431c019dc552bb0e3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\navigation-detection.ts": {
+  "lib/navigation-detection.ts": {
     "mtime": 1778188010.5088408,
     "ast_hash": "47b5ac44d9a2cee6f1a147ed3718fd29",
     "semantic_hash": "47b5ac44d9a2cee6f1a147ed3718fd29"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\once-you-lose-it.ts": {
+  "lib/once-you-lose-it.ts": {
     "mtime": 1779747887.0044203,
     "ast_hash": "19d205f79f2eb63bb3df29ee8f189053",
     "semantic_hash": "19d205f79f2eb63bb3df29ee8f189053"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\performance-cache.ts": {
+  "lib/performance-cache.ts": {
     "mtime": 1778188010.5124173,
     "ast_hash": "ba6e008bf01af46b99c2cbed3f9c0217",
     "semantic_hash": "ba6e008bf01af46b99c2cbed3f9c0217"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\performance-monitor.ts": {
+  "lib/performance-monitor.ts": {
     "mtime": 1778188010.5159154,
     "ast_hash": "e175f8858463a74bf5b72e5c0836d64c",
     "semantic_hash": "e175f8858463a74bf5b72e5c0836d64c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\performance-react.tsx": {
+  "lib/performance-react.tsx": {
     "mtime": 1778188010.5191684,
     "ast_hash": "76f3f0a0f3542b033cbd108f70bab579",
     "semantic_hash": "76f3f0a0f3542b033cbd108f70bab579"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\performance.ts": {
+  "lib/performance.ts": {
     "mtime": 1778188010.52166,
     "ast_hash": "6054fccd9d97f7c7e22b5ee6c58aa642",
     "semantic_hash": "6054fccd9d97f7c7e22b5ee6c58aa642"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\assignment-analytics.ts": {
+  "lib/queries/assignment-analytics.ts": {
     "mtime": 1778509644.4675977,
     "ast_hash": "c61293a0b2dad1edd37943b065318188",
     "semantic_hash": "c61293a0b2dad1edd37943b065318188"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\assignment-exemplars.ts": {
+  "lib/queries/assignment-exemplars.ts": {
     "mtime": 1778519262.6199725,
     "ast_hash": "a87caa90f3b871c9bf413ee9e1a8595f",
     "semantic_hash": "a87caa90f3b871c9bf413ee9e1a8595f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\assignments.ts": {
+  "lib/queries/assignments.ts": {
     "mtime": 1780247327.4631474,
     "ast_hash": "9ab763db7f2084fa7322f3440885814d",
     "semantic_hash": "9ab763db7f2084fa7322f3440885814d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\candidate-cds.ts": {
+  "lib/queries/candidate-cds.ts": {
     "mtime": 1778337647.193184,
     "ast_hash": "a3e21a4739e53de9c3ad908b71091dac",
     "semantic_hash": "a3e21a4739e53de9c3ad908b71091dac"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\class-periods-admin.ts": {
+  "lib/queries/class-periods-admin.ts": {
     "mtime": 1780404151.2924268,
     "ast_hash": "7de49f4bec79df356d25ef617720ca25",
     "semantic_hash": "7de49f4bec79df356d25ef617720ca25"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\classes-admin.ts": {
+  "lib/queries/classes-admin.ts": {
     "mtime": 1780401308.269303,
     "ast_hash": "1c2adb0cf0a36e1e62223d75e9efe2e0",
     "semantic_hash": "1c2adb0cf0a36e1e62223d75e9efe2e0"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\classes.ts": {
+  "lib/queries/classes.ts": {
     "mtime": 1778287200.2161605,
     "ast_hash": "9932de0025122ac47814667f73f76e42",
     "semantic_hash": "9932de0025122ac47814667f73f76e42"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\commentary.ts": {
+  "lib/queries/commentary.ts": {
     "mtime": 1778350663.2444332,
     "ast_hash": "ec48b4478e378447eb2ece16928f040e",
     "semantic_hash": "ec48b4478e378447eb2ece16928f040e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\districts.ts": {
+  "lib/queries/districts.ts": {
     "mtime": 1780393830.898696,
     "ast_hash": "b7896f6373fc6fc545468fb83884f06a",
     "semantic_hash": "b7896f6373fc6fc545468fb83884f06a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\essay-parts.ts": {
+  "lib/queries/essay-parts.ts": {
     "mtime": 1778436220.216069,
     "ast_hash": "4c52fdc4b37d6b5fe5f5184ebe58d111",
     "semantic_hash": "4c52fdc4b37d6b5fe5f5184ebe58d111"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\exemplars.ts": {
+  "lib/queries/exemplars.ts": {
     "mtime": 1778526922.2625813,
     "ast_hash": "d939d2378c151733d0481bae5a4a4c9a",
     "semantic_hash": "d939d2378c151733d0481bae5a4a4c9a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\final-draft.ts": {
+  "lib/queries/final-draft.ts": {
     "mtime": 1778763103.4375572,
     "ast_hash": "132dac7db47fb7a23244a55a1d810fc3",
     "semantic_hash": "132dac7db47fb7a23244a55a1d810fc3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\paragraph-form.ts": {
+  "lib/queries/paragraph-form.ts": {
     "mtime": 1778763073.1891966,
     "ast_hash": "a913953ff9db7b62655061a59708fef4",
     "semantic_hash": "a913953ff9db7b62655061a59708fef4"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\period-students.ts": {
+  "lib/queries/period-students.ts": {
     "mtime": 1780405132.4843118,
     "ast_hash": "209ea0ed20f6d037b14faa285a79125d",
     "semantic_hash": "209ea0ed20f6d037b14faa285a79125d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\prompt-decoding.ts": {
+  "lib/queries/prompt-decoding.ts": {
     "mtime": 1778330515.133057,
     "ast_hash": "92fbc199b499ad0eb8ac1156456a755d",
     "semantic_hash": "92fbc199b499ad0eb8ac1156456a755d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\rubric-scores.ts": {
+  "lib/queries/rubric-scores.ts": {
     "mtime": 1778503901.6776872,
     "ast_hash": "126b4806a95e41eaae6f00b03b39da9e",
     "semantic_hash": "126b4806a95e41eaae6f00b03b39da9e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\school-users.ts": {
-    "mtime": 1780396959.929471,
-    "ast_hash": "70d9f712e2c29eb851dc256e027a6df2",
-    "semantic_hash": "70d9f712e2c29eb851dc256e027a6df2"
+  "lib/queries/school-users.ts": {
+    "mtime": 1780918966.5172243,
+    "ast_hash": "6b3e2294753c2e8a26258bc5e62b72dc",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\schools.ts": {
+  "lib/queries/schools.ts": {
     "mtime": 1780396151.0050757,
     "ast_hash": "e501602765b1870982ef4b0ec4b9032d",
     "semantic_hash": "e501602765b1870982ef4b0ec4b9032d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\shaping.ts": {
+  "lib/queries/shaping.ts": {
     "mtime": 1779918122.5359476,
     "ast_hash": "8f80a0f4efa67beb1e6d3c605966c049",
     "semantic_hash": "8f80a0f4efa67beb1e6d3c605966c049"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\student-assignments.ts": {
+  "lib/queries/student-assignments.ts": {
     "mtime": 1778328754.6261973,
     "ast_hash": "b530244987888dd7ab7eb11200dfde3c",
     "semantic_hash": "b530244987888dd7ab7eb11200dfde3c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\student-progress.ts": {
+  "lib/queries/student-progress.ts": {
     "mtime": 1778511245.3404033,
     "ast_hash": "ea99b02c8080b3bb543a0c9788af02ae",
     "semantic_hash": "ea99b02c8080b3bb543a0c9788af02ae"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\student-writings.ts": {
+  "lib/queries/student-writings.ts": {
     "mtime": 1778335919.450091,
     "ast_hash": "0e30636f425bd0d7938779a675d4b42f",
     "semantic_hash": "0e30636f425bd0d7938779a675d4b42f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\students.ts": {
+  "lib/queries/students.ts": {
     "mtime": 1778287221.9948063,
     "ast_hash": "8d2d563903bcb56f41ac5c92543a253a",
     "semantic_hash": "8d2d563903bcb56f41ac5c92543a253a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\subjects.ts": {
+  "lib/queries/subjects.ts": {
     "mtime": 1780408772.6537967,
     "ast_hash": "b6ee084275dcc6eac57d9080c63cda75",
     "semantic_hash": "b6ee084275dcc6eac57d9080c63cda75"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\t-charts.ts": {
+  "lib/queries/t-charts.ts": {
     "mtime": 1779912166.2626686,
     "ast_hash": "3293ad9e58a0241471e53e3caa803b09",
     "semantic_hash": "3293ad9e58a0241471e53e3caa803b09"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\teacher-feedback.ts": {
+  "lib/queries/teacher-feedback.ts": {
     "mtime": 1778445834.200854,
     "ast_hash": "a7cfa7a4c3e9cda223c15b898dab6035",
     "semantic_hash": "a7cfa7a4c3e9cda223c15b898dab6035"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\teacher-writings.ts": {
+  "lib/queries/teacher-writings.ts": {
     "mtime": 1778503990.873481,
     "ast_hash": "c3617a3c6ade2bf3c275d5270e3792c5",
     "semantic_hash": "c3617a3c6ade2bf3c275d5270e3792c5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\queries\\text-annotations.ts": {
+  "lib/queries/text-annotations.ts": {
     "mtime": 1778334122.9745343,
     "ast_hash": "3ecb33e5c5cdadf8a62c6eba22f30c98",
     "semantic_hash": "3ecb33e5c5cdadf8a62c6eba22f30c98"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\rubric.ts": {
+  "lib/rubric.ts": {
     "mtime": 1778504041.9172938,
     "ast_hash": "0d4dd0c116dd699880f5affb3afc6997",
     "semantic_hash": "0d4dd0c116dd699880f5affb3afc6997"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\scoped-users.ts": {
-    "mtime": 1780397648.2815044,
-    "ast_hash": "3f21ef47e1fc7193ba51cd7b9cd3f577",
-    "semantic_hash": "3f21ef47e1fc7193ba51cd7b9cd3f577"
+  "lib/scoped-users.ts": {
+    "mtime": 1780918869.1173842,
+    "ast_hash": "cfdf421af7021e68f7170bf8523e1997",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\security-config.ts": {
+  "lib/security-config.ts": {
     "mtime": 1778188010.536065,
     "ast_hash": "85c0bc552466ca31a1ff4a4d0f2bfffe",
     "semantic_hash": "85c0bc552466ca31a1ff4a4d0f2bfffe"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\session-security.ts": {
+  "lib/session-security.ts": {
     "mtime": 1778188010.540707,
     "ast_hash": "2ee7ae2642ceda25a927ac885b89e1e1",
     "semantic_hash": "2ee7ae2642ceda25a927ac885b89e1e1"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\shaping-gate.ts": {
+  "lib/shaping-gate.ts": {
     "mtime": 1778790287.9811792,
     "ast_hash": "463e9112317995193da94fcfcf8b1a38",
     "semantic_hash": "463e9112317995193da94fcfcf8b1a38"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\source-content.ts": {
+  "lib/source-content.ts": {
     "mtime": 1780246301.9719586,
     "ast_hash": "a2262a4aaba48c3ade558ce242f44afb",
     "semantic_hash": "a2262a4aaba48c3ade558ce242f44afb"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\storage\\assignment-sources.ts": {
+  "lib/storage/assignment-sources.ts": {
     "mtime": 1780246900.5471008,
     "ast_hash": "d298627c6d9fb066b5157f3465ee50ba",
     "semantic_hash": "d298627c6d9fb066b5157f3465ee50ba"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\supabase.ts": {
+  "lib/supabase.ts": {
     "mtime": 1778241596.7685115,
     "ast_hash": "4b1af5c71f33d6c712e5348eaacf5263",
     "semantic_hash": "4b1af5c71f33d6c712e5348eaacf5263"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\supabase\\admin.ts": {
+  "lib/supabase/admin.ts": {
     "mtime": 1778245054.7491524,
     "ast_hash": "6e95d4f2d50b717f0d8eda84212e1a11",
     "semantic_hash": "6e95d4f2d50b717f0d8eda84212e1a11"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\supabase\\client.ts": {
+  "lib/supabase/client.ts": {
     "mtime": 1778241398.1855514,
     "ast_hash": "24d2b493c7d8b16e0f967a68f6ba6c4d",
     "semantic_hash": "24d2b493c7d8b16e0f967a68f6ba6c4d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\supabase\\middleware.ts": {
+  "lib/supabase/middleware.ts": {
     "mtime": 1778241408.5647354,
     "ast_hash": "cf1d5b56a94906e2ba46fbfd6c29725d",
     "semantic_hash": "cf1d5b56a94906e2ba46fbfd6c29725d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\lib\\supabase\\server.ts": {
+  "lib/supabase/server.ts": {
     "mtime": 1778241387.6215353,
     "ast_hash": "dc74a1abf4bd2901a32ef1dfc87cba5d",
     "semantic_hash": "dc74a1abf4bd2901a32ef1dfc87cba5d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\middleware.ts": {
+  "middleware.ts": {
     "mtime": 1778501661.7268145,
     "ast_hash": "97a560df844cfbbe207d04ede5ef012f",
     "semantic_hash": "97a560df844cfbbe207d04ede5ef012f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0001_init_jswp_schema.sql": {
+  "migrations/0001_init_jswp_schema.sql": {
     "mtime": 1778501470.2965405,
     "ast_hash": "1c2ff9c6c75eac0efc5587c80f001622",
     "semantic_hash": "1c2ff9c6c75eac0efc5587c80f001622"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0002_rls_policies.sql": {
+  "migrations/0002_rls_policies.sql": {
     "mtime": 1778206728.0,
     "ast_hash": "0c62eead7305c248653b27c753f1bda8",
     "semantic_hash": "0c62eead7305c248653b27c753f1bda8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0003_storage_buckets.sql": {
+  "migrations/0003_storage_buckets.sql": {
     "mtime": 1778206728.0,
     "ast_hash": "bd29b1ac5a8295e5f4c08fe9e46904ab",
     "semantic_hash": "bd29b1ac5a8295e5f4c08fe9e46904ab"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0004_seed.sql": {
+  "migrations/0004_seed.sql": {
     "mtime": 1778238773.251197,
     "ast_hash": "41f6529a28f05d2556610eeb5627aeea",
     "semantic_hash": "41f6529a28f05d2556610eeb5627aeea"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0005_audit_log.sql": {
+  "migrations/0005_audit_log.sql": {
     "mtime": 1778278491.0014298,
     "ast_hash": "efe344160551bc861a9890df962d0b54",
     "semantic_hash": "efe344160551bc861a9890df962d0b54"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0006_signup_requests.sql": {
+  "migrations/0006_signup_requests.sql": {
     "mtime": 1778281650.5787358,
     "ast_hash": "a4b0ca6b3f1e3a37044bfbae7c5200c2",
     "semantic_hash": "a4b0ca6b3f1e3a37044bfbae7c5200c2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0007_assignment_cascade_safety.sql": {
+  "migrations/0007_assignment_cascade_safety.sql": {
     "mtime": 1778292604.9195967,
     "ast_hash": "07f335191365b6dae32bb284304bf272",
     "semantic_hash": "07f335191365b6dae32bb284304bf272"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0008_tighten_assignments_release_policy.sql": {
+  "migrations/0008_tighten_assignments_release_policy.sql": {
     "mtime": 1778328492.4073315,
     "ast_hash": "8ec19ab352e82b2e40a9946ad8a6c999",
     "semantic_hash": "8ec19ab352e82b2e40a9946ad8a6c999"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0009_tighten_assignments_teacher_own.sql": {
+  "migrations/0009_tighten_assignments_teacher_own.sql": {
     "mtime": 1778449821.0596876,
     "ast_hash": "67f27195b6d1e9c186cb73dd382f4d92",
     "semantic_hash": "67f27195b6d1e9c186cb73dd382f4d92"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0010_fix_word_count_trigger.sql": {
+  "migrations/0010_fix_word_count_trigger.sql": {
     "mtime": 1778501490.9981205,
     "ast_hash": "ede413db536e227a3cbca831206e2df2",
     "semantic_hash": "ede413db536e227a3cbca831206e2df2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0011_rubric_scores.sql": {
+  "migrations/0011_rubric_scores.sql": {
     "mtime": 1778503879.0417871,
     "ast_hash": "c6eba909376a661c63504833c54be130",
     "semantic_hash": "c6eba909376a661c63504833c54be130"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0012_exemplars.sql": {
+  "migrations/0012_exemplars.sql": {
     "mtime": 1778513319.237929,
     "ast_hash": "51101f4052ad13656a6436240bac8cd1",
     "semantic_hash": "51101f4052ad13656a6436240bac8cd1"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0013_assignment_exemplars.sql": {
+  "migrations/0013_assignment_exemplars.sql": {
     "mtime": 1778517015.1179116,
     "ast_hash": "96a49e6976d70118a3dac0c289ef19b8",
     "semantic_hash": "96a49e6976d70118a3dac0c289ef19b8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0014_fix_via_pin_recursion.sql": {
+  "migrations/0014_fix_via_pin_recursion.sql": {
     "mtime": 1778516996.6769788,
     "ast_hash": "57f55a3fd9c1d0d8a3625e238fe53d2f",
     "semantic_hash": "57f55a3fd9c1d0d8a3625e238fe53d2f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0015_exemplars_shared_with_school.sql": {
+  "migrations/0015_exemplars_shared_with_school.sql": {
     "mtime": 1778519206.8249931,
     "ast_hash": "2a276d39d7e0aef849bfbcb411a9ad50",
     "semantic_hash": "2a276d39d7e0aef849bfbcb411a9ad50"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0016_exemplars_step_tags.sql": {
+  "migrations/0016_exemplars_step_tags.sql": {
     "mtime": 1778525360.6701016,
     "ast_hash": "81b83bd9d2465120a37fb7dcd132cb06",
     "semantic_hash": "81b83bd9d2465120a37fb7dcd132cb06"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0017_exemplar_content_format.sql": {
+  "migrations/0017_exemplar_content_format.sql": {
     "mtime": 1778526764.3887162,
     "ast_hash": "c92cf768a6f55181201d54ea0a49e988",
     "semantic_hash": "c92cf768a6f55181201d54ea0a49e988"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0018_narrative_tchart_detail_fields.sql": {
+  "migrations/0018_narrative_tchart_detail_fields.sql": {
     "mtime": 1778756519.087677,
     "ast_hash": "b0dcb0c260b1ef370787f1a98a06bcc2",
     "semantic_hash": "b0dcb0c260b1ef370787f1a98a06bcc2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0019_narrative_shaping_shape_fields.sql": {
+  "migrations/0019_narrative_shaping_shape_fields.sql": {
     "mtime": 1778757846.1835432,
     "ast_hash": "f1f5152ae9159faca5e18a328c34f530",
     "semantic_hash": "f1f5152ae9159faca5e18a328c34f530"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0020_fictional_abc_plan_fields.sql": {
+  "migrations/0020_fictional_abc_plan_fields.sql": {
     "mtime": 1778759374.495142,
     "ast_hash": "f532526595772a16c0f3d4ec9929535d",
     "semantic_hash": "f532526595772a16c0f3d4ec9929535d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0021_user_profiles_nullable_district.sql": {
+  "migrations/0021_user_profiles_nullable_district.sql": {
     "mtime": 1779880324.7775302,
     "ast_hash": "bc317294302bcbbf98ba24a3a650aa35",
     "semantic_hash": "bc317294302bcbbf98ba24a3a650aa35"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0022_prompt_decoding_three_parts.sql": {
+  "migrations/0022_prompt_decoding_three_parts.sql": {
     "mtime": 1779914596.9304821,
     "ast_hash": "108839b7268fcf1416148743ea0a2402",
     "semantic_hash": "108839b7268fcf1416148743ea0a2402"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0023_annotation_kind_main_idea.sql": {
+  "migrations/0023_annotation_kind_main_idea.sql": {
     "mtime": 1779916641.740888,
     "ast_hash": "1811c3793fbd3eedbdeb35dd67c3ca54",
     "semantic_hash": "1811c3793fbd3eedbdeb35dd67c3ca54"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0024_shaping_revision_moves.sql": {
+  "migrations/0024_shaping_revision_moves.sql": {
     "mtime": 1779918064.8128977,
     "ast_hash": "61e14f4a5195fac0394dd81e64cf4d07",
     "semantic_hash": "61e14f4a5195fac0394dd81e64cf4d07"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\0025_assignment_source_richtext.sql": {
+  "migrations/0025_assignment_source_richtext.sql": {
     "mtime": 1780246280.0382764,
     "ast_hash": "deeb4ea19ad5b289cec8aaa3885b6411",
     "semantic_hash": "deeb4ea19ad5b289cec8aaa3885b6411"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\next.config.js": {
+  "next.config.js": {
     "mtime": 1778292005.0228088,
     "ast_hash": "8fb11b19a140ef299dd77e2af7deb323",
     "semantic_hash": "8fb11b19a140ef299dd77e2af7deb323"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\package.json": {
-    "mtime": 1780246324.2647884,
-    "ast_hash": "34814d7d576a45ca34550e1c55636dd0",
-    "semantic_hash": "34814d7d576a45ca34550e1c55636dd0"
+  "package.json": {
+    "mtime": 1780928437.483909,
+    "ast_hash": "c39ef5d499ede96fe5874ed97a4780a7",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\postcss.config.mjs": {
+  "postcss.config.mjs": {
     "mtime": 1778188010.8462574,
     "ast_hash": "c0c313a495c36c02be449fd09aa4478e",
     "semantic_hash": "c0c313a495c36c02be449fd09aa4478e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\check-analytics-setup.js": {
+  "scripts/debug/check-analytics-setup.js": {
     "mtime": 1778188010.9177475,
     "ast_hash": "6ed8686f4cab6300fc03b150e2c21364",
     "semantic_hash": "6ed8686f4cab6300fc03b150e2c21364"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\check-and-fix-rls.js": {
+  "scripts/debug/check-and-fix-rls.js": {
     "mtime": 1778188010.9248629,
     "ast_hash": "7f76527e2a29f911f39e9c1232995fe9",
     "semantic_hash": "7f76527e2a29f911f39e9c1232995fe9"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\check-district-columns.ts": {
+  "scripts/debug/check-district-columns.ts": {
     "mtime": 1778188010.932444,
     "ast_hash": "d163ef9dacea618d25b2a0e3f54cb0de",
     "semantic_hash": "d163ef9dacea618d25b2a0e3f54cb0de"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\check-districts.js": {
+  "scripts/debug/check-districts.js": {
     "mtime": 1778188010.940352,
     "ast_hash": "7b24a4963b5e6041c10806476f6bec98",
     "semantic_hash": "7b24a4963b5e6041c10806476f6bec98"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\check-rls-status.js": {
+  "scripts/debug/check-rls-status.js": {
     "mtime": 1778188010.953775,
     "ast_hash": "ab6b45139067707b95b55b79101db940",
     "semantic_hash": "ab6b45139067707b95b55b79101db940"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\check-session-triggers.js": {
+  "scripts/debug/check-session-triggers.js": {
     "mtime": 1778188010.9602349,
     "ast_hash": "6d14c70e5a7b485c678b276dac21c424",
     "semantic_hash": "6d14c70e5a7b485c678b276dac21c424"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\check-specific-user.js": {
+  "scripts/debug/check-specific-user.js": {
     "mtime": 1778188010.9674222,
     "ast_hash": "a46af928ad338608f3d772499091a516",
     "semantic_hash": "a46af928ad338608f3d772499091a516"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\check-user-sessions.js": {
+  "scripts/debug/check-user-sessions.js": {
     "mtime": 1778188010.9743135,
     "ast_hash": "430ba4920c4901e85143ab1aa48c8d9a",
     "semantic_hash": "430ba4920c4901e85143ab1aa48c8d9a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\debug-auth-simple.js": {
+  "scripts/debug/debug-auth-simple.js": {
     "mtime": 1778188010.9825654,
     "ast_hash": "f4896726e90226745b5ced3b1383e825",
     "semantic_hash": "f4896726e90226745b5ced3b1383e825"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\debug-storage.js": {
+  "scripts/debug/debug-storage.js": {
     "mtime": 1778188010.9909928,
     "ast_hash": "055c4dc87b36c8ce465eef8a22521915",
     "semantic_hash": "055c4dc87b36c8ce465eef8a22521915"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\diagnose-duration-issue.js": {
+  "scripts/debug/diagnose-duration-issue.js": {
     "mtime": 1778188011.0021942,
     "ast_hash": "1f0a846334f72bafd1ec193e6d0acf56",
     "semantic_hash": "1f0a846334f72bafd1ec193e6d0acf56"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\district-logos-usage-examples.js": {
+  "scripts/debug/district-logos-usage-examples.js": {
     "mtime": 1778188011.0137284,
     "ast_hash": "f2cac62fc255bff8325bc01ae68241ff",
     "semantic_hash": "f2cac62fc255bff8325bc01ae68241ff"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\test-auth-fix.js": {
+  "scripts/debug/test-auth-fix.js": {
     "mtime": 1778188011.0252047,
     "ast_hash": "193a62a1cf1c34fc250e2c152fe42b01",
     "semantic_hash": "193a62a1cf1c34fc250e2c152fe42b01"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\test-auth-flow.js": {
+  "scripts/debug/test-auth-flow.js": {
     "mtime": 1778188011.0351467,
     "ast_hash": "4e11027fd43f910846edcf73ce3ed04c",
     "semantic_hash": "4e11027fd43f910846edcf73ce3ed04c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\test-auth-upload.js": {
+  "scripts/debug/test-auth-upload.js": {
     "mtime": 1778188011.0446768,
     "ast_hash": "dfc044ce99251c5d7d53223fc718f780",
     "semantic_hash": "dfc044ce99251c5d7d53223fc718f780"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\test-authenticated-profile.js": {
+  "scripts/debug/test-authenticated-profile.js": {
     "mtime": 1778188011.0548656,
     "ast_hash": "44cb4eed3a06877bc176f3507d240a08",
     "semantic_hash": "44cb4eed3a06877bc176f3507d240a08"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\test-logo-serving.js": {
+  "scripts/debug/test-logo-serving.js": {
     "mtime": 1778188011.0637956,
     "ast_hash": "c8c77176b183f056a2fae1daa7f99a2c",
     "semantic_hash": "c8c77176b183f056a2fae1daa7f99a2c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\test-session-persistence.js": {
+  "scripts/debug/test-session-persistence.js": {
     "mtime": 1778188011.0760968,
     "ast_hash": "a5deb097ac3b9a65dbdc78476399d39e",
     "semantic_hash": "a5deb097ac3b9a65dbdc78476399d39e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\test-upload-api.js": {
+  "scripts/debug/test-upload-api.js": {
     "mtime": 1778188011.0805237,
     "ast_hash": "df2317eb0eedfaa75a59b1dd9586d788",
     "semantic_hash": "df2317eb0eedfaa75a59b1dd9586d788"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\test-upload.js": {
+  "scripts/debug/test-upload.js": {
     "mtime": 1778188011.087566,
     "ast_hash": "b075ef6cfad41a65f592686840be97b9",
     "semantic_hash": "b075ef6cfad41a65f592686840be97b9"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\debug\\test-user-auth.js": {
+  "scripts/debug/test-user-auth.js": {
     "mtime": 1778188011.096416,
     "ast_hash": "8d84f4e10cbe08ea243b1bc3e64b3c86",
     "semantic_hash": "8d84f4e10cbe08ea243b1bc3e64b3c86"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\apply-rls-manual.js": {
+  "scripts/migrations/apply-rls-manual.js": {
     "mtime": 1778188011.1020072,
     "ast_hash": "2357c0c6d23937e18dfe2d53d1dbc661",
     "semantic_hash": "2357c0c6d23937e18dfe2d53d1dbc661"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\apply-rls-migration.js": {
+  "scripts/migrations/apply-rls-migration.js": {
     "mtime": 1778188011.1080139,
     "ast_hash": "cd6de2a8a12ff73b045c5af5a514926a",
     "semantic_hash": "cd6de2a8a12ff73b045c5af5a514926a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\apply-school-branding-migration.js": {
+  "scripts/migrations/apply-school-branding-migration.js": {
     "mtime": 1778188011.1164434,
     "ast_hash": "446c270c13e846413f6d245d44e08bfe",
     "semantic_hash": "446c270c13e846413f6d245d44e08bfe"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\execute-migration.js": {
+  "scripts/migrations/execute-migration.js": {
     "mtime": 1778188011.127164,
     "ast_hash": "fe393816bb111fd6d5cedc5126728b84",
     "semantic_hash": "fe393816bb111fd6d5cedc5126728b84"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\fix-comprehensive-rls.js": {
+  "scripts/migrations/fix-comprehensive-rls.js": {
     "mtime": 1778188011.134467,
     "ast_hash": "427ab08bd015ae23ed1410234376b3b5",
     "semantic_hash": "427ab08bd015ae23ed1410234376b3b5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\fix-storage-policies.js": {
+  "scripts/migrations/fix-storage-policies.js": {
     "mtime": 1778188011.1471746,
     "ast_hash": "afc42027e0047b3c2260a96b2f12bf6c",
     "semantic_hash": "afc42027e0047b3c2260a96b2f12bf6c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\fix-user-profiles-rls.js": {
+  "scripts/migrations/fix-user-profiles-rls.js": {
     "mtime": 1778188011.1727197,
     "ast_hash": "0a832809d5a3ba7915076511961fe9dc",
     "semantic_hash": "0a832809d5a3ba7915076511961fe9dc"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\setup-district-logos-bucket.js": {
+  "scripts/migrations/setup-district-logos-bucket.js": {
     "mtime": 1778188011.1770697,
     "ast_hash": "ade8454d546e8e9f03a7eb93416bbf4b",
     "semantic_hash": "ade8454d546e8e9f03a7eb93416bbf4b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\setup-district-logos-storage.js": {
+  "scripts/migrations/setup-district-logos-storage.js": {
     "mtime": 1778188011.1887593,
     "ast_hash": "090318337b246172f50b8e4f37be4aea",
     "semantic_hash": "090318337b246172f50b8e4f37be4aea"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\verify-district-branding-schema.js": {
+  "scripts/migrations/verify-district-branding-schema.js": {
     "mtime": 1778188011.2049875,
     "ast_hash": "69433134aaabfd690413d561358a5833",
     "semantic_hash": "69433134aaabfd690413d561358a5833"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\verify-district-logos-storage.js": {
+  "scripts/migrations/verify-district-logos-storage.js": {
     "mtime": 1778188011.2145333,
     "ast_hash": "d326bd766e3b76eff0d94ddf386d7e9c",
     "semantic_hash": "d326bd766e3b76eff0d94ddf386d7e9c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\verify-migration-complete.js": {
+  "scripts/migrations/verify-migration-complete.js": {
     "mtime": 1778188011.2303324,
     "ast_hash": "1f192976ba009780aea0769d25f8254e",
     "semantic_hash": "1f192976ba009780aea0769d25f8254e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\migrations\\verify-rls-migration.js": {
+  "scripts/migrations/verify-rls-migration.js": {
     "mtime": 1778188011.2418594,
     "ast_hash": "149d20d1984a336120a3be4e07c40569",
     "semantic_hash": "149d20d1984a336120a3be4e07c40569"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\scripts\\seed-auth.ts": {
+  "scripts/seed-auth.ts": {
     "mtime": 1778520186.8354585,
     "ast_hash": "68500c7522f199c163a4faff9833753e",
     "semantic_hash": "68500c7522f199c163a4faff9833753e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\setup-analytics.js": {
+  "setup-analytics.js": {
     "mtime": 1778188011.2483513,
     "ast_hash": "85df2a7e7b2e49b1c33eaf40fd1c50ca",
     "semantic_hash": "85df2a7e7b2e49b1c33eaf40fd1c50ca"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\start-clean.ps1": {
+  "start-clean.ps1": {
     "mtime": 1778188011.2584443,
     "ast_hash": "ab7a1f8340243b34093d1f651f61d6ef",
     "semantic_hash": "ab7a1f8340243b34093d1f651f61d6ef"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\start-dev-fixed.ps1": {
+  "start-dev-fixed.ps1": {
     "mtime": 1778188011.2866714,
     "ast_hash": "b758c7f9e6f1c9263631e802ceb39956",
     "semantic_hash": "b758c7f9e6f1c9263631e802ceb39956"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\start-dev.ps1": {
+  "start-dev.ps1": {
     "mtime": 1778188011.3792787,
     "ast_hash": "b217a0f683ff6abc40512dbdc10b1888",
     "semantic_hash": "b217a0f683ff6abc40512dbdc10b1888"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\tailwind.config.js": {
+  "tailwind.config.js": {
     "mtime": 1778188011.4128313,
     "ast_hash": "1c30ab42dac8ce54e5a0d739454655b3",
     "semantic_hash": "1c30ab42dac8ce54e5a0d739454655b3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\test-setup.ts": {
+  "test-setup.ts": {
     "mtime": 1778188011.4229424,
     "ast_hash": "a310af6e9fad8b92214c181412dba7ae",
     "semantic_hash": "a310af6e9fad8b92214c181412dba7ae"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\tsconfig.json": {
+  "tsconfig.json": {
     "mtime": 1778449525.1856816,
     "ast_hash": "cea808f0d72982d6e3082afdd6ec885b",
     "semantic_hash": "cea808f0d72982d6e3082afdd6ec885b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\types\\jsdom.d.ts": {
+  "types/jsdom.d.ts": {
     "mtime": 1778527174.6937678,
     "ast_hash": "11127b97f6726705b1348c71aada2539",
     "semantic_hash": "11127b97f6726705b1348c71aada2539"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\types\\mammoth-browser.d.ts": {
+  "types/mammoth-browser.d.ts": {
     "mtime": 1780247201.2546954,
     "ast_hash": "4061c7db298818bc1870a18f30efacee",
     "semantic_hash": "4061c7db298818bc1870a18f30efacee"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\vite.config.ts": {
+  "vite.config.ts": {
     "mtime": 1778188011.435469,
     "ast_hash": "b82b22c081d89dfbfbe3efe662ff7c7e",
     "semantic_hash": "b82b22c081d89dfbfbe3efe662ff7c7e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.claude\\agents\\ux-design-specialist.md": {
+  ".claude/agents/ux-design-specialist.md": {
     "mtime": 1778188008.2934053,
     "ast_hash": "a83e0875ba24b159f976de1316669361",
     "semantic_hash": "a83e0875ba24b159f976de1316669361"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.claude\\commands\\audit-chunk.md": {
+  ".claude/commands/audit-chunk.md": {
     "mtime": 1778521457.7600925,
     "ast_hash": "84d54ef104342064d17f1a2d2d593725",
     "semantic_hash": "84d54ef104342064d17f1a2d2d593725"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.claude\\commands\\next-migration.md": {
+  ".claude/commands/next-migration.md": {
     "mtime": 1778521494.8026307,
     "ast_hash": "c94374d644b2b18a202c88df5166253f",
     "semantic_hash": "c94374d644b2b18a202c88df5166253f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.claude\\commands\\repaste-acceptance.md": {
+  ".claude/commands/repaste-acceptance.md": {
     "mtime": 1778521487.6514657,
     "ast_hash": "6a85a42cd50426bc3ff2e94cf8ed6f7b",
     "semantic_hash": "6a85a42cd50426bc3ff2e94cf8ed6f7b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.claude\\commands\\run-sql.md": {
+  ".claude/commands/run-sql.md": {
     "mtime": 1778521479.5321705,
     "ast_hash": "64f558f3e2ec0b68861503563de5fef8",
     "semantic_hash": "64f558f3e2ec0b68861503563de5fef8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.claude\\commands\\ship-chunk.md": {
+  ".claude/commands/ship-chunk.md": {
     "mtime": 1778521470.3049634,
     "ast_hash": "970f4a403860ccc8c3712cff8aef0122",
     "semantic_hash": "970f4a403860ccc8c3712cff8aef0122"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.claude\\comprehensive-code-review-context.md": {
+  ".claude/comprehensive-code-review-context.md": {
     "mtime": 1778188008.2984679,
     "ast_hash": "c9dc1c713615fca2b30e5e1e182fcd8e",
     "semantic_hash": "c9dc1c713615fca2b30e5e1e182fcd8e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.remember\\now.md": {
-    "mtime": 1780852947.937913,
-    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
-    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  ".remember/now.md": {
+    "mtime": 1780930762.7760994,
+    "ast_hash": "39157bbd46d53cf0569a2d699eb41df7",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.remember\\remember.md": {
+  ".remember/remember.md": {
     "mtime": 1780681411.1270974,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.remember\\today-2026-05-31.md": {
+  ".remember/today-2026-05-31.md": {
     "mtime": 1780242977.3518443,
     "ast_hash": "cdca363a3646b9513c082309e066cda3",
     "semantic_hash": "cdca363a3646b9513c082309e066cda3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.remember\\today-2026-06-02.md": {
+  ".remember/today-2026-06-02.md": {
     "mtime": 1780408788.491509,
     "ast_hash": "cce04339ac75f657eb360fa787c06e76",
     "semantic_hash": "cce04339ac75f657eb360fa787c06e76"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.remember\\today-2026-06-05.md": {
+  ".remember/today-2026-06-05.md": {
     "mtime": 1780681571.3687687,
     "ast_hash": "a917d440d0ff03d8f27549ae33bcd24b",
     "semantic_hash": "a917d440d0ff03d8f27549ae33bcd24b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.remember\\today-2026-06-06.md": {
+  ".remember/today-2026-06-06.md": {
     "mtime": 1780788975.7336054,
     "ast_hash": "575c2ff4adc72c4d6eee686082642409",
     "semantic_hash": "575c2ff4adc72c4d6eee686082642409"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\CLAUDE.md": {
+  "CLAUDE.md": {
     "mtime": 1778347170.9327214,
     "ast_hash": "37072eb084fa7cb1dfeec6b8416b8daa",
     "semantic_hash": "37072eb084fa7cb1dfeec6b8416b8daa"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\DATABASE_SCHEMA.md": {
+  "DATABASE_SCHEMA.md": {
     "mtime": 1778188008.3265681,
     "ast_hash": "63c3477ed57f2fb44e6d52407900f6ea",
     "semantic_hash": "63c3477ed57f2fb44e6d52407900f6ea"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\GETTING_STARTED.md": {
+  "GETTING_STARTED.md": {
     "mtime": 1778206728.0,
     "ast_hash": "1a342a56ac9749d50378e7871e2d9444",
     "semantic_hash": "1a342a56ac9749d50378e7871e2d9444"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\MIGRATION_INSTRUCTIONS.md": {
+  "MIGRATION_INSTRUCTIONS.md": {
     "mtime": 1778188008.3302233,
     "ast_hash": "31f10a16c0844ed8934881a77c035ca8",
     "semantic_hash": "31f10a16c0844ed8934881a77c035ca8"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\README.md": {
+  "README.md": {
     "mtime": 1778188008.3362277,
     "ast_hash": "9162add00befbcdb432430f405c4ad8d",
     "semantic_hash": "9162add00befbcdb432430f405c4ad8d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\BACKLOG.md": {
-    "mtime": 1779918397.2436395,
-    "ast_hash": "8ba60ec788764d54af518b8cd1865d74",
-    "semantic_hash": "8ba60ec788764d54af518b8cd1865d74"
+  "docs/BACKLOG.md": {
+    "mtime": 1780919421.6520526,
+    "ast_hash": "21162258c8e0ca5fe28a80b0a5362350",
+    "semantic_hash": ""
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\CONSOLIDATION-ROADMAP.md": {
+  "docs/CONSOLIDATION-ROADMAP.md": {
     "mtime": 1778188010.1002462,
     "ast_hash": "b73149fdb6247e99a6d11c997c234cfe",
     "semantic_hash": "b73149fdb6247e99a6d11c997c234cfe"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\EXPOSITORY_FIDELITY_PLAN.md": {
+  "docs/EXPOSITORY_FIDELITY_PLAN.md": {
     "mtime": 1779918620.0064206,
     "ast_hash": "f3194eed2fcc4d3aa0e60e1cbc99c4fc",
     "semantic_hash": "f3194eed2fcc4d3aa0e60e1cbc99c4fc"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\PHASE-2-PROGRESS-CHECKPOINT.md": {
+  "docs/PHASE-2-PROGRESS-CHECKPOINT.md": {
     "mtime": 1778188010.1053543,
     "ast_hash": "749670018908f1f501a82fb60807ae80",
     "semantic_hash": "749670018908f1f501a82fb60807ae80"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\PHASE-2-SHAPING-ANALYSIS.md": {
+  "docs/PHASE-2-SHAPING-ANALYSIS.md": {
     "mtime": 1778188010.1156905,
     "ast_hash": "e62e182a6d7cf371a104bfe92a4e7abe",
     "semantic_hash": "e62e182a6d7cf371a104bfe92a4e7abe"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\PHASE-3-WORKING-TS-READY.md": {
+  "docs/PHASE-3-WORKING-TS-READY.md": {
     "mtime": 1778188010.1221917,
     "ast_hash": "fb945c04132b65a0f63bdde2adbd8c26",
     "semantic_hash": "fb945c04132b65a0f63bdde2adbd8c26"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\POC-UNIFIED-GATHERING-CDS.md": {
+  "docs/POC-UNIFIED-GATHERING-CDS.md": {
     "mtime": 1778188010.1283355,
     "ast_hash": "4c66938062679454215deb4a65182727",
     "semantic_hash": "4c66938062679454215deb4a65182727"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\SOURCE_TEXT_ARCHITECTURE.md": {
+  "docs/SOURCE_TEXT_ARCHITECTURE.md": {
     "mtime": 1780323214.1745722,
     "ast_hash": "35b8bd8188bdabe21055c5c4b544e6b5",
     "semantic_hash": "35b8bd8188bdabe21055c5c4b544e6b5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\TESTING-CHECKLIST-UNIFIED-GATHERING-CDS.md": {
+  "docs/TESTING-CHECKLIST-UNIFIED-GATHERING-CDS.md": {
     "mtime": 1778188010.1343622,
     "ast_hash": "8003df298f3f962150f746de38376b66",
     "semantic_hash": "8003df298f3f962150f746de38376b66"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\TESTING-CHECKLIST-UNIFIED-SHAPING.md": {
+  "docs/TESTING-CHECKLIST-UNIFIED-SHAPING.md": {
     "mtime": 1778188010.1379707,
     "ast_hash": "7ad7eeb356f0825bf677ad727e0a1b27",
     "semantic_hash": "7ad7eeb356f0825bf677ad727e0a1b27"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\TESTING-CHECKLIST-UNIFIED-WORKING-TS.md": {
+  "docs/TESTING-CHECKLIST-UNIFIED-WORKING-TS.md": {
     "mtime": 1778188010.1441154,
     "ast_hash": "a736dbf6a3d2ba8f91b8f9ed9c981e3a",
     "semantic_hash": "a736dbf6a3d2ba8f91b8f9ed9c981e3a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\WALKTHROUGH-EXPOSITORY.md": {
+  "docs/WALKTHROUGH-EXPOSITORY.md": {
     "mtime": 1779197557.2148795,
     "ast_hash": "e54db4cafd82bca31f9861ebc0202fba",
     "semantic_hash": "e54db4cafd82bca31f9861ebc0202fba"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\analytics\\ANALYTICS_AUTH_FIX.md": {
+  "docs/archive/analytics/ANALYTICS_AUTH_FIX.md": {
     "mtime": 1778188010.151841,
     "ast_hash": "e1110eaade4a32f3bd69af46cddbbf5b",
     "semantic_hash": "e1110eaade4a32f3bd69af46cddbbf5b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\analytics\\ANALYTICS_TROUBLESHOOTING.md": {
+  "docs/archive/analytics/ANALYTICS_TROUBLESHOOTING.md": {
     "mtime": 1778188010.1582441,
     "ast_hash": "148be800ed0d8d6edf1461a10dba5a31",
     "semantic_hash": "148be800ed0d8d6edf1461a10dba5a31"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\analytics\\SCHOOL_ANALYTICS_FIX.md": {
+  "docs/archive/analytics/SCHOOL_ANALYTICS_FIX.md": {
     "mtime": 1778188010.1644232,
     "ast_hash": "d16d47c2b4a6c43e175c557f68c1719a",
     "semantic_hash": "d16d47c2b4a6c43e175c557f68c1719a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\AUTHENTICATION_HOTFIX_APPLIED.md": {
+  "docs/archive/authentication-fixes/AUTHENTICATION_HOTFIX_APPLIED.md": {
     "mtime": 1778188010.1717741,
     "ast_hash": "5922933ef87b8aa49d5dbae7e84ed2e3",
     "semantic_hash": "5922933ef87b8aa49d5dbae7e84ed2e3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\AUTHENTICATION_LOOP_FIX.md": {
+  "docs/archive/authentication-fixes/AUTHENTICATION_LOOP_FIX.md": {
     "mtime": 1778188010.1768918,
     "ast_hash": "04eb7f980425c447dff73f3c0fb307c4",
     "semantic_hash": "04eb7f980425c447dff73f3c0fb307c4"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\AUTHENTICATION_SYSTEM_COMPLETE.md": {
+  "docs/archive/authentication-fixes/AUTHENTICATION_SYSTEM_COMPLETE.md": {
     "mtime": 1778188010.1909683,
     "ast_hash": "c101f6a91335d6d37dbb697635eeff54",
     "semantic_hash": "c101f6a91335d6d37dbb697635eeff54"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\AUTHENTICATION_VERIFICATION_REPORT.md": {
+  "docs/archive/authentication-fixes/AUTHENTICATION_VERIFICATION_REPORT.md": {
     "mtime": 1778188010.1977284,
     "ast_hash": "7e8e00f3853130d2550595c870b38e5f",
     "semantic_hash": "7e8e00f3853130d2550595c870b38e5f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\AUTHPROVIDER_ERROR_FIX.md": {
+  "docs/archive/authentication-fixes/AUTHPROVIDER_ERROR_FIX.md": {
     "mtime": 1778188010.2016406,
     "ast_hash": "c5a22011f255ff8d0de99ba197fd0164",
     "semantic_hash": "c5a22011f255ff8d0de99ba197fd0164"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\AUTHPROVIDER_HANGING_FIX.md": {
+  "docs/archive/authentication-fixes/AUTHPROVIDER_HANGING_FIX.md": {
     "mtime": 1778188010.2073781,
     "ast_hash": "1e0138d14515a87d4b915685e267ba3f",
     "semantic_hash": "1e0138d14515a87d4b915685e267ba3f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\LOGIN_LOOP_FIX.md": {
+  "docs/archive/authentication-fixes/LOGIN_LOOP_FIX.md": {
     "mtime": 1778188010.214301,
     "ast_hash": "a9ccfc9c012ac295c4f5849fba6354c5",
     "semantic_hash": "a9ccfc9c012ac295c4f5849fba6354c5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\LOGIN_LOOP_FIX_FINAL.md": {
+  "docs/archive/authentication-fixes/LOGIN_LOOP_FIX_FINAL.md": {
     "mtime": 1778188010.2202208,
     "ast_hash": "ee201156d53bbae6cd56d894c7ffd1c3",
     "semantic_hash": "ee201156d53bbae6cd56d894c7ffd1c3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\MIDDLEWARE_RACE_CONDITIONS_FIX.md": {
+  "docs/archive/authentication-fixes/MIDDLEWARE_RACE_CONDITIONS_FIX.md": {
     "mtime": 1778188010.2263079,
     "ast_hash": "9ec8d35620aa91f2a86ba5cb2a3b28ad",
     "semantic_hash": "9ec8d35620aa91f2a86ba5cb2a3b28ad"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\SESSION_LOADING_HANG_FIX.md": {
+  "docs/archive/authentication-fixes/SESSION_LOADING_HANG_FIX.md": {
     "mtime": 1778188010.2313654,
     "ast_hash": "573e84b0869eb3fff382bdae24125562",
     "semantic_hash": "573e84b0869eb3fff382bdae24125562"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\authentication-fixes\\SESSION_PERSISTENCE_FIX.md": {
+  "docs/archive/authentication-fixes/SESSION_PERSISTENCE_FIX.md": {
     "mtime": 1778188010.2360592,
     "ast_hash": "28e26463040f208fb8785b9f5590e3f5",
     "semantic_hash": "28e26463040f208fb8785b9f5590e3f5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\implementation-history\\IMPLEMENTATION_COMPLETE.md": {
+  "docs/archive/implementation-history/IMPLEMENTATION_COMPLETE.md": {
     "mtime": 1778188010.2492192,
     "ast_hash": "d1a85ed6891537e5cf80eff19d845830",
     "semantic_hash": "d1a85ed6891537e5cf80eff19d845830"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\implementation-history\\PERFORMANCE_OPTIMIZATIONS_IMPLEMENTED.md": {
+  "docs/archive/implementation-history/PERFORMANCE_OPTIMIZATIONS_IMPLEMENTED.md": {
     "mtime": 1778188010.2542467,
     "ast_hash": "9e34f9ee9e5863dd068e75109d1e9c59",
     "semantic_hash": "9e34f9ee9e5863dd068e75109d1e9c59"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\implementation-history\\PHASE_1_AUTHENTICATION_FIXES.md": {
+  "docs/archive/implementation-history/PHASE_1_AUTHENTICATION_FIXES.md": {
     "mtime": 1778188010.2623384,
     "ast_hash": "04252609cfc26edbc20eb0dfb20d1286",
     "semantic_hash": "04252609cfc26edbc20eb0dfb20d1286"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\implementation-history\\PHASE_2_STATE_MANAGEMENT_OPTIMIZATION.md": {
+  "docs/archive/implementation-history/PHASE_2_STATE_MANAGEMENT_OPTIMIZATION.md": {
     "mtime": 1778188010.2668364,
     "ast_hash": "1d89e9f844650a34deaf4e8ab93f6f2d",
     "semantic_hash": "1d89e9f844650a34deaf4e8ab93f6f2d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\implementation-history\\PHASE_3_USER_EXPERIENCE_IMPROVEMENTS.md": {
+  "docs/archive/implementation-history/PHASE_3_USER_EXPERIENCE_IMPROVEMENTS.md": {
     "mtime": 1778188010.271214,
     "ast_hash": "4a01c6e4de426b4d3617b4ccf1e97b3f",
     "semantic_hash": "4a01c6e4de426b4d3617b4ccf1e97b3f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\implementation-history\\PHASE_4_SECURITY_HARDENING.md": {
+  "docs/archive/implementation-history/PHASE_4_SECURITY_HARDENING.md": {
     "mtime": 1778188010.2776065,
     "ast_hash": "2efa689078b5a3dac5d57773bb225849",
     "semantic_hash": "2efa689078b5a3dac5d57773bb225849"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\BULK_CLASS_UPLOAD_TEMPLATE.md": {
+  "docs/archive/misc/BULK_CLASS_UPLOAD_TEMPLATE.md": {
     "mtime": 1778188010.3018942,
     "ast_hash": "70321d0903b54ae08c4700c9aaf8fb51",
     "semantic_hash": "70321d0903b54ae08c4700c9aaf8fb51"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\CLAUDE_AUTH_NOTES.md": {
+  "docs/archive/misc/CLAUDE_AUTH_NOTES.md": {
     "mtime": 1778188010.3059442,
     "ast_hash": "a51d78263d500c9ae6577110ccdf49eb",
     "semantic_hash": "a51d78263d500c9ae6577110ccdf49eb"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\CODE_REVIEW_AND_DEBUGGING_REPORT.md": {
+  "docs/archive/misc/CODE_REVIEW_AND_DEBUGGING_REPORT.md": {
     "mtime": 1778188010.3162346,
     "ast_hash": "35b07ecacf6094875f08b03ed28a239e",
     "semantic_hash": "35b07ecacf6094875f08b03ed28a239e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\CODE_REVIEW_REPORT.md": {
+  "docs/archive/misc/CODE_REVIEW_REPORT.md": {
     "mtime": 1778188010.322226,
     "ast_hash": "7e63f3975e8d28d336f74ed253577e79",
     "semantic_hash": "7e63f3975e8d28d336f74ed253577e79"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\DISTRICT_BACKGROUND_UPDATE.md": {
+  "docs/archive/misc/DISTRICT_BACKGROUND_UPDATE.md": {
     "mtime": 1778188010.3279324,
     "ast_hash": "517e2725bdf11b6cf5a5de6235858924",
     "semantic_hash": "517e2725bdf11b6cf5a5de6235858924"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\MCP_INSTALLATION_COMPLETE.md": {
+  "docs/archive/misc/MCP_INSTALLATION_COMPLETE.md": {
     "mtime": 1778188010.3307142,
     "ast_hash": "a806573977575a52d104d7f8c83ee5d1",
     "semantic_hash": "a806573977575a52d104d7f8c83ee5d1"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\MCP_SETUP_GUIDE.md": {
+  "docs/archive/misc/MCP_SETUP_GUIDE.md": {
     "mtime": 1778188010.3379736,
     "ast_hash": "4be249eaebccc50d37093fd8f5605977",
     "semantic_hash": "4be249eaebccc50d37093fd8f5605977"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\RLS_FIX_INSTRUCTIONS.md": {
+  "docs/archive/misc/RLS_FIX_INSTRUCTIONS.md": {
     "mtime": 1778188010.3424177,
     "ast_hash": "4849745c03a2ad49cf9d3b3e5ededc7a",
     "semantic_hash": "4849745c03a2ad49cf9d3b3e5ededc7a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\SEPARATE_LOGIN_IMPLEMENTATION.md": {
+  "docs/archive/misc/SEPARATE_LOGIN_IMPLEMENTATION.md": {
     "mtime": 1778188010.3479357,
     "ast_hash": "ae3c883509dc4564ee41b1a50c3f588c",
     "semantic_hash": "ae3c883509dc4564ee41b1a50c3f588c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\SUPABASE_DOMAIN_FIX.md": {
+  "docs/archive/misc/SUPABASE_DOMAIN_FIX.md": {
     "mtime": 1778188010.3526,
     "ast_hash": "d0d99bb1a198af27d2909ff8d9afc1a1",
     "semantic_hash": "d0d99bb1a198af27d2909ff8d9afc1a1"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\XSS_TEST_RESULTS.md": {
+  "docs/archive/misc/XSS_TEST_RESULTS.md": {
     "mtime": 1778188010.3568504,
     "ast_hash": "a1ce46f809ab405dc49e6205cf868be2",
     "semantic_hash": "a1ce46f809ab405dc49e6205cf868be2"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\auth-verification-checklist.md": {
+  "docs/archive/misc/auth-verification-checklist.md": {
     "mtime": 1778188010.3632648,
     "ast_hash": "517657a951db9f2ef7501cf79f727dd5",
     "semantic_hash": "517657a951db9f2ef7501cf79f727dd5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\archive\\misc\\test-edit-district.md": {
+  "docs/archive/misc/test-edit-district.md": {
     "mtime": 1778188010.367592,
     "ast_hash": "c6460cf36683267a6f35be04c227b062",
     "semantic_hash": "c6460cf36683267a6f35be04c227b062"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\district-branding-guide.md": {
+  "docs/district-branding-guide.md": {
     "mtime": 1778188010.3717704,
     "ast_hash": "f4a2ee489bd42191952751c50c9da384",
     "semantic_hash": "f4a2ee489bd42191952751c50c9da384"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\reference\\expository-organizer-specs.md": {
+  "docs/reference/expository-organizer-specs.md": {
     "mtime": 1778791753.4286735,
     "ast_hash": "d88b9633b284c95a32ba9ec8fdce3e4a",
     "semantic_hash": "d88b9633b284c95a32ba9ec8fdce3e4a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\reference\\sec_exp.txt": {
+  "docs/reference/sec_exp.txt": {
     "mtime": 1779907534.1196241,
     "ast_hash": "4c121536f973ecc48662c732e90f7b37",
     "semantic_hash": "4c121536f973ecc48662c732e90f7b37"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\setup\\PRIVATE_BUCKET_SETUP.md": {
+  "docs/setup/PRIVATE_BUCKET_SETUP.md": {
     "mtime": 1778188010.3775036,
     "ast_hash": "6fe4a30a76f8540c71608e1b14138f14",
     "semantic_hash": "6fe4a30a76f8540c71608e1b14138f14"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\superpowers\\specs\\2026-05-27-add-super-admin-design.md": {
+  "docs/superpowers/specs/2026-05-27-add-super-admin-design.md": {
     "mtime": 1779880125.928848,
     "ast_hash": "8ed83e6ccdf314e7d5885e8c4aa90468",
     "semantic_hash": "8ed83e6ccdf314e7d5885e8c4aa90468"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\superpowers\\specs\\2026-06-02-multitenant-admin-design.md": {
+  "docs/superpowers/specs/2026-06-02-multitenant-admin-design.md": {
     "mtime": 1780392612.6746936,
     "ast_hash": "2607bdfd371a91dc6636edd95dfdfe9a",
     "semantic_hash": "2607bdfd371a91dc6636edd95dfdfe9a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\examples\\analytics-integration-example.md": {
+  "examples/analytics-integration-example.md": {
     "mtime": 1778188010.398927,
     "ast_hash": "a2636fcea5413a51c49c5493eb34bd74",
     "semantic_hash": "a2636fcea5413a51c49c5493eb34bd74"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\migrations\\README.md": {
+  "migrations/README.md": {
     "mtime": 1778188010.5862389,
     "ast_hash": "e567105b800da59e74d090e1bbb4aa86",
     "semantic_hash": "e567105b800da59e74d090e1bbb4aa86"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\Expository_Example_1.pdf": {
+  "Expository_Example_1.pdf": {
     "mtime": 1780237142.4869637,
     "ast_hash": "3552a5123242514723533f14afee6778",
     "semantic_hash": "3552a5123242514723533f14afee6778"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\Expository_Example_48-64.pdf": {
+  "Expository_Example_48-64.pdf": {
     "mtime": 1780238672.4125645,
     "ast_hash": "119cbe74954e7a54d2a900f36b1a13b5",
     "semantic_hash": "119cbe74954e7a54d2a900f36b1a13b5"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\2018Narrative-Guide-insidepgsV1.pdf": {
+  "docs/2018Narrative-Guide-insidepgsV1.pdf": {
     "mtime": 1778754142.5024042,
     "ast_hash": "b5d8c80d2c152209e2dcb0937b73d05f",
     "semantic_hash": "b5d8c80d2c152209e2dcb0937b73d05f"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\2023-2024JSWP-Expository-GuideFNL5-hires.pdf": {
+  "docs/2023-2024JSWP-Expository-GuideFNL5-hires.pdf": {
     "mtime": 1778759384.5019495,
     "ast_hash": "928b036ba67b051bdd165f383ca29216",
     "semantic_hash": "928b036ba67b051bdd165f383ca29216"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\reference\\Sec_Exp (1).pdf": {
+  "docs/reference/Sec_Exp (1).pdf": {
     "mtime": 1779741976.9866,
     "ast_hash": "06dc26e1440f826975d55b37c999a58c",
     "semantic_hash": "06dc26e1440f826975d55b37c999a58c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\assets\\argumentation01-circle-cmyk.jpg": {
+  "public/assets/argumentation01-circle-cmyk.jpg": {
     "mtime": 1778188010.8540487,
     "ast_hash": "9270c455719521720c73187befa9c977",
     "semantic_hash": "9270c455719521720c73187befa9c977"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\assets\\expository01-circle-cmyk.jpg": {
+  "public/assets/expository01-circle-cmyk.jpg": {
     "mtime": 1778188010.8594208,
     "ast_hash": "c655dc7adb30b6c3ef6287a84dac3849",
     "semantic_hash": "c655dc7adb30b6c3ef6287a84dac3849"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\assets\\jswp-logo.png": {
+  "public/assets/jswp-logo.png": {
     "mtime": 1778188010.8652122,
     "ast_hash": "3bcad520ac590e8f22c8fefd5b450a4c",
     "semantic_hash": "3bcad520ac590e8f22c8fefd5b450a4c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\assets\\jswp-logo.svg": {
+  "public/assets/jswp-logo.svg": {
     "mtime": 1778188010.8674898,
     "ast_hash": "2833bd54356496b50149b14c17cad6ba",
     "semantic_hash": "2833bd54356496b50149b14c17cad6ba"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\assets\\literary01-circle-cmyk.jpg": {
+  "public/assets/literary01-circle-cmyk.jpg": {
     "mtime": 1778188010.8726363,
     "ast_hash": "8d5264424ca03585a8107c5a279b0126",
     "semantic_hash": "8d5264424ca03585a8107c5a279b0126"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\assets\\logos\\JSWPOnlineLogo-p-500.png": {
+  "public/assets/logos/JSWPOnlineLogo-p-500.png": {
     "mtime": 1778188010.8798347,
     "ast_hash": "b82780d789f80d6cb1beb87380866a3c",
     "semantic_hash": "b82780d789f80d6cb1beb87380866a3c"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\assets\\main logo.png": {
+  "public/assets/main logo.png": {
     "mtime": 1778188010.881816,
     "ast_hash": "de289ea0792b34d685320139e151c5d9",
     "semantic_hash": "de289ea0792b34d685320139e151c5d9"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\assets\\narrative01-circle-cmyk.jpg": {
+  "public/assets/narrative01-circle-cmyk.jpg": {
     "mtime": 1778188010.8848076,
     "ast_hash": "d2dacc0a1042807863bc01d77ef6ab24",
     "semantic_hash": "d2dacc0a1042807863bc01d77ef6ab24"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\file.svg": {
+  "public/file.svg": {
     "mtime": 1778188010.888422,
     "ast_hash": "d09f95206c3fa0bb9bd9fefabfd0ea71",
     "semantic_hash": "d09f95206c3fa0bb9bd9fefabfd0ea71"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\globe.svg": {
+  "public/globe.svg": {
     "mtime": 1778188010.8918326,
     "ast_hash": "2aaafa6a49b6563925fe440891e32717",
     "semantic_hash": "2aaafa6a49b6563925fe440891e32717"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\images\\district-placeholder.svg": {
+  "public/images/district-placeholder.svg": {
     "mtime": 1778188010.8960829,
     "ast_hash": "e3e2fde1a80e7e016a5fce788473cd3a",
     "semantic_hash": "e3e2fde1a80e7e016a5fce788473cd3a"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\images\\placeholder.svg": {
+  "public/images/placeholder.svg": {
     "mtime": 1778188010.8999655,
     "ast_hash": "d59f1e971847a4e759324c121f031c7d",
     "semantic_hash": "d59f1e971847a4e759324c121f031c7d"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\next.svg": {
+  "public/next.svg": {
     "mtime": 1778188010.9037395,
     "ast_hash": "8e061864f388b47f33a1c3780831193e",
     "semantic_hash": "8e061864f388b47f33a1c3780831193e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\vercel.svg": {
+  "public/vercel.svg": {
     "mtime": 1778188010.9080904,
     "ast_hash": "c0af2f507b369b085b35ef4bbe3bcf1e",
     "semantic_hash": "c0af2f507b369b085b35ef4bbe3bcf1e"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\public\\window.svg": {
+  "public/window.svg": {
     "mtime": 1778188010.9121587,
     "ast_hash": "a2760511c65806022ad20adf74370ff3",
     "semantic_hash": "a2760511c65806022ad20adf74370ff3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\.remember\\today-2026-06-07.md": {
+  ".remember/today-2026-06-07.md": {
     "mtime": 1780852947.930886,
     "ast_hash": "9ba3eef18ae14800daf9a216525083fd",
     "semantic_hash": "9ba3eef18ae14800daf9a216525083fd"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\graphify-out\\converted\\Quick Start Guide - Expos - Health_b5c44fb8.md": {
-    "mtime": 1780853898.0301287,
+  "graphify-out/converted/Quick Start Guide - Expos - Health_b5c44fb8.md": {
+    "mtime": 1780931164.347951,
     "ast_hash": "0c67465ff329655d84b0d81674e96974",
     "semantic_hash": "0c67465ff329655d84b0d81674e96974"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\graphify-out\\converted\\User Guide - All_3ad5cfeb.md": {
-    "mtime": 1780853898.4185395,
+  "graphify-out/converted/User Guide - All_3ad5cfeb.md": {
+    "mtime": 1780931164.879734,
     "ast_hash": "9f778a000e3b65437bbd952f7d9a12c3",
     "semantic_hash": "9f778a000e3b65437bbd952f7d9a12c3"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\Quick Start Guide - Expos - Health.docx": {
+  "docs/Quick Start Guide - Expos - Health.docx": {
     "mtime": 1778787464.4082336,
     "ast_hash": "e52f366036cbaa3b1089ff1a6fef631b",
     "semantic_hash": "e52f366036cbaa3b1089ff1a6fef631b"
   },
-  "C:\\Users\\Raymond Jenkins\\Desktop\\CODE\\jswp-online\\docs\\User Guide - All.docx": {
+  "docs/User Guide - All.docx": {
     "mtime": 1778787420.2820432,
     "ast_hash": "1c302587101feb31314f277cc68ff14f",
     "semantic_hash": "1c302587101feb31314f277cc68ff14f"
+  },
+  "app/(auth)/reset-password/new-password-form.tsx": {
+    "mtime": 1778275645.7540991,
+    "ast_hash": "94e292773dcf87f0d4b582915b4f4f59",
+    "semantic_hash": ""
+  },
+  "app/admin/districts/[id]/schools/[sid]/subjects/add-subject-class-form.tsx": {
+    "mtime": 1780922694.0477736,
+    "ast_hash": "27431529089de82e63057eac3b68533d",
+    "semantic_hash": ""
+  },
+  "app/admin/school/_dashboard.tsx": {
+    "mtime": 1780919058.9839904,
+    "ast_hash": "d2ed322b99a7a6c08e3b0e1d7645cb75",
+    "semantic_hash": ""
+  },
+  "app/admin/school/administrator/page.tsx": {
+    "mtime": 1780919071.9474325,
+    "ast_hash": "2fa5219a41e0e093236449daef49b240",
+    "semantic_hash": ""
+  },
+  "app/admin/school/counselor/page.tsx": {
+    "mtime": 1780919083.4399302,
+    "ast_hash": "020bbfaa6214507d4cda49fb831d118d",
+    "semantic_hash": ""
+  },
+  "app/admin/school/other/page.tsx": {
+    "mtime": 1780919094.2097054,
+    "ast_hash": "93d58d2a5f6c64bc6eea81588c7f6dea",
+    "semantic_hash": ""
+  },
+  "app/admin/school/page.tsx": {
+    "mtime": 1780919105.8225327,
+    "ast_hash": "7bba6af7a28513426c9815f96db02515",
+    "semantic_hash": ""
+  },
+  "lib/actions/subject-class.ts": {
+    "mtime": 1780922665.6888921,
+    "ast_hash": "565d39b1f246201d859bea85269fa308",
+    "semantic_hash": ""
+  },
+  "lib/admin-kinds.ts": {
+    "mtime": 1780918820.079867,
+    "ast_hash": "181615bae42a3f545d3814157dc5e8c1",
+    "semantic_hash": ""
+  },
+  "lib/school-levels.ts": {
+    "mtime": 1780917920.422354,
+    "ast_hash": "25114ddd265e48291b946e5a2d494292",
+    "semantic_hash": ""
+  },
+  "migrations/0026_user_profiles_admin_kind.sql": {
+    "mtime": 1780918728.9962156,
+    "ast_hash": "fe66a174cfafab393efda5a4adb0eba9",
+    "semantic_hash": ""
+  },
+  "migrations/0027_classes_description.sql": {
+    "mtime": 1780922576.2744386,
+    "ast_hash": "1d4eae3d6c7ef27b2367432d4fb9eb98",
+    "semantic_hash": ""
+  },
+  ".remember/today-2026-06-08.md": {
+    "mtime": 1780929315.8435557,
+    "ast_hash": "56da28c8a73a846089e6e88b4f05ad66",
+    "semantic_hash": ""
+  },
+  "migrations/0028_schema_inventory_fn.sql": {
+    "mtime": 1780928367.492198,
+    "ast_hash": "aa3931f6a7a5f664e218bfe1b4685fca",
+    "semantic_hash": ""
+  },
+  "scripts/db-check.ts": {
+    "mtime": 1780928502.5109303,
+    "ast_hash": "a258a74f851bdf1c80d00084a8e312eb",
+    "semantic_hash": ""
   }
 }

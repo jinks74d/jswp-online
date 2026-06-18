@@ -1,16 +1,16 @@
-# Graph Report - jswp-online  (2026-06-08)
+# Graph Report - jswp-online  (2026-06-09)
 
 ## Corpus Check
-- 505 files · ~439,046 words
+- 524 files · ~454,730 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2655 nodes · 5259 edges · 190 communities (158 shown, 32 thin omitted)
+- 2756 nodes · 5388 edges · 219 communities (182 shown, 37 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 189 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b26314cf`
+- Built from commit: `6072ffba`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -37,13 +37,13 @@
 - [[_COMMUNITY_Signup Approval Flow|Signup Approval Flow]]
 - [[_COMMUNITY_Literary CM-Dev & Decisions|Literary CM-Dev & Decisions]]
 - [[_COMMUNITY_Analytics Breakdown Components|Analytics Breakdown Components]]
-- [[_COMMUNITY_Expository Guide Concepts (2024)|Expository Guide Concepts (2024)]]
+- [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_District Branding Types|District Branding Types]]
 - [[_COMMUNITY_Writing Structure Bootstrap|Writing Structure Bootstrap]]
 - [[_COMMUNITY_Assignment Authoring Actions|Assignment Authoring Actions]]
 - [[_COMMUNITY_Final Draft Assembly|Final Draft Assembly]]
 - [[_COMMUNITY_Writing Structure Bootstrap|Writing Structure Bootstrap]]
-- [[_COMMUNITY_Prompt Decoding & Step Flow|Prompt Decoding & Step Flow]]
+- [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_DevTools & Logger|DevTools & Logger]]
 - [[_COMMUNITY_Narrative Guide Concepts (2018)|Narrative Guide Concepts (2018)]]
 - [[_COMMUNITY_Exemplars List Pages|Exemplars List Pages]]
@@ -76,7 +76,7 @@
 - [[_COMMUNITY_User Guide Portals & Drafts|User Guide: Portals & Drafts]]
 - [[_COMMUNITY_Shaping BP Panes|Shaping BP Panes]]
 - [[_COMMUNITY_Assignment Analytics Pages|Assignment Analytics Pages]]
-- [[_COMMUNITY_Narrative T-Chart & BP Labels|Narrative T-Chart & BP Labels]]
+- [[_COMMUNITY_Community 61|Community 61]]
 - [[_COMMUNITY_Error Provider & Notifications|Error Provider & Notifications]]
 - [[_COMMUNITY_Color Toolbar & Exemplar Content|Color Toolbar & Exemplar Content]]
 - [[_COMMUNITY_Dev Dependencies|Dev Dependencies]]
@@ -94,13 +94,13 @@
 - [[_COMMUNITY_Assignment Authoring Actions|Assignment Authoring Actions]]
 - [[_COMMUNITY_Backlog & Fidelity Docs|Backlog & Fidelity Docs]]
 - [[_COMMUNITY_Exemplar Actions|Exemplar Actions]]
-- [[_COMMUNITY_Teacher Writings Review|Teacher Writings Review]]
+- [[_COMMUNITY_Community 79|Community 79]]
 - [[_COMMUNITY_Class Detail & Roster|Class Detail & Roster]]
 - [[_COMMUNITY_Narrative T-Chart & BP Labels|Narrative T-Chart & BP Labels]]
 - [[_COMMUNITY_Analytics Setup Debug|Analytics Setup Debug]]
 - [[_COMMUNITY_Performance Monitor|Performance Monitor]]
-- [[_COMMUNITY_Classes & Subjects Actions|Classes & Subjects Actions]]
-- [[_COMMUNITY_Decode Prompt Step UI|Decode Prompt Step UI]]
+- [[_COMMUNITY_Community 84|Community 84]]
+- [[_COMMUNITY_Community 85|Community 85]]
 - [[_COMMUNITY_District Branding Docs|District Branding Docs]]
 - [[_COMMUNITY_Forms Consolidation Roadmap|Forms Consolidation Roadmap]]
 - [[_COMMUNITY_RLS Manual Scripts|RLS Manual Scripts]]
@@ -117,15 +117,15 @@
 - [[_COMMUNITY_Expository Organizer Specs|Expository Organizer Specs]]
 - [[_COMMUNITY_DistrictDB Debug Scripts|District/DB Debug Scripts]]
 - [[_COMMUNITY_API Client|API Client]]
-- [[_COMMUNITY_Subdomain Middleware|Subdomain Middleware]]
+- [[_COMMUNITY_Community 102|Community 102]]
 - [[_COMMUNITY_Super Admin Design|Super Admin Design]]
 - [[_COMMUNITY_CLAUDE.md Brief Concepts|CLAUDE.md Brief Concepts]]
 - [[_COMMUNITY_Legacy Anti-Pattern Concepts|Legacy Anti-Pattern Concepts]]
-- [[_COMMUNITY_Once-You-Lose-It Rule|Once-You-Lose-It Rule]]
+- [[_COMMUNITY_Community 106|Community 106]]
 - [[_COMMUNITY_Landing & Auth Pages|Landing & Auth Pages]]
 - [[_COMMUNITY_Loading States UI|Loading States UI]]
-- [[_COMMUNITY_Shaping Sheet Step|Shaping Sheet Step]]
-- [[_COMMUNITY_Admin Layout|Admin Layout]]
+- [[_COMMUNITY_Community 109|Community 109]]
+- [[_COMMUNITY_Community 110|Community 110]]
 - [[_COMMUNITY_Session Triggers Debug|Session Triggers Debug]]
 - [[_COMMUNITY_User Sessions Debug|User Sessions Debug]]
 - [[_COMMUNITY_Duration Issue Debug|Duration Issue Debug]]
@@ -143,11 +143,11 @@
 - [[_COMMUNITY_Upload API Test Script|Upload API Test Script]]
 - [[_COMMUNITY_ESLint Config|ESLint Config]]
 - [[_COMMUNITY_Execute Migration Script|Execute Migration Script]]
-- [[_COMMUNITY_Verify Migration Script|Verify Migration Script]]
+- [[_COMMUNITY_Community 130|Community 130]]
 - [[_COMMUNITY_Seed Auth Script|Seed Auth Script]]
 - [[_COMMUNITY_Image With Fallback|Image With Fallback]]
-- [[_COMMUNITY_Analytics Troubleshooting Docs|Analytics Troubleshooting Docs]]
-- [[_COMMUNITY_Bulk Upload Routes|Bulk Upload Routes]]
+- [[_COMMUNITY_Community 133|Community 133]]
+- [[_COMMUNITY_Community 134|Community 134]]
 - [[_COMMUNITY_Bulk Upload Routes|Bulk Upload Routes]]
 - [[_COMMUNITY_Community 136|Community 136]]
 - [[_COMMUNITY_Brand Logo Images|Brand Logo Images]]
@@ -182,21 +182,46 @@
 - [[_COMMUNITY_Next.js README|Next.js README]]
 - [[_COMMUNITY_Community 180|Community 180]]
 - [[_COMMUNITY_Community 181|Community 181]]
-- [[_COMMUNITY_Community 182|Community 182]]
 - [[_COMMUNITY_Community 183|Community 183]]
 - [[_COMMUNITY_Community 184|Community 184]]
+- [[_COMMUNITY_Community 185|Community 185]]
 - [[_COMMUNITY_Community 187|Community 187]]
 - [[_COMMUNITY_Community 188|Community 188]]
+- [[_COMMUNITY_Community 189|Community 189]]
+- [[_COMMUNITY_Community 190|Community 190]]
+- [[_COMMUNITY_Community 191|Community 191]]
+- [[_COMMUNITY_Community 194|Community 194]]
+- [[_COMMUNITY_Community 196|Community 196]]
+- [[_COMMUNITY_Community 197|Community 197]]
+- [[_COMMUNITY_Community 198|Community 198]]
+- [[_COMMUNITY_Community 199|Community 199]]
+- [[_COMMUNITY_Community 200|Community 200]]
+- [[_COMMUNITY_Community 201|Community 201]]
+- [[_COMMUNITY_Community 202|Community 202]]
+- [[_COMMUNITY_Community 203|Community 203]]
+- [[_COMMUNITY_Community 204|Community 204]]
+- [[_COMMUNITY_Community 205|Community 205]]
+- [[_COMMUNITY_Community 206|Community 206]]
+- [[_COMMUNITY_Community 209|Community 209]]
+- [[_COMMUNITY_Community 210|Community 210]]
+- [[_COMMUNITY_Community 211|Community 211]]
+- [[_COMMUNITY_Community 212|Community 212]]
+- [[_COMMUNITY_Community 213|Community 213]]
+- [[_COMMUNITY_Community 214|Community 214]]
+- [[_COMMUNITY_Community 215|Community 215]]
+- [[_COMMUNITY_Community 216|Community 216]]
+- [[_COMMUNITY_Community 217|Community 217]]
+- [[_COMMUNITY_Community 224|Community 224]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `createServerClient()` - 252 edges
+1. `createServerClient()` - 253 edges
 2. `requireRole()` - 168 edges
 3. `useWritingMode()` - 88 edges
 4. `Database` - 66 edges
-5. `createAdminClient()` - 51 edges
+5. `createAdminClient()` - 52 edges
 6. `Logger` - 35 edges
-7. `createClient()` - 31 edges
-8. `requireUser()` - 30 edges
+7. `requireUser()` - 31 edges
+8. `createClient()` - 31 edges
 9. `createServerSupabaseClient()` - 30 edges
 10. `MonitoringSystem` - 26 edges
 
@@ -206,11 +231,11 @@
 - `POST()` --calls--> `createServerClient()`  [INFERRED]
   app/api/school-admin/classes/bulk-upload-sheets/route.ts → lib/supabase/server.ts
 - `POST()` --calls--> `createServerClient()`  [INFERRED]
+  app/api/school-admin/classes/bulk-upload/route.ts → lib/supabase/server.ts
+- `POST()` --calls--> `createServerClient()`  [INFERRED]
+  app/api/school-admin/students/bulk-upload-sheets/route.ts → lib/supabase/server.ts
+- `POST()` --calls--> `createServerClient()`  [INFERRED]
   app/api/school-admin/students/bulk-upload/route.ts → lib/supabase/server.ts
-- `debugAuth()` --calls--> `createClient()`  [INFERRED]
-  scripts/debug/debug-auth-simple.js → lib/supabase.ts
-- `DistrictLogo()` --calls--> `createClient()`  [INFERRED]
-  scripts/debug/district-logos-usage-examples.js → lib/supabase.ts
 
 ## Import Cycles
 - None detected.
@@ -245,19 +270,19 @@
 - **Teacher Portal Functions** — docs_user_guide_all_submitted_assignments, docs_user_guide_all_teacher_feedback, docs_user_guide_all_student_list, docs_user_guide_all_change_password [EXTRACTED 1.00]
 - **User Guide Mode Flows** — docs_user_guide_all_expository_flow, docs_user_guide_all_literary_flow, docs_user_guide_all_argumentation_flow, docs_user_guide_all_narrative_flow [EXTRACTED 1.00]
 
-## Communities (190 total, 32 thin omitted)
+## Communities (219 total, 37 thin omitted)
 
 ### Community 0 - "CSV Import Descriptors"
-Cohesion: 0.11
-Nodes (29): ImportContext, ImportDescriptor, JswpRole, RowMatch, REGISTRY, CommitOutcome, CommitRowError, ImportCredential (+21 more)
+Cohesion: 0.14
+Nodes (21): ImportContext, ImportDescriptor, JswpRole, RowMatch, REGISTRY, CommitOutcome, ImportScope, classifyPeriods() (+13 more)
 
 ### Community 1 - "Paragraph Form Composition"
-Cohesion: 0.06
-Nodes (33): bootstrapParagraphForms(), updateFinalText(), clean(), ComposeChunkInput, ComposeInput, composeParagraphSegments(), composeParagraphText(), ParagraphSegment (+25 more)
+Cohesion: 0.05
+Nodes (40): bootstrapParagraphForms(), CD_CM_MODES, resyncFinalTextToCompose(), syncParagraphForms(), updateFinalText(), clean(), ComposeChunkInput, ComposeInput (+32 more)
 
 ### Community 2 - "T-Chart & Chunks"
 Cohesion: 0.05
-Nodes (45): addChunk(), ChunkRatio, CmKind, ConcreteDetailQuotationFields, createCommentaryItem(), createConcreteDetail(), deleteCommentaryItem(), deleteConcreteDetail() (+37 more)
+Nodes (41): addChunk(), ChunkRatio, CmKind, ConcreteDetailQuotationFields, createCommentaryItem(), createConcreteDetail(), deleteCommentaryItem(), deleteConcreteDetail() (+33 more)
 
 ### Community 3 - "Student Progress Views"
 Cohesion: 0.06
@@ -265,43 +290,43 @@ Nodes (32): Params, StudentDetailPage(), getStudentProgress(), Mode, StudentProg
 
 ### Community 4 - "Essay Parts (Intro/Thesis/Conclusion)"
 Cohesion: 0.12
-Nodes (22): bootstrapEssayParts(), ThesisFrame, updateConclusionText(), updateIntroductionFields(), updateThesisFields(), VALID_HOOK_KINDS, VALID_THESIS_FRAMES, Database (+14 more)
+Nodes (15): generatePassword(), HEADER_ALIASES, ImportResult, importRoster(), ImportRowError, ParseError, ParseResult, parseRosterFile() (+7 more)
 
 ### Community 5 - "Assignment Mode Configs"
 Cohesion: 0.08
 Nodes (32): argumentationGatheringCDsConfig, argumentationShapingConfig, argumentationWorkingTopicSentenceConfig, expositoryGatheringCDsConfig, expositoryShapingConfig, expositoryWorkingTopicSentenceConfig, literaryGatheringCDsConfig, literaryShapingConfig (+24 more)
 
 ### Community 6 - "Student Assignments List"
-Cohesion: 0.15
-Nodes (15): MODE_LABELS, ctaLabelFor(), formatDue(), StudentAssignmentDetail(), StartWritingButton(), DerivedStatus, deriveStatus(), getStudentAssignmentDetail() (+7 more)
+Cohesion: 0.17
+Nodes (14): failed(), parseImport(), runImport(), normalizeHeader(), normalizeRow(), ReadResult, readSpreadsheet(), sanitizeCell() (+6 more)
 
 ### Community 7 - "Analytics API & Error Client"
-Cohesion: 0.08
-Nodes (25): ErrorBoundaryProps, ErrorBoundaryState, ErrorContext, ErrorContextType, ErrorNotification, ErrorNotificationCardProps, ErrorNotifications(), ErrorProviderProps (+17 more)
+Cohesion: 0.10
+Nodes (18): ErrorBoundaryProps, ErrorBoundaryState, ApiRequestOptions, ApiResponse, AsyncHandler, AsyncOperationOptions, AsyncOperationResult, handleAsync() (+10 more)
 
 ### Community 8 - "Auth Cache"
 Cohesion: 0.08
 Nodes (5): AuthCache, CachedData, SecurityConfig, SessionFingerprint, SessionSecurity
 
 ### Community 9 - "Gather CDs & Topic-Sentence Dev"
-Cohesion: 0.09
-Nodes (30): createCandidate(), deleteCandidate(), reorderSelectedCandidates(), setCandidateSelected(), setCandidateSide(), updateCandidateText(), updateSheetTaskPortion(), CandidateRow() (+22 more)
+Cohesion: 0.17
+Nodes (11): createAndEnrollStudent(), EnrollFormState, MANAGE_ROLES, UnenrollState, unenrollStudent(), createScopedUser(), generateTempPassword(), enrollInitial (+3 more)
 
 ### Community 10 - "Sec_Exp Guide Concepts"
 Cohesion: 0.12
 Nodes (15): 10. Step 8 — Conclusion ⬛, 11. Step 9 — Paragraph Form 🎨, 15. Quick-test variant (single paragraph, ~10 min), 16. Known sharp edges, 17. Source-of-truth references, 3.1 — Inputs, 3.2 — Behavior to verify, 3. Step 1 — Decoding the Prompt 🦉 (+7 more)
 
 ### Community 11 - "Class & Period Pages"
-Cohesion: 0.10
-Nodes (28): AssignmentState, assignTeacher(), ClassPeriodFormState, createClassPeriod(), isUniqueViolation(), MANAGE_ROLES, unassignTeacher(), updateClassPeriod() (+20 more)
+Cohesion: 0.19
+Nodes (14): CsvImporter(), NotFound(), DistrictDetailPage(), Schools, schoolLevelLabel(), getDistrict(), listSchoolUsersByRole(), getSchool() (+6 more)
 
 ### Community 12 - "Bulk Upload Routes"
-Cohesion: 0.06
-Nodes (27): POST(), POST(), UploadStats, POST(), UploadStats, GET(), POST(), ClassRow (+19 more)
+Cohesion: 0.07
+Nodes (21): POST(), GET(), POST(), GET(), classifyByEmail(), classifyClasses(), classifyDistricts(), classifyByEmail() (+13 more)
 
 ### Community 13 - "Prompt Decoding & Step Flow"
-Cohesion: 0.06
-Nodes (29): startWriting(), WritingIndex(), ExpositoryTChartSpec, getExpositoryTChartSpec(), STANDARD_SPEC, SUMMARY_SPEC, TChartRegion, GRAMMAR_RULES (+21 more)
+Cohesion: 0.11
+Nodes (22): FILTERS, isDerivedStatus(), StudentAssignmentsList(), DerivedStatus, deriveStatus(), getStudentAssignmentsList(), groupByStatus(), indexWritingsByAssignment() (+14 more)
 
 ### Community 14 - "Database Types"
 Cohesion: 0.07
@@ -309,191 +334,199 @@ Nodes (29): AssignmentExemplars, Assignments, AuditLog, BodyParagraphs, Candidat
 
 ### Community 15 - "Subjects & Schools Queries"
 Cohesion: 0.11
-Nodes (23): CsvImporter(), DistrictDetailPage(), Params, Schools, Subjects, schoolLevelLabel(), listClassesForSubject(), getDistrict() (+15 more)
+Nodes (18): 10. Testing, 11. Build order, 12. Non-goals (deferred), 1. Problem, 2. Decisions (locked during brainstorming), 3. Data model — migration `0031`, 4. Value scales — `lib/grade-format.ts` (pure, unit-tested), 5.1 `GradeInput` component (teacher, editable) (+10 more)
 
 ### Community 16 - "District Settings API Routes"
-Cohesion: 0.10
-Nodes (23): POST(), PUT(), POST(), PUT(), POST(), DELETE(), POST(), createSupabaseAdmin() (+15 more)
+Cohesion: 0.09
+Nodes (25): POST(), POST(), PUT(), POST(), PUT(), POST(), DELETE(), POST() (+17 more)
 
 ### Community 17 - "District/DB Debug Scripts"
-Cohesion: 0.07
-Nodes (26): checkDistricts(), { createClient }, { createClient }, debugStorage(), { createClient }, testAuthUpload(), { createClient }, testLogoServing() (+18 more)
+Cohesion: 0.12
+Nodes (15): Props, RichSourceEditor(), RenderMode, SourceTextFields(), SourceTextInitial, StoredFile, ExtractedSource, ExtractResult (+7 more)
 
 ### Community 18 - "Commentary Items (CM)"
-Cohesion: 0.09
-Nodes (19): CmKind, createPhraseCm(), createWordCm(), deleteCm(), setBestForChunk(), setBestForTs(), updateCmText(), CdSection() (+11 more)
+Cohesion: 0.29
+Nodes (4): GRAMMAR_RULES, GrammarRule, GrammarRuleExamples, GroupOrigin
 
 ### Community 19 - "Signup Approval Flow"
 Cohesion: 0.11
-Nodes (22): approveSignup(), DecisionFormState, deleteDeniedSignup(), denySignup(), getDistrictName(), getSiteUrl(), Params, logDevFallback() (+14 more)
+Nodes (23): approveSignup(), DecisionFormState, deleteDeniedSignup(), denySignup(), getDistrictName(), getSiteUrl(), Params, logDevFallback() (+15 more)
 
 ### Community 20 - "Literary CM-Dev & Decisions"
 Cohesion: 0.13
 Nodes (14): CREATE A WORKING TOPIC SENTENCE, First Draft, Generating Commentary, Here’s your first draft!, MAKING DECISIONS, STEP ONE:, STEP ONE: GATHERING CDS, STEP ONE: GATHERING CDS (+6 more)
 
 ### Community 21 - "Analytics Breakdown Components"
-Cohesion: 0.11
-Nodes (21): CriterionBreakdown(), Props, InterventionCandidates(), Props, AssignmentAnalyticsPage(), Params, formatNumber(), Props (+13 more)
+Cohesion: 0.05
+Nodes (43): CriterionBreakdown(), Props, InterventionCandidates(), Props, AssignmentAnalyticsPage(), Params, formatNumber(), Props (+35 more)
 
-### Community 22 - "Expository Guide Concepts (2024)"
-Cohesion: 0.17
-Nodes (13): FILTERS, isDerivedStatus(), StudentAssignmentsList(), getStudentAssignmentsList(), groupByStatus(), StudentAssignmentListItem, countTeacherFeedbackByWriting(), AssignmentCard() (+5 more)
+### Community 22 - "Community 22"
+Cohesion: 0.27
+Nodes (9): createSubject(), isUniqueViolation(), MANAGE_ROLES, parseSubjectForm(), SubjectFormState, updateSubject(), initialState, SubjectForm() (+1 more)
 
 ### Community 23 - "District Branding Types"
 Cohesion: 0.10
 Nodes (21): BrandingValidationError, BrandingValidationResult, DISTRICT_LOGO_NAMING, DistrictBrandingResponse, DistrictBrandingUpdate, DistrictColorTheme, DistrictLogoFile, DistrictLogoUploadConfig (+13 more)
 
 ### Community 24 - "Writing Structure Bootstrap"
-Cohesion: 0.19
-Nodes (11): EssayPartForm(), KindSelect(), KindSelectConfig, Props, SelectOption, DEFAULT_HOOK_KIND_OPTIONS, EXPOSITORY_HOOK_KIND_OPTIONS, hookKindOptions() (+3 more)
+Cohesion: 0.21
+Nodes (12): createExemplar(), Mode, ParsedFields, parseForm(), ParseResult, TEACHER_ROLES, togglePublish(), updateExemplar() (+4 more)
 
 ### Community 25 - "Assignment Authoring Actions"
 Cohesion: 0.12
-Nodes (26): AssignmentFormState, buildSourceColumns(), ChunkRatio, countStudentWritings(), createDraftAssignment(), deleteAssignment(), emptyToNull(), Mode (+18 more)
+Nodes (27): AssignmentFormState, buildSourceColumns(), cancelAssignment(), ChunkRatio, countStudentWritings(), createDraftAssignment(), deleteAssignment(), emptyToNull() (+19 more)
 
 ### Community 26 - "Final Draft Assembly"
 Cohesion: 0.11
 Nodes (23): assembleFinalDraft(), bootstrapFinalDraft(), updateFullText(), updateTitle(), AssembleButton(), ContinueBar(), countWords(), FinalDraftClient() (+15 more)
 
 ### Community 27 - "Writing Structure Bootstrap"
-Cohesion: 0.09
-Nodes (38): bootstrapGatheringSheets(), BootstrapContext, bootstrapWritingStructure(), CD_CM_MODES, ChunkRatio, CmKind, fetchSheetsForPromotion(), Mode (+30 more)
+Cohesion: 0.10
+Nodes (28): bootstrapEssayParts(), ThesisFrame, updateConclusionText(), updateIntroductionFields(), updateThesisFields(), VALID_HOOK_KINDS, VALID_THESIS_FRAMES, EssayPartForm() (+20 more)
 
-### Community 28 - "Prompt Decoding & Step Flow"
-Cohesion: 0.13
-Nodes (24): ChunkRatio, completePromptDecoding(), PromptDecodingFields, sanitize(), savePromptDecoding(), VALID_FORMS, VALID_RATIOS, advanceCurrentStep() (+16 more)
+### Community 28 - "Community 28"
+Cohesion: 0.20
+Nodes (8): PromptDecodingFields, ChunkRatio, DecodePromptStep(), FORM_LABELS, FormState, InitialFields, initialToState(), RATIO_LABELS
 
 ### Community 29 - "DevTools & Logger"
 Cohesion: 0.09
 Nodes (11): DevToolsProps, LogEntry, LoggerConfig, LogLevel, Alert, AlertThreshold, DEFAULT_ALERT_THRESHOLDS, MetricValue (+3 more)
 
 ### Community 30 - "Narrative Guide Concepts (2018)"
-Cohesion: 0.21
-Nodes (12): NotFound(), WritingLayout(), getExemplarsForStudent(), hasFinalDraftForPromotion(), getRubricScoresForWriting(), getCompletedStepKeys(), countTeacherFeedback(), FeedbackTarget (+4 more)
+Cohesion: 0.14
+Nodes (13): 10. Testing, 11. Build order, 12. Risks, 1. Problem, 2. Goals / Non-goals, 3. Anchoring model — `step_key`, 4. Data model — migration `0030`, 5. Server actions (+5 more)
 
 ### Community 31 - "Exemplars List Pages"
 Cohesion: 0.11
-Nodes (16): ExemplarsListPage(), MODE_LABELS, parseStepFilter(), SearchParams, Exemplars, isStepTag(), STEP_TAG_SET, StepTagValidation (+8 more)
+Nodes (18): ExemplarsListPage(), MODE_LABELS, parseStepFilter(), SearchParams, Exemplars, isStepTag(), STEP_TAG_LABELS, STEP_TAG_SET (+10 more)
 
 ### Community 32 - "Cross-Curriculum Example Prompts"
-Cohesion: 0.09
-Nodes (20): pinExemplar(), TEACHER_ROLES, unpinExemplar(), AssignmentForm(), AssignmentInitial, ChunkRatio, ClassPeriodOption, formatForDateTimeInput() (+12 more)
+Cohesion: 0.13
+Nodes (8): AssignmentForm(), AssignmentInitial, ChunkRatio, ClassPeriodOption, formatForDateTimeInput(), initialState, Mode, createBrowserClient()
 
 ### Community 33 - "Assignment Analytics Pages"
-Cohesion: 0.11
-Nodes (26): Params, SearchParams, AssignmentDetailPage(), submissionsBlurb(), Json, Mode, NewAssignmentPage(), VALID_MODES (+18 more)
+Cohesion: 0.20
+Nodes (13): Params, PinnedExemplarsList(), Props, AssignmentDetailPage(), submissionsBlurb(), AuthorEmbed, listPinnableForTeacher(), listPinnedForAssignment() (+5 more)
 
 ### Community 34 - "Teacher Writings Review"
-Cohesion: 0.15
-Nodes (13): listAssignmentWritings(), LABELS, STYLES, TeacherStatusBadge(), WritingStatus, activityLine(), AssignmentWritingsPage(), formatRelative() (+5 more)
+Cohesion: 0.25
+Nodes (9): startWriting(), WritingIndex(), getStepByKey(), AssignmentRow, GetOrCreateResult, getOrCreateWriting(), getWriting(), WritingForStepEngine (+1 more)
 
 ### Community 35 - "Discovery & Counterargument Panes"
 Cohesion: 0.27
 Nodes (7): createSubjectClass(), isUniqueViolation(), MANAGE_ROLES, SubjectClassFormState, AddSubjectClassForm(), initialState, TeacherOption
 
 ### Community 36 - "Narrative T-Chart & BP Labels"
-Cohesion: 0.33
-Nodes (7): createAnonClient(), createServiceRoleClient(), createUserClient(), anonClient, IDS, svc, TEST
+Cohesion: 0.29
+Nodes (6): ExpositoryTChartSpec, getExpositoryTChartSpec(), STANDARD_SPEC, SUMMARY_SPEC, TChartRegion, ChunkRatio
 
 ### Community 39 - "NPM Dependencies"
 Cohesion: 0.08
 Nodes (26): dependencies, autoprefixer, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, dompurify, dotenv, lodash-es (+18 more)
 
 ### Community 40 - "Enrollment & School Users"
-Cohesion: 0.25
-Nodes (4): StepResolutionContext, computeGate(), GateResult, ShapingChunkData
+Cohesion: 0.09
+Nodes (20): CmKind, createPhraseCm(), createWordCm(), deleteCm(), setBestForChunk(), setBestForTs(), updateCmText(), CdSection() (+12 more)
 
 ### Community 41 - "Roster Import"
-Cohesion: 0.12
-Nodes (15): generatePassword(), HEADER_ALIASES, ImportResult, importRoster(), ImportRowError, ParseError, ParseResult, parseRosterFile() (+7 more)
+Cohesion: 0.17
+Nodes (11): File Structure, Per-Section Teacher Feedback Implementation Plan, Self-Review (completed), Task 1: Migration 0030 + Database type, Task 2: `groupSectionFeedback` pure helper (TDD), Task 3: Surface `step_key` in the feedback query, Task 4: `upsertSectionFeedback` action, Task 5: `SectionFeedbackNote` component (+3 more)
 
 ### Community 42 - "Auth Fix Docs (archive)"
 Cohesion: 0.16
 Nodes (21): Analytics Authentication Fix, AuthCache (lib/auth-cache.ts), Authentication System Hotfix Applied, Authentication Loop Fix, Authentication System Complete, Authentication Flow Verification Report, AuthProvider component, AuthProvider Error Fix (hoisting) (+13 more)
 
 ### Community 43 - "Commentary Items (CM)"
-Cohesion: 0.10
-Nodes (36): CmDevBpPane(), CmDevClient(), computeGate(), GateResult, Props, computeGate(), DecisionsClient(), GateResult (+28 more)
+Cohesion: 0.14
+Nodes (20): AnnotateTextClient(), AnnotationForm(), AnnotationFormPayload, Props, ANNOTATION_KIND_ORDER, ANNOTATION_KINDS, AnnotationKind, AnnotationKindConfig (+12 more)
 
 ### Community 44 - "NPM Scripts"
 Cohesion: 0.09
 Nodes (23): scripts, build, build:analyze, build:debug, build:trace, clean, clean:all, db:check (+15 more)
 
 ### Community 45 - "Dashboard Pages"
-Cohesion: 0.17
-Nodes (10): AssignmentsPage(), ClassesPage(), DashboardHome(), getCurrentDistrict(), getCurrentSchool(), JswpRole, requireUser(), getTeacherAssignments() (+2 more)
+Cohesion: 0.12
+Nodes (28): completeStepAndAdvance(), CmDevClient(), computeGate(), GateResult, Props, DecisionsBpPane(), computeGate(), DecisionsClient() (+20 more)
 
 ### Community 46 - "Source Text Editor"
-Cohesion: 0.12
-Nodes (13): Props, RichSourceEditor(), RenderMode, SourceTextFields(), SourceTextInitial, StoredFile, ExtractedSource, ExtractResult (+5 more)
+Cohesion: 0.18
+Nodes (16): createSchool(), isUniqueViolation(), MANAGE_ROLES, parseSchoolForm(), SchoolFormState, updateSchool(), validate(), initialState (+8 more)
 
 ### Community 47 - "Writing Layout & Rubric Scores"
-Cohesion: 0.20
-Nodes (12): RubricScores, ExemplarForStudent, RubricScoreRow, ExemplarReference(), Props, Props, RubricBreakdown(), formatDate() (+4 more)
+Cohesion: 0.15
+Nodes (15): navigateToStep(), submitWriting(), createSuperAdmin(), CreateSuperAdminState, AnnotationKind, createAnnotation(), CreateAnnotationInput, deleteAnnotation() (+7 more)
 
 ### Community 48 - "Performance Cache"
 Cohesion: 0.14
 Nodes (3): CacheEntry, PerformanceCache, SessionCache
 
 ### Community 49 - "User Guide: Writing Flows"
-Cohesion: 0.22
-Nodes (9): ExemplarFormState, initialState, Mode, MODES, PrefillFromWriting, Props, STEP_TAG_LABELS, STEP_TAG_VALUES (+1 more)
+Cohesion: 0.23
+Nodes (11): createDistrict(), DistrictFormState, emptyToNull(), isUniqueViolation(), ParsedDistrict, parseDistrictForm(), updateDistrict(), validate() (+3 more)
 
 ### Community 50 - "MCP Server Settings"
 Cohesion: 0.16
 Nodes (19): BRAVE_API_KEY, DATABASE_URL, FASTMCP_LOG_LEVEL, GITHUB_PERSONAL_ACCESS_TOKEN, uvx, mcp-server-aws-docs, mcp-server-brave-search, mcp-server-filesystem (+11 more)
 
 ### Community 51 - "Shaping Query Types"
-Cohesion: 0.20
-Nodes (10): ChunkOutputData, ChunkRatio, CmKind, NarrativeKind, NarrativeSubject, RawBp, RawShapingSheet, RawTChart (+2 more)
+Cohesion: 0.17
+Nodes (16): ClassDetailPage(), Params, Classes, Subjects, listPeriodsForClass(), ClassListRow, getClass(), listClassesForSubject() (+8 more)
+
+### Community 52 - "Monitoring System"
+Cohesion: 0.31
+Nodes (7): pinExemplar(), TEACHER_ROLES, unpinExemplar(), ExemplarPicker(), MODE_LABELS, Props, PinnableExemplarOption
 
 ### Community 53 - "TypeScript Config"
 Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 54 - "Shaping Role Shapes"
-Cohesion: 0.12
-Nodes (10): ROLE_SPECS, RoleShapeLabel(), RoleSpec, ShapeRole, Mode, REVISION_MOVES, RevisionMovesChecklist(), ROLE_COLOR_VAR (+2 more)
+Cohesion: 0.28
+Nodes (7): upsertSectionFeedback(), formatGradeLabel(), GradeFormat, isValidGrade(), LETTER_GRADES, GradeInput(), OverallGradeControl()
 
 ### Community 55 - "Auth Actions & Forms"
-Cohesion: 0.17
-Nodes (12): AuthFormState, getSiteUrl(), isValidEmail(), requestResetAction(), signInAction(), signUpAction(), updatePasswordAction(), initialState (+4 more)
+Cohesion: 0.36
+Nodes (6): HomePage(), getCurrentUser(), getRedirectPath(), LoginPage(), PendingPage(), SignupPage()
 
 ### Community 56 - "Rubric Grading & Editor"
-Cohesion: 0.11
-Nodes (18): gradeWritingByRubric(), RubricScoreInput, TEACHER_ROLES, gradeWriting(), returnWriting(), TEACHER_ROLES, RubricEditor(), DEFAULT_LEVELS (+10 more)
+Cohesion: 0.19
+Nodes (11): gradeWriting(), returnWriting(), TEACHER_ROLES, Json, loadRubric(), AssignmentForEdit, WritingForTeacherReview, Props (+3 more)
 
 ### Community 57 - "Teacher Feedback"
-Cohesion: 0.22
-Nodes (12): addWritingFeedback(), deleteFeedback(), editFeedback(), markFeedbackResolved(), TEACHER_ROLES, FeedbackItemRow, FeedbackItem(), formatAuthor() (+4 more)
+Cohesion: 0.20
+Nodes (13): addWritingFeedback(), deleteFeedback(), editFeedback(), markFeedbackResolved(), TEACHER_ROLES, countTeacherFeedback(), FeedbackItemRow, FeedbackTarget (+5 more)
 
 ### Community 58 - "User Guide: Portals & Drafts"
 Cohesion: 0.22
 Nodes (8): Expository Graphic Organizer — Layout Specs, Gathering CDs — 2+:1  *(reference only — see note below)*, Paragraph Form  *(chunk 4.5d-3)*, Shaping Sheet — 2+:1  *(chunk 4.5d-3)*, Shaping Sheet — 3+:0  *(chunk 4.5d-3)*, Shared — JSWP color + shape coding, T-Chart — 2+:1  *(chunk 4.5d-2)*, T-Chart — 3+:0  *(chunk 4.5d-2)*
 
 ### Community 59 - "Shaping BP Panes"
-Cohesion: 0.13
-Nodes (9): ShapingBpData, CdCmShapingBpPane(), DASH, ELLIPSE_LINES, NarrativeShapingBpPane(), TRAPEZOID_LINES, TRAPEZOID_POINTS, Mode (+1 more)
+Cohesion: 0.17
+Nodes (11): gradeWritingByRubric(), RubricScoreInput, TEACHER_ROLES, RubricEditor(), DEFAULT_LEVELS, newCriterion(), Rubric, RubricCriterion (+3 more)
 
 ### Community 60 - "Assignment Analytics Pages"
 Cohesion: 0.36
 Nodes (7): CATEGORY_LABELS, Expected, LiveInventory, main(), matchAll(), parseMigration(), stripComments()
 
-### Community 61 - "Narrative T-Chart & BP Labels"
-Cohesion: 0.19
-Nodes (12): failed(), parseImport(), runImport(), normalizeHeader(), normalizeRow(), ReadResult, readSpreadsheet(), sanitizeCell() (+4 more)
+### Community 61 - "Community 61"
+Cohesion: 0.20
+Nodes (7): ErrorContext, ErrorContextType, ErrorNotification, ErrorNotificationCardProps, ErrorNotifications(), ErrorProviderProps, useErrorHandler()
+
+### Community 62 - "Error Provider & Notifications"
+Cohesion: 0.15
+Nodes (12): DeleteAssignmentButton(), AssignmentsPage(), PublishToggleButton(), ClassesPage(), DashboardHome(), getCurrentDistrict(), getCurrentSchool(), JswpRole (+4 more)
 
 ### Community 63 - "Color Toolbar & Exemplar Content"
-Cohesion: 0.15
-Nodes (16): ARGUMENTATION_ONLY, COLOR_VAR_BY_CLASS, ColorToolbar(), Mode, Props, SYMBOL_BY_CLASS, ALLOWED_ATTR, ALLOWED_TAGS (+8 more)
+Cohesion: 0.17
+Nodes (13): ARGUMENTATION_ONLY, COLOR_VAR_BY_CLASS, Mode, Props, SYMBOL_BY_CLASS, ALLOWED_ATTR, ALLOWED_TAGS, DOMPurify (+5 more)
 
 ### Community 64 - "Dev Dependencies"
 Cohesion: 0.12
 Nodes (17): devDependencies, eslint, eslint-config-next, jsdom, @next/bundle-analyzer, postcss, @svgr/webpack, tailwindcss (+9 more)
 
 ### Community 65 - "District Admin Pages"
-Cohesion: 0.11
-Nodes (19): Clone-forward on writing return, Combined view refetches annotations 3x per page render, ⚠ Confirm expository essay-frame wording with Dr. Louis (gate before master), Consolidate live-count textarea pattern, Edit a school admin's kind after creation, Exemplar step-match uses persisted current_step, not URL [step], Expository step subLabels are off-by-one for 3+:0, Implement Dr. Louis's 15 Grammar Rules (+11 more)
+Cohesion: 0.10
+Nodes (20): Clone-forward on writing return, Combined view refetches annotations 3x per page render, ⚠ Confirm expository essay-frame wording with Dr. Louis (gate before master), Consolidate live-count textarea pattern, Edit a school admin's kind after creation, Exemplar step-match uses persisted current_step, not URL [step], Expository step subLabels are off-by-one for 3+:0, Feedback-area grading: error feedback + deferred extensions (+12 more)
 
 ### Community 66 - "Root Layouts & Branding"
 Cohesion: 0.21
@@ -504,68 +537,68 @@ Cohesion: 0.31
 Nodes (9): Source Text Architecture, Artifact-carried structure (no normalized tables), assignment-sources bucket (school-scoped), mammoth (.docx to HTML), Migration 0025 (source columns), One Substrate, Two Renderers, pdfjs-dist, source_render_mode (pdf/rich/plain) (+1 more)
 
 ### Community 68 - "District Actions & Form"
-Cohesion: 0.16
-Nodes (15): createDistrict(), DistrictFormState, emptyToNull(), isUniqueViolation(), ParsedDistrict, parseDistrictForm(), updateDistrict(), validate() (+7 more)
+Cohesion: 0.27
+Nodes (8): KindSelect(), KindSelectConfig, Props, AutoSaveInput(), BaseProps, InputProps, Props, TextareaProps
 
 ### Community 69 - "Exemplar Detail Pages"
-Cohesion: 0.16
-Nodes (10): deleteExemplar(), MODE_LABELS, Params, ExemplarRender(), Props, DeleteExemplarButton(), Props, ExemplarDetailPage() (+2 more)
+Cohesion: 0.20
+Nodes (8): deleteExemplar(), Params, DeleteExemplarButton(), Props, ExemplarDetailPage(), MODE_LABELS, formatAuthorName(), getForViewer()
 
 ### Community 70 - "Exemplar Form"
-Cohesion: 0.17
-Nodes (15): createExemplar(), Mode, ParsedFields, parseForm(), ParseResult, TEACHER_ROLES, togglePublish(), updateExemplar() (+7 more)
+Cohesion: 0.21
+Nodes (10): ExemplarFormState, ColorToolbar(), ExemplarForm(), initialState, Mode, MODES, PrefillFromWriting, Props (+2 more)
 
 ### Community 71 - "School Actions & Form"
-Cohesion: 0.18
-Nodes (16): createSchool(), isUniqueViolation(), MANAGE_ROLES, parseSchoolForm(), SchoolFormState, updateSchool(), validate(), initialState (+8 more)
+Cohesion: 0.10
+Nodes (17): CounterargumentBpData, CounterargumentBpPane(), computeGate(), CounterargumentClient(), GateResult, Props, ShapingBpData, CdCmShapingBpPane() (+9 more)
 
 ### Community 72 - "Auth System Docs (history)"
 Cohesion: 0.16
 Nodes (15): User Roles (super/district/school admin, teacher, student), Authentication Flow Verification Checklist, Authentication & Session Management Documentation, OptimizedAuthProvider, Centralized Redirect Handler (lib/redirect-handler.ts), LoadingStates Components, NetworkRecoveryModal, Phase 3: User Experience Improvements (+7 more)
 
 ### Community 73 - "Student Shell & Header"
-Cohesion: 0.24
-Nodes (8): StudentHeader(), StudentShell(), StudentShellBranding, StudentShellProfile, NAV_ITEMS, StudentSidebar(), StudentUserMenu(), StudentLayout()
+Cohesion: 0.22
+Nodes (9): signOutAction(), StudentHeader(), StudentShell(), StudentShellBranding, StudentShellProfile, NAV_ITEMS, StudentSidebar(), StudentUserMenu() (+1 more)
 
 ### Community 74 - "Shaping Actions & Pick-n-Stitch"
-Cohesion: 0.16
-Nodes (11): CD_CM_MODES, PickNStitchFlag, setCmFlag(), ShapingSheetUpdates, updateChunkOutputCdSentences(), updateChunkOutputCmSentences(), updateShapingSheet(), ShapingCmData (+3 more)
+Cohesion: 0.14
+Nodes (24): bootstrapGatheringSheets(), JswpMode, getGatheringSheetsAndCandidates(), getCommentaryByWriting(), getPromptDecoding(), PromptDecodingRow, getAnnotations(), AnnotateTextStep() (+16 more)
 
 ### Community 75 - "Mode Circle Images"
 Cohesion: 0.29
 Nodes (14): Argumentation Mode Circle (CMYK), Expository Mode Circle (CMYK), Literary Mode Circle (CMYK), Narrative Mode Circle (CMYK), Head with Open Book (Narrative Emblem), JSWP Color Code, Mode Badge Icon Motif, Owl (Expository Emblem) (+6 more)
 
 ### Community 76 - "Assignment Authoring Actions"
-Cohesion: 0.43
-Nodes (5): StepConfig, decorateSteps(), StepSidebar(), StepSidebarProps, StepUI
+Cohesion: 0.12
+Nodes (21): BootstrapContext, bootstrapWritingStructure(), CD_CM_MODES, ChunkRatio, CmKind, fetchSheetsForPromotion(), Mode, SheetForPromotion (+13 more)
 
 ### Community 77 - "Backlog & Fidelity Docs"
 Cohesion: 0.27
 Nodes (9): Backlog, Deferred chunk work, Expository Guide-Fidelity Plan, Chunk 4.5f-2 Decode Background/Trigger/Task (migration 0022), Chunk 4.5f-4 Mode-Aware Thesis + Intro Frames, Chunk 4.5f-5 Shaping Five-Move Checklist (migration 0024), 2024 Expository Teacher's Guide (Third Edition), Chunk 4.5f-3 Annotate Main Idea (migration 0023) (+1 more)
 
 ### Community 78 - "Exemplar Actions"
-Cohesion: 0.32
-Nodes (3): initialState, SchoolOption, SignupForm()
+Cohesion: 0.15
+Nodes (15): bootstrapShapingSheets(), ChunkOutputData, ChunkRatio, CmKind, getShapingData(), NarrativeKind, NarrativeSubject, RawBp (+7 more)
 
 ### Community 80 - "Class Detail & Roster"
 Cohesion: 0.19
 Nodes (9): Params, ClassDetailPage(), AssignmentRow, ClassPeriodRow, ClassPeriodWithRoster, EnrollmentStudentRow, getClassPeriodWithRoster(), RosterStudent (+1 more)
 
 ### Community 81 - "Narrative T-Chart & BP Labels"
-Cohesion: 0.05
-Nodes (33): updateTChart(), DiscoveryBpPane(), NarrativeKind, NarrativeSubject, computeGate(), DiscoveryClient(), GateResult, Props (+25 more)
+Cohesion: 0.27
+Nodes (9): ClassPeriods, Params, PeriodDetailPage(), TeacherAssignment(), AssignedTeacher, ClassPeriodListRow, getClassPeriod(), listAssignedTeachers() (+1 more)
 
 ### Community 82 - "Analytics Setup Debug"
 Cohesion: 0.24
 Nodes (11): checkAnalyticsTables(), checkExistingSessions(), checkStudentUser(), createAnalyticsSchema(), { createClient }, envPath, fixRLSPolicies(), fs (+3 more)
 
-### Community 84 - "Classes & Subjects Actions"
-Cohesion: 0.50
-Nodes (3): POST(), UploadStats, ClassRow
+### Community 84 - "Community 84"
+Cohesion: 0.12
+Nodes (11): ARGUMENTATION_STEPS, EXPOSITORY_STEPS, JSWP_COLORS, LITERARY_STEPS, ModeConfig, ModeIcon, NARRATIVE_STEPS, StepResolutionContext (+3 more)
 
-### Community 85 - "Decode Prompt Step UI"
-Cohesion: 0.50
-Nodes (3): POST(), UploadStats, StudentRow
+### Community 85 - "Community 85"
+Cohesion: 0.47
+Nodes (4): DistrictsPage(), Districts, DistrictListRow, listDistricts()
 
 ### Community 86 - "District Branding Docs"
 Cohesion: 0.20
@@ -588,12 +621,12 @@ Cohesion: 0.27
 Nodes (11): POC: Unified Gathering CDs Form, Assignment Configs System (lib/assignment-configs), USE_UNIFIED_GATHERING_CDS_FORM flag, Selection Mode (single vs multi-select), UnifiedGatheringCDsForm, Testing Checklist: Unified Gathering CDs Form, Testing Checklist: Unified Shaping Components, UnifiedNarrativeShapingSequence (+3 more)
 
 ### Community 91 - "Landing & Auth Pages"
-Cohesion: 0.36
-Nodes (6): HomePage(), getCurrentUser(), getRedirectPath(), LoginPage(), PendingPage(), SignupPage()
+Cohesion: 0.31
+Nodes (7): config, DistrictBranding, extractSubdomain(), middleware(), resolveSubdomain(), subdomainCache, createMiddlewareClient()
 
 ### Community 92 - "Teacher Shell & Sidebar"
-Cohesion: 0.29
-Nodes (7): signOutAction(), TeacherHeader(), ShellBranding, ShellProfile, NAV_ITEMS, TeacherSidebar(), UserMenu()
+Cohesion: 0.36
+Nodes (6): TeacherHeader(), ShellBranding, ShellProfile, NAV_ITEMS, TeacherSidebar(), UserMenu()
 
 ### Community 93 - "Auth Error Boundary"
 Cohesion: 0.22
@@ -615,10 +648,6 @@ Nodes (9): checkForLogPatterns(), handleAuthLog(), handleErrorLog(), handlePerfo
 Cohesion: 0.33
 Nodes (9): adminSupabase, { createClient }, displayNextSteps(), main(), simulateAuthenticatedUserQuery(), testDistrictAccess(), testSchoolAccess(), testUserProfileQuery() (+1 more)
 
-### Community 98 - "Classes & Subjects Actions"
-Cohesion: 0.16
-Nodes (14): navigateToStep(), createSuperAdmin(), CreateSuperAdminState, AnnotationKind, createAnnotation(), CreateAnnotationInput, deleteAnnotation(), updateAnnotation() (+6 more)
-
 ### Community 99 - "Expository Organizer Specs"
 Cohesion: 0.33
 Nodes (6): 1.1 — Sign in, 1.2 — Start a new assignment, 1.3 — Fill in the form, 1.4 — Save the draft, 1.5 — Publish, 1. Teacher: create the assignment
@@ -627,9 +656,9 @@ Nodes (6): 1.1 — Sign in, 1.2 — Start a new assignment, 1.3 — Fill in the 
 Cohesion: 0.40
 Nodes (5): 13.1 — Open the writing, 13.2 — Walk through every artifact, 13.3 — Score with the rubric, 13.4 — Return to student, 13. Teacher: review and grade
 
-### Community 102 - "Subdomain Middleware"
-Cohesion: 0.31
-Nodes (7): config, DistrictBranding, extractSubdomain(), middleware(), resolveSubdomain(), subdomainCache, createMiddlewareClient()
+### Community 102 - "Community 102"
+Cohesion: 0.12
+Nodes (21): createCandidate(), deleteCandidate(), reorderSelectedCandidates(), setCandidateSelected(), setCandidateSide(), updateCandidateText(), updateSheetTaskPortion(), CandidateRow() (+13 more)
 
 ### Community 103 - "Super Admin Design"
 Cohesion: 0.29
@@ -643,9 +672,9 @@ Nodes (4): auth_user_*() RLS Helper Functions, audit-chunk Command, RLS Helper C
 Cohesion: 0.38
 Nodes (7): Legacy Anti-Patterns, Pedagogical Artifacts as First-Class Tables, JSWP Legacy Code Review Context, student_assignment_progress JSONB blob, 5-Tier Role-Based Access Control, Legacy RLS Hierarchical Access Control, Legacy Testing Coverage Gap (2/10)
 
-### Community 106 - "Once-You-Lose-It Rule"
-Cohesion: 0.38
-Nodes (5): contentWords(), findRepeatedContentWords(), RepeatedWord, STOPWORDS, ChunkSection()
+### Community 106 - "Community 106"
+Cohesion: 0.08
+Nodes (21): CD_CM_MODES, PickNStitchFlag, setCmFlag(), ShapingSheetUpdates, updateChunkOutputCdSentences(), updateChunkOutputCmSentences(), updateShapingSheet(), ROLE_SPECS (+13 more)
 
 ### Community 107 - "Landing & Auth Pages"
 Cohesion: 0.40
@@ -655,9 +684,13 @@ Nodes (5): 14. Verification checklist, Data integrity (run in Supabase SQL edito
 Cohesion: 0.25
 Nodes (5): LoadingSpinner, LoadingState, LoadingStateProps, RedirectingStateProps, RoleMismatchProps
 
-### Community 109 - "Shaping Sheet Step"
-Cohesion: 0.38
-Nodes (6): bootstrapShapingSheets(), getShapingData(), ShapingClient(), Mode, Props, ShapingSheetStep()
+### Community 109 - "Community 109"
+Cohesion: 0.15
+Nodes (12): Feedback-Area Grading Implementation Plan, File Structure, Self-Review (completed), Task 1: Migration 0031 + types, Task 2: `lib/grade-format.ts` (TDD), Task 3: Queries — surface grade fields, Task 4: Actions — grade mutations + delete-guard, Task 5: `GradeInput` component (+4 more)
+
+### Community 110 - "Community 110"
+Cohesion: 0.09
+Nodes (21): checkDistrictBrandingColumns(), District, checkDistricts(), { createClient }, { createClient }, debugStorage(), createAnonClient(), createServiceRoleClient() (+13 more)
 
 ### Community 111 - "Session Triggers Debug"
 Cohesion: 0.29
@@ -727,25 +760,29 @@ Nodes (4): compat, __dirname, eslintConfig, __filename
 Cohesion: 0.40
 Nodes (4): { createClient }, executeMigration(), fs, path
 
-### Community 130 - "Verify Migration Script"
-Cohesion: 0.60
-Nodes (4): { createClient }, runFullVerification(), testFormCompatibility(), verifyMigrationComplete()
+### Community 130 - "Community 130"
+Cohesion: 0.24
+Nodes (8): SearchParams, MODES, ICONS, ModePicker(), Mode, NewAssignmentPage(), VALID_MODES, getTeacherClassPeriodsForPicker()
 
 ### Community 131 - "Seed Auth Script"
 Cohesion: 0.40
 Nodes (3): SEED_USERS, SeedUser, supabase
 
-### Community 133 - "Analytics Troubleshooting Docs"
-Cohesion: 0.83
-Nodes (4): Analytics Troubleshooting Guide, SessionTrackingProvider, user_sessions table, School Analytics Fix
+### Community 133 - "Community 133"
+Cohesion: 0.22
+Nodes (14): ChunkRatio, completePromptDecoding(), sanitize(), savePromptDecoding(), VALID_FORMS, VALID_RATIOS, advanceCurrentStep(), markStepComplete() (+6 more)
+
+### Community 134 - "Community 134"
+Cohesion: 0.31
+Nodes (7): revalidateFor(), setGradeFormat(), setOverallGrade(), setSectionGrade(), TEACHER_ROLES, GradeFormatBar(), OPTIONS
 
 ### Community 135 - "Bulk Upload Routes"
 Cohesion: 0.40
 Nodes (5): 6.1 — Body Paragraph 1 — Physical Health, 6.2 — Body Paragraph 2 — Mental Health, 6.3 — Body Paragraph 3 — Academic & Social, 6.4 — Behavior to verify (per BP), 6. Step 4 — Completing the T-Chart 📋
 
 ### Community 136 - "Community 136"
-Cohesion: 0.50
-Nodes (3): checkDistrictBrandingColumns(), District, Tables
+Cohesion: 0.29
+Nodes (9): applyRLSPolicies(), { createClient }, executeSQL(), fs, main(), path, supabase, testWithAuthenticatedUser() (+1 more)
 
 ### Community 137 - "Brand Logo Images"
 Cohesion: 1.00
@@ -779,6 +816,10 @@ Nodes (3): District Branding, District Logo Placeholder SVG, Generic No-Image Pl
 Cohesion: 0.50
 Nodes (4): 7.1 — Body Paragraph 1 — Polished sentences, 7.2 — Body Paragraphs 2 & 3 — Polished sentences, 7.3 — Behavior to verify, 7. Step 5 — Editing & Revising on the Shaping Sheet ✂️
 
+### Community 164 - "Community 164"
+Cohesion: 0.39
+Nodes (6): MODE_LABELS, ctaLabelFor(), formatDue(), StudentAssignmentDetail(), StartWritingButton(), getStudentAssignmentDetail()
+
 ### Community 180 - "Community 180"
 Cohesion: 0.67
 Nodes (3): 12.1 — Final assembly preview, 12.2 — Submit, 12. Step 10 — Final Draft 📄
@@ -787,45 +828,109 @@ Nodes (3): 12.1 — Final assembly preview, 12.2 — Submit, 12. Step 10 — Fin
 Cohesion: 0.67
 Nodes (3): 2.1 — Sign in, 2.2 — Start the writing, 2. Student: open the assignment
 
-### Community 182 - "Community 182"
-Cohesion: 0.21
-Nodes (8): EnrollFormState, MANAGE_ROLES, UnenrollState, unenrollStudent(), enrollInitial, StudentEnrollment(), unenrollInitial, EnrolledStudent
-
 ### Community 183 - "Community 183"
-Cohesion: 0.09
-Nodes (30): createAndEnrollStudent(), createSchoolAdmin(), createSchoolUser(), createTeacher(), AdminHome(), AdministratorDashboard(), CounselorDashboard(), ADMIN_KINDS (+22 more)
+Cohesion: 0.10
+Nodes (27): createSchoolAdmin(), createSchoolUser(), createTeacher(), AdminHome(), AdministratorDashboard(), CounselorDashboard(), ADMIN_KINDS, adminDashboardPath() (+19 more)
 
 ### Community 184 - "Community 184"
 Cohesion: 0.67
 Nodes (3): 4.1 — Annotations to create, 4.2 — Behavior to verify, 4. Step 2 — Reading & Annotating the Text 📑
 
+### Community 185 - "Community 185"
+Cohesion: 0.38
+Nodes (5): ExemplarRender(), Props, ExemplarForStudent, ExemplarReference(), Props
+
 ### Community 187 - "Community 187"
-Cohesion: 0.14
-Nodes (18): ClassFormState, createClass(), isUniqueViolation(), MANAGE_ROLES, updateClass(), createSubject(), isUniqueViolation(), MANAGE_ROLES (+10 more)
+Cohesion: 0.31
+Nodes (6): GroupedFeedback, groupSectionFeedback(), hasFinalDraftForPromotion(), getWritingForTeacherReview(), Params, TeacherWritingReviewPage()
 
 ### Community 188 - "Community 188"
-Cohesion: 0.12
-Nodes (20): CounterargumentBpData, CounterargumentBpPane(), computeGate(), CounterargumentClient(), GateResult, Props, Props, CounterargumentStep() (+12 more)
+Cohesion: 0.60
+Nodes (4): { createClient }, runFullVerification(), testFormCompatibility(), verifyMigrationComplete()
+
+### Community 189 - "Community 189"
+Cohesion: 0.50
+Nodes (3): POST(), UploadStats, StudentRow
+
+### Community 190 - "Community 190"
+Cohesion: 0.38
+Nodes (5): contentWords(), findRepeatedContentWords(), RepeatedWord, STOPWORDS, ChunkSection()
+
+### Community 194 - "Community 194"
+Cohesion: 0.83
+Nodes (4): Analytics Troubleshooting Guide, SessionTrackingProvider, user_sessions table, School Analytics Fix
+
+### Community 200 - "Community 200"
+Cohesion: 0.17
+Nodes (12): AuthFormState, getSiteUrl(), isValidEmail(), requestResetAction(), signInAction(), signUpAction(), updatePasswordAction(), initialState (+4 more)
+
+### Community 204 - "Community 204"
+Cohesion: 0.18
+Nodes (13): AssignmentState, assignTeacher(), ClassPeriodFormState, createClassPeriod(), isUniqueViolation(), MANAGE_ROLES, unassignTeacher(), updateClassPeriod() (+5 more)
+
+### Community 205 - "Community 205"
+Cohesion: 0.32
+Nodes (3): initialState, SchoolOption, SignupForm()
+
+### Community 206 - "Community 206"
+Cohesion: 0.31
+Nodes (8): WritingLayout(), getExemplarsForStudent(), getRubricScoresForWriting(), getCompletedStepKeys(), listFeedback(), WritingMode, WritingModeContext, WritingModeProvider()
+
+### Community 209 - "Community 209"
+Cohesion: 0.23
+Nodes (10): RubricScores, RubricScoreRow, FeedbackPanel(), Props, RubricBreakdown(), formatDate(), MODE_LABELS, StatusBanner() (+2 more)
+
+### Community 210 - "Community 210"
+Cohesion: 0.67
+Nodes (3): SearchParams, NewExemplarPage(), getWritingPrefillData()
+
+### Community 211 - "Community 211"
+Cohesion: 0.05
+Nodes (29): updateTChart(), DiscoveryBpPane(), NarrativeKind, NarrativeSubject, computeGate(), DiscoveryClient(), GateResult, Props (+21 more)
+
+### Community 212 - "Community 212"
+Cohesion: 0.43
+Nodes (5): StepConfig, decorateSteps(), StepSidebar(), StepSidebarProps, StepUI
+
+### Community 213 - "Community 213"
+Cohesion: 0.25
+Nodes (6): ImportCredential, schoolAdminsDescriptor, JswpRole, makeSchoolUserDescriptor(), SchoolUserRow, teachersDescriptor
+
+### Community 214 - "Community 214"
+Cohesion: 0.50
+Nodes (3): POST(), UploadStats, ClassRow
+
+### Community 215 - "Community 215"
+Cohesion: 0.50
+Nodes (3): POST(), UploadStats, ClassRow
+
+### Community 217 - "Community 217"
+Cohesion: 0.50
+Nodes (3): POST(), UploadStats, StudentRow
+
+### Community 224 - "Community 224"
+Cohesion: 0.31
+Nodes (7): ClassFormState, createClass(), isUniqueViolation(), MANAGE_ROLES, updateClass(), ClassInitial, initialState
 
 ## Knowledge Gaps
-- **815 isolated node(s):** `Params`, `name`, `version`, `private`, `build` (+810 more)
+- **872 isolated node(s):** `Feedback-area grading: error feedback + deferred extensions`, `School-admin dashboards: real content per kind`, `Edit a school admin's kind after creation`, `Per-row `admin_kind` column in the school-admins CSV import`, `Expository step subLabels are off-by-one for 3+:0` (+867 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **32 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **37 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `createServerClient()` connect `Bulk Upload Routes` to `CSV Import Descriptors`, `Paragraph Form Composition`, `T-Chart & Chunks`, `Student Progress Views`, `Essay Parts (Intro/Thesis/Conclusion)`, `Student Assignments List`, `Gather CDs & Topic-Sentence Dev`, `Class & Period Pages`, `Prompt Decoding & Step Flow`, `Subjects & Schools Queries`, `District Settings API Routes`, `Commentary Items (CM)`, `Signup Approval Flow`, `Analytics Breakdown Components`, `Expository Guide Concepts (2024)`, `Assignment Authoring Actions`, `Final Draft Assembly`, `Writing Structure Bootstrap`, `Prompt Decoding & Step Flow`, `Narrative Guide Concepts (2018)`, `Exemplars List Pages`, `Cross-Curriculum Example Prompts`, `Assignment Analytics Pages`, `Teacher Writings Review`, `Discovery & Counterargument Panes`, `Roster Import`, `Commentary Items (CM)`, `Dashboard Pages`, `Writing Layout & Rubric Scores`, `Shaping Query Types`, `Community 182`, `Auth Actions & Forms`, `Community 183`, `Rubric Grading & Editor`, `Teacher Feedback`, `Community 187`, `Community 188`, `District Actions & Form`, `Exemplar Detail Pages`, `Exemplar Form`, `School Actions & Form`, `Shaping Actions & Pick-n-Stitch`, `Class Detail & Roster`, `Narrative T-Chart & BP Labels`, `Classes & Subjects Actions`, `Decode Prompt Step UI`, `Landing & Auth Pages`, `Teacher Shell & Sidebar`, `Classes & Subjects Actions`, `Subdomain Middleware`, `Shaping Sheet Step`?**
-  _High betweenness centrality (0.169) - this node is a cross-community bridge._
-- **Why does `createServerSupabaseClient()` connect `District Settings API Routes` to `Community 164`, `Bulk Upload Routes`, `Analytics API & Error Client`?**
-  _High betweenness centrality (0.081) - this node is a cross-community bridge._
-- **Why does `createClient()` connect `District/DB Debug Scripts` to `Cross-Curriculum Example Prompts`, `Execute Migration Script`, `Verify Migration Script`, `RLS Verify Scripts`, `Community 164`, `Narrative T-Chart & BP Labels`, `Bulk Upload Routes`, `Community 136`, `Teacher Writings Review`, `District Settings API Routes`, `RLS Manual Scripts`, `Community 187`, `Upload Test Script`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
+- **Why does `createServerClient()` connect `Bulk Upload Routes` to `CSV Import Descriptors`, `Paragraph Form Composition`, `T-Chart & Chunks`, `Community 130`, `Essay Parts (Intro/Thesis/Conclusion)`, `Community 133`, `Community 134`, `Student Progress Views`, `Gather CDs & Topic-Sentence Dev`, `Class & Period Pages`, `Prompt Decoding & Step Flow`, `District Settings API Routes`, `Signup Approval Flow`, `Analytics Breakdown Components`, `Community 22`, `Writing Structure Bootstrap`, `Assignment Authoring Actions`, `Final Draft Assembly`, `Writing Structure Bootstrap`, `Exemplars List Pages`, `Assignment Analytics Pages`, `Teacher Writings Review`, `Discovery & Counterargument Panes`, `Community 164`, `Enrollment & School Users`, `Dashboard Pages`, `Source Text Editor`, `Writing Layout & Rubric Scores`, `User Guide: Writing Flows`, `Shaping Query Types`, `Monitoring System`, `Community 183`, `Rubric Grading & Editor`, `Teacher Feedback`, `Auth Actions & Forms`, `Shaping BP Panes`, `Community 187`, `Community 189`, `Error Provider & Notifications`, `Exemplar Detail Pages`, `Community 200`, `Student Shell & Header`, `Shaping Actions & Pick-n-Stitch`, `Community 204`, `Assignment Authoring Actions`, `Exemplar Actions`, `Community 206`, `Class Detail & Roster`, `Narrative T-Chart & BP Labels`, `Community 210`, `Community 211`, `Community 209`, `Community 213`, `Community 214`, `Community 215`, `Community 85`, `Community 217`, `Landing & Auth Pages`, `Community 224`, `Community 102`, `Community 106`?**
+  _High betweenness centrality (0.175) - this node is a cross-community bridge._
+- **Why does `createServerSupabaseClient()` connect `District Settings API Routes` to `Bulk Upload Routes`, `Analytics API & Error Client`?**
+  _High betweenness centrality (0.075) - this node is a cross-community bridge._
+- **Why does `requireRole()` connect `Writing Layout & Rubric Scores` to `Paragraph Form Composition`, `T-Chart & Chunks`, `Community 130`, `Essay Parts (Intro/Thesis/Conclusion)`, `Community 133`, `Community 134`, `Student Assignments List`, `Gather CDs & Topic-Sentence Dev`, `Class & Period Pages`, `Prompt Decoding & Step Flow`, `Signup Approval Flow`, `Analytics Breakdown Components`, `Community 22`, `Writing Structure Bootstrap`, `Assignment Authoring Actions`, `Final Draft Assembly`, `Writing Structure Bootstrap`, `Exemplars List Pages`, `Assignment Analytics Pages`, `Teacher Writings Review`, `Discovery & Counterargument Panes`, `Community 164`, `Enrollment & School Users`, `Dashboard Pages`, `Source Text Editor`, `User Guide: Writing Flows`, `Shaping Query Types`, `Monitoring System`, `Community 183`, `Rubric Grading & Editor`, `Teacher Feedback`, `Shaping BP Panes`, `Community 187`, `Error Provider & Notifications`, `Root Layouts & Branding`, `Exemplar Detail Pages`, `Student Shell & Header`, `Community 202`, `Shaping Actions & Pick-n-Stitch`, `Community 204`, `Assignment Authoring Actions`, `Community 206`, `Narrative T-Chart & BP Labels`, `Community 210`, `Community 211`, `Community 85`, `Community 224`, `Community 102`, `Community 106`?**
+  _High betweenness centrality (0.062) - this node is a cross-community bridge._
 - **Are the 19 inferred relationships involving `createServerClient()` (e.g. with `POST()` and `POST()`) actually correct?**
   _`createServerClient()` has 19 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 8 inferred relationships involving `requireRole()` (e.g. with `StudentAssignmentsList()` and `AssignmentDetailPage()`) actually correct?**
   _`requireRole()` has 8 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 2 inferred relationships involving `createAdminClient()` (e.g. with `SignupDetailPage()` and `createClient()`) actually correct?**
   _`createAdminClient()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Params`, `name`, `version` to the rest of the system?**
-  _819 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `Feedback-area grading: error feedback + deferred extensions`, `School-admin dashboards: real content per kind`, `Edit a school admin's kind after creation` to the rest of the system?**
+  _876 weakly-connected nodes found - possible documentation gaps or missing edges._
