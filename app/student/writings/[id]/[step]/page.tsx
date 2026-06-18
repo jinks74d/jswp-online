@@ -152,6 +152,7 @@ export default async function StepDispatcher({
         sourceFilePath={a.source_file_path}
         sourceFileName={a.source_file_name}
         sourceHtml={a.source_html}
+        sourceRenderMode={a.source_render_mode}
       />
     );
   }

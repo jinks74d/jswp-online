@@ -15,10 +15,12 @@
  * round-trip. Per chunk 4.3 spec: no optimistic UI.
  */
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { SourceTextViewer, type SelectionPayload } from "./source-text-viewer";
+import { PdfSourceViewer } from "./pdf-source-viewer";
 import { OpenOriginalButton } from "./open-original-button";
+import { getWritingSourceUrl } from "@/lib/actions/source-files";
 import { AnnotationPopover } from "./annotation-popover";
 import {
   AnnotationForm,
@@ -43,6 +45,7 @@ interface Props {
   sourceFilePath: string | null;
   sourceFileName: string | null;
   sourceHtml: string | null;
+  sourceRenderMode: "pdf" | "rich" | "plain" | null;
   initialAnnotations: readonly TextAnnotationRow[];
 }
 
@@ -56,6 +59,7 @@ export function AnnotateTextClient({
   sourceFilePath,
   sourceFileName,
   sourceHtml,
+  sourceRenderMode,
   initialAnnotations,
 }: Props) {
   const { isReadOnly } = useWritingMode();
@@ -67,6 +71,30 @@ export function AnnotateTextClient({
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
   const [continuing, startContinue] = useTransition();
   const [continueError, setContinueError] = useState<string | null>(null);
+
+  // PDF-native annotate: render the original file faithfully (canvas + text
+  // layer) instead of flat text. We mint the signed URL on demand (like
+  // OpenOriginalButton) rather than embed a stale one. If minting fails, fall
+  // back to the flat SourceTextViewer over the same source_text — annotation
+  // offsets stay valid either way. (pdf.js load failures degrade inside the
+  // viewer; Phase 6 hardens the rest.)
+  const isPdf = sourceRenderMode === "pdf" && Boolean(sourceFilePath);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfFailed, setPdfFailed] = useState(false);
+
+  useEffect(() => {
+    if (!isPdf) return;
+    let active = true;
+    (async () => {
+      const res = await getWritingSourceUrl(writingId);
+      if (!active) return;
+      if (res.ok) setPdfUrl(res.url);
+      else setPdfFailed(true);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [isPdf, writingId]);
 
   const onAnnotateClick = () => {
     if (!selection) return;
@@ -149,16 +177,35 @@ export function AnnotateTextClient({
               Tip: select any passage to add your first annotation.
             </div>
           )}
-          <SourceTextViewer
-            sourceText={sourceText}
-            sourceHtml={sourceHtml}
-            annotations={initialAnnotations}
-            visibleKinds={visibleKinds}
-            scrollToAnnotationId={scrollTargetId}
-            onSelection={isReadOnly ? () => {} : setSelection}
-            onClearSelection={() => setSelection(null)}
-            onAnnotationClick={onAnnotationClick}
-          />
+          {isPdf && !pdfFailed ? (
+            pdfUrl ? (
+              <PdfSourceViewer
+                fileUrl={pdfUrl}
+                annotations={initialAnnotations}
+                visibleKinds={visibleKinds}
+                scrollToAnnotationId={scrollTargetId}
+                onSelection={isReadOnly ? () => {} : setSelection}
+                onClearSelection={() => setSelection(null)}
+                onAnnotationClick={onAnnotationClick}
+                readOnly={isReadOnly}
+              />
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" /> Preparing PDF…
+              </div>
+            )
+          ) : (
+            <SourceTextViewer
+              sourceText={sourceText}
+              sourceHtml={sourceHtml}
+              annotations={initialAnnotations}
+              visibleKinds={visibleKinds}
+              scrollToAnnotationId={scrollTargetId}
+              onSelection={isReadOnly ? () => {} : setSelection}
+              onClearSelection={() => setSelection(null)}
+              onAnnotationClick={onAnnotationClick}
+            />
+          )}
         </div>
 
         <aside className="lg:sticky lg:top-20 lg:self-start">

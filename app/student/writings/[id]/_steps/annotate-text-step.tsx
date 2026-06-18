@@ -25,6 +25,7 @@ interface Props {
   sourceFilePath: string | null;
   sourceFileName: string | null;
   sourceHtml: string | null;
+  sourceRenderMode: "pdf" | "rich" | "plain" | null;
 }
 
 export async function AnnotateTextStep({
@@ -39,6 +40,7 @@ export async function AnnotateTextStep({
   sourceFilePath,
   sourceFileName,
   sourceHtml,
+  sourceRenderMode,
 }: Props) {
   if (!sourceText) {
     return (
@@ -91,6 +93,7 @@ export async function AnnotateTextStep({
         sourceFilePath={sourceFilePath}
         sourceFileName={sourceFileName}
         sourceHtml={sourceHtml}
+        sourceRenderMode={sourceRenderMode}
         initialAnnotations={annotations}
       />
     </div>

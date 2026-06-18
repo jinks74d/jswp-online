@@ -170,6 +170,9 @@ function renderStep({
         sourceFilePath={assignment.source_file_path}
         sourceFileName={assignment.source_file_name}
         sourceHtml={null}
+        // Teacher review renders the flat substrate for now; PDF/rich-faithful
+        // review rendering is Chunk 3 (spec §11), out of scope here.
+        sourceRenderMode={null}
       />
     );
   }
