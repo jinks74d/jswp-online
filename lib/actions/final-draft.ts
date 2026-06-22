@@ -97,6 +97,28 @@ export async function updateFullText(
 }
 
 /**
+ * Persist the literary final-draft self-check toggles (literary present tense /
+ * third-person POV). Non-blocking; mirrors shaping_sheets.revision_moves.
+ */
+export async function updateFinalDraftSelfChecks(
+  writingId: string,
+  finalDraftId: string,
+  selfChecks: string[]
+): Promise<void> {
+  await requireRole("student");
+  const supabase = await createServerClient();
+
+  const { error } = await supabase
+    .from("final_drafts")
+    .update({ self_checks: selfChecks })
+    .eq("id", finalDraftId);
+  if (error) {
+    throw new Error(`updateFinalDraftSelfChecks: ${error.message}`);
+  }
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
+/**
  * Read fresh assembly source server-side and write the concat to
  * full_text. Empty pieces are skipped so the result doesn't have
  * stray double newlines from missing intro/conclusion/paragraphs.

@@ -18,11 +18,13 @@ import type { Database } from "@/lib/database.types";
 
 type NarrativeKind = Database["public"]["Enums"]["jswp_narrative_kind"];
 type NarrativeSubject = Database["public"]["Enums"]["jswp_narrative_subject"];
+type Mode = Database["public"]["Enums"]["jswp_mode"];
 
 export interface FinalDraftRowData {
   id: string;
   title: string | null;
   full_text: string;
+  self_checks: string[] | null;
 }
 
 export interface AssemblyParagraph {
@@ -43,10 +45,12 @@ export interface AssemblySource {
 export interface FinalDraftData {
   final_draft: FinalDraftRowData | null;
   assembly: AssemblySource;
+  mode: Mode;
 }
 
 interface RawWriting {
   final_draft: FinalDraftRowData | FinalDraftRowData[] | null;
+  assignment: { mode: Mode } | Array<{ mode: Mode }> | null;
   essay_parts:
     | {
         introduction_text: string | null;
@@ -84,7 +88,8 @@ export async function getFinalDraftData(
     .from("student_writings")
     .select(
       `
-      final_draft:final_drafts ( id, title, full_text ),
+      final_draft:final_drafts ( id, title, full_text, self_checks ),
+      assignment:assignments ( mode ),
       essay_parts ( introduction_text, conclusion_text )
       `
     )
@@ -96,6 +101,7 @@ export async function getFinalDraftData(
     return {
       final_draft: null,
       assembly: { introduction_text: "", paragraphs: [], conclusion_text: "" },
+      mode: "expository",
     };
   }
 
@@ -103,6 +109,10 @@ export async function getFinalDraftData(
   const fd = Array.isArray(w.final_draft)
     ? (w.final_draft[0] ?? null)
     : w.final_draft;
+  const assignment = Array.isArray(w.assignment)
+    ? (w.assignment[0] ?? null)
+    : w.assignment;
+  const mode: Mode = assignment?.mode ?? "expository";
   const ep = Array.isArray(w.essay_parts)
     ? (w.essay_parts[0] ?? null)
     : w.essay_parts;
@@ -148,5 +158,6 @@ export async function getFinalDraftData(
       paragraphs,
       conclusion_text: ep?.conclusion_text ?? "",
     },
+    mode,
   };
 }

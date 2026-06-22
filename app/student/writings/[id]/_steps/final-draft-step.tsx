@@ -27,7 +27,7 @@ export async function FinalDraftStep({
   isTerminal,
 }: Props) {
   await bootstrapFinalDraft(writingId);
-  const { final_draft, assembly } = await getFinalDraftData(writingId);
+  const { final_draft, assembly, mode } = await getFinalDraftData(writingId);
 
   return (
     <div className="space-y-5">
@@ -47,6 +47,7 @@ export async function FinalDraftStep({
         isTerminal={isTerminal}
         finalDraft={final_draft}
         assembly={assembly}
+        mode={mode}
       />
     </div>
   );

@@ -29,13 +29,23 @@ import {
   updateFullText,
   updateTitle,
 } from "@/lib/actions/final-draft";
+import {
+  updateFinalDraftSelfChecks,
+} from "@/lib/actions/final-draft";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
+import {
+  LITERARY_FINAL_SELF_CHECKS,
+  findFirstSecondPersonPronouns,
+} from "@/lib/jswp-literary-final-checks";
 import { useWritingMode } from "../use-writing-mode";
 import type {
   AssemblySource,
   FinalDraftRowData,
 } from "@/lib/queries/final-draft";
+import type { Database } from "@/lib/database.types";
+
+type Mode = Database["public"]["Enums"]["jswp_mode"];
 
 interface Props {
   writingId: string;
@@ -43,6 +53,7 @@ interface Props {
   isTerminal: boolean;
   finalDraft: FinalDraftRowData | null;
   assembly: AssemblySource;
+  mode: Mode;
 }
 
 export function FinalDraftClient({
@@ -51,6 +62,7 @@ export function FinalDraftClient({
   isTerminal,
   finalDraft,
   assembly,
+  mode,
 }: Props) {
   if (!finalDraft) {
     return (
@@ -81,6 +93,15 @@ export function FinalDraftClient({
         finalDraftId={finalDraft.id}
         initialValue={finalDraft.full_text}
       />
+
+      {mode === "literary" && (
+        <LiteraryFinalChecks
+          writingId={writingId}
+          finalDraftId={finalDraft.id}
+          initial={finalDraft.self_checks ?? []}
+          fullText={finalDraft.full_text}
+        />
+      )}
 
       <ContinueBar
         writingId={writingId}
@@ -378,6 +399,80 @@ function countWords(text: string): number {
   const t = text.trim();
   if (t.length === 0) return 0;
   return t.split(/\s+/).length;
+}
+
+/* ─── Literary self-check: LP + third-person POV (non-blocking) ───────
+   The guide names literary present tense (p.179) and third-person-only POV
+   (p.2784) as scoring criteria. Self-check toggles (persisted, mirroring
+   shaping's revision_moves) + a high-confidence first/second-person pronoun
+   nudge. NOT a grammar linter; the no-no-words list isn't in the guide. */
+
+function LiteraryFinalChecks({
+  writingId,
+  finalDraftId,
+  initial,
+  fullText,
+}: {
+  writingId: string;
+  finalDraftId: string;
+  initial: readonly string[];
+  fullText: string;
+}) {
+  const { isReadOnly } = useWritingMode();
+  const [checks, setChecks] = useState<readonly string[]>(initial);
+  const [pending, start] = useTransition();
+
+  const toggle = (key: string) => {
+    const prev = checks;
+    const next = prev.includes(key)
+      ? prev.filter((c) => c !== key)
+      : [...prev, key];
+    setChecks(next); // optimistic
+    start(async () => {
+      try {
+        await updateFinalDraftSelfChecks(writingId, finalDraftId, [...next]);
+      } catch (e) {
+        console.error("self_checks toggle:", e);
+        setChecks(prev); // revert on failure
+      }
+    });
+  };
+
+  const pronouns = Array.from(new Set(findFirstSecondPersonPronouns(fullText)));
+
+  return (
+    <section className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+        Before you submit
+      </h3>
+      <ul className="space-y-1.5">
+        {LITERARY_FINAL_SELF_CHECKS.map((c) => (
+          <li key={c.key}>
+            <label className="flex items-start gap-2 text-sm text-gray-800">
+              <input
+                type="checkbox"
+                checked={checks.includes(c.key)}
+                onChange={() => toggle(c.key)}
+                disabled={isReadOnly || pending}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                style={{ accentColor: "var(--district-primary)" }}
+              />
+              <span>{c.label}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      {pronouns.length > 0 && (
+        <div
+          className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900"
+          role="status"
+        >
+          <span className="font-semibold">Heads up</span> — literary analysis is
+          third person. Found: <span className="font-mono">{pronouns.join(", ")}</span>.
+        </div>
+      )}
+    </section>
+  );
 }
 
 /* ─── Continue / Submit bar ───────────────────────────────────────── */
