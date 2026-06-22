@@ -380,7 +380,7 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     subLabel: "Step 3",
     groupOrigin: "gathering_cds",
     pedagogyHint:
-      "List 3-5 concrete details from the text. For literary, you'll combine them into ONE sentence per chunk (1:2+). Drag to reorder.",
+      "List 3-5 concrete details from the text. Pick the single strongest CD for each chunk — one CD per chunk (1:2+). Drag to reorder.",
     required: true,
     repeatPerBP: true,
   },
