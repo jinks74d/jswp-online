@@ -2090,8 +2090,8 @@
     "semantic_hash": "9162add00befbcdb432430f405c4ad8d"
   },
   "docs/BACKLOG.md": {
-    "mtime": 1782157580.5274792,
-    "ast_hash": "0909090844ed12ae5366805495fcc131",
+    "mtime": 1782157518.2812173,
+    "ast_hash": "b02ac176994576062b34a5ca566c6811",
     "semantic_hash": ""
   },
   "docs/CONSOLIDATION-ROADMAP.md": {
@@ -2460,12 +2460,12 @@
     "semantic_hash": "9ba3eef18ae14800daf9a216525083fd"
   },
   "graphify-out/converted/Quick Start Guide - Expos - Health_b5c44fb8.md": {
-    "mtime": 1782157713.8248627,
+    "mtime": 1782157498.8109088,
     "ast_hash": "0c67465ff329655d84b0d81674e96974",
     "semantic_hash": "0c67465ff329655d84b0d81674e96974"
   },
   "graphify-out/converted/User Guide - All_3ad5cfeb.md": {
-    "mtime": 1782157714.1975434,
+    "mtime": 1782157499.157092,
     "ast_hash": "9f778a000e3b65437bbd952f7d9a12c3",
     "semantic_hash": "9f778a000e3b65437bbd952f7d9a12c3"
   },
@@ -2850,8 +2850,8 @@
     "semantic_hash": ""
   },
   ".superpowers/sdd/progress.md": {
-    "mtime": 1782157701.052724,
-    "ast_hash": "1132d53a20fe8cd1c34652747db5ca1f",
+    "mtime": 1782156410.1626053,
+    "ast_hash": "f5a5cbae885c4e5fa0cc961a8934e2fe",
     "semantic_hash": ""
   },
   ".superpowers/sdd/task-1-brief.md": {
