@@ -22,6 +22,8 @@ export interface CommentaryItemData {
   text: string;
   kind: CmKind;
   parent_cd_id: string | null;
+  parent_cm_id: string | null;   // phrase → the CM word it elaborates (WOW)
+  synonym: string | null;        // WOW box #2, set on the best-word row
   is_best_word_for_ts: boolean;
   is_best_word_for_chunk: boolean;
 }
@@ -64,6 +66,8 @@ interface RawBpRow {
       text: string;
       kind: CmKind;
       parent_cd_id: string | null;
+      parent_cm_id: string | null;
+      synonym: string | null;
       is_best_word_for_ts: boolean;
       is_best_word_for_chunk: boolean;
     }>;
@@ -84,7 +88,7 @@ export async function getCommentaryByWriting(
         id, position,
         concrete_details ( id, position, text ),
         commentary_items (
-          id, position, text, kind, parent_cd_id,
+          id, position, text, kind, parent_cd_id, parent_cm_id, synonym,
           is_best_word_for_ts, is_best_word_for_chunk
         )
       )
