@@ -1,6 +1,6 @@
 import type { CommentaryBpData } from "@/lib/queries/commentary";
 
-interface GateResult {
+export interface GateResult {
   canContinue: boolean;
   blockerPosition: number | null;
 }

@@ -92,11 +92,6 @@ Path A in P7-6 deleted the v1 super-admin district CRUD surface (create, edit, b
 - **Identified:** chunk P7-6
 - **Priority:** before first production tenant onboarding
 
-### Phrase-to-word linking on `commentary_items`
-Literary's elaboration step (chunk 4.5b2) pools phrase CMs per CD via `parent_cd_id` only. The pedagogyHint says "for each CM word, write a synonym, then two phrases" — implying a 1:1 word→phrase association. Schema doesn't enforce this. Adding a `parent_cm_id UUID REFERENCES commentary_items(id) ON DELETE CASCADE` column would let elaboration link each phrase to the specific best-word it elaborates, improving pedagogical fidelity. Requires migration; not load-bearing for any current step.
-- **Identified:** chunk 4.5b2 audit
-- **Priority:** polish; before production cutover (Phase 7)
-
 ### Consolidate live-count textarea pattern
 Extend `AutoSaveInput` with an optional `onChange` callback prop, OR extract a shared `<LiveCountTextarea>` helper. Currently chunk 4.6b's CD/CM and Narrative paragraph-form panes inline ~40 lines of AutoSaveInput-shaped code each to support live word-count display (which needs `onChange` access). Chunk 4.6c's final-draft surface will likely want the same. Consolidating reduces duplication.
 - **Identified:** chunk 4.6b
@@ -149,6 +144,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Phrase-to-word linking on `commentary_items`
+Implemented by the Literary WOW-fidelity chunk (migration `0032`): `commentary_items.parent_cm_id UUID REFERENCES commentary_items(id) ON DELETE CASCADE` links each elaboration phrase to the best CM word it elaborates, and `synonym TEXT` stores WOW box #2. The Elaboration step now webs per best word (synonym + 2+ phrases), the Continue gate requires 2+ phrases per best word, and Shaping pick-n-stitch groups phrases under their word. Plan: `docs/superpowers/plans/2026-06-22-literary-wow-fidelity.md`.
+- **Closed:** Literary WOW-fidelity chunk (2026-06-22)
 
 ### Keyboard creation of a NEW annotation over the PDF canvas (WCAG-AA close-out)
 PDF-annotate decision 1 — make the PDF text layer itself keyboard-operable (no "view as text" toggle). Span-navigation selection mode in `pdf-source-viewer.tsx` (`5169ae0`, spec `docs/superpowers/specs/2026-06-22-pdf-keyboard-selection-design.md`): single tab stop (`role="application"`, `aria-activedescendant`), roving cursor moves by word (←/→) / line (↑/↓) / Home-End, Shift+Arrow extends from an anchor, Enter commits via the shared `emitSelection` path (same `SelectionPayload`, `lastEmittedRef`-deduped against the trailing `selectionchange`), Esc collapses/exits; dashed sky marquee + polite live region. Mouse + debounced selection paths and the offset model untouched. Foundation (keyboard-operable highlights + debounced modality-agnostic selection + scanned-PDF Continue-gate unblock) shipped in `9baad99`. **C3 browser-verify PASSED 2026-06-22** (owner): keyboard-only creation end-to-end with caret-browsing OFF, no double popover, marquee/cross-page scroll, screen-reader smoke (`role="application"` not hostile — `grid` fallback not needed), inert in readOnly/scanned/error. The Read & Annotate step is WCAG-AA complete for PDF sources. Known follow-up (not blocking): popover focus hand-off is a DOM query across rAF retries rather than a ref (the popover lives in sibling `annotate-text-client.tsx`).
