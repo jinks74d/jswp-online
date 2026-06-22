@@ -52,6 +52,10 @@ export interface ShapingCmData {
   text: string;
   kind: CmKind;
   parent_cd_id: string | null;
+  /** UUID of the best-word CM this phrase elaborates (literary only). */
+  parent_cm_id: string | null;
+  /** Synonym entered alongside this word during the literary Decisions step. */
+  synonym: string | null;
   is_best_word_for_ts: boolean;
   is_best_word_for_chunk: boolean;
   used_in_topic_sentence: boolean;
@@ -156,7 +160,7 @@ export async function getShapingData(
         id, position, ratio,
         concrete_details ( id, position, text ),
         commentary_items (
-          id, position, text, kind, parent_cd_id,
+          id, position, text, kind, parent_cd_id, parent_cm_id, synonym,
           is_best_word_for_ts, is_best_word_for_chunk,
           used_in_topic_sentence, used_in_cm_sentence,
           used_in_concluding_sentence

@@ -25,6 +25,15 @@ import {
 import { useWritingMode } from "../use-writing-mode";
 import type { ShapingCmData } from "@/lib/queries/shaping";
 
+/**
+ * One group in the literary pick-n-stitch panel: a best-word CM and all
+ * phrase CMs that elaborated it.
+ */
+export interface LiteraryCmGroup {
+  word: ShapingCmData;
+  phrases: readonly ShapingCmData[];
+}
+
 const FLAGS: ReadonlyArray<{ key: PickNStitchFlag; short: string; long: string }> = [
   { key: "used_in_topic_sentence", short: "TS", long: "topic sentence" },
   { key: "used_in_cm_sentence", short: "CM", long: "CM sentence" },
@@ -34,13 +43,29 @@ const FLAGS: ReadonlyArray<{ key: PickNStitchFlag; short: string; long: string }
 export function PickNStitchPanel({
   writingId,
   cms,
+  groups,
   emptyMessage,
 }: {
   writingId: string;
   cms: readonly ShapingCmData[];
+  /**
+   * Literary-only: when provided, render phrase CMs grouped under their best
+   * CM word instead of as a flat list. Each group's `word` is the best-word
+   * CM; its `phrases` are the elaboration-phase phrase CMs that link to it.
+   * Non-literary callers omit this prop and get the existing flat-list path.
+   */
+  groups?: readonly LiteraryCmGroup[];
   emptyMessage?: string;
 }) {
-  if (cms.length === 0) {
+  // Use grouped rendering for literary when groups are provided.
+  const hasGroups = groups !== undefined && groups.length > 0;
+
+  // Empty-state: for grouped mode count total phrases; for flat mode count cms.
+  const isEmpty = hasGroups
+    ? groups.every((g) => g.phrases.length === 0)
+    : cms.length === 0;
+
+  if (isEmpty) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm text-gray-600">
         {emptyMessage ?? "No commentary to stitch from yet."}
@@ -59,11 +84,44 @@ export function PickNStitchPanel({
           Once you use it, you lose it.
         </p>
       </header>
-      <ul className="space-y-1.5">
-        {cms.map((cm) => (
-          <CmRow key={cm.id} writingId={writingId} cm={cm} />
-        ))}
-      </ul>
+
+      {hasGroups ? (
+        // Literary: phrases grouped under their best-word CM label.
+        <div className="space-y-4">
+          {groups.map((group) => (
+            <div key={group.word.id}>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--jswp-color-cm,#16a34a)] mb-0.5">
+                {group.word.text.trim() || (
+                  <span className="italic font-normal text-gray-400">(no word)</span>
+                )}
+                {group.word.synonym && (
+                  <span className="ml-1.5 font-normal normal-case text-gray-500">
+                    / {group.word.synonym}
+                  </span>
+                )}
+              </h4>
+              {group.phrases.length === 0 ? (
+                <p className="text-xs text-gray-400 italic pl-1">
+                  No elaboration phrases for this word yet.
+                </p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {group.phrases.map((phrase) => (
+                    <CmRow key={phrase.id} writingId={writingId} cm={phrase} />
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        // Flat list — expository / argumentation, unchanged.
+        <ul className="space-y-1.5">
+          {cms.map((cm) => (
+            <CmRow key={cm.id} writingId={writingId} cm={cm} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

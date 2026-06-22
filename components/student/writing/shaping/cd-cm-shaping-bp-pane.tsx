@@ -73,6 +73,23 @@ export function CdCmShapingBpPane({
     c.cms.filter((cm) => cm.kind === stitchKind)
   );
 
+  // Literary: group phrases under their best-word CM parent so the student
+  // stitches CM1 from word-1's clouds and CM2 from word-2's clouds.
+  const literaryGroups =
+    mode === "literary"
+      ? (() => {
+          const bestWords = bp.chunks.flatMap((c) =>
+            c.cms.filter(
+              (cm) => cm.kind === "word" && cm.is_best_word_for_chunk
+            )
+          );
+          return bestWords.map((word) => ({
+            word,
+            phrases: stitchCms.filter((p) => p.parent_cm_id === word.id),
+          }));
+        })()
+      : undefined;
+
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
       {/* Main column */}
@@ -203,6 +220,7 @@ export function CdCmShapingBpPane({
         <PickNStitchPanel
           writingId={writingId}
           cms={stitchCms}
+          groups={literaryGroups}
           emptyMessage={
             mode === "literary"
               ? "No elaboration phrases yet — go back to Elaboration to add some."
