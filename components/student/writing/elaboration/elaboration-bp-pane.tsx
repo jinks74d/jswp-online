@@ -1,16 +1,15 @@
 "use client";
 
 /**
- * One body paragraph's elaboration pane. Per CD:
- *   - CD text (read-only red header)
- *   - Best words pill list (the words flagged is_best_word_for_chunk).
- *     Empty state with back-link if zero.
- *   - List of kind='phrase' rows. Each editable via AutoSaveInput +
- *     delete. [+ Add phrase] at bottom. No starter pre-population.
+ * One body paragraph's elaboration pane. Per CD → per best word:
+ *   - Best word shown as a sky pill header.
+ *   - Single-line synonym AutoSaveInput (WOW box #2).
+ *   - Phrase list: each phrase linked to this word via parent_cm_id.
+ *     Each phrase editable (multiline AutoSaveInput) + deletable.
+ *   - [+ Add phrase] appends a new phrase linked to this word.
  *
- * Phrases attach to the CD via parent_cd_id only — no per-best-word
- * link (Phase 7 backlog: parent_cm_id FK migration). UI presents
- * phrases as a flat list scoped to the CD.
+ * If a CD has no best-word CMs (is_best_word_for_chunk=false for all),
+ * NoBestWordsState renders with a back-link to Making Decisions.
  */
 
 import Link from "next/link";
@@ -20,6 +19,7 @@ import { AutoSaveInput } from "../t-chart/auto-save-input";
 import {
   createPhraseCm,
   updateCmText,
+  updateCmSynonym,
   deleteCm,
 } from "@/lib/actions/commentary";
 import { useWritingMode } from "../use-writing-mode";
@@ -46,9 +46,8 @@ export function ElaborationBpPane({
   return (
     <div className="space-y-5">
       <p className="text-xs text-gray-600">
-        For each best word, write a synonym and 2+ phrases of 3+ words
-        explaining what you mean. These &quot;cloud&quot; phrases will
-        become your CM sentences.
+        For each best word: write a synonym, then 2+ phrases answering — what
+        does it mean to the character to be that?
       </p>
       {bp.chunks.map((chunk) => (
         <section
@@ -68,7 +67,7 @@ export function ElaborationBpPane({
                 cdId={cd.id}
                 cdText={cd.text}
                 bestWords={cd.words.filter((w) => w.is_best_word_for_chunk)}
-                phrases={cd.phrases}
+                allPhrases={cd.phrases}
               />
             ))
           )}
@@ -84,14 +83,14 @@ function CdSection({
   cdId,
   cdText,
   bestWords,
-  phrases,
+  allPhrases,
 }: {
   writingId: string;
   chunkId: string;
   cdId: string;
   cdText: string;
   bestWords: readonly CommentaryItemData[];
-  phrases: readonly CommentaryItemData[];
+  allPhrases: readonly CommentaryItemData[];
 }) {
   return (
     <div className="space-y-3">
@@ -111,15 +110,18 @@ function CdSection({
       {bestWords.length === 0 ? (
         <NoBestWordsState writingId={writingId} />
       ) : (
-        <>
-          <BestWordsPills words={bestWords} />
-          <PhraseList
-            writingId={writingId}
-            chunkId={chunkId}
-            cdId={cdId}
-            phrases={phrases}
-          />
-        </>
+        <div className="space-y-4">
+          {bestWords.map((word) => (
+            <BestWordBlock
+              key={word.id}
+              writingId={writingId}
+              chunkId={chunkId}
+              cdId={cdId}
+              word={word}
+              phrases={allPhrases.filter((p) => p.parent_cm_id === word.id)}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
@@ -141,24 +143,51 @@ function NoBestWordsState({ writingId }: { writingId: string }) {
   );
 }
 
-function BestWordsPills({
-  words,
+function BestWordBlock({
+  writingId,
+  chunkId,
+  cdId,
+  word,
+  phrases,
 }: {
-  words: readonly CommentaryItemData[];
+  writingId: string;
+  chunkId: string;
+  cdId: string;
+  word: CommentaryItemData;
+  phrases: readonly CommentaryItemData[];
 }) {
+  const { isReadOnly } = useWritingMode();
+
   return (
-    <div className="flex items-baseline flex-wrap gap-2">
-      <span className="text-xs uppercase tracking-wide text-gray-500">
-        Best words:
-      </span>
-      {words.map((w) => (
-        <span
-          key={w.id}
-          className="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 text-xs font-medium"
-        >
-          {w.text.trim() || "(empty)"}
+    <div className="border border-sky-200 rounded-lg p-3 space-y-2">
+      {/* Best word pill header */}
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-700 text-xs font-medium">
+          {word.text.trim() || "(empty)"}
         </span>
-      ))}
+        <span className="text-xs uppercase tracking-wide text-gray-500">
+          best word
+        </span>
+      </div>
+
+      {/* Synonym field */}
+      <AutoSaveInput
+        initialValue={word.synonym ?? ""}
+        placeholder="A synonym for this word (optional)"
+        disabled={isReadOnly}
+        onSave={async (v) => {
+          await updateCmSynonym(writingId, word.id, v);
+        }}
+      />
+
+      {/* Phrases for this word */}
+      <PhraseList
+        writingId={writingId}
+        chunkId={chunkId}
+        cdId={cdId}
+        wordId={word.id}
+        phrases={phrases}
+      />
     </div>
   );
 }
@@ -167,16 +196,18 @@ function PhraseList({
   writingId,
   chunkId,
   cdId,
+  wordId,
   phrases,
 }: {
   writingId: string;
   chunkId: string;
   cdId: string;
+  wordId: string;
   phrases: readonly CommentaryItemData[];
 }) {
   const { isReadOnly } = useWritingMode();
   return (
-    <div className="ml-4 space-y-2">
+    <div className="ml-2 space-y-2">
       {phrases.length === 0 && (
         <p className="text-xs text-gray-500 italic">
           No phrases yet. Click [Add phrase] to start elaborating.
@@ -190,6 +221,7 @@ function PhraseList({
           writingId={writingId}
           chunkId={chunkId}
           cdId={cdId}
+          wordId={wordId}
         />
       )}
     </div>
@@ -212,7 +244,7 @@ function PhraseRow({
           multiline
           rows={2}
           initialValue={phrase.text}
-          placeholder="A synonym, or a 3+ word phrase that explains what you mean…"
+          placeholder="A 3+ word phrase — what does it mean to the character?"
           disabled={isReadOnly}
           onSave={async (text) => {
             await updateCmText(writingId, phrase.id, text);
@@ -246,10 +278,12 @@ function AddPhraseButton({
   writingId,
   chunkId,
   cdId,
+  wordId,
 }: {
   writingId: string;
   chunkId: string;
   cdId: string;
+  wordId: string;
 }) {
   const [pending, start] = useTransition();
   return (
@@ -257,7 +291,7 @@ function AddPhraseButton({
       type="button"
       onClick={() =>
         start(async () => {
-          await createPhraseCm(writingId, chunkId, cdId);
+          await createPhraseCm(writingId, chunkId, cdId, wordId);
         })
       }
       disabled={pending}

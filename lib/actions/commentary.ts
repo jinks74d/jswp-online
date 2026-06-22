@@ -15,7 +15,9 @@
  *     no transaction; transient zero-best state recoverable on next
  *     render.
  *   - setBestForChunk: independent toggle, any count.
- *   - createPhraseCm: append a kind='phrase' row under a CD.
+ *   - createPhraseCm: append a kind='phrase' row under a CD, linked
+ *     to the best-word CM it elaborates (WOW parent_cm_id).
+ *   - updateCmSynonym: set the synonym on a word-kind CM row.
  *
  * RLS chains via chunks → body_paragraphs → writing.
  */
@@ -208,15 +210,17 @@ export async function setBestForChunk(
 /* ─── elaboration step ────────────────────────────────────────────── */
 
 /**
- * Append a kind='phrase' row under a CD. Position scoped to phrases
- * for this CD: the next position is max(existing phrase positions) + 1
+ * Append a kind='phrase' row under a CD, linked to the best-word CM
+ * it elaborates (WOW parent_cm_id). Position scoped to phrases for
+ * this CD: the next position is max(existing phrase positions) + 1
  * (or 1 if none). No starter pre-population — students click [+ Add
  * phrase] explicitly.
  */
 export async function createPhraseCm(
   writingId: string,
   chunkId: string,
-  parentCdId: string
+  parentCdId: string,
+  parentCmId: string
 ): Promise<void> {
   await requireRole("student");
   const supabase = await createServerClient();
@@ -237,6 +241,7 @@ export async function createPhraseCm(
   const { error } = await supabase.from("commentary_items").insert({
     chunk_id: chunkId,
     parent_cd_id: parentCdId,
+    parent_cm_id: parentCmId,
     position: nextPos,
     text: "",
     kind: "phrase" as CmKind,
@@ -244,5 +249,26 @@ export async function createPhraseCm(
   if (error) {
     throw new Error(`createPhraseCm: ${error.message}`);
   }
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
+/**
+ * Set (or clear) the synonym on a word-kind CM row. An empty / blank
+ * string is stored as NULL so the query layer can test `IS NULL`
+ * cleanly.
+ */
+export async function updateCmSynonym(
+  writingId: string,
+  cmId: string,
+  synonym: string
+): Promise<void> {
+  await requireRole("student");
+  const supabase = await createServerClient();
+
+  const { error } = await supabase
+    .from("commentary_items")
+    .update({ synonym: synonym.trim() === "" ? null : synonym })
+    .eq("id", cmId);
+  if (error) throw new Error(`Failed to update synonym: ${error.message}`);
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }
