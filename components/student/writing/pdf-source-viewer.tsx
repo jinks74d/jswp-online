@@ -28,7 +28,7 @@
  * is Phase 6; here a failure shows a notice + "Open original".
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { loadPdfjs } from "@/lib/pdf-worker";
@@ -69,6 +69,13 @@ interface Props {
    * same source_text — annotation never depends on pdf.js succeeding (spec §6).
    */
   onLoadError?: () => void;
+  /**
+   * Called when the PDF renders but has no selectable text (scanned/image-only),
+   * so highlighting is impossible. The parent uses this to relax the Continue
+   * gate: a teacher's image-only file must not permanently trap a student on a
+   * required-annotate step (spec §6; image PDFs surface, not silently break).
+   */
+  onUnannotatable?: () => void;
 }
 
 /** Clamp a fit-to-width scale so canvases never get absurdly large/small. */
@@ -137,10 +144,22 @@ function clearHighlights(state: RenderState) {
   for (const p of state.pages) p.highlightLayer.replaceChildren();
 }
 
+/** Short, screen-reader-friendly label for a highlight: kind + a text snippet. */
+function annotationLabel(state: RenderState, a: TextAnnotationRow): string {
+  const snippet = state.text.slice(a.range_start, a.range_end).trim();
+  const clipped = snippet.length > 60 ? `${snippet.slice(0, 57)}…` : snippet;
+  return `${ANNOTATION_KINDS[a.kind].label} annotation: ${clipped}`;
+}
+
 function drawHighlights(
   state: RenderState,
   annotations: readonly TextAnnotationRow[],
-  visibleKinds: ReadonlySet<AnnotationKind>
+  visibleKinds: ReadonlySet<AnnotationKind>,
+  // When interactive, the first rect of each annotation becomes a real keyboard
+  // control (Tab to reach, Enter/Space to open its editor) — the canvas overlay
+  // is otherwise mouse-only, which fails WCAG-AA (CLAUDE.md §9, spec §10).
+  interactive: boolean,
+  onAnnotationClick?: (annotation: TextAnnotationRow) => void
 ) {
   clearHighlights(state);
   for (const a of annotations) {
@@ -149,6 +168,9 @@ function drawHighlights(
 
     const overlay = OVERLAY[a.kind];
     const covered = itemsCoveringRange(state.segments, a.range_start, a.range_end);
+    // Only the first rect of a (possibly multi-line) annotation is a tab stop,
+    // so each annotation is one keyboard control, not one-per-wrapped-line.
+    let firstRect = true;
     for (const { item, fromChar, toChar } of covered) {
       const info = state.spanByOffset.get(item.startOffset);
       const textNode = info?.span.firstChild;
@@ -183,6 +205,28 @@ function drawHighlights(
           div.style.mixBlendMode = "multiply";
           div.style.borderRadius = "2px";
         }
+        if (interactive && firstRect && onAnnotationClick) {
+          firstRect = false;
+          div.tabIndex = 0;
+          div.setAttribute("role", "button");
+          div.setAttribute("aria-label", annotationLabel(state, a));
+          // Kept under the layer's pointer-events-none (so the mouse can still
+          // select text through a highlight); Tab focus + keydown are unaffected
+          // by pointer-events, so this is the keyboard-only edit path. A visible
+          // focus ring is required (the tint alone isn't a focus cue).
+          div.classList.add(
+            "focus-visible:outline",
+            "focus-visible:outline-2",
+            "focus-visible:outline-offset-2",
+            "focus-visible:outline-sky-600"
+          );
+          div.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onAnnotationClick(a);
+            }
+          });
+        }
         page.highlightLayer.appendChild(div);
       }
     }
@@ -200,6 +244,7 @@ export function PdfSourceViewer({
   onAnnotationClick,
   readOnly = false,
   onLoadError,
+  onUnannotatable,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const renderStateRef = useRef<RenderState | null>(null);
@@ -316,7 +361,12 @@ export function PdfSourceViewer({
         // Leave the (readable) canvases up, skip the text layer, and tell the
         // student annotation isn't possible on an image. Not an error.
         if (!fullText.trim()) {
-          if (!cancelled) setStatus("scanned");
+          if (!cancelled) {
+            setStatus("scanned");
+            // Tell the parent annotation is impossible here so it can relax the
+            // required-annotate Continue gate (student must not get trapped).
+            onUnannotatable?.();
+          }
           return;
         }
 
@@ -389,7 +439,13 @@ export function PdfSourceViewer({
             highlightLayer: p.highlightLayer,
           })),
         };
-        drawHighlights(renderStateRef.current, annotations, visibleKinds);
+        drawHighlights(
+          renderStateRef.current,
+          annotations,
+          visibleKinds,
+          !readOnly,
+          onAnnotationClick
+        );
         setStatus("ready");
       } catch (e) {
         console.error("pdf render:", e);
@@ -414,8 +470,8 @@ export function PdfSourceViewer({
   // Light redraw on annotation / visibility changes (no canvas repaint).
   useEffect(() => {
     const s = renderStateRef.current;
-    if (s) drawHighlights(s, annotations, visibleKinds);
-  }, [annotations, visibleKinds]);
+    if (s) drawHighlights(s, annotations, visibleKinds, !readOnly, onAnnotationClick);
+  }, [annotations, visibleKinds, readOnly, onAnnotationClick]);
 
   // Scroll an annotation into view when the parent asks.
   useEffect(() => {
@@ -433,51 +489,116 @@ export function PdfSourceViewer({
     }
   }, [scrollToAnnotationId]);
 
+  // True while a mouse drag is in progress; the mouseup path owns that case so
+  // the debounced selectionchange handler stands down (avoids a double-emit).
+  const pointerDownRef = useRef(false);
+  // Last emitted "start:end" so the same range isn't surfaced twice (e.g. the
+  // mouseup commit followed by a trailing selectionchange for the same range).
+  const lastEmittedRef = useRef<string | null>(null);
+
+  // Read the live DOM selection and surface it as a SelectionPayload. Shared by
+  // the mouse path (mouseup) and the keyboard path (debounced selectionchange),
+  // so a selection made by ANY means opens the popover identically. The popover
+  // button is itself focusable, closing the keyboard create-annotation loop.
+  const commitSelection = useCallback(
+    (allowCollapsedClick: boolean) => {
+      if (readOnly) return;
+      const s = renderStateRef.current;
+      if (!s) return;
+
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) {
+        lastEmittedRef.current = null;
+        onClearSelection?.();
+        return;
+      }
+
+      if (sel.isCollapsed) {
+        // A collapsed click inside a highlight opens it (mouse affordance);
+        // keyboard editing goes through the focusable highlight instead.
+        if (allowCollapsedClick) {
+          const off = offsetFromNode(sel.anchorNode, sel.anchorOffset);
+          const hit =
+            off === null ? null : annotationAt(annotations, visibleKinds, off);
+          if (hit) {
+            onAnnotationClick?.(hit);
+            return;
+          }
+        }
+        lastEmittedRef.current = null;
+        onClearSelection?.();
+        return;
+      }
+
+      const a1 = offsetFromNode(sel.anchorNode, sel.anchorOffset);
+      const a2 = offsetFromNode(sel.focusNode, sel.focusOffset);
+      // A selection that doesn't resolve to our text layer (e.g. the user
+      // selected something elsewhere on the page) clears the popover.
+      if (a1 === null || a2 === null) {
+        lastEmittedRef.current = null;
+        onClearSelection?.();
+        return;
+      }
+      const start = Math.max(0, Math.min(a1, a2));
+      const end = Math.min(s.text.length, Math.max(a1, a2));
+      if (end - start < 1) {
+        lastEmittedRef.current = null;
+        onClearSelection?.();
+        return;
+      }
+
+      const key = `${start}:${end}`;
+      if (key === lastEmittedRef.current) return; // already surfaced this range
+      lastEmittedRef.current = key;
+
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      onSelection?.({
+        rangeStart: start,
+        rangeEnd: end,
+        selectedText: s.text.slice(start, end),
+        rect: {
+          top: rect.top,
+          left: rect.left,
+          right: rect.right,
+          bottom: rect.bottom,
+        },
+      });
+    },
+    [
+      readOnly,
+      annotations,
+      visibleKinds,
+      onSelection,
+      onClearSelection,
+      onAnnotationClick,
+    ]
+  );
+
   const handleMouseUp = () => {
-    if (readOnly) return;
-    const s = renderStateRef.current;
-    if (!s) return;
-
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) {
-      onClearSelection?.();
-      return;
-    }
-
-    if (sel.isCollapsed) {
-      const off = offsetFromNode(sel.anchorNode, sel.anchorOffset);
-      const hit = off === null ? null : annotationAt(annotations, visibleKinds, off);
-      if (hit) onAnnotationClick?.(hit);
-      else onClearSelection?.();
-      return;
-    }
-
-    const a1 = offsetFromNode(sel.anchorNode, sel.anchorOffset);
-    const a2 = offsetFromNode(sel.focusNode, sel.focusOffset);
-    if (a1 === null || a2 === null) {
-      onClearSelection?.();
-      return;
-    }
-    const start = Math.max(0, Math.min(a1, a2));
-    const end = Math.min(s.text.length, Math.max(a1, a2));
-    if (end - start < 1) {
-      onClearSelection?.();
-      return;
-    }
-
-    const rect = sel.getRangeAt(0).getBoundingClientRect();
-    onSelection?.({
-      rangeStart: start,
-      rangeEnd: end,
-      selectedText: s.text.slice(start, end),
-      rect: {
-        top: rect.top,
-        left: rect.left,
-        right: rect.right,
-        bottom: rect.bottom,
-      },
-    });
+    pointerDownRef.current = false;
+    commitSelection(true);
   };
+
+  // Keyboard path: surface a selection once it's been stable for a beat. A
+  // keyboard selection (shift+arrows, or assistive tech / caret browsing) emits
+  // `selectionchange` on every caret nudge with no natural "done" signal, so we
+  // debounce. While the mouse is dragging, the mouseup path owns it (we stand
+  // down) to avoid a duplicate emit. This is the "debounced stable selection"
+  // trigger chosen in design.
+  useEffect(() => {
+    if (readOnly) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onSelChange = () => {
+      if (pointerDownRef.current) return; // mouse drag → mouseup will commit
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => commitSelection(false), 350);
+    };
+    document.addEventListener("selectionchange", onSelChange);
+    return () => {
+      document.removeEventListener("selectionchange", onSelChange);
+      if (timer) clearTimeout(timer);
+    };
+  }, [readOnly, commitSelection]);
 
   return (
     <div className="space-y-2">
@@ -502,6 +623,9 @@ export function PdfSourceViewer({
       )}
       <div
         ref={containerRef}
+        onMouseDown={() => {
+          pointerDownRef.current = true;
+        }}
         onMouseUp={handleMouseUp}
         className="space-y-4 overflow-x-auto rounded-lg border border-gray-200 bg-gray-100 p-3"
       />

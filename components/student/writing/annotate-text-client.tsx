@@ -81,6 +81,10 @@ export function AnnotateTextClient({
   const isPdf = sourceRenderMode === "pdf" && Boolean(sourceFilePath);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfFailed, setPdfFailed] = useState(false);
+  // A scanned/image-only PDF renders but has no selectable text, so it can't be
+  // annotated. We must not let a teacher's bad file trap a student on a
+  // required-annotate step, so this relaxes the Continue gate below.
+  const [pdfUnannotatable, setPdfUnannotatable] = useState(false);
 
   useEffect(() => {
     if (!isPdf) return;
@@ -136,7 +140,10 @@ export function AnnotateTextClient({
   // student may continue without annotating. Flag comes from the step
   // config in lib/jswp-modes.ts.
   const hasAnnotations = initialAnnotations.length >= 1;
-  const canContinue = required ? hasAnnotations : true;
+  // A required step normally needs ≥1 annotation, but a scanned/unannotatable
+  // PDF can't be highlighted at all — never trap the student on a file they
+  // can't act on.
+  const canContinue = !required || hasAnnotations || pdfUnannotatable;
 
   const onContinue = () => {
     setContinueError(null);
@@ -190,6 +197,7 @@ export function AnnotateTextClient({
                 onAnnotationClick={onAnnotationClick}
                 readOnly={isReadOnly}
                 onLoadError={() => setPdfFailed(true)}
+                onUnannotatable={() => setPdfUnannotatable(true)}
               />
             ) : (
               <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -240,9 +248,11 @@ export function AnnotateTextClient({
           <div className="text-xs text-gray-500">
             {hasAnnotations
               ? `${initialAnnotations.length} annotation${initialAnnotations.length === 1 ? "" : "s"} saved`
-              : required
-                ? "Add at least one annotation to continue."
-                : "Annotating is optional — add notes if they help, or continue."}
+              : pdfUnannotatable
+                ? "This PDF can’t be highlighted — read it, then continue."
+                : required
+                  ? "Add at least one annotation to continue."
+                  : "Annotating is optional — add notes if they help, or continue."}
           </div>
           <div className="flex items-center gap-3">
             {continueError && (
