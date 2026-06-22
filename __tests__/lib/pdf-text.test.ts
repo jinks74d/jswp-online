@@ -72,6 +72,82 @@ describe("buildPdfText — separator rule", () => {
   });
 });
 
+describe("buildPdfText — line/region grouping (glued-token fixes)", () => {
+  // Real-PDF reading order can place the next item on a different line/region
+  // without pdf.js setting hasEOL. The horizontal-gap test only makes sense for
+  // same-line items, so a y-jump (or a backward x-jump) must itself separate.
+
+  it("separates a footer page number that abuts preceding text", () => {
+    // "...LLC" sits on a body line (y=500); "38" is the page-number footer far
+    // below (y=40). pdf.js doesn't flag hasEOL, and the footer's x lands such
+    // that the same-line gap test sees a small/negative gap → previously glued
+    // into "LLC38". The y-jump must force a separator.
+    const { text } = buildPdfText([
+      page(
+        item("LLC", 400, 30, { y: 500 }),
+        item("38", 300, 16, { y: 40 })
+      ),
+    ]);
+    expect(text).toBe("LLC 38");
+  });
+
+  it("separates a column/heading boundary where x jumps backward", () => {
+    // "Writing" ends a left-column line at x=120; "COPYRIGHT" starts the next
+    // region back at the left margin (x=0) on a different line (y differs).
+    // Same-line gap test saw a large negative gap → no space → "WritingCOPYRIGHT".
+    const { text } = buildPdfText([
+      page(
+        item("Writing", 60, 60, { y: 500 }),
+        item("COPYRIGHT", 0, 90, { y: 480 })
+      ),
+    ]);
+    expect(text).toBe("Writing COPYRIGHT");
+  });
+
+  it("separates a backward x-jump even when y is unchanged (new column/line)", () => {
+    // Some extractors keep y constant across a wrapped/column break; an item
+    // starting well to the LEFT of the previous item's left edge is a new line.
+    const { text } = buildPdfText([
+      page(
+        item("rightcol", 300, 80, { y: 200 }),
+        item("leftcol", 0, 70, { y: 200 })
+      ),
+    ]);
+    expect(text).toBe("rightcol leftcol");
+  });
+
+  it("does not insert a separator for sub-pixel baseline jitter on one line", () => {
+    // Tiny y differences (font baseline rounding) within a line must NOT break.
+    const { text } = buildPdfText([
+      page(
+        item("super", 0, 40, { y: 100 }),
+        item("script", 40, 40, { y: 100.4 })
+      ),
+    ]);
+    expect(text).toBe("superscript");
+  });
+
+  it("does not double a separator when the line item already carries a space", () => {
+    const { text } = buildPdfText([
+      page(
+        item("LLC ", 400, 36, { y: 500 }),
+        item("38", 300, 16, { y: 40 })
+      ),
+    ]);
+    expect(text).toBe("LLC 38");
+  });
+
+  it("still abuts same-line items the gap test joins (no false line break)", () => {
+    const { text } = buildPdfText([
+      page(
+        item("Hello", 0, 50, { y: 700 }),
+        item("World", 50, 50, { y: 700 })
+      ),
+    ]);
+    expect(text).toBe("HelloWorld");
+  });
+});
+
 describe("buildPdfText — offset tiling invariant", () => {
   it("every item's [startOffset,endOffset) slices text back to its str", () => {
     const { text, items } = buildPdfText([
@@ -98,6 +174,35 @@ describe("buildPdfText — offset tiling invariant", () => {
       page(item("b", 0, 10)),
     ]);
     expect(items.map((i) => i.pageIndex)).toEqual([0, 1]);
+  });
+
+  it("tiles text contiguously across line/region breaks (no gaps/overlaps)", () => {
+    // Mixes every separator path: abutting, gap-space, hasEOL newline, page
+    // break, footer y-jump, and a backward x-jump column break. Whatever
+    // separators land between items, each item's slice must still equal its str
+    // and offsets must remain ascending and non-overlapping.
+    const { text, items } = buildPdfText([
+      page(
+        item("Header", 0, 60, { y: 700 }),
+        item("right", 200, 50, { y: 700 }), // gap → space
+        item("COPYRIGHT", 0, 90, { y: 680 }), // backward x → region break
+        item("Body", 0, 40, { y: 640, hasEOL: true }), // hasEOL → newline
+        item("LLC", 400, 30, { y: 620 }),
+        item("38", 300, 16, { y: 40 }) // footer y-jump
+      ),
+      page(item("PageTwo", 0, 70, { y: 700 })), // page break
+    ]);
+    expect(items).toHaveLength(7);
+    for (const it of items) {
+      expect(text.slice(it.startOffset, it.endOffset)).toBe(it.str);
+    }
+    // Offsets ascending and non-overlapping (endOffset[i-1] <= startOffset[i]).
+    for (let i = 1; i < items.length; i++) {
+      expect(items[i].startOffset).toBeGreaterThanOrEqual(items[i - 1].endOffset);
+    }
+    // And contiguous: the first item starts at 0 and the last ends at text.length.
+    expect(items[0].startOffset).toBe(0);
+    expect(items[items.length - 1].endOffset).toBe(text.length);
   });
 });
 

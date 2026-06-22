@@ -50,17 +50,6 @@ CSV-imported school admins all default to `administrator` (`school-user.ts` pass
 - **Identified:** chunk school-admin-roles
 - **Priority:** polish
 
-### PDF extraction: separator heuristic edge cases
-`buildPdfText`'s separator rule (`lib/pdf-text.ts`, `SPACE_RATIO = 0.3`) produces
-readable substrate on real JSWP PDFs, but glues a few cross-region tokens — e.g.
-a footer page number abutting preceding text (`"LLC38"`) and column/heading
-boundaries (`"Writing COPYRIGHT"`). The offset invariant is unaffected (verified
-`true` on live data); this is cosmetic spacing only. Refinement candidates:
-line-grouping by `y` before applying the horizontal-gap test, and a column/region
-break heuristic. Tune against several real guides.
-- **Identified:** chunk pdf-annotate Phase 2 (commit 42a483f)
-- **Priority:** polish (Phase 7); not a blocker for annotation
-
 ### Expository step subLabels are off-by-one for 3+:0
 `jswp-modes.ts` hard-codes each Expository step's `subLabel` as a static
 `"Step N"` string ("Step 1" … "Step 5"), numbered for the 2+:1 sequence.
@@ -178,6 +167,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### PDF extraction: separator heuristic edge cases
+Refined `buildPdfText`'s `separatorBetween` (`lib/pdf-text.ts`): a line/region break check now runs before the horizontal-gap test — a `y`-jump test (footer page numbers, `"LLC38"`→`"LLC 38"`) and a backward-`x` test (column/heading boundaries, `"WritingCOPYRIGHT"`→`"Writing COPYRIGHT"`), emitting a space (not a newline) so line structure isn't over-asserted. Separator alphabet (`\n`/` `/``) and offset bookkeeping unchanged → contiguity invariant holds by construction (new mixed-path contiguity test; 23/23 pass). Thresholds derive scale from mean glyph width (no glyph-height field on `PdfTextItem`); tight (<1 glyph) multi-column layouts would need a true column-segmentation pass — out of scope. NB: changes `source_text` for *new* uploads (forward-only); pre-change stored PDFs would now mismatch the live extraction and the render-side guard degrades them to the flat viewer (still annotatable) — negligible per the no-stored-PDFs data reality.
+- **Closed:** PDF-annotate polish (2026-06-22)
 
 ### Warn the teacher when a PDF source is image-only (unannotatable)
 Shipped: `source-text-upload.tsx` shows a non-blocking amber `role="status"` warning when an uploaded PDF has no extractable text (`extracted.renderMode === "pdf" && extracted.text.trim() === ""`) — advises swapping in a text-based PDF, but save still proceeds. Pairs with the runtime Continue-gate unblock (`9baad99`). This is the *prevention* half of PDF-annotate decision 2.

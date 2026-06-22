@@ -19,6 +19,22 @@
 /** Fraction of a glyph's mean width that a gap must exceed to imply a space. */
 const SPACE_RATIO = 0.3;
 
+/**
+ * Fraction of a glyph's mean width that a baseline (y) jump must exceed to count
+ * as a new line/region rather than intra-line jitter (super/subscripts, font
+ * baseline rounding). Lines and footers jump by roughly a glyph height or more;
+ * this stays well above sub-pixel noise.
+ */
+const LINE_Y_RATIO = 0.6;
+
+/**
+ * Fraction of a glyph's mean width that `curr` must start to the LEFT of `prev`'s
+ * left edge to count as a new line/column. A token starting meaningfully left of
+ * where the previous one began is a carriage-return / next-column, not a
+ * same-line continuation, even when y is unchanged.
+ */
+const BACK_X_RATIO = 1;
+
 export interface PdfTextItem {
   readonly str: string;
   /** True when this item ends a line (pdf.js TextItem.hasEOL). */
@@ -143,10 +159,21 @@ interface Placed {
   readonly pageIndex: number;
 }
 
+/** A space, unless the adjacent items already carry one (avoid doubling). */
+function spaceOrNothing(prev: Placed, curr: Placed): string {
+  if (prev.item.str.endsWith(" ") || curr.item.str.startsWith(" ")) return "";
+  return " ";
+}
+
 /**
  * Separator inserted *before* `curr`, derived from the previous item:
  *   - different page → newline (page break)
  *   - previous item ended a line → newline
+ *   - new line/region (large y-jump, or `curr` starts well left of `prev`) →
+ *     space. The horizontal-gap test below only makes sense for same-line items,
+ *     so reading-order jumps to a footer (big y delta) or the next column
+ *     (backward x) are caught here first — otherwise they'd glue (e.g.
+ *     "LLC" + "38" → "LLC38", "Writing" + "COPYRIGHT" → "WritingCOPYRIGHT").
  *   - wide horizontal gap on the same line → space (unless already spaced)
  *   - otherwise → nothing (items abut)
  */
@@ -154,14 +181,22 @@ function separatorBetween(prev: Placed, curr: Placed): string {
   if (curr.pageIndex !== prev.pageIndex) return "\n";
   if (prev.item.hasEOL) return "\n";
 
-  const gap = curr.item.x - (prev.item.x + prev.item.width);
   const meanGlyph =
     prev.item.str.length > 0
       ? prev.item.width / prev.item.str.length
       : prev.item.width;
+
+  // New line/region: a baseline jump beyond intra-line jitter, or `curr`
+  // starting meaningfully left of where `prev` began (carriage-return / column).
+  const yJump = Math.abs(curr.item.y - prev.item.y);
+  const backX = prev.item.x - curr.item.x;
+  if (yJump > meanGlyph * LINE_Y_RATIO || backX > meanGlyph * BACK_X_RATIO) {
+    return spaceOrNothing(prev, curr);
+  }
+
+  const gap = curr.item.x - (prev.item.x + prev.item.width);
   if (gap > meanGlyph * SPACE_RATIO) {
-    if (prev.item.str.endsWith(" ") || curr.item.str.startsWith(" ")) return "";
-    return " ";
+    return spaceOrNothing(prev, curr);
   }
   return "";
 }
