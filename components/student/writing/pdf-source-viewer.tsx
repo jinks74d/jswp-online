@@ -26,9 +26,20 @@
  * (Web Worker + canvas), so it runs inside a mount-gated effect; SSR renders
  * just the shell to avoid a hydration mismatch. The robust flat-text fallback
  * is Phase 6; here a failure shows a notice + "Open original".
+ *
+ * Keyboard create path (see docs/.../2026-06-22-pdf-keyboard-selection-design.md):
+ * the text layer is otherwise mouse-only — placing a caret in static <span>s
+ * needs caret-browsing (F7), which is off by default, so a keyboard-only user
+ * couldn't START a selection. We add a managed span-navigation mode: the
+ * container is ONE tab stop (role="application"), a roving cursor (an index into
+ * the navigable segments) moves by word (←/→) or line (↑/↓), Shift+Arrow extends
+ * from an anchor, Enter commits via the SAME emit path the mouse uses, and Esc
+ * cancels/exits. The cursor and selection are surfaced to AT via
+ * aria-activedescendant + a polite live region. No new offset model: the cursor
+ * is just an index into `segments`, whose offsets already map to source_text.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { loadPdfjs } from "@/lib/pdf-worker";
@@ -107,6 +118,102 @@ interface RenderState {
   readonly segments: readonly PdfTextSegment[];
   readonly spanByOffset: Map<number, { span: HTMLSpanElement; pageIndex: number }>;
   readonly pages: PageLayer[];
+  /**
+   * Keyboard-navigation view: indices into `segments` that are real stops (a
+   * span exists for them and they aren't whitespace-only). The roving cursor is
+   * an index into THIS array, so word stepping is ±1 and the cursor never lands
+   * on an invisible run (spec §7).
+   */
+  readonly navStops: readonly number[];
+  /** Stable DOM id of each segment's span (for aria-activedescendant). */
+  readonly spanIdByOffset: Map<number, string>;
+}
+
+/** Unique-per-mount prefix so span ids don't collide across remounts. */
+let pdfTextLayerSeq = 0;
+
+/** Marquee divs (transient selection chrome) are tagged so they're separable. */
+const MARQUEE_ATTR = "data-kbd-marquee";
+
+/**
+ * Pure navigation reducer: given the navigable stops, the current cursor index
+ * (into navStops), and a movement intent, return the next cursor index. Word
+ * moves are ±1; line moves jump to the first stop of the adjacent visual line
+ * (line membership = same page + close baseline y); Home/End snap to the line's
+ * ends; doc-home/end go to the extremes. Kept pure so it's unit-testable with
+ * synthetic segments (spec §9 phase 0) and never touches the DOM.
+ */
+type NavIntent =
+  | "word-next"
+  | "word-prev"
+  | "line-next"
+  | "line-prev"
+  | "line-home"
+  | "line-end"
+  | "doc-home"
+  | "doc-end";
+
+/** Same visual line ≈ same page and a baseline within ~half a glyph height. */
+function sameLine(a: PdfTextSegment, b: PdfTextSegment): boolean {
+  if (a.pageIndex !== b.pageIndex) return false;
+  const meanGlyph =
+    a.str.length > 0 ? a.width / a.str.length : a.width || 1;
+  return Math.abs(a.y - b.y) <= Math.max(1, meanGlyph * 0.6);
+}
+
+function navigate(
+  segments: readonly PdfTextSegment[],
+  navStops: readonly number[],
+  current: number,
+  intent: NavIntent
+): number {
+  if (navStops.length === 0) return 0;
+  const clamp = (i: number): number =>
+    Math.max(0, Math.min(navStops.length - 1, i));
+  const seg = (navPos: number): PdfTextSegment => segments[navStops[clamp(navPos)]];
+
+  switch (intent) {
+    case "word-next":
+      return clamp(current + 1);
+    case "word-prev":
+      return clamp(current - 1);
+    case "doc-home":
+      return 0;
+    case "doc-end":
+      return navStops.length - 1;
+    case "line-home": {
+      const cur = seg(current);
+      let i = current;
+      while (i > 0 && sameLine(seg(i - 1), cur)) i--;
+      return i;
+    }
+    case "line-end": {
+      const cur = seg(current);
+      let i = current;
+      while (i < navStops.length - 1 && sameLine(seg(i + 1), cur)) i++;
+      return i;
+    }
+    case "line-prev": {
+      const cur = seg(current);
+      // Walk back off the current line, then to the start of that prior line.
+      let i = current;
+      while (i > 0 && sameLine(seg(i - 1), cur)) i--;
+      if (i === 0) return 0; // already on the first line
+      const prevLine = seg(i - 1);
+      let j = i - 1;
+      while (j > 0 && sameLine(seg(j - 1), prevLine)) j--;
+      return j;
+    }
+    case "line-next": {
+      const cur = seg(current);
+      let i = current;
+      while (i < navStops.length - 1 && sameLine(seg(i + 1), cur)) i++;
+      if (i === navStops.length - 1) return navStops.length - 1; // last line
+      return i + 1; // first stop of the next line
+    }
+    default:
+      return current;
+  }
 }
 
 /** Map a selection endpoint (node + local offset) to a global source offset. */
@@ -392,7 +499,11 @@ export function PdfSourceViewer({
           number,
           { span: HTMLSpanElement; pageIndex: number }
         >();
+        const spanIdByOffset = new Map<number, string>();
         const toScale: { span: HTMLSpanElement; target: number }[] = [];
+        // Per-mount id prefix so spans get stable, collision-free DOM ids for
+        // aria-activedescendant (the active word must be addressable by id).
+        const idPrefix = `pdf-tl-${pdfTextLayerSeq++}`;
         let seg = 0;
 
         rendered.forEach((p, pageIndex) => {
@@ -406,6 +517,11 @@ export function PdfSourceViewer({
             const span = document.createElement("span");
             span.textContent = item.str;
             span.dataset.startOffset = String(s.startOffset);
+            const spanId = `${idPrefix}-${s.startOffset}`;
+            span.id = spanId;
+            // role=text + the word's own text content gives the SR an accessible
+            // name when this span is the aria-activedescendant (spec §5.1).
+            span.setAttribute("role", "text");
             span.style.position = "absolute";
             span.style.whiteSpace = "pre";
             span.style.transformOrigin = "0% 0%";
@@ -416,7 +532,18 @@ export function PdfSourceViewer({
             p.textLayer.appendChild(span);
 
             spanByOffset.set(s.startOffset, { span, pageIndex });
+            spanIdByOffset.set(s.startOffset, spanId);
             toScale.push({ span, target: item.width * p.viewport.scale });
+          }
+        });
+
+        // Navigable stops: segments that have a span AND aren't whitespace-only,
+        // so the cursor steps word-to-word and never lands on an invisible run
+        // (spec §3.3/§7). Index order is document/reading order by construction.
+        const navStops: number[] = [];
+        segments.forEach((s, i) => {
+          if (s.str.trim().length > 0 && spanByOffset.has(s.startOffset)) {
+            navStops.push(i);
           }
         });
 
@@ -434,6 +561,8 @@ export function PdfSourceViewer({
           text: fullText,
           segments,
           spanByOffset,
+          spanIdByOffset,
+          navStops,
           pages: rendered.map((p) => ({
             pageWrap: p.pageWrap,
             highlightLayer: p.highlightLayer,
@@ -493,8 +622,38 @@ export function PdfSourceViewer({
   // the debounced selectionchange handler stands down (avoids a double-emit).
   const pointerDownRef = useRef(false);
   // Last emitted "start:end" so the same range isn't surfaced twice (e.g. the
-  // mouseup commit followed by a trailing selectionchange for the same range).
+  // mouseup commit followed by a trailing selectionchange for the same range,
+  // OR the keyboard commit followed by a trailing selectionchange — the
+  // keyboard committer sets the window selection, so it MUST funnel through this
+  // same de-dupe to avoid a double popover (spec §6)).
   const lastEmittedRef = useRef<string | null>(null);
+
+  // Single emit body shared by the mouse/DOM path (commitSelection) and the
+  // keyboard committer (commitKeyboardSelection). Builds the identical
+  // SelectionPayload from an already-resolved [start, end) + viewport rect and
+  // applies the lastEmittedRef de-dupe. Factored out per spec §3.5/§6 so the
+  // keyboard path reuses, not duplicates, the emit.
+  const emitSelection = useCallback(
+    (start: number, end: number, rect: DOMRect): void => {
+      const s = renderStateRef.current;
+      if (!s) return;
+      const key = `${start}:${end}`;
+      if (key === lastEmittedRef.current) return; // already surfaced this range
+      lastEmittedRef.current = key;
+      onSelection?.({
+        rangeStart: start,
+        rangeEnd: end,
+        selectedText: s.text.slice(start, end),
+        rect: {
+          top: rect.top,
+          left: rect.left,
+          right: rect.right,
+          bottom: rect.bottom,
+        },
+      });
+    },
+    [onSelection]
+  );
 
   // Read the live DOM selection and surface it as a SelectionPayload. Shared by
   // the mouse path (mouseup) and the keyboard path (debounced selectionchange),
@@ -547,30 +706,16 @@ export function PdfSourceViewer({
         return;
       }
 
-      const key = `${start}:${end}`;
-      if (key === lastEmittedRef.current) return; // already surfaced this range
-      lastEmittedRef.current = key;
-
       const rect = sel.getRangeAt(0).getBoundingClientRect();
-      onSelection?.({
-        rangeStart: start,
-        rangeEnd: end,
-        selectedText: s.text.slice(start, end),
-        rect: {
-          top: rect.top,
-          left: rect.left,
-          right: rect.right,
-          bottom: rect.bottom,
-        },
-      });
+      emitSelection(start, end, rect);
     },
     [
       readOnly,
       annotations,
       visibleKinds,
-      onSelection,
       onClearSelection,
       onAnnotationClick,
+      emitSelection,
     ]
   );
 
@@ -600,6 +745,302 @@ export function PdfSourceViewer({
     };
   }, [readOnly, commitSelection]);
 
+  // ---- Keyboard span-navigation selection mode (spec 2026-06-22) -----------
+  // The roving cursor is an index into renderState.navStops; anchorNav !== null
+  // means a Shift-extended selection is in progress. Both are component state so
+  // the cursor render + live announcements react to moves. They reset whenever
+  // the document re-renders (status flips away from "ready").
+  const [cursorNav, setCursorNav] = useState<number | null>(null);
+  const [anchorNav, setAnchorNav] = useState<number | null>(null);
+  const [liveMessage, setLiveMessage] = useState("");
+  // aria-activedescendant id for the focused word (drives SR word-by-word
+  // reading without moving real DOM focus off the region).
+  const [activeDescId, setActiveDescId] = useState<string | null>(null);
+  const announceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
+
+  // Reset the cursor whenever a fresh document is (re)rendered or read-only
+  // turns the mode off, so stale indices never point into a replaced segments
+  // array.
+  useEffect(() => {
+    if (status !== "ready" || readOnly) {
+      setCursorNav(null);
+      setAnchorNav(null);
+      setActiveDescId(null);
+    }
+  }, [status, readOnly]);
+
+  // Debounced polite announcement (mirrors the 350 ms philosophy already in the
+  // file) so rapid Shift+Arrow doesn't flood the live region.
+  const announce = useCallback((msg: string, immediate = false) => {
+    if (announceTimerRef.current) clearTimeout(announceTimerRef.current);
+    if (immediate) {
+      setLiveMessage(msg);
+      return;
+    }
+    announceTimerRef.current = setTimeout(() => setLiveMessage(msg), 200);
+  }, []);
+
+  // Reflect the cursor in the DOM: scroll the active span into view and point
+  // aria-activedescendant at it. Pure side-effect of cursor state; no layout on
+  // the hot path beyond scrollIntoView (spec §4).
+  useEffect(() => {
+    const s = renderStateRef.current;
+    if (!s || cursorNav === null) {
+      setActiveDescId(null);
+      return;
+    }
+    const offset = s.segments[s.navStops[cursorNav]]?.startOffset;
+    if (offset === undefined) return;
+    const id = s.spanIdByOffset.get(offset) ?? null;
+    setActiveDescId(id);
+    const info = s.spanByOffset.get(offset);
+    info?.span.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [cursorNav]);
+
+  // Draw the transient selection "marquee" — a dashed outline over the spanned
+  // words, distinct from committed-annotation tints (never a kind color) so it
+  // isn't mistaken for a saved highlight (spec §3.4). Declared AFTER the
+  // highlights effect so it re-runs (and redraws) whenever drawHighlights wipes
+  // the layer; depends on annotations/visibleKinds for exactly that reason.
+  useEffect(() => {
+    const s = renderStateRef.current;
+    if (!s) return;
+    // Clear any prior marquee chrome first (highlights own the rest of the layer).
+    for (const p of s.pages) {
+      for (const el of Array.from(
+        p.highlightLayer.querySelectorAll(`[${MARQUEE_ATTR}]`)
+      )) {
+        el.remove();
+      }
+    }
+    if (readOnly || cursorNav === null) return;
+
+    // The marquee covers the inclusive nav range [min, max]; a lone cursor
+    // (no anchor) gets a single-word outline so the focus position is visible
+    // (spec §2.4.7 focus visible).
+    const a = anchorNav ?? cursorNav;
+    const lo = Math.min(a, cursorNav);
+    const hi = Math.max(a, cursorNav);
+    const loSeg = s.segments[s.navStops[lo]];
+    const hiSeg = s.segments[s.navStops[hi]];
+    if (!loSeg || !hiSeg) return;
+    const start = loSeg.startOffset;
+    const end = hiSeg.endOffset;
+
+    const covered = itemsCoveringRange(s.segments, start, end);
+    for (const { item, fromChar, toChar } of covered) {
+      const info = s.spanByOffset.get(item.startOffset);
+      const textNode = info?.span.firstChild;
+      if (!info || !textNode) continue;
+      const range = document.createRange();
+      try {
+        range.setStart(textNode, fromChar);
+        range.setEnd(textNode, toChar);
+      } catch {
+        continue;
+      }
+      const page = s.pages[info.pageIndex];
+      const wrap = page.pageWrap.getBoundingClientRect();
+      for (const r of Array.from(range.getClientRects())) {
+        const div = document.createElement("div");
+        div.setAttribute(MARQUEE_ATTR, "");
+        div.style.position = "absolute";
+        div.style.left = `${r.left - wrap.left}px`;
+        div.style.top = `${r.top - wrap.top}px`;
+        div.style.width = `${r.width}px`;
+        div.style.height = `${r.height}px`;
+        div.style.borderRadius = "2px";
+        // Dashed sky outline — a shape cue, not a kind tint (CLAUDE.md §9).
+        div.className =
+          "outline-dashed outline-2 outline-offset-1 outline-sky-600 bg-sky-200/30";
+        page.highlightLayer.appendChild(div);
+      }
+    }
+    // annotations/visibleKinds are deps so this redraws after drawHighlights
+    // wipes the layer; readOnly toggles the mode off.
+  }, [cursorNav, anchorNav, readOnly, annotations, visibleKinds, status]);
+
+  // Commit the current keyboard selection: synthesize a DOM Range over the
+  // spanned offsets, set it as the window selection (so the artifact a keyboard
+  // user creates is identical to the mouse one), and route through the SHARED
+  // emitSelection. The lastEmittedRef de-dupe guards the trailing
+  // selectionchange that setting the window selection will fire (spec §3.5/§6).
+  const commitKeyboardSelection = useCallback((): boolean => {
+    if (readOnly) return false;
+    const s = renderStateRef.current;
+    if (cursorNav === null) return false;
+    const a = anchorNav ?? cursorNav;
+    const lo = Math.min(a, cursorNav);
+    const hi = Math.max(a, cursorNav);
+    if (!s) return false;
+    const loSeg = s.segments[s.navStops[lo]];
+    const hiSeg = s.segments[s.navStops[hi]];
+    if (!loSeg || !hiSeg) return false;
+    const start = Math.max(0, loSeg.startOffset);
+    const end = Math.min(s.text.length, hiSeg.endOffset);
+    if (end - start < 1) return false;
+
+    const startInfo = s.spanByOffset.get(loSeg.startOffset);
+    const endInfo = s.spanByOffset.get(hiSeg.startOffset);
+    const startNode = startInfo?.span.firstChild;
+    const endNode = endInfo?.span.firstChild;
+    if (!startNode || !endNode) return false;
+
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, 0);
+      range.setEnd(endNode, hiSeg.str.length);
+    } catch {
+      return false;
+    }
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    // End-anchored rect: for a cross-page range the union would span the gutter
+    // and push the popover off-screen, so anchor to the cursor end (spec §7).
+    const rects = range.getClientRects();
+    const rect =
+      rects.length > 0 ? rects[rects.length - 1] : range.getBoundingClientRect();
+    emitSelection(start, end, rect);
+    return true;
+  }, [readOnly, cursorNav, anchorNav, emitSelection]);
+
+  // The whole keyboard model on one handler bound to the region. Returns early
+  // for non-handled keys so the browser's defaults (e.g. Tab to leave) survive.
+  const handleRegionKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (readOnly) return;
+      const s = renderStateRef.current;
+      if (!s || s.navStops.length === 0) return;
+
+      // First entry / focus may not have seated a cursor yet.
+      const start = cursorNav ?? 0;
+      const wordLabel = (navIdx: number): string =>
+        s.segments[s.navStops[navIdx]]?.str.trim() ?? "";
+
+      const move = (intent: NavIntent, extend: boolean): void => {
+        e.preventDefault();
+        const next = navigate(s.segments, s.navStops, start, intent);
+        if (extend) {
+          // Begin (or continue) extending: set the anchor to where we started
+          // if we weren't already extending.
+          setAnchorNav((prev) => (prev === null ? start : prev));
+        } else {
+          setAnchorNav(null); // plain arrow collapses to a single-word cursor
+        }
+        setCursorNav(next);
+        if (extend) {
+          const a = anchorNav ?? start;
+          const lo = Math.min(a, next);
+          const hi = Math.max(a, next);
+          const count = hi - lo + 1;
+          announce(
+            `Selected: ${wordLabel(lo)} … ${wordLabel(hi)}, ${count} word${count === 1 ? "" : "s"}.`
+          );
+        }
+        // Word-by-word reading is carried by aria-activedescendant; the live
+        // region stays quiet on plain moves to avoid double-speak (spec §5.2).
+      };
+
+      switch (e.key) {
+        case "ArrowRight":
+          move("word-next", e.shiftKey);
+          return;
+        case "ArrowLeft":
+          move("word-prev", e.shiftKey);
+          return;
+        case "ArrowDown":
+          move("line-next", e.shiftKey);
+          return;
+        case "ArrowUp":
+          move("line-prev", e.shiftKey);
+          return;
+        case "Home":
+          move(e.ctrlKey ? "doc-home" : "line-home", e.shiftKey);
+          return;
+        case "End":
+          move(e.ctrlKey ? "doc-end" : "line-end", e.shiftKey);
+          return;
+        case "Enter": {
+          e.preventDefault();
+          if (commitKeyboardSelection()) {
+            announce("Annotation menu open. Press Enter to choose a kind.", true);
+            // The popover mounts on the parent's next render in response to
+            // onSelection; move focus to its Annotate button once it exists
+            // (it lives in a sibling component, reachable only by query here).
+            const focusPopover = (attempt: number): void => {
+              const btn = document.querySelector<HTMLButtonElement>(
+                '[role="toolbar"][aria-label="Annotation toolbar"] button'
+              );
+              if (btn) {
+                btn.focus();
+              } else if (attempt < 10) {
+                requestAnimationFrame(() => focusPopover(attempt + 1));
+              }
+            };
+            requestAnimationFrame(() => focusPopover(0));
+          }
+          return;
+        }
+        case "Escape": {
+          e.preventDefault();
+          if (anchorNav !== null) {
+            // In-progress selection → collapse to the cursor, stay in mode.
+            setAnchorNav(null);
+            lastEmittedRef.current = null;
+            onClearSelection?.();
+            window.getSelection()?.removeAllRanges();
+            announce("Selection cleared.", true);
+          } else {
+            // No selection → exit the mode (focus stays on the region; a second
+            // Tab leaves the layer entirely).
+            setCursorNav(null);
+            setActiveDescId(null);
+            announce("Left selection mode.", true);
+          }
+          return;
+        }
+        default:
+          return; // let unhandled keys (Tab, etc.) behave natively
+      }
+    },
+    [readOnly, cursorNav, anchorNav, announce, commitKeyboardSelection, onClearSelection]
+  );
+
+  // On focus, seat the cursor on the first navigable word (first entry) and
+  // announce the mode once.
+  const handleRegionFocus = useCallback(() => {
+    if (readOnly) return;
+    const s = renderStateRef.current;
+    if (!s || s.navStops.length === 0) return;
+    setCursorNav((prev) => (prev === null ? 0 : prev));
+    announce(
+      "Selection mode. Use arrows to move by word, Shift and arrow to select, Enter to annotate, Escape to exit.",
+      true
+    );
+  }, [readOnly, announce]);
+
+  useEffect(
+    () => () => {
+      if (announceTimerRef.current) clearTimeout(announceTimerRef.current);
+    },
+    []
+  );
+
+  // The managed text region is a single tab stop only when there's a navigable
+  // text layer and creation is allowed. role="application" so the SR's own caret
+  // doesn't intercept our remapped Arrow/Shift/Enter keys (spec §5.1).
+  const kbdMode = status === "ready" && !readOnly;
+  const regionLabel = useMemo(
+    () =>
+      "Source text — press arrow keys to move by word, Shift and arrow to select, Enter to annotate, Escape to exit.",
+    []
+  );
+
   return (
     <div className="space-y-2">
       {status === "loading" && (
@@ -627,8 +1068,23 @@ export function PdfSourceViewer({
           pointerDownRef.current = true;
         }}
         onMouseUp={handleMouseUp}
-        className="space-y-4 overflow-x-auto rounded-lg border border-gray-200 bg-gray-100 p-3"
+        // Keyboard create mode: a single tab stop owning the whole text layer.
+        // role="application" remaps Arrow/Shift/Enter to our selection model
+        // (spec §5.1). Only active when there's navigable text and creation is
+        // allowed; otherwise the region is inert (readOnly / scanned / error).
+        tabIndex={kbdMode ? 0 : undefined}
+        role={kbdMode ? "application" : undefined}
+        aria-label={kbdMode ? regionLabel : undefined}
+        aria-activedescendant={kbdMode && activeDescId ? activeDescId : undefined}
+        onFocus={kbdMode ? handleRegionFocus : undefined}
+        onKeyDown={kbdMode ? handleRegionKeyDown : undefined}
+        className="space-y-4 overflow-x-auto rounded-lg border border-gray-200 bg-gray-100 p-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
       />
+      {/* Polite live region: mode entry, selection extent, commit, cancel/exit
+          (spec §5.2). Word-by-word reading is carried by aria-activedescendant. */}
+      <div aria-live="polite" className="sr-only" role="status">
+        {liveMessage}
+      </div>
     </div>
   );
 }

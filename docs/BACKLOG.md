@@ -10,22 +10,10 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
-### Keyboard creation of a NEW annotation over the PDF canvas (true AA close-out)
-Decided 2026-06-22 (PDF-annotate decision 1) to make the PDF layer
-keyboard-operable rather than ship a "view as text" toggle. **Done so far:**
-existing highlights are keyboard-operable (Tab to reach, Enter/Space to edit —
-`pdf-source-viewer.tsx` `drawHighlights` interactive path), and selection-commit
-is now modality-agnostic + debounced (`commitSelection` + a `selectionchange`
-listener), so a selection made by ANY means surfaces the popover (whose button
-is focusable). **Residual gap:** placing a caret to *start* a brand-new
-shift+arrow selection in the non-editable canvas text layer still depends on the
-browser's caret-browsing mode (off by default), so keyboard-only *creation*
-isn't guaranteed. To truly satisfy WCAG-AA (CLAUDE.md §9, spec §10), add a
-span-navigation selection mode (roving focus over word/line spans: focus an
-anchor, arrow to extend, Enter to commit → reuse `commitSelection`'s payload
-shape). Must be **browser-verified on preview** (canvas + selection don't run in
-jsdom). Until this lands, do not mark the annotate step AA-complete.
-- **Identified:** PDF-annotate decision 1 (2026-06-22)
+### Keyboard creation of a NEW annotation over the PDF canvas — C3 browser-verify pending
+Decided 2026-06-22 (PDF-annotate decision 1) to make the PDF layer keyboard-operable rather than ship a "view as text" toggle. **Implemented (C2, awaiting browser-verify):** the span-navigation selection mode per `docs/superpowers/specs/2026-06-22-pdf-keyboard-selection-design.md` — `pdf-source-viewer.tsx` is a single tab stop (`role="application"`, `aria-activedescendant`), a roving cursor moves by word (←/→) / line (↑/↓) / Home-End, Shift+Arrow extends from an anchor, Enter commits via the shared `emitSelection` path (same `SelectionPayload`, `lastEmittedRef`-deduped against the trailing `selectionchange`), Esc collapses/exits; a dashed sky marquee + polite live region surface state. Mouse + debounced paths untouched. One deviation: focus hand-off to the popover's Annotate button is a `role`/`aria-label` DOM query across a few rAF retries (the popover lives in the sibling `annotate-text-client.tsx`), not a ref.
+**STILL OPEN = C3:** must be **browser-verified on preview** (canvas + selection don't run in jsdom): keyboard-only creation end-to-end **with caret-browsing OFF**; no double popover; marquee + cross-page rect/scroll; **screen-reader smoke (NVDA/VoiceOver)** that `role="application"` isn't hostile (fall back to `grid`/`gridcell` per spec §5.1 if it is); `readOnly`/scanned/error keep the region inert. **Do not mark the annotate step WCAG-AA complete until C3 passes.**
+- **Identified:** PDF-annotate decision 1 (2026-06-22); C2 implemented 2026-06-22
 - **Priority:** before production cutover (Phase 7); a11y gate for the annotate step
 
 ### Feedback-area grading: error feedback + deferred extensions
