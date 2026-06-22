@@ -21,6 +21,7 @@ import {
   deleteCm,
 } from "@/lib/actions/commentary";
 import { useWritingMode } from "../use-writing-mode";
+import { LITERARY_CD_ANALYSIS_QUESTIONS } from "@/lib/jswp-literary-cd-analysis";
 import type {
   CommentaryBpData,
   CommentaryItemData,
@@ -44,6 +45,7 @@ export function CmDevBpPane({
 
   return (
     <div className="space-y-5">
+      <CdAnalysisHelper />
       {bp.chunks.map((chunk) => (
         <section
           key={chunk.id}
@@ -69,6 +71,25 @@ export function CmDevBpPane({
         </section>
       ))}
     </div>
+  );
+}
+
+/**
+ * Non-blocking helper: Dr. Louis's 13 CD-Analysis questions ("How to Generate
+ * Commentary," guide p.78-80). Collapsed by default so it doesn't crowd the form.
+ */
+function CdAnalysisHelper() {
+  return (
+    <details className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+      <summary className="cursor-pointer font-medium text-gray-700">
+        Need ideas? Ask yourself…
+      </summary>
+      <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600">
+        {LITERARY_CD_ANALYSIS_QUESTIONS.map((q) => (
+          <li key={q}>{q}</li>
+        ))}
+      </ol>
+    </details>
   );
 }
 
