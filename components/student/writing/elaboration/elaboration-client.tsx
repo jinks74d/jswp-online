@@ -4,11 +4,10 @@
  * Elaboration orchestrator. Per-BP tabs, reference panel reuse,
  * Continue gate.
  *
- * Continue gate: each BP must have ≥1 non-empty phrase (across any
- * CD). Per-best-word counting is intentionally out of scope —
- * pedagogyHint expects 3 per word (synonym + 2 clouds), but
- * enforcement at that granularity overreaches. Tooltip names the
- * offending BP.
+ * Continue gate: each BP must have every best word (a CD.words item
+ * with is_best_word_for_chunk) linked to ≥2 non-empty phrases
+ * (via parent_cm_id). Ensures students generate multiple
+ * elaboration "clouds" for each key word before advancing.
  */
 
 import { useState, useTransition } from "react";
@@ -17,6 +16,7 @@ import { ElaborationBpPane } from "./elaboration-bp-pane";
 import { ReferencePanel } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useWritingMode } from "../use-writing-mode";
+import { computeGate } from "./compute-gate";
 import type { CommentaryBpData } from "@/lib/queries/commentary";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 
@@ -33,29 +33,6 @@ interface Props {
   annotations: readonly TextAnnotationRow[];
 }
 
-interface GateResult {
-  canContinue: boolean;
-  blockerPosition: number | null;
-}
-
-function computeGate(bps: readonly CommentaryBpData[]): GateResult {
-  for (const bp of bps) {
-    let hasPhrase = false;
-    for (const chunk of bp.chunks) {
-      for (const cd of chunk.cds) {
-        if (cd.phrases.some((p) => p.text.trim().length > 0)) {
-          hasPhrase = true;
-          break;
-        }
-      }
-      if (hasPhrase) break;
-    }
-    if (!hasPhrase) {
-      return { canContinue: false, blockerPosition: bp.position };
-    }
-  }
-  return { canContinue: true, blockerPosition: null };
-}
 
 export function ElaborationClient({
   writingId,
@@ -193,8 +170,8 @@ export function ElaborationClient({
         <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
           <div className="text-xs text-gray-500">
             {gate.canContinue
-              ? "Each body paragraph has at least one elaboration phrase."
-              : `Body paragraph ${gate.blockerPosition} needs at least one elaboration phrase.`}
+              ? "Each best word has at least two elaboration phrases."
+              : `Body paragraph ${gate.blockerPosition} needs two phrases for each best word.`}
           </div>
           <div className="flex items-center gap-3">
             {error && (
