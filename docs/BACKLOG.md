@@ -10,19 +10,6 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
-### Warn the teacher when a PDF source is image-only (unannotatable)
-Decided 2026-06-22 (PDF-annotate decision 2): a scanned/image-only PDF has no
-text layer, so students can't highlight it. The runtime side is handled — the
-student is no longer trapped on a required-annotate step (`PdfSourceViewer`
-fires `onUnannotatable` → `AnnotateTextClient` relaxes the Continue gate). The
-*prevention* side is still open: at upload / assignment-publish, detect a PDF
-that yields no extractable text (run `buildPdfText` on the parsed pages and
-check `text.trim()` is empty) and warn the teacher that it can't be annotated,
-so they can swap in a text-based PDF before students hit it. Authoring-time
-surface (assignment builder upload), not student-facing.
-- **Identified:** PDF-annotate decision 2 (2026-06-22)
-- **Priority:** before production cutover (Phase 7); pairs with the shipped runtime unblock
-
 ### Keyboard creation of a NEW annotation over the PDF canvas (true AA close-out)
 Decided 2026-06-22 (PDF-annotate decision 1) to make the PDF layer
 keyboard-operable rather than ship a "view as text" toggle. **Done so far:**
@@ -191,6 +178,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Warn the teacher when a PDF source is image-only (unannotatable)
+Shipped: `source-text-upload.tsx` shows a non-blocking amber `role="status"` warning when an uploaded PDF has no extractable text (`extracted.renderMode === "pdf" && extracted.text.trim() === ""`) — advises swapping in a text-based PDF, but save still proceeds. Pairs with the runtime Continue-gate unblock (`9baad99`). This is the *prevention* half of PDF-annotate decision 2.
+- **Closed:** PDF-annotate decision 2 (2026-06-22)
 
 ### Shaping Sheet: five-move revision checklist
 Added a non-blocking five-move self-check to the Shaping Sheet (`cd-cm-shaping-bp-pane.tsx`), under the "Move and improve" callout: add transitions / vary openings / vary sentence types / fix mechanics / add-delete for voice (2024 guide glossary pp.151–152). Persists to a new `shaping_sheets.revision_moves TEXT[]` (migration `0024`), kept separate from `rules_applied` (reserved for the 15 Grammar Rules). Optimistic toggle, reverts on error; read-only (disabled) in teacher review. Expository/argumentation/literary panes; narrative pane is a possible follow-up.

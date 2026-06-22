@@ -44,6 +44,7 @@ export function SourceTextUpload({
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -51,10 +52,21 @@ export function SourceTextUpload({
 
     setBusy(true);
     setError(null);
+    setWarning(null);
     setStatus("Reading file…");
 
     try {
       const extracted = await extractSource(file);
+
+      // Image-only (scanned) PDF: pdf.js found no text layer, so there is
+      // nothing for students to highlight on the annotate step. Advise the
+      // teacher to swap in a text-based PDF — but do NOT block: save proceeds.
+      if (extracted.renderMode === "pdf" && extracted.text.trim() === "") {
+        setWarning(
+          "This PDF has no selectable text, so students won't be able to " +
+            "highlight it. Consider uploading a text-based PDF instead."
+        );
+      }
 
       // Best-effort archival to Storage when we have an assignment id.
       let stored: ExtractedSource["file"] = null;
@@ -133,6 +145,11 @@ export function SourceTextUpload({
         )}
       </div>
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {warning && (
+        <p role="status" className="mt-1 text-sm text-amber-700">
+          {warning}
+        </p>
+      )}
     </div>
   );
 }
