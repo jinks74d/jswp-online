@@ -40,13 +40,23 @@ adjacent component gaps and one outright contradiction:
 
 ## 2. Scope
 
-Delivers five items, all serving "make the per-paragraph WOW machinery faithful":
+Delivers four items, all serving "make the per-paragraph WOW machinery faithful":
 
 - **(a)** Fix the Gather-CDs hint contradiction.
 - **(b)** Faithful WOW organizer: synonym + per-word phrase linkage. *(Core.)*
-- **(c)** Lead-in starter-word bank on the quotation T-chart row.
 - **(d)** CD-Analysis 13-question helper on Generating Commentary.
 - **(e)** Final-draft self-check: literary present tense + third-person POV.
+
+> **Item (c) — lead-in starter-word bank — was dropped from this chunk during
+> planning (2026-06-22).** It assumed the Literary T-chart already had a quotation
+> row, but Literary renders through the deliberately-frozen `cd-cm-t-chart.tsx`
+> (`t-chart-client.tsx:208`), which has **no** quotation UI — only Expository's
+> `CdEditor` does. Adding the bank to Literary first requires porting the whole
+> TLCD quotation UI into `cd-cm-t-chart.tsx`, which is the separate deferred
+> BACKLOG item *"Mirror TLCD quotation UI into `cd-cm-t-chart.tsx` (argumentation
+> + literary)."* The lead-in starter-word bank (verbatim guide p.129: **After ·
+> Although · As · Before · Since · When · While**) is folded into that future
+> chunk. (a/b/d/e letters kept stable to avoid churn.)
 
 **Explicitly deferred** to their own specs (see §8): paraphrase/quotation
 authoring split, Web-off-the-Topic-Sentence → concluding sentence, Discovering
@@ -133,20 +143,11 @@ This also closes the existing BACKLOG Open item *"Phrase-to-word linking on
 Each unit has one job and a clear interface (query returns nested shape →
 component renders → action persists), so they're independently testable.
 
-## 5. Items (c)(d)(e) — component enrichments
+## 5. Items (d)(e) — component enrichments
 
-Independent of each other; each touches a different step. All buildable after
+Independent of each other; each touches a different step. Both buildable after
 (b)'s migration lands (they don't depend on (b)'s logic, only avoid colliding on
-the migration).
-
-### 5.1 (c) Lead-in starter-word bank — T-chart quotation row
-
-Component-only; `transitional_lead_in` / `source_citation` columns already exist.
-In the T-chart CD editor, when a CD `is_quotation`, render a row of clickable
-**starter words** that prefill the lead-in field. Verbatim list (guide p.129,
-lines 4374/4377): **After · Although · As · Before · Since · When · While**
-(*"Use one of these starter words to begin the lead-in,"* p.129). No schema, no
-`jswp-modes.ts`.
+the migration). *(Item (c) deferred — see §2.)*
 
 ### 5.2 (d) CD-Analysis question helper — Generating Commentary
 
@@ -216,12 +217,14 @@ Per CLAUDE.md §8 (`lib/` ≥90%):
 | 1 | (a) hint reword | jswp-frontend | none — lands first, trivial |
 | 2 | (b) migration (`synonym`, `parent_cm_id`, `final_drafts.self_checks`) | jswp-database | §15 schema (cleared) |
 | 3 | (b) queries → actions → elaboration component → shaping grouping | jswp-backend + jswp-frontend | sequential after the migration |
-| 4 | (c) lead-in bank / (d) CD-Analysis helper / (e) final-draft self-check | jswp-frontend | parallel after step 2 |
+| 4 | (d) CD-Analysis helper / (e) final-draft self-check | jswp-frontend | parallel after step 2 |
 
 ## 8. Out of scope (future Literary-epic chunks)
 
 Paraphrase-CD vs embedded-quotation-CD authoring split (+ separate gathering/
-T-charts); Web-off-the-Topic-Sentence → concluding-sentence organizer;
+T-charts) — **this is where the deferred item (c) lead-in starter-word bank lands**,
+since it needs Literary's quotation T-chart UI built first;
+Web-off-the-Topic-Sentence → concluding-sentence organizer;
 Discovering Theme; Decoding-a-Text organizer; Compare/Contrast (two-text
 assignments + compare thesis frames + two-story T-charts); one-chunk vs
 two-chunk teaching progression; the enumerated literary **no-no-words** list
