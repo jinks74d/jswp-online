@@ -604,6 +604,9 @@ export type CommentaryItems = {
   used_in_concluding_sentence: boolean;
   is_best_word_for_ts: boolean;
   is_best_word_for_chunk: boolean;
+  // Migration 0032: WOW synonym (box #2) and parent word link for phrase rows (clouds, box #3)
+  synonym: string | null;
+  parent_cm_id: string | null;
 } & Timestamps;
 
 export type ShapingSheets = {
@@ -657,6 +660,8 @@ export type FinalDrafts = {
   title: string | null;
   full_text: string;
   word_count: number | null;
+  // Migration 0032: mirrors shaping_sheets.revision_moves; student self-check list
+  self_checks: string[] | null;
 } & Timestamps;
 
 export type StepProgress = {
