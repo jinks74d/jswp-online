@@ -40,7 +40,7 @@ export default async function NewAssignmentPage({
           href="/dashboard/assignments"
           className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
           Back to My Assignments
         </Link>
         <header>
@@ -68,7 +68,7 @@ export default async function NewAssignmentPage({
         href="/dashboard/assignments/new"
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
         Pick a different mode
       </Link>
       <header>

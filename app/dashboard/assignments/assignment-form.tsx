@@ -14,7 +14,7 @@
  * After publish, structural fields lock; only title/prompt/due_at/class_period_id stay editable.
  */
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import React, { useActionState, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   Ban,
@@ -195,13 +195,18 @@ export function AssignmentForm({
         </Field>
 
         <div>
-          <label className="flex items-center gap-2 text-sm">
+          <label
+            htmlFor="is_essay"
+            className="flex items-center gap-2 text-sm"
+          >
             <input
+              id="is_essay"
               type="checkbox"
               name="is_essay"
               checked={isEssay}
               onChange={(e) => handleIsEssayChange(e.target.checked)}
               disabled={isPublished}
+              aria-describedby={!isEssay ? "is_essay-hint" : undefined}
               className="text-blue-600 focus:ring-blue-500"
             />
             <span className="font-medium text-gray-900">Essay format</span>
@@ -210,7 +215,7 @@ export function AssignmentForm({
             </span>
           </label>
           {!isEssay && (
-            <p className="mt-1 text-xs text-stone-600">
+            <p id="is_essay-hint" className="mt-1 text-xs text-stone-600">
               Unchecked: students write a single one-chunk paragraph (e.g. a
               3+:0 summary).
             </p>
@@ -290,8 +295,12 @@ export function AssignmentForm({
 
         {isArgumentation && (
           <div>
-            <label className="flex items-center gap-2 text-sm">
+            <label
+              htmlFor="has_counterargument"
+              className="flex items-center gap-2 text-sm"
+            >
               <input
+                id="has_counterargument"
                 type="checkbox"
                 name="has_counterargument"
                 checked={hasCounter}
@@ -338,7 +347,13 @@ export function AssignmentForm({
         />
         <input type="hidden" name="rubric" value={JSON.stringify(rubric)} />
         {state.fieldErrors?.rubric && (
-          <p className="text-sm text-red-600">{state.fieldErrors.rubric}</p>
+          <p
+            id="rubric-error"
+            role="alert"
+            className="text-sm text-red-600"
+          >
+            {state.fieldErrors.rubric}
+          </p>
         )}
 
         <Field label="Due date (optional)" htmlFor="due_at">
@@ -382,7 +397,7 @@ export function AssignmentForm({
         >
           {isPending ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               Saving…
             </>
           ) : isPublished ? (
@@ -489,12 +504,12 @@ function CancelForm({
         >
           {pending ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               Cancelling…
             </>
           ) : (
             <>
-              <Ban className="w-4 h-4" />
+              <Ban className="w-4 h-4" aria-hidden="true" />
               Cancel assignment &amp; delete all work
             </>
           )}
@@ -533,12 +548,12 @@ function DeleteForm({ assignmentId }: { assignmentId: string }) {
         >
           {pending ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               Deleting…
             </>
           ) : (
             <>
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
               Delete draft
             </>
           )}
@@ -589,12 +604,12 @@ function UnpublishForm({
         >
           {pending ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               Unpublishing…
             </>
           ) : (
             <>
-              <Undo2 className="w-4 h-4" />
+              <Undo2 className="w-4 h-4" aria-hidden="true" />
               Unpublish
             </>
           )}
@@ -635,7 +650,7 @@ function PublishForm({ assignmentId }: { assignmentId: string }) {
         >
           {pending ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               Publishing…
             </>
           ) : (
@@ -662,16 +677,42 @@ function Field({
   hint?: string;
   children: React.ReactNode;
 }) {
+  const hintId = hint ? `${htmlFor}-hint` : undefined;
+  const errorId = error ? `${htmlFor}-error` : undefined;
+  const describedBy =
+    [hintId, errorId].filter(Boolean).join(" ") || undefined;
   return (
     <div>
       <div className="flex items-baseline justify-between mb-2">
         <label htmlFor={htmlFor} className="text-sm font-medium text-stone-700">
           {label}
         </label>
-        {hint && <span className="text-xs text-stone-600">{hint}</span>}
+        {hint && (
+          <span id={hintId} className="text-xs text-stone-600">
+            {hint}
+          </span>
+        )}
       </div>
-      {children}
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {/* Thread error/hint association onto the single field control. The
+          control passes `id={htmlFor}`; here we add aria-describedby and
+          aria-invalid so SRs announce the hint + error and the invalid state. */}
+      {React.isValidElement(children)
+        ? React.cloneElement(
+            children as React.ReactElement<{
+              "aria-describedby"?: string;
+              "aria-invalid"?: boolean;
+            }>,
+            {
+              "aria-describedby": describedBy,
+              "aria-invalid": error ? true : undefined,
+            }
+          )
+        : children}
+      {error && (
+        <p id={errorId} className="mt-1 text-sm text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -694,9 +735,15 @@ function Banner({
       }`}
     >
       {isError ? (
-        <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+        <AlertCircle
+          className="w-5 h-5 mt-0.5 flex-shrink-0"
+          aria-hidden="true"
+        />
       ) : (
-        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0" />
+        <CheckCircle2
+          className="w-5 h-5 mt-0.5 flex-shrink-0"
+          aria-hidden="true"
+        />
       )}
       <p className="text-sm">{children}</p>
     </div>

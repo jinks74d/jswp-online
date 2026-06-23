@@ -378,7 +378,7 @@ function WowField({
   const textColor = color === "cd" ? "text-red-600" : "text-green-700";
   const borderColor =
     color === "cd" ? "border-red-300" : "border-green-300";
-  const cls = `w-full bg-transparent px-1 py-1 text-sm ${textColor} placeholder:text-gray-300 placeholder:not-italic border-b border-dashed ${borderColor} focus:outline-none focus:border-solid focus:border-blue-400 disabled:opacity-60`;
+  const cls = `w-full bg-transparent px-1 py-1 text-sm ${textColor} placeholder:text-gray-300 placeholder:not-italic border-b border-dashed ${borderColor} focus:outline-none focus:border-solid focus:border-blue-400 focus:ring-2 focus:ring-blue-500 focus:rounded-sm disabled:opacity-60`;
 
   return (
     <div className="relative">

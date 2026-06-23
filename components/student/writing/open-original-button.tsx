@@ -46,9 +46,9 @@ export function OpenOriginalButton({
         className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
       >
         {pending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
         ) : (
-          <FileText className="h-3.5 w-3.5" />
+          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
         )}
         Open original{fileName ? ` (${fileName})` : ""}
       </button>

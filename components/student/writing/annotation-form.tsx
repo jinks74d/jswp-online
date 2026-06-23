@@ -136,7 +136,7 @@ export function AnnotationForm({ payload, onClose }: Props) {
             className="text-gray-500 hover:text-gray-900 disabled:opacity-50"
             aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </header>
 
@@ -200,9 +200,9 @@ export function AnnotationForm({ payload, onClose }: Props) {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-red-300 text-red-700 text-sm hover:bg-red-50 disabled:opacity-50"
               >
                 {deleting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
                 )}
                 Delete
               </button>
@@ -225,7 +225,7 @@ export function AnnotationForm({ payload, onClose }: Props) {
                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-semibold text-white shadow-sm disabled:opacity-50"
                 style={{ backgroundColor: "var(--district-primary)" }}
               >
-                {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+                {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
                 {pending ? "Saving…" : "Save"}
               </button>
             )}

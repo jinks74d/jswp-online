@@ -28,7 +28,7 @@ export default async function ClassDetailPage({ params }: { params: Params }) {
         href="/dashboard/classes"
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
         Back to My Classes
       </Link>
 
@@ -47,7 +47,7 @@ export default async function ClassDetailPage({ params }: { params: Params }) {
 
       <section className="space-y-3">
         <div className="flex items-center gap-2 text-sm text-stone-700">
-          <Users className="w-4 h-4" />
+          <Users className="w-4 h-4" aria-hidden="true" />
           <span className="font-medium">{period.roster.length}</span> student
           {period.roster.length === 1 ? "" : "s"}
         </div>
@@ -72,10 +72,18 @@ function Roster({ students }: { students: RosterStudent[] }) {
         <table className="min-w-full text-sm">
           <thead className="bg-stone-50 text-stone-700">
             <tr>
-              <th className="px-3 py-2 text-left font-medium">Name</th>
-              <th className="px-3 py-2 text-left font-medium">Email</th>
-              <th className="px-3 py-2 text-left font-medium">Grade</th>
-              <th className="px-3 py-2 text-right font-medium" />
+              <th scope="col" className="px-3 py-2 text-left font-medium">
+                Name
+              </th>
+              <th scope="col" className="px-3 py-2 text-left font-medium">
+                Email
+              </th>
+              <th scope="col" className="px-3 py-2 text-left font-medium">
+                Grade
+              </th>
+              <th scope="col" className="px-3 py-2 text-right font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-200 text-gray-900">

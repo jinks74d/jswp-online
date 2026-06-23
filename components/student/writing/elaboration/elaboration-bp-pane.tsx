@@ -261,12 +261,13 @@ function PhraseRow({
           }
           disabled={pending}
           title="Remove phrase"
+          aria-label="Remove phrase"
           className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
         >
           {pending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
           ) : (
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
       )}
@@ -298,9 +299,9 @@ function AddPhraseButton({
       className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-sky-700 hover:bg-sky-50 disabled:opacity-50"
     >
       {pending ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
       ) : (
-        <Plus className="w-3.5 h-3.5" />
+        <Plus className="w-3.5 h-3.5" aria-hidden="true" />
       )}
       Add phrase
     </button>

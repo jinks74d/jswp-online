@@ -32,7 +32,10 @@ export function NewPasswordForm() {
           className="bg-red-50 border border-red-200 rounded-md p-4 flex items-start gap-3"
           role="alert"
         >
-          <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+          <AlertCircle
+            className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+            aria-hidden="true"
+          />
           <p className="text-sm text-red-700">{state.error}</p>
         </div>
       )}
@@ -96,6 +99,7 @@ function PasswordField({
           autoComplete="new-password"
           placeholder={placeholder}
           aria-invalid={!!error}
+          aria-describedby={error ? `err-${id}` : undefined}
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10 text-gray-900"
         />
         <button
@@ -105,13 +109,17 @@ function PasswordField({
           aria-label={show ? "Hide password" : "Show password"}
         >
           {show ? (
-            <EyeOff className="w-4 h-4 text-gray-400" />
+            <EyeOff className="w-4 h-4 text-gray-400" aria-hidden="true" />
           ) : (
-            <Eye className="w-4 h-4 text-gray-400" />
+            <Eye className="w-4 h-4 text-gray-400" aria-hidden="true" />
           )}
         </button>
       </div>
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p id={`err-${id}`} className="mt-1 text-sm text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -125,7 +133,10 @@ function SubmitButton({ pending }: { pending: boolean }) {
     >
       {pending ? (
         <span className="flex items-center gap-2">
-          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <span
+            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+            aria-hidden="true"
+          />
           Updating...
         </span>
       ) : (

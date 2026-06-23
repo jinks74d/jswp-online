@@ -38,7 +38,10 @@ export function AddSuperAdminForm() {
     return (
       <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
         <div className="flex items-start gap-3 text-sm text-green-800">
-          <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+          <CheckCircle2
+            className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0"
+            aria-hidden="true"
+          />
           <p>
             Super admin <strong>{state.success.email}</strong> created. Share the
             temporary password securely; they should change it after first login.
@@ -62,8 +65,14 @@ export function AddSuperAdminForm() {
       className="space-y-4 bg-white border border-gray-200 rounded-lg p-6 max-w-xl"
     >
       {state.error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 p-4 flex items-start gap-3"
+        >
+          <AlertCircle
+            className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+            aria-hidden="true"
+          />
           <p className="text-sm text-red-700">{state.error}</p>
         </div>
       )}
@@ -81,10 +90,14 @@ export function AddSuperAdminForm() {
             name="first_name"
             type="text"
             required
+            aria-invalid={!!state.fieldErrors?.first_name}
+            aria-describedby={
+              state.fieldErrors?.first_name ? "err-first_name" : undefined
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
           />
           {state.fieldErrors?.first_name && (
-            <p className="mt-1 text-sm text-red-600">
+            <p id="err-first_name" className="mt-1 text-sm text-red-600">
               {state.fieldErrors.first_name}
             </p>
           )}
@@ -102,10 +115,14 @@ export function AddSuperAdminForm() {
             name="last_name"
             type="text"
             required
+            aria-invalid={!!state.fieldErrors?.last_name}
+            aria-describedby={
+              state.fieldErrors?.last_name ? "err-last_name" : undefined
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
           />
           {state.fieldErrors?.last_name && (
-            <p className="mt-1 text-sm text-red-600">
+            <p id="err-last_name" className="mt-1 text-sm text-red-600">
               {state.fieldErrors.last_name}
             </p>
           )}
@@ -125,10 +142,14 @@ export function AddSuperAdminForm() {
           type="email"
           required
           autoComplete="off"
+          aria-invalid={!!state.fieldErrors?.email}
+          aria-describedby={state.fieldErrors?.email ? "err-email" : undefined}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
         />
         {state.fieldErrors?.email && (
-          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.email}</p>
+          <p id="err-email" className="mt-1 text-sm text-red-600">
+            {state.fieldErrors.email}
+          </p>
         )}
       </div>
 
@@ -150,6 +171,12 @@ export function AddSuperAdminForm() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={!!state.fieldErrors?.password}
+              aria-describedby={
+                state.fieldErrors?.password
+                  ? "hint-password err-password"
+                  : "hint-password"
+              }
               className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md text-gray-900 font-mono"
             />
             <button
@@ -159,9 +186,9 @@ export function AddSuperAdminForm() {
               className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               {showPassword ? (
-                <EyeOff className="w-4 h-4" />
+                <EyeOff className="w-4 h-4" aria-hidden="true" />
               ) : (
-                <Eye className="w-4 h-4" />
+                <Eye className="w-4 h-4" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -173,16 +200,16 @@ export function AddSuperAdminForm() {
             }}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-50"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
             Generate
           </button>
         </div>
-        <p className="mt-1 text-xs text-gray-500">
+        <p id="hint-password" className="mt-1 text-xs text-gray-500">
           At least 10 characters. Share it securely; they change it after first
           login.
         </p>
         {state.fieldErrors?.password && (
-          <p className="mt-1 text-sm text-red-600">
+          <p id="err-password" className="mt-1 text-sm text-red-600">
             {state.fieldErrors.password}
           </p>
         )}
@@ -195,7 +222,7 @@ export function AddSuperAdminForm() {
       >
         {pending ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
             Creating…
           </>
         ) : (

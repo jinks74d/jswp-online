@@ -191,7 +191,7 @@ function BestForTsToggle({
       }
     >
       {pending ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
       ) : (
         <Star
           className="w-3.5 h-3.5"
@@ -238,7 +238,7 @@ function BestForChunkToggle({
       }
     >
       {pending ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
       ) : (
         <span
           className="inline-block w-3 h-3 rounded-full border"

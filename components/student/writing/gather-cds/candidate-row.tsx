@@ -99,7 +99,7 @@ export function CandidateRow({
           disabled={isReadOnly}
           className="mt-1 text-gray-400 hover:text-gray-700 cursor-grab active:cursor-grabbing touch-none disabled:opacity-50"
         >
-          <GripVertical className="w-4 h-4" />
+          <GripVertical className="w-4 h-4" aria-hidden="true" />
         </button>
       )}
 
@@ -145,12 +145,13 @@ export function CandidateRow({
           onClick={onDelete}
           disabled={deletePending}
           title="Remove candidate"
+          aria-label="Delete this candidate"
           className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
         >
           {deletePending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
           ) : (
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
       )}

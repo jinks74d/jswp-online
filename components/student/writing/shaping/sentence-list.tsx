@@ -130,12 +130,13 @@ export function SentenceList({
               onClick={() => start(async () => persist(removeAt(i)))}
               disabled={pending}
               title="Remove sentence"
+              aria-label="Remove sentence"
               className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
             >
               {pending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               ) : (
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
               )}
             </button>
           )}
@@ -149,9 +150,9 @@ export function SentenceList({
           className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-gray-300 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
           {pending ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
           ) : (
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" />
           )}
           Add sentence
         </button>

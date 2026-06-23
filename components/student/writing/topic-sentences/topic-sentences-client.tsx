@@ -124,7 +124,7 @@ export function TopicSentencesClient({ writingId, stepKey, bps }: Props) {
                   : `Body paragraph ${gate.blockerPosition} below needs a topic sentence`
               }
             >
-              {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
               {pending ? "Saving…" : "Continue"}
             </button>
           </div>

@@ -50,21 +50,21 @@ export function InterventionCandidates({ candidates }: Props) {
         <div className="space-y-4">
           {candidates.notSubmitted.length > 0 && (
             <GroupBlock
-              icon={<Clock className="w-4 h-4 text-stone-600" />}
+              icon={<Clock className="w-4 h-4 text-stone-600" aria-hidden="true" />}
               title="Not yet submitted"
               students={candidates.notSubmitted}
             />
           )}
           {candidates.awaitingGrading.length > 0 && (
             <GroupBlock
-              icon={<Clock className="w-4 h-4 text-amber-600" />}
+              icon={<Clock className="w-4 h-4 text-amber-600" aria-hidden="true" />}
               title="Awaiting grading"
               students={candidates.awaitingGrading}
             />
           )}
           {candidates.belowThreshold.length > 0 && (
             <ThresholdBlock
-              icon={<CircleAlert className="w-4 h-4 text-red-600" />}
+              icon={<CircleAlert className="w-4 h-4 text-red-600" aria-hidden="true" />}
               title="Scored below 50% threshold"
               entries={candidates.belowThreshold}
             />
@@ -103,7 +103,10 @@ function GroupBlock({
               <span className="text-gray-900 truncate">
                 {studentDisplayName(s)}
               </span>
-              <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <ChevronRight
+                className="w-4 h-4 text-gray-400 flex-shrink-0"
+                aria-hidden="true"
+              />
             </Link>
           </li>
         ))}
@@ -144,7 +147,7 @@ function ThresholdBlock({
                 <span className="text-xs text-stone-600 tabular-nums">
                   {e.score}
                 </span>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <ChevronRight className="w-4 h-4 text-gray-400" aria-hidden="true" />
               </span>
             </Link>
           </li>

@@ -281,7 +281,7 @@ function Editor({
             disabled={resyncing}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-amber-300 bg-white px-2 py-1 font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
           >
-            {resyncing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {resyncing && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
             Reset to auto-composed
           </button>
         </div>
@@ -411,8 +411,22 @@ function ReadOnlyMaterial({
       {/* C/CA/R block (argumentation only with has_counterargument) */}
       {hasCounterargument && bp.shaping && (
         <Section
-          title="Concession / Counterargument / Refutation"
-          accentClass="text-purple-700"
+          title={
+            <>
+              <span className="jswp-concession text-[color:var(--jswp-color-concession)]">
+                Concession
+              </span>{" "}
+              /{" "}
+              <span className="jswp-counterargument text-[color:var(--jswp-color-counterargument)]">
+                Counterargument
+              </span>{" "}
+              /{" "}
+              <span className="jswp-refutation text-[color:var(--jswp-color-refutation)]">
+                Refutation
+              </span>
+            </>
+          }
+          accentClass="text-gray-700"
         >
           <LabeledLine label="Concession" text={bp.shaping.final_concession} />
           <LabeledLine
@@ -489,7 +503,7 @@ function Section({
   accentClass,
   children,
 }: {
-  title: string;
+  title: React.ReactNode;
   accentClass: string;
   children: React.ReactNode;
 }) {

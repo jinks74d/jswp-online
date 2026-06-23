@@ -28,7 +28,7 @@ export default function DashboardError({
     <div className="flex items-center justify-center py-16">
       <div className="max-w-md w-full bg-white border border-red-200 rounded-lg p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <AlertTriangle className="w-6 h-6 text-red-600" />
+          <AlertTriangle className="w-6 h-6 text-red-600" aria-hidden="true" />
           <h1 className="text-xl font-semibold text-gray-900">
             Something went wrong
           </h1>
@@ -47,7 +47,7 @@ export default function DashboardError({
           onClick={reset}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
         >
-          <RotateCw className="w-4 h-4" />
+          <RotateCw className="w-4 h-4" aria-hidden="true" />
           Try again
         </button>
       </div>

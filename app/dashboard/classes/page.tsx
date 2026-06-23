@@ -49,10 +49,13 @@ export default async function ClassesPage() {
                     {p.schoolName}
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0 group-hover:text-stone-600" />
+                <ChevronRight
+                  className="w-5 h-5 text-gray-400 flex-shrink-0 group-hover:text-stone-600"
+                  aria-hidden="true"
+                />
               </div>
               <div className="flex items-center gap-2 mt-4 text-sm text-stone-600">
-                <Users className="w-4 h-4" />
+                <Users className="w-4 h-4" aria-hidden="true" />
                 {p.studentCount} student{p.studentCount === 1 ? "" : "s"}
               </div>
             </Link>
@@ -66,7 +69,10 @@ export default async function ClassesPage() {
 function EmptyState() {
   return (
     <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
-      <BookOpen className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+      <BookOpen
+        className="w-10 h-10 text-gray-400 mx-auto mb-4"
+        aria-hidden="true"
+      />
       <h2 className="text-lg font-semibold text-gray-900">No classes yet</h2>
       <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
         You aren&apos;t assigned to any class periods yet. Ask your district

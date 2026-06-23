@@ -68,7 +68,10 @@ export function GradeInput({
 
   // Inline indicator: spinner while saving, red "not saved" mark on failure.
   const statusMark = pending ? (
-    <Loader2 className="h-3.5 w-3.5 animate-spin text-stone-400" />
+    <Loader2
+      className="h-3.5 w-3.5 animate-spin text-stone-400"
+      aria-hidden="true"
+    />
   ) : failed ? (
     <span
       role="alert"
@@ -90,6 +93,7 @@ export function GradeInput({
               type="button"
               disabled={pending}
               aria-pressed={active}
+              aria-label={tok === "check" ? "Check (pass)" : "Cross (fail)"}
               onClick={() => save(active ? "" : tok)}
               className={`inline-flex h-7 w-7 items-center justify-center rounded-md border text-sm font-bold ${
                 active
@@ -97,7 +101,7 @@ export function GradeInput({
                   : "border-stone-200 text-stone-400 hover:bg-stone-50"
               }`}
             >
-              {tok === "check" ? "✓" : "✗"}
+              <span aria-hidden="true">{tok === "check" ? "✓" : "✗"}</span>
             </button>
           );
         })}

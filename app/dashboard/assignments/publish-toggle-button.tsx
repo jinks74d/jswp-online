@@ -67,11 +67,11 @@ export function PublishToggleButton({
         className="inline-flex items-center justify-center p-1.5 rounded-md text-stone-600 hover:bg-stone-100 hover:text-stone-700 disabled:opacity-50"
       >
         {pending ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
         ) : published ? (
-          <Undo2 className="w-4 h-4" />
+          <Undo2 className="w-4 h-4" aria-hidden="true" />
         ) : (
-          <Send className="w-4 h-4" />
+          <Send className="w-4 h-4" aria-hidden="true" />
         )}
       </button>
     </form>

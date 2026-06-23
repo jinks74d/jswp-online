@@ -78,10 +78,14 @@ export function SchoolForm({
           maxLength={255}
           defaultValue={initial?.name ?? ""}
           placeholder="e.g. Keller High School"
+          aria-invalid={!!state.fieldErrors?.name}
+          aria-describedby={state.fieldErrors?.name ? "err-name" : undefined}
           className={inputClass}
         />
         {state.fieldErrors?.name && (
-          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.name}</p>
+          <p id="err-name" className="mt-1 text-sm text-red-600">
+            {state.fieldErrors.name}
+          </p>
         )}
       </div>
 
@@ -93,6 +97,8 @@ export function SchoolForm({
           id="level"
           value={choice}
           onChange={(e) => setChoice(e.target.value)}
+          aria-invalid={!!state.fieldErrors?.level}
+          aria-describedby={state.fieldErrors?.level ? "err-level" : undefined}
           className={inputClass}
         >
           <option value="">— level —</option>
@@ -120,13 +126,16 @@ export function SchoolForm({
         <input type="hidden" name="level" value={submittedLevel} />
 
         {state.fieldErrors?.level && (
-          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.level}</p>
+          <p id="err-level" className="mt-1 text-sm text-red-600">
+            {state.fieldErrors.level}
+          </p>
         )}
       </div>
 
       {mode === "edit" && (
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="active" className="flex items-center gap-2 text-sm">
           <input
+            id="active"
             type="checkbox"
             name="active"
             defaultChecked={initial?.active ?? true}
@@ -141,7 +150,9 @@ export function SchoolForm({
         disabled={pending}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
       >
-        {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+        {pending && (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        )}
         {mode === "create" ? "Add school" : "Save changes"}
       </button>
     </form>
@@ -169,9 +180,9 @@ function Banner({
       }`}
     >
       {isError ? (
-        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       ) : (
-        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       )}
       <p>{children}</p>
     </div>

@@ -25,6 +25,9 @@ export default async function RootLayout({
   return (
     <html lang="en" style={cssVars}>
       <body className={inter.className} suppressHydrationWarning>
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <ErrorBoundary>{children}</ErrorBoundary>
       </body>
     </html>

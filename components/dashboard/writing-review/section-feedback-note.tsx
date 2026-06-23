@@ -42,7 +42,7 @@ export function SectionFeedbackNote({
       <div className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3">
         <div className="mb-1 flex items-center justify-between gap-2">
           <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-blue-800">
-            <MessageSquare className="h-3.5 w-3.5" />
+            <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
             Teacher feedback
           </span>
           {gradeLabel.length > 0 && (
@@ -114,7 +114,7 @@ function TeacherNote({
     <div className="mt-3 rounded-md border border-blue-200 bg-blue-50/60 p-3">
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-blue-800">
-          <MessageSquare className="h-3.5 w-3.5" />
+          <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
           Feedback on this section
         </span>
         <div className="flex items-center gap-2">
@@ -142,6 +142,7 @@ function TeacherNote({
         onBlur={handleBlur}
         rows={2}
         placeholder="Leave feedback for this section (leave empty to remove)…"
+        aria-label="Feedback on this section"
         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
     </div>

@@ -47,7 +47,7 @@ export function FeedbackPanel({
     <aside className="space-y-3">
       {!hideHeader && (
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-gray-700" />
+          <MessageSquare className="w-4 h-4 text-gray-700" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-gray-900">Feedback</h2>
           <span className="text-xs text-gray-500">
             ({unresolved.length} open
@@ -151,10 +151,12 @@ function Composer({ writingId }: { writingId: string }) {
         onKeyDown={onKeyDown}
         rows={3}
         placeholder="Write feedback for this student…"
+        aria-label="Write feedback for this student"
+        aria-describedby="feedback-composer-hint"
         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
       <div className="flex items-center justify-between gap-3">
-        <p className="text-base text-gray-500">
+        <p id="feedback-composer-hint" className="text-base text-gray-500">
           ⌘/Ctrl + Enter to submit
         </p>
         <button
@@ -164,9 +166,9 @@ function Composer({ writingId }: { writingId: string }) {
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {pending ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
           ) : (
-            <Send className="w-3.5 h-3.5" />
+            <Send className="w-3.5 h-3.5" aria-hidden="true" />
           )}
           {pending ? "Adding…" : "Add comment"}
         </button>

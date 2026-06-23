@@ -37,11 +37,11 @@ export default async function DistrictsPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-left text-gray-500">
               <tr>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">Subdomain</th>
-                <th className="px-4 py-2 font-medium">Status</th>
-                <th className="px-4 py-2 font-medium">Created</th>
-                <th className="px-4 py-2" />
+                <th scope="col" className="px-4 py-2 font-medium">Name</th>
+                <th scope="col" className="px-4 py-2 font-medium">Subdomain</th>
+                <th scope="col" className="px-4 py-2 font-medium">Status</th>
+                <th scope="col" className="px-4 py-2 font-medium">Created</th>
+                <th scope="col" className="px-4 py-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

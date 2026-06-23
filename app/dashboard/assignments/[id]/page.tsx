@@ -49,7 +49,7 @@ export default async function AssignmentDetailPage({
         href="/dashboard/assignments"
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
         Back to My Assignments
       </Link>
 
@@ -85,7 +85,10 @@ export default async function AssignmentDetailPage({
             className="flex items-center justify-between gap-3 bg-white border border-stone-200 rounded-xl shadow-sm px-4 py-3 hover:border-gray-400 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <Inbox className="w-5 h-5 text-stone-700 flex-shrink-0" />
+              <Inbox
+                className="w-5 h-5 text-stone-700 flex-shrink-0"
+                aria-hidden="true"
+              />
               <div className="min-w-0">
                 <div className="text-sm font-medium text-gray-900">
                   Submissions
@@ -95,7 +98,10 @@ export default async function AssignmentDetailPage({
                 </div>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <ChevronRight
+              className="w-4 h-4 text-gray-400 flex-shrink-0"
+              aria-hidden="true"
+            />
           </Link>
 
           <Link
@@ -103,7 +109,10 @@ export default async function AssignmentDetailPage({
             className="flex items-center justify-between gap-3 bg-white border border-stone-200 rounded-xl shadow-sm px-4 py-3 hover:border-gray-400 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <BarChart3 className="w-5 h-5 text-stone-700 flex-shrink-0" />
+              <BarChart3
+                className="w-5 h-5 text-stone-700 flex-shrink-0"
+                aria-hidden="true"
+              />
               <div className="min-w-0">
                 <div className="text-sm font-medium text-gray-900">
                   Analytics
@@ -114,7 +123,10 @@ export default async function AssignmentDetailPage({
                 </div>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <ChevronRight
+              className="w-4 h-4 text-gray-400 flex-shrink-0"
+              aria-hidden="true"
+            />
           </Link>
         </div>
       )}

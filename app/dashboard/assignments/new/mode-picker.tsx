@@ -30,7 +30,10 @@ export function ModePicker() {
             className="group block bg-white border border-stone-200 rounded-xl shadow-sm p-5 hover:border-blue-500 hover:shadow-sm transition"
           >
             <div className="flex items-start gap-3">
-              <Icon className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
+              <Icon
+                className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0"
+                aria-hidden="true"
+              />
               <div>
                 <h2 className="font-semibold text-gray-900">
                   {cfg.displayName}

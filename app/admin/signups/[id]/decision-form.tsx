@@ -149,8 +149,14 @@ function PendingDecision({
       </div>
 
       {state.error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 p-4 flex items-start gap-3"
+        >
+          <AlertCircle
+            className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+            aria-hidden="true"
+          />
           <p className="text-sm text-red-700">{state.error}</p>
         </div>
       )}
@@ -167,14 +173,22 @@ function PendingDecision({
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="approve_role"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Role
             </label>
             <select
+              id="approve_role"
               name="role"
               required
               value={role}
               onChange={(e) => setRole(e.target.value)}
+              aria-invalid={!!approveState.fieldErrors?.role}
+              aria-describedby={
+                approveState.fieldErrors?.role ? "err-approve_role" : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
             >
               <option value="teacher">Teacher</option>
@@ -182,21 +196,31 @@ function PendingDecision({
               <option value="district_admin">District administrator</option>
             </select>
             {approveState.fieldErrors?.role && (
-              <p className="mt-1 text-sm text-red-600">
+              <p id="err-approve_role" className="mt-1 text-sm text-red-600">
                 {approveState.fieldErrors.role}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="approve_district_id"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               District
             </label>
             <select
+              id="approve_district_id"
               name="district_id"
               required
               value={districtId}
               onChange={(e) => setDistrictId(e.target.value)}
+              aria-invalid={!!approveState.fieldErrors?.district_id}
+              aria-describedby={
+                approveState.fieldErrors?.district_id
+                  ? "err-approve_district_id"
+                  : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
             >
               <option value="">— Pick a district —</option>
@@ -207,24 +231,37 @@ function PendingDecision({
               ))}
             </select>
             {approveState.fieldErrors?.district_id && (
-              <p className="mt-1 text-sm text-red-600">
+              <p
+                id="err-approve_district_id"
+                className="mt-1 text-sm text-red-600"
+              >
                 {approveState.fieldErrors.district_id}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="approve_school_id"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               School{" "}
               {role === "district_admin" && (
                 <span className="text-gray-500 font-normal">(optional)</span>
               )}
             </label>
             <select
+              id="approve_school_id"
               name="school_id"
               required={role !== "district_admin"}
               defaultValue={defaultSchoolId ?? ""}
               key={districtId}
+              aria-invalid={!!approveState.fieldErrors?.school_id}
+              aria-describedby={
+                approveState.fieldErrors?.school_id
+                  ? "err-approve_school_id"
+                  : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
             >
               <option value="">
@@ -237,7 +274,10 @@ function PendingDecision({
               ))}
             </select>
             {approveState.fieldErrors?.school_id && (
-              <p className="mt-1 text-sm text-red-600">
+              <p
+                id="err-approve_school_id"
+                className="mt-1 text-sm text-red-600"
+              >
                 {approveState.fieldErrors.school_id}
               </p>
             )}
@@ -266,7 +306,7 @@ function PendingDecision({
           >
             {approving ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                 Approving…
               </>
             ) : (
@@ -299,10 +339,16 @@ function PendingDecision({
               rows={3}
               maxLength={1000}
               placeholder="e.g. We could not verify you teach at this school."
+              aria-invalid={!!denyState.fieldErrors?.denial_reason}
+              aria-describedby={
+                denyState.fieldErrors?.denial_reason
+                  ? "err-denial_reason"
+                  : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
             />
             {denyState.fieldErrors?.denial_reason && (
-              <p className="mt-1 text-sm text-red-600">
+              <p id="err-denial_reason" className="mt-1 text-sm text-red-600">
                 {denyState.fieldErrors.denial_reason}
               </p>
             )}
@@ -331,7 +377,7 @@ function PendingDecision({
           >
             {denying ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                 Sending…
               </>
             ) : (
@@ -352,7 +398,7 @@ function DeleteButton({ signupRequestId }: { signupRequestId: string }) {
         type="submit"
         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-red-300 bg-white text-sm text-red-700 hover:bg-red-50"
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-4 h-4" aria-hidden="true" />
         Permanently delete request and account
       </button>
     </form>

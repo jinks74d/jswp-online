@@ -51,6 +51,7 @@ export function UserMenu({ profile }: { profile: ShellProfile }) {
       >
         <span className="font-medium">{displayName}</span>
         <ChevronDown
+          aria-hidden="true"
           className={`w-4 h-4 transition-transform ${
             open ? "rotate-180" : ""
           }`}
@@ -82,7 +83,7 @@ export function UserMenu({ profile }: { profile: ShellProfile }) {
               role="menuitem"
               className="w-full flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4" aria-hidden="true" />
               Log out
             </button>
           </form>

@@ -35,7 +35,7 @@ export default async function AssignmentsPage() {
           href="/dashboard/assignments/new"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4" aria-hidden="true" />
           New assignment
         </Link>
       </header>
@@ -49,12 +49,24 @@ export default async function AssignmentsPage() {
             <table className="min-w-full text-sm">
               <thead className="bg-stone-50 text-stone-700">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium">Title</th>
-                  <th className="px-3 py-2 text-left font-medium">Mode</th>
-                  <th className="px-3 py-2 text-left font-medium">Status</th>
-                  <th className="px-3 py-2 text-left font-medium">Class</th>
-                  <th className="px-3 py-2 text-left font-medium">Updated</th>
-                  <th className="px-3 py-2 text-right font-medium">Actions</th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Title
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Mode
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Status
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Class
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Updated
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-200 text-gray-900">
@@ -90,7 +102,7 @@ export default async function AssignmentsPage() {
                           aria-label={`View ${a.title || "assignment"}`}
                           className={iconLink}
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-4 h-4" aria-hidden="true" />
                         </Link>
                         <Link
                           href={`/dashboard/assignments/${a.id}#edit`}
@@ -98,7 +110,7 @@ export default async function AssignmentsPage() {
                           aria-label={`Edit ${a.title || "assignment"}`}
                           className={iconLink}
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Pencil className="w-4 h-4" aria-hidden="true" />
                         </Link>
                         <PublishToggleButton
                           assignmentId={a.id}
@@ -147,14 +159,14 @@ export default async function AssignmentsPage() {
                     href={`/dashboard/assignments/${a.id}`}
                     className="inline-flex items-center gap-1 text-stone-600 hover:text-gray-900"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-4 h-4" aria-hidden="true" />
                     View
                   </Link>
                   <Link
                     href={`/dashboard/assignments/${a.id}#edit`}
                     className="inline-flex items-center gap-1 text-stone-600 hover:text-gray-900"
                   >
-                    <Pencil className="w-4 h-4" />
+                    <Pencil className="w-4 h-4" aria-hidden="true" />
                     Edit
                   </Link>
                   <div className="ml-auto flex items-center gap-1">
@@ -182,7 +194,10 @@ export default async function AssignmentsPage() {
 function EmptyState() {
   return (
     <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
-      <FileText className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+      <FileText
+        className="w-10 h-10 text-gray-400 mx-auto mb-4"
+        aria-hidden="true"
+      />
       <h2 className="text-lg font-semibold text-gray-900">
         No assignments yet
       </h2>
@@ -195,7 +210,7 @@ function EmptyState() {
         href="/dashboard/assignments/new"
         className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
       >
-        <Plus className="w-4 h-4" />
+        <Plus className="w-4 h-4" aria-hidden="true" />
         New assignment
       </Link>
     </div>

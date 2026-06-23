@@ -52,9 +52,9 @@ export function DeleteAssignmentButton({
         className="inline-flex items-center justify-center p-1.5 rounded-md text-red-600 hover:bg-red-50 disabled:opacity-50"
       >
         {pending ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
         ) : (
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-4 h-4" aria-hidden="true" />
         )}
       </button>
     </form>

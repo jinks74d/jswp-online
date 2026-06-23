@@ -203,9 +203,9 @@ export function RubricScoringPanel({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-white bg-green-700 hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {pending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
           ) : (
-            <Check className="w-4 h-4" />
+            <Check className="w-4 h-4" aria-hidden="true" />
           )}
           {pending ? "Saving…" : "Confirm grade"}
         </button>

@@ -89,7 +89,7 @@ export function FictionalAbcPlan({
             onSave={(narrative_concrete_example) =>
               save({ narrative_concrete_example })
             }
-            className="w-full resize-y bg-transparent text-sm leading-6 text-gray-900 placeholder:text-gray-300 focus:outline-none"
+            className="w-full resize-y bg-transparent text-sm leading-6 text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:rounded-sm"
           />
         </div>
       </Part>
@@ -157,7 +157,7 @@ function NestedOvalBrainstorm({
               .filter(Boolean);
             await onSaveIdeas(arr.length > 0 ? arr : null);
           }}
-          className="h-full w-full resize-none bg-transparent text-center text-xs leading-5 text-gray-700 placeholder:text-gray-300 focus:outline-none"
+          className="h-full w-full resize-none bg-transparent text-center text-xs leading-5 text-gray-700 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:rounded-sm"
         />
       </div>
 
@@ -184,7 +184,7 @@ function NestedOvalBrainstorm({
           placeholder="key word"
           disabled={disabled}
           onSave={onSaveKeyWord}
-          className="w-full bg-transparent text-center text-sm font-semibold text-blue-700 placeholder:text-blue-300 placeholder:font-normal focus:outline-none"
+          className="w-full bg-transparent text-center text-sm font-semibold text-blue-700 placeholder:text-blue-300 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 focus:rounded-sm"
         />
       </div>
     </div>
@@ -291,7 +291,7 @@ function ChainCircle({
             initialValue={initialValue}
             disabled={disabled}
             onSave={onSave}
-            className="h-full w-full resize-none bg-transparent text-center text-gray-900 placeholder:text-gray-300 focus:outline-none"
+            className="h-full w-full resize-none bg-transparent text-center text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:rounded-sm"
             style={{ fontSize: 16, lineHeight: "20px" }}
           />
         </div>

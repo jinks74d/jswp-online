@@ -189,6 +189,18 @@ export function validateDistrictBranding(data: DistrictBrandingUpdate): Branding
     }
   }
 
+  // Per CLAUDE.md §9: a custom primary color is used as a surface behind
+  // WHITE text, so it must clear WCAG AA (4.5:1) against #FFFFFF. We warn
+  // loudly rather than block, naming the actual ratio so the admin can act.
+  if (data.primary_color && isValidHexColor(data.primary_color)) {
+    const whiteContrast = getContrastRatio(data.primary_color, '#FFFFFF')
+    if (whiteContrast < 4.5) {
+      warnings.push(
+        `Primary color has a contrast ratio of ${whiteContrast.toFixed(2)}:1 against white text — below the WCAG AA minimum of 4.5:1. White text on this color may be hard to read.`
+      )
+    }
+  }
+
   // Check color contrast if both colors are provided
   if (data.primary_color && data.secondary_color) {
     const contrast = getContrastRatio(data.primary_color, data.secondary_color)

@@ -40,7 +40,10 @@ export function AddSchoolUserForm({
           role="alert"
           className="rounded-md p-3 flex items-start gap-2 border text-sm bg-red-50 border-red-200 text-red-700"
         >
-          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <AlertCircle
+            className="w-4 h-4 mt-0.5 flex-shrink-0"
+            aria-hidden="true"
+          />
           <p>{state.error}</p>
         </div>
       )}
@@ -65,10 +68,19 @@ export function AddSchoolUserForm({
             name="first_name"
             type="text"
             required
+            aria-invalid={!!state.fieldErrors?.first_name}
+            aria-describedby={
+              state.fieldErrors?.first_name
+                ? `err-first_name_${roleLabel}`
+                : undefined
+            }
             className={inputClass}
           />
           {state.fieldErrors?.first_name && (
-            <p className="mt-1 text-sm text-red-600">
+            <p
+              id={`err-first_name_${roleLabel}`}
+              className="mt-1 text-sm text-red-600"
+            >
               {state.fieldErrors.first_name}
             </p>
           )}
@@ -82,10 +94,19 @@ export function AddSchoolUserForm({
             name="last_name"
             type="text"
             required
+            aria-invalid={!!state.fieldErrors?.last_name}
+            aria-describedby={
+              state.fieldErrors?.last_name
+                ? `err-last_name_${roleLabel}`
+                : undefined
+            }
             className={inputClass}
           />
           {state.fieldErrors?.last_name && (
-            <p className="mt-1 text-sm text-red-600">
+            <p
+              id={`err-last_name_${roleLabel}`}
+              className="mt-1 text-sm text-red-600"
+            >
               {state.fieldErrors.last_name}
             </p>
           )}
@@ -101,10 +122,16 @@ export function AddSchoolUserForm({
           name="email"
           type="email"
           required
+          aria-invalid={!!state.fieldErrors?.email}
+          aria-describedby={
+            state.fieldErrors?.email ? `err-email_${roleLabel}` : undefined
+          }
           className={inputClass}
         />
         {state.fieldErrors?.email && (
-          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.email}</p>
+          <p id={`err-email_${roleLabel}`} className="mt-1 text-sm text-red-600">
+            {state.fieldErrors.email}
+          </p>
         )}
       </div>
 
@@ -120,6 +147,7 @@ export function AddSchoolUserForm({
             id={`admin_kind_${roleLabel}`}
             name="admin_kind"
             defaultValue={DEFAULT_ADMIN_KIND}
+            aria-describedby={`hint-admin_kind_${roleLabel}`}
             className={inputClass}
           >
             {ADMIN_KINDS.map((k) => (
@@ -128,7 +156,10 @@ export function AddSchoolUserForm({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-500">
+          <p
+            id={`hint-admin_kind_${roleLabel}`}
+            className="mt-1 text-xs text-gray-500"
+          >
             Determines which dashboard this admin sees.
           </p>
         </div>
@@ -139,7 +170,9 @@ export function AddSchoolUserForm({
         disabled={pending}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
       >
-        {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+        {pending && (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        )}
         Add {roleLabel}
       </button>
     </form>
@@ -158,7 +191,7 @@ function Credentials({
   return (
     <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm">
       <div className="flex items-center gap-2 text-green-800 font-medium">
-        <KeyRound className="w-4 h-4" />
+        <KeyRound className="w-4 h-4" aria-hidden="true" />
         {roleLabel[0].toUpperCase() + roleLabel.slice(1)} created — share these
         now (shown once)
       </div>
@@ -171,7 +204,7 @@ function Credentials({
           onClick={() => navigator.clipboard?.writeText(`${email} ${password}`)}
           className="inline-flex items-center gap-1 text-green-700 hover:text-green-900"
         >
-          <Copy className="w-3.5 h-3.5" />
+          <Copy className="w-3.5 h-3.5" aria-hidden="true" />
           Copy
         </button>
       </div>

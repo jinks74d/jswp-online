@@ -38,7 +38,10 @@ export default async function DashboardHome() {
         </header>
 
         <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
-          <Sparkles className="w-10 h-10 text-blue-600 mx-auto mb-4" />
+          <Sparkles
+            className="w-10 h-10 text-blue-600 mx-auto mb-4"
+            aria-hidden="true"
+          />
           <h2 className="text-lg font-semibold text-gray-900">
             You&apos;re ready to start
           </h2>
@@ -51,7 +54,7 @@ export default async function DashboardHome() {
             href="/dashboard/assignments/new"
             className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-4 h-4" aria-hidden="true" />
             Create your first assignment
           </Link>
         </div>
@@ -98,7 +101,10 @@ function StatCard({
   value,
   href,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{
+    className?: string;
+    "aria-hidden"?: boolean | "true" | "false";
+  }>;
   label: string;
   value: number;
   href: string;
@@ -119,7 +125,7 @@ function StatCard({
             color: "var(--district-primary)",
           }}
         >
-          <Icon className="w-5 h-5" />
+          <Icon className="w-5 h-5" aria-hidden="true" />
         </span>
       </div>
       <div className="mt-3 text-3xl font-semibold text-stone-900">{value}</div>

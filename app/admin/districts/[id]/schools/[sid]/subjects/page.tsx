@@ -73,9 +73,9 @@ export default async function SubjectsPage({ params }: { params: Params }) {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-left text-gray-500">
               <tr>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">Description</th>
-                <th className="px-4 py-2" />
+                <th scope="col" className="px-4 py-2 font-medium">Name</th>
+                <th scope="col" className="px-4 py-2 font-medium">Description</th>
+                <th scope="col" className="px-4 py-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

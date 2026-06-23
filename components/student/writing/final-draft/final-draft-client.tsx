@@ -296,9 +296,9 @@ function AssembleButton({
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
       >
         {pending ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
         ) : (
-          <Wand2 className="w-4 h-4" />
+          <Wand2 className="w-4 h-4" aria-hidden="true" />
         )}
         Assemble from pieces
       </button>
@@ -540,7 +540,7 @@ function ContinueBar({
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ backgroundColor: "var(--district-primary)" }}
         >
-          {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+          {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
           {pending ? pendingLabel : buttonLabel}
         </button>
       </div>

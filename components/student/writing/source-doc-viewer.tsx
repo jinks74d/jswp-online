@@ -62,7 +62,7 @@ export function SourceDocViewer({
       rel="noopener noreferrer"
       className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 hover:text-blue-900"
     >
-      <FileText className="h-3.5 w-3.5" />
+      <FileText className="h-3.5 w-3.5" aria-hidden="true" />
       Open original{fileName ? ` (${fileName})` : ""}
     </a>
   ) : null;

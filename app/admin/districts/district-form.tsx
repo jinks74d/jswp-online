@@ -60,6 +60,8 @@ export function DistrictForm({
           maxLength={255}
           defaultValue={initial?.name ?? ""}
           placeholder="e.g. Los Angeles County Office of Education"
+          aria-invalid={!!state.fieldErrors?.name}
+          aria-describedby={state.fieldErrors?.name ? "err-name" : undefined}
           className={inputClass}
         />
       </Field>
@@ -78,6 +80,11 @@ export function DistrictForm({
             maxLength={63}
             defaultValue={initial?.subdomain ?? ""}
             placeholder="lacoe"
+            aria-invalid={!!state.fieldErrors?.subdomain}
+            aria-describedby={describedBy("subdomain", {
+              hint: true,
+              error: !!state.fieldErrors?.subdomain,
+            })}
             className={`${inputClass} rounded-r-none`}
           />
           <span className="inline-flex items-center px-3 py-2 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-sm text-gray-500">
@@ -98,6 +105,11 @@ export function DistrictForm({
           type="email"
           defaultValue={initial?.contact_email ?? ""}
           placeholder="admin@district.org"
+          aria-invalid={!!state.fieldErrors?.contact_email}
+          aria-describedby={describedBy("contact_email", {
+            hint: true,
+            error: !!state.fieldErrors?.contact_email,
+          })}
           className={inputClass}
         />
       </Field>
@@ -115,6 +127,11 @@ export function DistrictForm({
             type="text"
             defaultValue={initial?.primary_color ?? ""}
             placeholder="#1E40AF"
+            aria-invalid={!!state.fieldErrors?.primary_color}
+            aria-describedby={describedBy("primary_color", {
+              hint: true,
+              error: !!state.fieldErrors?.primary_color,
+            })}
             className={inputClass}
           />
         </Field>
@@ -130,6 +147,11 @@ export function DistrictForm({
             type="text"
             defaultValue={initial?.secondary_color ?? ""}
             placeholder="#9333EA"
+            aria-invalid={!!state.fieldErrors?.secondary_color}
+            aria-describedby={describedBy("secondary_color", {
+              hint: true,
+              error: !!state.fieldErrors?.secondary_color,
+            })}
             className={inputClass}
           />
         </Field>
@@ -147,13 +169,19 @@ export function DistrictForm({
           type="url"
           defaultValue={initial?.logo_url ?? ""}
           placeholder="https://…/logo.png"
+          aria-invalid={!!state.fieldErrors?.logo_url}
+          aria-describedby={describedBy("logo_url", {
+            hint: true,
+            error: !!state.fieldErrors?.logo_url,
+          })}
           className={inputClass}
         />
       </Field>
 
       {mode === "edit" && (
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="active" className="flex items-center gap-2 text-sm">
           <input
+            id="active"
             type="checkbox"
             name="active"
             defaultChecked={initial?.active ?? true}
@@ -171,7 +199,9 @@ export function DistrictForm({
         disabled={pending}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
       >
-        {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+        {pending && (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        )}
         {mode === "create" ? "Create district" : "Save changes"}
       </button>
     </form>
@@ -180,6 +210,18 @@ export function DistrictForm({
 
 const inputClass =
   "w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500";
+
+/** Space-separated hint+error id list for a field's aria-describedby. */
+function describedBy(
+  key: string,
+  opts: { hint?: boolean; error?: boolean }
+): string | undefined {
+  const ids = [
+    opts.hint ? `hint-${key}` : null,
+    opts.error ? `err-${key}` : null,
+  ].filter(Boolean);
+  return ids.length > 0 ? ids.join(" ") : undefined;
+}
 
 function Field({
   label,
@@ -200,10 +242,18 @@ function Field({
         <label htmlFor={htmlFor} className="text-sm font-medium text-gray-700">
           {label}
         </label>
-        {hint && <span className="text-xs text-gray-500">{hint}</span>}
+        {hint && (
+          <span id={`hint-${htmlFor}`} className="text-xs text-gray-500">
+            {hint}
+          </span>
+        )}
       </div>
       {children}
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p id={`err-${htmlFor}`} className="mt-1 text-sm text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -226,9 +276,9 @@ function Banner({
       }`}
     >
       {isError ? (
-        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       ) : (
-        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       )}
       <p>{children}</p>
     </div>

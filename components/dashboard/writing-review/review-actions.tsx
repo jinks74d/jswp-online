@@ -80,9 +80,9 @@ export function ReviewActions({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {pending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
             ) : (
-              <ArrowLeftCircle className="w-4 h-4" />
+              <ArrowLeftCircle className="w-4 h-4" aria-hidden="true" />
             )}
             Return for revision
           </button>
@@ -92,7 +92,7 @@ export function ReviewActions({
             disabled={pending}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-white bg-green-700 hover:bg-green-800 disabled:opacity-50"
           >
-            <Award className="w-4 h-4" />
+            <Award className="w-4 h-4" aria-hidden="true" />
             {grading ? "Cancel grading" : "Mark graded"}
           </button>
         </div>
@@ -160,7 +160,7 @@ function GradeComposer({
 
   return (
     <div className="rounded-md border border-gray-200 bg-white p-3 space-y-2">
-      <div className="text-xs text-gray-700">
+      <div id="grade-composer-hint" className="text-xs text-gray-700">
         Optional score (0–999.99). Leave blank to mark graded without a number.
       </div>
       <div className="flex items-center gap-2">
@@ -174,6 +174,8 @@ function GradeComposer({
           onChange={(e) => setScoreText(e.target.value)}
           placeholder="e.g. 92"
           disabled={pending}
+          aria-label="Score"
+          aria-describedby="grade-composer-hint"
           className="w-32 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 disabled:opacity-50"
         />
         <button
@@ -182,7 +184,9 @@ function GradeComposer({
           disabled={pending}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-white bg-green-700 hover:bg-green-800 disabled:opacity-50"
         >
-          {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+          {pending && (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          )}
           {pending ? "Grading…" : "Confirm"}
         </button>
         <button

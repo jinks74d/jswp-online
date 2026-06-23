@@ -61,7 +61,10 @@ export default async function SignupQueuePage({
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
           {error.message}
         </div>
       )}
@@ -75,13 +78,13 @@ export default async function SignupQueuePage({
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 text-gray-700">
               <tr>
-                <th className="px-3 py-2 text-left font-medium">Name</th>
-                <th className="px-3 py-2 text-left font-medium">Email</th>
-                <th className="px-3 py-2 text-left font-medium">
+                <th scope="col" className="px-3 py-2 text-left font-medium">Name</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium">Email</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium">
                   Requested role
                 </th>
-                <th className="px-3 py-2 text-left font-medium">Submitted</th>
-                <th className="px-3 py-2 text-right font-medium">Action</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium">Submitted</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-gray-900">

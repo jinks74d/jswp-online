@@ -51,13 +51,13 @@ export default async function AssignmentAnalyticsPage({
         href={`/dashboard/assignments/${id}`}
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
         Back to assignment
       </Link>
 
       <header>
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-stone-600 mb-2">
-          <BarChart3 className="w-3.5 h-3.5" />
+          <BarChart3 className="w-3.5 h-3.5" aria-hidden="true" />
           Analytics
         </div>
         <h1 className="text-2xl font-bold text-gray-900">

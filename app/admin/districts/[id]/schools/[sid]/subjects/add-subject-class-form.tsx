@@ -50,13 +50,19 @@ export function AddSubjectClassForm({
           required
           maxLength={255}
           placeholder="e.g. English"
+          aria-invalid={!!state.fieldErrors?.subject_name}
+          aria-describedby={
+            state.fieldErrors?.subject_name
+              ? "hint-subject_name err-subject_name"
+              : "hint-subject_name"
+          }
           className={inputClass}
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p id="hint-subject_name" className="mt-1 text-xs text-gray-500">
           Reused if it already exists at this school, otherwise created.
         </p>
         {state.fieldErrors?.subject_name && (
-          <p className="mt-1 text-sm text-red-600">
+          <p id="err-subject_name" className="mt-1 text-sm text-red-600">
             {state.fieldErrors.subject_name}
           </p>
         )}
@@ -73,10 +79,14 @@ export function AddSubjectClassForm({
           required
           maxLength={255}
           placeholder="e.g. American Literature"
+          aria-invalid={!!state.fieldErrors?.class_name}
+          aria-describedby={
+            state.fieldErrors?.class_name ? "err-class_name" : undefined
+          }
           className={inputClass}
         />
         {state.fieldErrors?.class_name && (
-          <p className="mt-1 text-sm text-red-600">
+          <p id="err-class_name" className="mt-1 text-sm text-red-600">
             {state.fieldErrors.class_name}
           </p>
         )}
@@ -105,10 +115,14 @@ export function AddSubjectClassForm({
           required
           maxLength={50}
           placeholder="e.g. Block 3"
+          aria-invalid={!!state.fieldErrors?.period_label}
+          aria-describedby={
+            state.fieldErrors?.period_label ? "err-period_label" : undefined
+          }
           className={inputClass}
         />
         {state.fieldErrors?.period_label && (
-          <p className="mt-1 text-sm text-red-600">
+          <p id="err-period_label" className="mt-1 text-sm text-red-600">
             {state.fieldErrors.period_label}
           </p>
         )}
@@ -143,7 +157,9 @@ export function AddSubjectClassForm({
         disabled={pending}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
       >
-        {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+        {pending && (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        )}
         Add subject & class
       </button>
     </form>
@@ -172,9 +188,9 @@ function Banner({
       }`}
     >
       {isError ? (
-        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       ) : (
-        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       )}
       <p>{children}</p>
     </div>

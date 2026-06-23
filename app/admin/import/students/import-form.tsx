@@ -86,7 +86,10 @@ export function ImportForm({
           role="alert"
           className="rounded-md border border-red-200 bg-red-50 p-4 flex items-start gap-3"
         >
-          <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+          <AlertCircle
+            className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+            aria-hidden="true"
+          />
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
@@ -188,12 +191,12 @@ function UploadStage({
       >
         {isPending ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
             Parsing…
           </>
         ) : (
           <>
-            <FileText className="w-4 h-4" />
+            <FileText className="w-4 h-4" aria-hidden="true" />
             Preview file
           </>
         )}
@@ -263,12 +266,12 @@ function PreviewStage({
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50 text-gray-700">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium">Row</th>
-                  <th className="px-3 py-2 text-left font-medium">Email</th>
-                  <th className="px-3 py-2 text-left font-medium">First</th>
-                  <th className="px-3 py-2 text-left font-medium">Last</th>
-                  <th className="px-3 py-2 text-left font-medium">Grade</th>
-                  <th className="px-3 py-2 text-left font-medium">SIS ID</th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">Row</th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">Email</th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">First</th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">Last</th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">Grade</th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">SIS ID</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-900">
@@ -310,7 +313,7 @@ function PreviewStage({
         >
           {isPending ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               Importing…
             </>
           ) : (
@@ -350,7 +353,10 @@ function ResultStage({
   return (
     <div className="space-y-4">
       <div className="rounded-md border border-green-200 bg-green-50 p-4 flex items-start gap-3">
-        <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+        <CheckCircle2
+          className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0"
+          aria-hidden="true"
+        />
         <div className="text-sm text-green-800">
           Import complete. <strong>{created}</strong> created,{" "}
           <strong>{updated}</strong> updated, <strong>{errors.length}</strong>{" "}
@@ -371,15 +377,15 @@ function ResultStage({
             onClick={downloadCredentialsCsv}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-yellow-700 text-white text-sm font-medium hover:bg-yellow-800"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-4 h-4" aria-hidden="true" />
             Download credentials.csv
           </button>
           <div className="bg-white border border-yellow-200 rounded overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-yellow-100 text-yellow-900">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium">Email</th>
-                  <th className="px-3 py-2 text-left font-medium">
+                  <th scope="col" className="px-3 py-2 text-left font-medium">Email</th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
                     Temporary password
                   </th>
                 </tr>

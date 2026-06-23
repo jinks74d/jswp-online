@@ -55,10 +55,14 @@ export function ClassForm({
           maxLength={255}
           defaultValue={initial?.name ?? ""}
           placeholder="e.g. English I Honors"
+          aria-invalid={!!state.fieldErrors?.name}
+          aria-describedby={state.fieldErrors?.name ? "err-name" : undefined}
           className={inputClass}
         />
         {state.fieldErrors?.name && (
-          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.name}</p>
+          <p id="err-name" className="mt-1 text-sm text-red-600">
+            {state.fieldErrors.name}
+          </p>
         )}
       </div>
 
@@ -67,7 +71,9 @@ export function ClassForm({
         disabled={pending}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
       >
-        {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+        {pending && (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        )}
         {mode === "create" ? "Add class" : "Save changes"}
       </button>
     </form>
@@ -95,9 +101,9 @@ function Banner({
       }`}
     >
       {isError ? (
-        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       ) : (
-        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       )}
       <p>{children}</p>
     </div>

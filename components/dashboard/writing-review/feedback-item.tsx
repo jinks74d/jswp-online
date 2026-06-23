@@ -125,7 +125,9 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
               disabled={pending}
               className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
             >
-              {pending && <Loader2 className="w-3 h-3 animate-spin" />}
+              {pending && (
+                <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
+              )}
               Save
             </button>
           </div>
@@ -155,7 +157,7 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
                 disabled={pending}
                 className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 disabled:opacity-50"
               >
-                <Pencil className="w-3 h-3" />
+                <Pencil className="w-3 h-3" aria-hidden="true" />
                 Edit
               </button>
               <button
@@ -164,7 +166,7 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
                 disabled={pending}
                 className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 disabled:opacity-50"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-3 h-3" aria-hidden="true" />
                 Delete
               </button>
             </>
@@ -177,16 +179,16 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
               className="inline-flex items-center gap-1 text-green-700 hover:text-green-900 disabled:opacity-50"
             >
               {pending ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
               ) : (
-                <Check className="w-3 h-3" />
+                <Check className="w-3 h-3" aria-hidden="true" />
               )}
               Mark resolved
             </button>
           )}
           {feedback.is_resolved && (
             <span className="inline-flex items-center gap-1 text-gray-500">
-              <Check className="w-3 h-3" />
+              <Check className="w-3 h-3" aria-hidden="true" />
               Resolved
             </span>
           )}

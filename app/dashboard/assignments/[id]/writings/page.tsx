@@ -65,7 +65,7 @@ export default async function AssignmentWritingsPage({
         href={`/dashboard/assignments/${id}`}
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
         Back to assignment
       </Link>
 
@@ -143,7 +143,7 @@ function WritingCard({
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
         <TeacherStatusBadge status={writing.status} />
-        <ChevronRight className="w-4 h-4 text-gray-400" />
+        <ChevronRight className="w-4 h-4 text-gray-400" aria-hidden="true" />
       </div>
     </Link>
   );
@@ -188,7 +188,10 @@ function formatRelative(iso: string): string {
 function EmptyState() {
   return (
     <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-10 text-center">
-      <FileText className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+      <FileText
+        className="w-10 h-10 text-gray-400 mx-auto mb-4"
+        aria-hidden="true"
+      />
       <h2 className="text-lg font-semibold text-gray-900">
         No submissions yet
       </h2>

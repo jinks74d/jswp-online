@@ -63,7 +63,12 @@ export function GradeFormatBar({
           );
         })}
       </div>
-      {pending && <Loader2 className="h-4 w-4 animate-spin text-stone-400" />}
+      {pending && (
+        <Loader2
+          className="h-4 w-4 animate-spin text-stone-400"
+          aria-hidden="true"
+        />
+      )}
       {!pending && failed && (
         <span role="alert" className="text-sm font-semibold text-red-600">
           ⚠ Not saved — try again

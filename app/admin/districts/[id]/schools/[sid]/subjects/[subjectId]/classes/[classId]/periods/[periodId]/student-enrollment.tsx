@@ -67,7 +67,7 @@ export function StudentEnrollment({
                 type="submit"
                 className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-red-700"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
                 Remove
               </button>
             </form>
@@ -89,7 +89,10 @@ export function StudentEnrollment({
             role="alert"
             className="rounded-md p-3 flex items-start gap-2 border text-sm bg-red-50 border-red-200 text-red-700"
           >
-            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <AlertCircle
+              className="w-4 h-4 mt-0.5 flex-shrink-0"
+              aria-hidden="true"
+            />
             <p>{enrollS.error}</p>
           </div>
         )}
@@ -116,7 +119,9 @@ export function StudentEnrollment({
           disabled={enrolling}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
         >
-          {enrolling && <Loader2 className="w-4 h-4 animate-spin" />}
+          {enrolling && (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          )}
           Add &amp; enroll
         </button>
       </form>
@@ -147,9 +152,15 @@ function Input({
         name={name}
         type={type}
         required={required}
+        aria-invalid={!!error}
+        aria-describedby={error ? `err-${name}` : undefined}
         className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
       />
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p id={`err-${name}`} className="mt-1 text-sm text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -165,7 +176,7 @@ function Result({ email, password }: { email: string; password?: string }) {
   return (
     <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm">
       <div className="flex items-center gap-2 text-green-800 font-medium">
-        <KeyRound className="w-4 h-4" />
+        <KeyRound className="w-4 h-4" aria-hidden="true" />
         Student created &amp; enrolled — share these now (shown once)
       </div>
       <div className="mt-2 flex items-center justify-between gap-2 rounded bg-white border border-green-200 px-2 py-1.5 font-mono text-xs">
@@ -177,7 +188,7 @@ function Result({ email, password }: { email: string; password?: string }) {
           onClick={() => navigator.clipboard?.writeText(`${email} ${password}`)}
           className="inline-flex items-center gap-1 text-green-700 hover:text-green-900"
         >
-          <Copy className="w-3.5 h-3.5" />
+          <Copy className="w-3.5 h-3.5" aria-hidden="true" />
           Copy
         </button>
       </div>

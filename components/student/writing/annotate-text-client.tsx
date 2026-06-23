@@ -201,7 +201,7 @@ export function AnnotateTextClient({
               />
             ) : (
               <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Loader2 className="h-4 w-4 animate-spin" /> Preparing PDF…
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Preparing PDF…
               </div>
             )
           ) : (
@@ -267,7 +267,7 @@ export function AnnotateTextClient({
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: "var(--district-primary)" }}
             >
-              {continuing && <Loader2 className="w-4 h-4 animate-spin" />}
+              {continuing && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
               {continuing ? "Saving…" : "Continue"}
             </button>
           </div>

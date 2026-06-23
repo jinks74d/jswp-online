@@ -51,7 +51,7 @@ export function StudentShell({
         onClose={() => setMobileOpen(false)}
       />
 
-      <main className="md:pl-64">
+      <main id="main-content" className="md:pl-64">
         <div className="max-w-6xl mx-auto px-4 py-6">{children}</div>
       </main>
     </div>

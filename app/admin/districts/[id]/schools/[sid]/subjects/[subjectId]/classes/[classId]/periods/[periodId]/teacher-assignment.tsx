@@ -65,7 +65,7 @@ export function TeacherAssignment({
                 type="submit"
                 className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-red-700"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
                 Remove
               </button>
             </form>
@@ -85,6 +85,7 @@ export function TeacherAssignment({
             name="teacher_id"
             required
             defaultValue=""
+            aria-label="Teacher to assign"
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
           >
             <option value="" disabled>
@@ -102,9 +103,9 @@ export function TeacherAssignment({
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
           >
             {assigning ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
             ) : (
-              <UserPlus className="w-4 h-4" />
+              <UserPlus className="w-4 h-4" aria-hidden="true" />
             )}
             Assign
           </button>

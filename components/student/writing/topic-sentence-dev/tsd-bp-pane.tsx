@@ -187,7 +187,7 @@ function CandidateRow({
         })}
       </div>
       {pending && (
-        <Loader2 className="w-4 h-4 animate-spin text-gray-400 mt-1" />
+        <Loader2 className="w-4 h-4 animate-spin text-gray-400 mt-1" aria-hidden="true" />
       )}
     </li>
   );

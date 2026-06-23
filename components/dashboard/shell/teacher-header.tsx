@@ -36,7 +36,7 @@ export function TeacherHeader({
             className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-md text-stone-700 hover:bg-white/60"
             aria-label="Open navigation"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-5 h-5" aria-hidden="true" />
           </button>
 
           {/* Brand shows on mobile only — the closed drawer hides the

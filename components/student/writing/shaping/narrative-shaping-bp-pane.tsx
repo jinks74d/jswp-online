@@ -126,8 +126,8 @@ export function NarrativeShapingBpPane({
 
 /* ─── Shape blocks (guide pp. 64/70) ──────────────────────────────── */
 
-const BLUE = "#1d4ed8"; // text-blue-700
-const GREEN = "#15803d"; // text-green-700
+const BLUE = "var(--jswp-color-ts)"; // Topic/Concluding Sentence (blue)
+const GREEN = "var(--jswp-color-cm)"; // Commentary (green)
 const DASH = { stroke: "#9ca3af", strokeWidth: 1, strokeDasharray: "8 5" };
 
 const TRAPEZOID_POINTS = {

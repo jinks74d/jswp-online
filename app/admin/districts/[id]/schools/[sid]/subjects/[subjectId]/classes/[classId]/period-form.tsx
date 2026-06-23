@@ -61,10 +61,14 @@ export function PeriodForm({
             maxLength={50}
             defaultValue={initial?.period_label ?? ""}
             placeholder="e.g. 2 or Block 3"
+            aria-invalid={!!state.fieldErrors?.period_label}
+            aria-describedby={
+              state.fieldErrors?.period_label ? "err-period_label" : undefined
+            }
             className={inputClass}
           />
           {state.fieldErrors?.period_label && (
-            <p className="mt-1 text-sm text-red-600">
+            <p id="err-period_label" className="mt-1 text-sm text-red-600">
               {state.fieldErrors.period_label}
             </p>
           )}
@@ -90,7 +94,9 @@ export function PeriodForm({
         disabled={pending}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
       >
-        {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+        {pending && (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        )}
         {mode === "create" ? "Add period" : "Save changes"}
       </button>
     </form>
@@ -118,9 +124,9 @@ function Banner({
       }`}
     >
       {isError ? (
-        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       ) : (
-        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
       )}
       <p>{children}</p>
     </div>

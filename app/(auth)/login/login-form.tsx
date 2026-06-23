@@ -20,7 +20,10 @@ export function LoginForm() {
           className="bg-red-50 border border-red-200 rounded-md p-4 flex items-start gap-3"
           role="alert"
         >
-          <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+          <AlertCircle
+            className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+            aria-hidden="true"
+          />
           <div>
             <h3 className="text-sm font-medium text-red-800">Login Failed</h3>
             <p className="text-sm text-red-700 mt-1">{state.error}</p>
@@ -70,9 +73,9 @@ export function LoginForm() {
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (
-              <EyeOff className="w-4 h-4 text-gray-400" />
+              <EyeOff className="w-4 h-4 text-gray-400" aria-hidden="true" />
             ) : (
-              <Eye className="w-4 h-4 text-gray-400" />
+              <Eye className="w-4 h-4 text-gray-400" aria-hidden="true" />
             )}
           </button>
         </div>
@@ -92,7 +95,10 @@ function SubmitButton({ pending }: { pending: boolean }) {
     >
       {pending ? (
         <span className="flex items-center gap-2">
-          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <span
+            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+            aria-hidden="true"
+          />
           Signing in...
         </span>
       ) : (

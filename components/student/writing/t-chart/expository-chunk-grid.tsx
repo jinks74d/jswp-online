@@ -89,7 +89,7 @@ export function ExpositoryChunkGrid({
               onClick={onRemove}
               className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-red-700"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
               Remove chunk
             </button>
           )}
@@ -442,9 +442,9 @@ function AddCdButton({
       style={{ color: "var(--jswp-color-cd)" }}
     >
       {pending ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
       ) : (
-        <Plus className="h-3.5 w-3.5" />
+        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
       )}
       Add CD
     </button>
@@ -474,9 +474,9 @@ function AddCmButton({
       style={{ color: "var(--jswp-color-cm)" }}
     >
       {pending ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
       ) : (
-        <Plus className="h-3.5 w-3.5" />
+        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
       )}
       Add CM
     </button>
@@ -495,6 +495,7 @@ function DeleteButton({
     <button
       type="button"
       title={title}
+      aria-label={title}
       onClick={() =>
         start(async () => {
           await onConfirm();
@@ -504,9 +505,9 @@ function DeleteButton({
       className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
     >
       {pending ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
       ) : (
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-4 w-4" aria-hidden="true" />
       )}
     </button>
   );

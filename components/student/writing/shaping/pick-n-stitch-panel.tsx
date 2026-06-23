@@ -90,7 +90,7 @@ export function PickNStitchPanel({
         <div className="space-y-4">
           {groups.map((group) => (
             <div key={group.word.id}>
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--jswp-color-cm,#16a34a)] mb-0.5">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--jswp-color-cm)] mb-0.5">
                 {group.word.text.trim() || (
                   <span className="italic font-normal text-gray-400">(no word)</span>
                 )}
@@ -229,7 +229,7 @@ function FlagToggle({
           : "border-gray-300 text-gray-500 hover:border-gray-500 hover:text-gray-700"
       }`}
     >
-      {pending ? <Loader2 className="w-3 h-3 animate-spin" /> : short}
+      {pending ? <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" /> : short}
     </button>
   );
 }

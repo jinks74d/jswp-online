@@ -67,7 +67,7 @@ export function ChunkEditor({
             onClick={onRemove}
             className="text-xs text-gray-500 hover:text-red-700 inline-flex items-center gap-1"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
             Remove chunk
           </button>
         )}
@@ -223,9 +223,9 @@ function AddCdButton({
       className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
     >
       {pending ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
       ) : (
-        <Plus className="w-3.5 h-3.5" />
+        <Plus className="w-3.5 h-3.5" aria-hidden="true" />
       )}
       Add CD
     </button>
@@ -250,12 +250,13 @@ function DeleteCdButton({
       }
       disabled={pending}
       title="Remove CD"
+      aria-label="Remove CD"
       className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
     >
       {pending ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
+        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
       ) : (
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-4 h-4" aria-hidden="true" />
       )}
     </button>
   );
@@ -283,9 +284,9 @@ function AddCmButton({
       className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-green-700 hover:bg-green-50 disabled:opacity-50"
     >
       {pending ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
       ) : (
-        <Plus className="w-3.5 h-3.5" />
+        <Plus className="w-3.5 h-3.5" aria-hidden="true" />
       )}
       Add CM
     </button>
@@ -310,12 +311,13 @@ function DeleteCmButton({
       }
       disabled={pending}
       title="Remove CM"
+      aria-label="Remove CM"
       className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
     >
       {pending ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
+        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
       ) : (
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-4 h-4" aria-hidden="true" />
       )}
     </button>
   );

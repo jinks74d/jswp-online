@@ -87,7 +87,7 @@ function AssignmentRow({
     <div className="flex items-center justify-between gap-3 px-3 py-3">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-stone-600">
-          <FileText className="w-3.5 h-3.5" />
+          <FileText className="w-3.5 h-3.5" aria-hidden="true" />
           {MODE_LABELS[assignment.mode]}
         </div>
         <div className="text-sm font-medium text-gray-900 truncate mt-0.5">
@@ -121,7 +121,7 @@ function AssignmentRow({
           </div>
         )}
         {assignment.writingId && (
-          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <ChevronRight className="w-4 h-4 text-gray-400" aria-hidden="true" />
         )}
       </div>
     </div>

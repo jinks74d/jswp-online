@@ -51,7 +51,7 @@ export default async function StudentDetailPage({
         href="/dashboard/students"
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
         Back to My Students
       </Link>
 

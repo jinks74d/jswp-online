@@ -56,7 +56,7 @@ export function CounterargumentBpPane({
 
       <Field
         label="Concession"
-        accentClass="text-purple-700"
+        accentClass="jswp-concession text-[color:var(--jswp-color-concession)]"
         help="Acknowledge what's true on the other side."
       >
         <AutoSaveInput
@@ -73,7 +73,7 @@ export function CounterargumentBpPane({
 
       <Field
         label="Counterargument"
-        accentClass="text-orange-700"
+        accentClass="jswp-counterargument text-[color:var(--jswp-color-counterargument)]"
         help="Lay out the opposing position fully and fairly."
       >
         <AutoSaveInput
@@ -90,7 +90,7 @@ export function CounterargumentBpPane({
 
       <Field
         label="Refutation"
-        accentClass="text-teal-700"
+        accentClass="jswp-refutation text-[color:var(--jswp-color-refutation)]"
         help="Show why your position holds up despite the counterargument."
       >
         <AutoSaveInput

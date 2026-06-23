@@ -73,6 +73,7 @@ export function TeacherSidebar({
                 }
               >
                 <Icon
+                  aria-hidden="true"
                   className="w-5 h-5"
                   style={
                     active

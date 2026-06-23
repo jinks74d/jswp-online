@@ -41,10 +41,18 @@ export default async function StudentsPage() {
             <table className="min-w-full text-sm">
               <thead className="bg-stone-50 text-stone-700">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium">Name</th>
-                  <th className="px-3 py-2 text-left font-medium">Email</th>
-                  <th className="px-3 py-2 text-left font-medium">Grade</th>
-                  <th className="px-3 py-2 text-left font-medium">Classes</th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Name
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Email
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Grade
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Classes
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-200 text-gray-900">
@@ -107,7 +115,10 @@ export default async function StudentsPage() {
 function EmptyState() {
   return (
     <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
-      <GraduationCap className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+      <GraduationCap
+        className="w-10 h-10 text-gray-400 mx-auto mb-4"
+        aria-hidden="true"
+      />
       <h2 className="text-lg font-semibold text-gray-900">No students yet</h2>
       <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
         Once you&apos;re assigned to a class period and students are enrolled

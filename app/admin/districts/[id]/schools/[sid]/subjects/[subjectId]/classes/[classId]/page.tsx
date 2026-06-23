@@ -74,9 +74,9 @@ export default async function ClassDetailPage({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-left text-gray-500">
               <tr>
-                <th className="px-4 py-2 font-medium">Period</th>
-                <th className="px-4 py-2 font-medium">Academic year</th>
-                <th className="px-4 py-2" />
+                <th scope="col" className="px-4 py-2 font-medium">Period</th>
+                <th scope="col" className="px-4 py-2 font-medium">Academic year</th>
+                <th scope="col" className="px-4 py-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
