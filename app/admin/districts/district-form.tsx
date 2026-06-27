@@ -16,6 +16,13 @@ import {
 
 const initialState: DistrictFormState = {};
 
+type PocInitial = {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+};
+
 export type DistrictInitial = {
   id: string;
   name: string;
@@ -25,6 +32,8 @@ export type DistrictInitial = {
   secondary_color: string | null;
   logo_url: string | null;
   active: boolean;
+  primaryPoc?: PocInitial;
+  secondaryPoc?: PocInitial;
 };
 
 export function DistrictForm({
@@ -178,18 +187,30 @@ export function DistrictForm({
         />
       </Field>
 
-      {mode === "create" && (
-        <fieldset className="border-t border-gray-200 pt-4 mt-2 space-y-5">
-          <legend className="text-sm font-semibold text-gray-900">
-            Points of Contact
-            <span className="ml-2 font-normal text-xs text-gray-500">
-              both required — each becomes a district admin you can invite
-            </span>
-          </legend>
-          <PocFields prefix="primary" label="Primary POC" state={state} />
-          <PocFields prefix="secondary" label="Secondary POC" state={state} />
-        </fieldset>
-      )}
+      <fieldset className="border-t border-gray-200 pt-4 mt-2 space-y-5">
+        <legend className="text-sm font-semibold text-gray-900">
+          Points of Contact
+          <span className="ml-2 font-normal text-xs text-gray-500">
+            {mode === "create"
+              ? "both required — each becomes a district admin you can invite"
+              : "edit contact details, or add a contact if one is missing"}
+          </span>
+        </legend>
+        <PocFields
+          prefix="primary"
+          label="Primary POC"
+          state={state}
+          required={mode === "create"}
+          initial={initial?.primaryPoc}
+        />
+        <PocFields
+          prefix="secondary"
+          label="Secondary POC"
+          state={state}
+          required={mode === "create"}
+          initial={initial?.secondaryPoc}
+        />
+      </fieldset>
 
       {mode === "edit" && (
         <label htmlFor="active" className="flex items-center gap-2 text-sm">
@@ -225,10 +246,14 @@ function PocFields({
   prefix,
   label,
   state,
+  required,
+  initial,
 }: {
   prefix: "primary" | "secondary";
   label: string;
   state: DistrictFormState;
+  required: boolean;
+  initial?: PocInitial;
 }) {
   const fe = state.fieldErrors;
   const k = (name: string) => `${prefix}_poc_${name}`;
@@ -247,8 +272,9 @@ function PocFields({
             id={k("first_name")}
             name={k("first_name")}
             type="text"
-            required
+            required={required}
             maxLength={100}
+            defaultValue={initial?.first_name ?? ""}
             aria-invalid={!!fe?.[`${prefix}_poc_first_name`]}
             aria-describedby={
               fe?.[`${prefix}_poc_first_name`] ? `err-${k("first_name")}` : undefined
@@ -265,8 +291,9 @@ function PocFields({
             id={k("last_name")}
             name={k("last_name")}
             type="text"
-            required
+            required={required}
             maxLength={100}
+            defaultValue={initial?.last_name ?? ""}
             aria-invalid={!!fe?.[`${prefix}_poc_last_name`]}
             aria-describedby={
               fe?.[`${prefix}_poc_last_name`] ? `err-${k("last_name")}` : undefined
@@ -280,8 +307,9 @@ function PocFields({
           id={k("email")}
           name={k("email")}
           type="email"
-          required
+          required={required}
           maxLength={255}
+          defaultValue={initial?.email ?? ""}
           placeholder="name@district.org"
           aria-invalid={!!fe?.[`${prefix}_poc_email`]}
           aria-describedby={fe?.[`${prefix}_poc_email`] ? `err-${k("email")}` : undefined}
@@ -293,8 +321,9 @@ function PocFields({
           id={k("phone")}
           name={k("phone")}
           type="tel"
-          required
+          required={required}
           maxLength={32}
+          defaultValue={initial?.phone ?? ""}
           placeholder="(555) 123-4567"
           aria-invalid={!!fe?.[`${prefix}_poc_phone`]}
           aria-describedby={fe?.[`${prefix}_poc_phone`] ? `err-${k("phone")}` : undefined}

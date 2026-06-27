@@ -251,6 +251,22 @@ export default async function DistrictDetailPage({
                 secondary_color: district.secondary_color,
                 logo_url: district.logo_url,
                 active: district.active,
+                primaryPoc: pocs.primary
+                  ? {
+                      first_name: pocs.primary.first_name,
+                      last_name: pocs.primary.last_name,
+                      email: pocs.primary.email,
+                      phone: pocs.primary.phone,
+                    }
+                  : undefined,
+                secondaryPoc: pocs.secondary
+                  ? {
+                      first_name: pocs.secondary.first_name,
+                      last_name: pocs.secondary.last_name,
+                      email: pocs.secondary.email,
+                      phone: pocs.secondary.phone,
+                    }
+                  : undefined,
               }}
             />
           </Disclosure>

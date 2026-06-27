@@ -288,9 +288,68 @@ export async function updateDistrict(
   if (!id) return { error: "Missing district id." };
 
   const f = parseDistrictForm(formData);
-  const fe = validate(f);
-  if (fe) return { fieldErrors: fe };
+  const primary = parsePoc(formData, "primary");
+  const secondary = parsePoc(formData, "secondary");
+  const fe: NonNullable<DistrictFormState["fieldErrors"]> = validate(f) ?? {};
 
+  const admin = createAdminClient();
+
+  // Resolve the district's real POC account ids from the DB (don't trust the
+  // client) so we know which slots update an existing account vs. provision one.
+  const { data: dist, error: distErr } = await admin
+    .from("districts")
+    .select("primary_poc_id, secondary_poc_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (distErr || !dist) {
+    return { error: distErr?.message ?? "District not found." };
+  }
+
+  const slots = [
+    {
+      prefix: "primary" as const,
+      poc: primary,
+      existingId: dist.primary_poc_id,
+      fk: "primary_poc_id" as const,
+    },
+    {
+      prefix: "secondary" as const,
+      poc: secondary,
+      existingId: dist.secondary_poc_id,
+      fk: "secondary_poc_id" as const,
+    },
+  ];
+
+  // A POC slot is validated when it already has an account (you can't blank an
+  // existing contact) or when any field was filled (adding a missing contact).
+  const hasAny = (p: ParsedPoc) =>
+    !!(p.firstName || p.lastName || p.email || p.phone);
+  for (const s of slots) {
+    if (s.existingId || hasAny(s.poc)) validatePoc(s.poc, s.prefix, fe);
+  }
+  if (
+    primary.email &&
+    secondary.email &&
+    primary.email.toLowerCase() === secondary.email.toLowerCase()
+  ) {
+    fe.secondary_poc_email = "Secondary POC must use a different email.";
+  }
+  if (Object.keys(fe).length) return { fieldErrors: fe };
+
+  // Current POC emails, to skip auth email churn when unchanged.
+  const existingIds = slots
+    .map((s) => s.existingId)
+    .filter((v): v is string => !!v);
+  const currentEmail = new Map<string, string | null>();
+  if (existingIds.length > 0) {
+    const { data: rows } = await admin
+      .from("user_profiles")
+      .select("id, email")
+      .in("id", existingIds);
+    for (const r of rows ?? []) currentEmail.set(r.id, r.email);
+  }
+
+  // District fields go through the RLS client (districts_super_admin_all).
   const supabase = await createServerClient();
   const { error } = await supabase
     .from("districts")
@@ -311,16 +370,76 @@ export async function updateDistrict(
     return { error: error.message };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "district.update",
-      target_scope: { district_id: id },
-      metadata: { name: f.name, active: f.active },
-      district_id: id,
-      school_id: null,
-    });
+  // Apply POC changes: update existing accounts, provision newly-added ones.
+  const newFk: { primary_poc_id?: string; secondary_poc_id?: string } = {};
+  for (const s of slots) {
+    if (s.existingId) {
+      const prev = currentEmail.get(s.existingId);
+      if (prev !== undefined && prev?.toLowerCase() !== s.poc.email.toLowerCase()) {
+        const { error: emailErr } = await admin.auth.admin.updateUserById(
+          s.existingId,
+          { email: s.poc.email }
+        );
+        if (emailErr) {
+          if (/already|exists|registered/i.test(emailErr.message))
+            return {
+              fieldErrors: {
+                [`${s.prefix}_poc_email`]:
+                  "An account with this email already exists.",
+              },
+            };
+          return { error: emailErr.message };
+        }
+      }
+      const { error: upErr } = await admin
+        .from("user_profiles")
+        .update({
+          first_name: s.poc.firstName,
+          last_name: s.poc.lastName,
+          email: s.poc.email,
+          phone: s.poc.phone,
+        })
+        .eq("id", s.existingId);
+      if (upErr) return { error: upErr.message };
+    } else if (hasAny(s.poc)) {
+      const res = await createScopedUser({
+        role: "district_admin",
+        districtId: id,
+        schoolId: null,
+        firstName: s.poc.firstName,
+        lastName: s.poc.lastName,
+        email: s.poc.email,
+        phone: s.poc.phone,
+      });
+      if (!res.ok) {
+        if (res.duplicateEmail)
+          return {
+            fieldErrors: {
+              [`${s.prefix}_poc_email`]:
+                "An account with this email already exists.",
+            },
+          };
+        return { error: res.error };
+      }
+      newFk[s.fk] = res.userId;
+    }
+  }
+  if (Object.keys(newFk).length > 0) {
+    const { error: fkErr } = await supabase
+      .from("districts")
+      .update(newFk)
+      .eq("id", id);
+    if (fkErr) return { error: fkErr.message };
+  }
+
+  await admin.from("audit_log").insert({
+    actor_id: actor.id,
+    action: "district.update",
+    target_scope: { district_id: id },
+    metadata: { name: f.name, active: f.active },
+    district_id: id,
+    school_id: null,
+  });
 
   revalidatePath("/admin/districts");
   revalidatePath(`/admin/districts/${id}`);
