@@ -97,7 +97,7 @@ export function NewDistrictPanel() {
         <button
           type="button"
           onClick={() => openWith("create")}
-          className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           New district
@@ -105,7 +105,7 @@ export function NewDistrictPanel() {
         <button
           type="button"
           onClick={() => openWith("import")}
-          className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
         >
           <Upload className="h-4 w-4" aria-hidden="true" />
           Import CSV
@@ -130,7 +130,7 @@ export function NewDistrictPanel() {
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className={`relative flex max-h-[calc(100vh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition duration-150 ${
+            className={`relative flex max-h-[calc(100vh-2rem)] w-full max-w-[712px] flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition duration-150 ${
               entered ? "scale-100 opacity-100" : "scale-95 opacity-0"
             }`}
           >
@@ -203,7 +203,7 @@ export function NewDistrictPanel() {
                   id={`${titleId}-panel-create`}
                   aria-labelledby={`${titleId}-tab-create`}
                 >
-                  <DistrictForm mode="create" />
+                  <DistrictForm mode="create" onCancel={close} />
                 </div>
               ) : (
                 <div

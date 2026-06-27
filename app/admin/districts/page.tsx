@@ -31,9 +31,9 @@ export default async function DistrictsPage() {
         <NewDistrictPanel />
       </header>
 
-      <dl className="grid grid-cols-3 gap-3 sm:max-w-md">
+      <dl className="grid grid-cols-3 gap-4 sm:max-w-2xl">
         <StatTile label="Districts" value={overview.stats.total} />
-        <StatTile label="Active" value={overview.stats.active} />
+        <StatTile label="Active" value={overview.stats.active} accent />
         <StatTile label="Schools" value={overview.stats.schools} />
       </dl>
 
@@ -42,13 +42,27 @@ export default async function DistrictsPage() {
   );
 }
 
-function StatTile({ label, value }: { label: string; value: number }) {
+function StatTile({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: number;
+  accent?: boolean;
+}) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
         {label}
       </dt>
-      <dd className="mt-0.5 text-xl font-bold text-gray-900">{value}</dd>
+      <dd
+        className={`mt-1 text-3xl font-bold ${
+          accent ? "text-rose-600" : "text-gray-900"
+        }`}
+      >
+        {value}
+      </dd>
     </div>
   );
 }

@@ -14,8 +14,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { School, Search, Users } from "lucide-react";
 import type { DistrictCard } from "@/lib/queries/districts";
-import { getContrastColor } from "@/lib/district-branding.utils";
 import { isValidHexColor } from "@/lib/district-branding.types";
+
+const FALLBACK_ACCENT = "#475569"; // slate-600, for districts without a brand colour
 
 type SortKey = "name" | "newest" | "schools";
 
@@ -76,7 +77,7 @@ export function DistrictsBrowser({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or subdomain"
             aria-label="Search districts by name or subdomain"
-            className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
           />
         </div>
 
@@ -91,7 +92,7 @@ export function DistrictsBrowser({
             id="district-sort"
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="rounded-md border border-gray-300 bg-white py-2 pl-3 pr-8 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-md border border-gray-300 bg-white py-2 pl-3 pr-8 text-sm text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -128,43 +129,38 @@ export function DistrictsBrowser({
 /* ── Card ─────────────────────────────────────────────────────────────── */
 
 function DistrictTenantCard({ district }: { district: DistrictCard }) {
-  const primary =
+  const accent =
     district.primary_color && isValidHexColor(district.primary_color)
       ? district.primary_color
-      : null;
-  const secondary =
-    district.secondary_color && isValidHexColor(district.secondary_color)
-      ? district.secondary_color
-      : null;
-  const onPrimary = primary ? getContrastColor(primary) : undefined;
+      : FALLBACK_ACCENT;
   const initials = getInitials(district.name);
 
   return (
     <Link
       href={`/admin/districts/${district.id}`}
       aria-label={`Manage ${district.name}`}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
     >
-      {/* Brand band: district primary colour or a neutral slate fallback. */}
+      {/* Brand band: the district's primary colour (or a neutral fallback),
+          with a white chip holding the district logo — or, if none, a
+          monogram whose text echoes the brand colour. */}
       <div
-        className={`flex h-20 items-center justify-center ${
-          primary ? "" : "bg-slate-600"
-        }`}
-        style={primary ? { backgroundColor: primary } : undefined}
+        className="flex h-24 items-center justify-center"
+        style={{ backgroundColor: accent }}
       >
         {district.logo_url ? (
-          <span className="flex h-14 items-center rounded-md bg-white/95 px-3 shadow-sm">
+          <span className="flex h-14 min-w-14 items-center justify-center rounded-lg bg-white px-3 shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={district.logo_url}
               alt=""
-              className="block h-9 w-auto max-w-[160px] object-contain"
+              className="block h-10 w-auto max-w-[150px] object-contain"
             />
           </span>
         ) : (
           <span
-            className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/20 text-lg font-bold"
-            style={{ color: onPrimary ?? "#ffffff" }}
+            className="flex min-w-14 items-center justify-center rounded-lg bg-white px-4 py-2 text-xl font-bold shadow-sm"
+            style={{ color: accent }}
             aria-hidden="true"
           >
             {initials}
@@ -201,15 +197,6 @@ function DistrictTenantCard({ district }: { district: DistrictCard }) {
           </div>
         </dl>
       </div>
-
-      {/* Secondary-colour accent stripe — echoes the detail-page banner. */}
-      {secondary && (
-        <div
-          className="h-1.5 w-full"
-          style={{ backgroundColor: secondary }}
-          aria-hidden="true"
-        />
-      )}
     </Link>
   );
 }
@@ -217,17 +204,13 @@ function DistrictTenantCard({ district }: { district: DistrictCard }) {
 function StatusPill({ active }: { active: boolean }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
-        active
-          ? "bg-green-50 text-green-700"
-          : "bg-gray-100 text-gray-500"
+      className={`inline-flex shrink-0 items-center gap-1.5 text-xs font-medium ${
+        active ? "text-emerald-600" : "text-gray-400"
       }`}
     >
       <span
         className={`h-2 w-2 rounded-full ${
-          active
-            ? "bg-green-500"
-            : "border border-gray-400 bg-transparent"
+          active ? "bg-emerald-500" : "border border-gray-400 bg-transparent"
         }`}
         aria-hidden="true"
       />

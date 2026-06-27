@@ -1,29 +1,24 @@
 /**
- * /admin/districts/[id] — district detail (super-admin). Two-column dashboard:
- * a branded banner (logo + district colors), a Schools-focused main column, and
- * a right rail with branding summary, quick stats, and a collapsed edit form.
+ * /admin/districts/[id] — district detail (super-admin). A white header card
+ * with a crimson accent + Edit-details modal, a four-up stats row, a Schools
+ * table with add/import actions, and a right rail (branding + points of contact).
  */
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  Pencil,
-  Plus,
-  School as SchoolIcon,
-  Upload,
-} from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight } from "lucide-react";
 import { requireRole } from "@/lib/auth";
-import { getDistrict, getDistrictPocs, type DistrictPoc } from "@/lib/queries/districts";
+import {
+  getDistrict,
+  getDistrictPocs,
+  type DistrictPoc,
+} from "@/lib/queries/districts";
 import { listSchoolsForDistrict } from "@/lib/queries/schools";
 import { schoolLevelLabel } from "@/lib/school-levels";
-import { getContrastColor } from "@/lib/district-branding.utils";
 import { isValidHexColor } from "@/lib/district-branding.types";
-import { CsvImporter } from "@/components/admin/csv-importer";
-import { DistrictForm } from "../district-form";
-import { SchoolForm } from "./school-form";
+import { type DistrictInitial } from "../district-form";
+import { EditDistrictPanel } from "./edit-district-panel";
+import { SchoolActions } from "./school-actions";
 import { PocInviteButton } from "./poc-invite-button";
 
 export const dynamic = "force-dynamic";
@@ -42,10 +37,19 @@ export default async function DistrictDetailPage({
   if (!district) notFound();
 
   const schools = await listSchoolsForDistrict(district.id);
-  const activeSchools = schools.filter((s) => s.active).length;
   const pocs = await getDistrictPocs(district);
 
-  // Only treat colors as "branded" when they're real hex values.
+  const activeSchools = schools.filter((s) => s.active).length;
+  const contactsSet = (pocs.primary ? 1 : 0) + (pocs.secondary ? 1 : 0);
+  const levelLabels = Array.from(
+    new Set(
+      schools
+        .map((s) => schoolLevelLabel(s.level))
+        .filter((l): l is string => !!l)
+    )
+  );
+  const levelsDisplay = levelLabels.length > 0 ? levelLabels.join(", ") : "—";
+
   const primary =
     district.primary_color && isValidHexColor(district.primary_color)
       ? district.primary_color
@@ -54,222 +58,178 @@ export default async function DistrictDetailPage({
     district.secondary_color && isValidHexColor(district.secondary_color)
       ? district.secondary_color
       : null;
-  const onPrimary = primary ? getContrastColor(primary) : undefined;
+
+  const editInitial: DistrictInitial = {
+    id: district.id,
+    name: district.name,
+    subdomain: district.subdomain,
+    contact_email: district.contact_email,
+    primary_color: district.primary_color,
+    secondary_color: district.secondary_color,
+    logo_url: district.logo_url,
+    active: district.active,
+    primaryPoc: pocs.primary
+      ? {
+          first_name: pocs.primary.first_name,
+          last_name: pocs.primary.last_name,
+          email: pocs.primary.email,
+          phone: pocs.primary.phone,
+        }
+      : undefined,
+    secondaryPoc: pocs.secondary
+      ? {
+          first_name: pocs.secondary.first_name,
+          last_name: pocs.secondary.last_name,
+          email: pocs.secondary.email,
+          phone: pocs.secondary.phone,
+        }
+      : undefined,
+  };
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6">
       <Link
         href="/admin/districts"
-        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+        className="inline-flex items-center gap-1 text-sm font-medium text-rose-600 hover:text-rose-700"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="h-4 w-4" />
         Back to Districts
       </Link>
 
-      {/* ── Branded banner ───────────────────────────────────────────── */}
-      <header
-        className="rounded-xl border border-gray-200 overflow-hidden"
-        style={primary ? { backgroundColor: primary, color: onPrimary } : undefined}
-      >
-        <div className="p-6 flex items-center gap-4">
-          <LogoTile logoUrl={district.logo_url} branded={!!primary} />
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <h1
-                className="text-2xl font-bold truncate"
-                style={primary ? undefined : { color: "#111827" }}
-              >
+      {/* ── Header card ─────────────────────────────────────────────── */}
+      <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="w-1.5 shrink-0 bg-rose-600" aria-hidden="true" />
+        <div className="flex flex-1 flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <LogoTile logoUrl={district.logo_url} />
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-gray-900">
                 {district.name}
               </h1>
-              {!district.active && (
-                <span
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                  style={
-                    primary
-                      ? { backgroundColor: "rgba(255,255,255,0.22)", color: onPrimary }
-                      : { backgroundColor: "#f3f4f6", color: "#4b5563" }
-                  }
-                >
-                  Inactive
-                </span>
+              {district.subdomain ? (
+                <p className="mt-0.5 font-mono text-sm text-gray-500">
+                  {district.subdomain}.jswponline.com
+                </p>
+              ) : (
+                <p className="mt-0.5 text-sm text-gray-400">No subdomain set</p>
               )}
             </div>
-            {district.subdomain ? (
-              <p
-                className="text-sm font-mono mt-0.5"
-                style={primary ? { opacity: 0.9 } : { color: "#6b7280" }}
-              >
-                {district.subdomain}.jswponline.com
-              </p>
-            ) : (
-              <p
-                className="text-sm mt-0.5"
-                style={primary ? { opacity: 0.85 } : { color: "#9ca3af" }}
-              >
-                No subdomain set
-              </p>
-            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <StatusPill active={district.active} />
+            <EditDistrictPanel initial={editInitial} />
           </div>
         </div>
-        {secondary && <div className="h-1.5" style={{ backgroundColor: secondary }} />}
-      </header>
+      </div>
 
-      {/* ── Two-column dashboard ─────────────────────────────────────── */}
-      <div className="grid gap-6 lg:grid-cols-3 items-start">
-        {/* Main: Schools */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+      {/* ── Stats row ───────────────────────────────────────────────── */}
+      <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard label="Schools" value={schools.length} />
+        <StatCard label="Active" value={activeSchools} accent />
+        <StatCard label="Contacts set" value={`${contactsSet}/2`} />
+        <StatCard label="Levels" value={levelsDisplay} />
+      </dl>
+
+      {/* ── Main + rail ─────────────────────────────────────────────── */}
+      <div className="grid items-start gap-6 lg:grid-cols-3">
+        {/* Schools */}
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm lg:col-span-2">
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
               Schools
             </h2>
-            <span className="text-xs text-gray-400">
-              {schools.length} total
-            </span>
+            <span className="text-xs text-gray-400">{schools.length} total</span>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-gray-500">
-                <tr>
-                  <th scope="col" className="px-4 py-2 font-medium">Name</th>
-                  <th scope="col" className="px-4 py-2 font-medium">Level</th>
-                  <th scope="col" className="px-4 py-2 font-medium">Status</th>
-                  <th scope="col" className="px-4 py-2" />
+          <table className="w-full text-sm">
+            <thead className="text-left text-gray-500">
+              <tr className="border-b border-gray-100">
+                <th scope="col" className="px-5 py-2 font-medium">Name</th>
+                <th scope="col" className="px-5 py-2 font-medium">Level</th>
+                <th scope="col" className="px-5 py-2 font-medium">Status</th>
+                <th scope="col" className="px-5 py-2" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {schools.map((s) => (
+                <tr key={s.id} className="hover:bg-gray-50">
+                  <td className="px-5 py-3 font-medium text-gray-900">
+                    <Link
+                      href={`/admin/districts/${district.id}/schools/${s.id}`}
+                      className="hover:text-rose-700"
+                    >
+                      {s.name}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3 text-gray-600">
+                    {schoolLevelLabel(s.level) ?? "—"}
+                  </td>
+                  <td className="px-5 py-3">
+                    {s.active ? (
+                      <span className="inline-flex items-center gap-1.5 text-emerald-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-gray-400">
+                        <span className="h-1.5 w-1.5 rounded-full border border-gray-400" aria-hidden="true" />
+                        Inactive
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <Link
+                      href={`/admin/districts/${district.id}/schools/${s.id}`}
+                      className="inline-flex items-center text-gray-400 hover:text-gray-700"
+                      aria-label={`Manage ${s.name}`}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {schools.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 font-medium text-gray-900">
-                      <Link
-                        href={`/admin/districts/${district.id}/schools/${s.id}`}
-                        className="hover:text-blue-700"
-                      >
-                        {s.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2 text-gray-600">
-                      {schoolLevelLabel(s.level) ?? "—"}
-                    </td>
-                    <td className="px-4 py-2">
-                      {s.active ? (
-                        <span className="text-green-700">Active</span>
-                      ) : (
-                        <span className="text-gray-400">Inactive</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      <Link
-                        href={`/admin/districts/${district.id}/schools/${s.id}`}
-                        className="inline-flex items-center text-gray-400 hover:text-gray-700"
-                        aria-label={`Manage ${s.name}`}
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-                {schools.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
-                      No schools yet. Add one below.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+              ))}
+              {schools.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-5 py-8 text-center text-gray-400">
+                    No schools yet. Add one below.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div className="border-t border-gray-100 p-4">
+            <SchoolActions districtId={district.id} />
           </div>
-
-          <Disclosure
-            icon={<Plus className="w-4 h-4" />}
-            label="Add a school"
-            defaultOpen={schools.length === 0}
-          >
-            <SchoolForm mode="create" districtId={district.id} />
-          </Disclosure>
-
-          <Disclosure icon={<Upload className="w-4 h-4" />} label="Import schools (CSV)">
-            <CsvImporter
-              entity="schools"
-              sampleHeaders={["name", "level"]}
-              scope={{ districtId: district.id }}
-            />
-          </Disclosure>
         </div>
 
-        {/* Rail: branding + stats + edit */}
+        {/* Rail */}
         <aside className="space-y-4">
-          <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
               Branding
             </h2>
-            <Swatch label="Primary" color={primary} />
-            <Swatch label="Secondary" color={secondary} />
-            {!primary && !secondary && !district.logo_url && (
-              <p className="text-sm text-gray-400">
-                No custom branding yet. Add a logo and colors in Edit.
-              </p>
-            )}
+            <div className="space-y-4">
+              <Swatch label="Primary" color={primary} />
+              <Swatch label="Secondary" color={secondary} />
+              {!primary && !secondary && !district.logo_url && (
+                <p className="text-sm text-gray-400">
+                  No custom branding yet. Add a logo and colors in Edit.
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
               Points of Contact
             </h2>
-            <PocCard label="Primary" poc={pocs.primary} districtId={district.id} />
-            <div className="border-t border-gray-100" />
-            <PocCard label="Secondary" poc={pocs.secondary} districtId={district.id} />
+            <div className="mt-4 space-y-4">
+              <PocCard label="Primary" poc={pocs.primary} districtId={district.id} />
+              <div className="border-t border-gray-100" />
+              <PocCard label="Secondary" poc={pocs.secondary} districtId={district.id} />
+            </div>
           </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-5">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-              At a glance
-            </h2>
-            <dl className="space-y-2 text-sm">
-              <Stat
-                icon={<SchoolIcon className="w-4 h-4 text-gray-400" />}
-                label="Schools"
-                value={schools.length}
-              />
-              <Stat
-                icon={<Building2 className="w-4 h-4 text-gray-400" />}
-                label="Active schools"
-                value={activeSchools}
-              />
-            </dl>
-          </div>
-
-          <Disclosure icon={<Pencil className="w-4 h-4" />} label="Edit district details">
-            <DistrictForm
-              mode="edit"
-              initial={{
-                id: district.id,
-                name: district.name,
-                subdomain: district.subdomain,
-                contact_email: district.contact_email,
-                primary_color: district.primary_color,
-                secondary_color: district.secondary_color,
-                logo_url: district.logo_url,
-                active: district.active,
-                primaryPoc: pocs.primary
-                  ? {
-                      first_name: pocs.primary.first_name,
-                      last_name: pocs.primary.last_name,
-                      email: pocs.primary.email,
-                      phone: pocs.primary.phone,
-                    }
-                  : undefined,
-                secondaryPoc: pocs.secondary
-                  ? {
-                      first_name: pocs.secondary.first_name,
-                      last_name: pocs.secondary.last_name,
-                      email: pocs.secondary.email,
-                      phone: pocs.secondary.phone,
-                    }
-                  : undefined,
-              }}
-            />
-          </Disclosure>
         </aside>
       </div>
     </div>
@@ -278,34 +238,79 @@ export default async function DistrictDetailPage({
 
 /* ── Presentational helpers ───────────────────────────────────────────── */
 
-function LogoTile({
-  logoUrl,
-  branded,
-}: {
-  logoUrl: string | null;
-  branded: boolean;
-}) {
-  if (logoUrl) {
-    return (
-      <span className="inline-block p-5 rounded-lg bg-white shadow-sm shrink-0 overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {/* Definite width anchors logos (esp. SVGs with a viewBox but no
-            intrinsic width/height); height scales by ratio, capped at 125. */}
+function LogoTile({ logoUrl }: { logoUrl: string | null }) {
+  return (
+    <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white">
+      {logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logoUrl}
-          alt="District logo"
-          className="block w-[250px] h-auto max-h-[125px] object-contain"
+          alt=""
+          className="h-full w-full object-contain p-1.5"
         />
-      </span>
-    );
-  }
-  return (
-    <span
-      className="flex items-center justify-center w-32 h-16 rounded-lg shrink-0"
-      style={branded ? { backgroundColor: "rgba(255,255,255,0.18)" } : { backgroundColor: "#f3f4f6" }}
-    >
-      <Building2 className="w-7 h-7" style={branded ? undefined : { color: "#9ca3af" }} />
+      ) : (
+        <Building2 className="h-7 w-7 text-gray-300" aria-hidden="true" />
+      )}
     </span>
+  );
+}
+
+function StatusPill({ active }: { active: boolean }) {
+  return active ? (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+      Active
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-500">
+      <span className="h-1.5 w-1.5 rounded-full border border-gray-400" aria-hidden="true" />
+      Inactive
+    </span>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: string | number;
+  accent?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
+        {label}
+      </dt>
+      <dd
+        className={`mt-1 truncate text-3xl font-bold ${
+          accent ? "text-rose-600" : "text-gray-900"
+        }`}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function Swatch({ label, color }: { label: string; color: string | null }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span
+        className="h-9 w-9 shrink-0 rounded-md border border-gray-200"
+        style={{
+          backgroundColor: color ?? undefined,
+          backgroundImage: color
+            ? undefined
+            : "repeating-linear-gradient(45deg,#f3f4f6,#f3f4f6 4px,#e5e7eb 4px,#e5e7eb 8px)",
+        }}
+      />
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-gray-900">{label}</p>
+        <p className="font-mono text-xs text-gray-500">{color ?? "—"}</p>
+      </div>
+    </div>
   );
 }
 
@@ -329,8 +334,7 @@ function PocCard({
     );
   }
 
-  const name =
-    [poc.first_name, poc.last_name].filter(Boolean).join(" ") || "—";
+  const name = [poc.first_name, poc.last_name].filter(Boolean).join(" ") || "—";
   const invitedLabel = poc.invited_at
     ? `Invited ${new Date(poc.invited_at).toLocaleDateString()}`
     : "Not invited yet";
@@ -344,7 +348,7 @@ function PocCard({
       {poc.email && (
         <a
           href={`mailto:${poc.email}`}
-          className="block text-sm text-blue-600 hover:text-blue-800 break-all"
+          className="block break-all text-sm text-rose-600 hover:text-rose-700"
         >
           {poc.email}
         </a>
@@ -357,68 +361,5 @@ function PocCard({
         alreadyInvited={!!poc.invited_at}
       />
     </div>
-  );
-}
-
-function Swatch({ label, color }: { label: string; color: string | null }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span
-        className="w-9 h-9 rounded-md border border-gray-200 shrink-0"
-        style={{
-          backgroundColor: color ?? undefined,
-          backgroundImage: color
-            ? undefined
-            : "repeating-linear-gradient(45deg,#f3f4f6,#f3f4f6 4px,#e5e7eb 4px,#e5e7eb 8px)",
-        }}
-      />
-      <div className="min-w-0">
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-sm font-mono text-gray-900">{color ?? "—"}</p>
-      </div>
-    </div>
-  );
-}
-
-function Stat({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <dt className="flex items-center gap-2 text-gray-600">
-        {icon}
-        {label}
-      </dt>
-      <dd className="font-semibold text-gray-900">{value}</dd>
-    </div>
-  );
-}
-
-function Disclosure({
-  icon,
-  label,
-  defaultOpen = false,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <details open={defaultOpen} className="group">
-      <summary className="flex items-center gap-2 cursor-pointer list-none select-none rounded-md bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
-        <ChevronRight className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-90" />
-        {icon}
-        {label}
-      </summary>
-      <div className="mt-3">{children}</div>
-    </details>
   );
 }
