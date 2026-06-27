@@ -49,6 +49,7 @@ export type CreateScopedUserInput = {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string | null;
   gradeLevel?: string | null;
   studentIdExternal?: string | null;
   /** School-admin dashboard discriminator; ignored for other roles. */
@@ -88,6 +89,7 @@ export async function createScopedUser(
     first_name: input.firstName,
     last_name: input.lastName,
     email: input.email,
+    phone: input.phone ?? null,
     grade_level: input.gradeLevel ?? null,
     student_id_external: input.studentIdExternal ?? null,
     // Only school admins carry a kind; the column CHECK enforces this too.

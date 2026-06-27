@@ -16,7 +16,7 @@ import {
   Upload,
 } from "lucide-react";
 import { requireRole } from "@/lib/auth";
-import { getDistrict } from "@/lib/queries/districts";
+import { getDistrict, getDistrictPocs, type DistrictPoc } from "@/lib/queries/districts";
 import { listSchoolsForDistrict } from "@/lib/queries/schools";
 import { schoolLevelLabel } from "@/lib/school-levels";
 import { getContrastColor } from "@/lib/district-branding.utils";
@@ -24,6 +24,7 @@ import { isValidHexColor } from "@/lib/district-branding.types";
 import { CsvImporter } from "@/components/admin/csv-importer";
 import { DistrictForm } from "../district-form";
 import { SchoolForm } from "./school-form";
+import { PocInviteButton } from "./poc-invite-button";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export default async function DistrictDetailPage({
 
   const schools = await listSchoolsForDistrict(district.id);
   const activeSchools = schools.filter((s) => s.active).length;
+  const pocs = await getDistrictPocs(district);
 
   // Only treat colors as "branded" when they're real hex values.
   const primary =
@@ -210,6 +212,15 @@ export default async function DistrictDetailPage({
             )}
           </div>
 
+          <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              Points of Contact
+            </h2>
+            <PocCard label="Primary" poc={pocs.primary} districtId={district.id} />
+            <div className="border-t border-gray-100" />
+            <PocCard label="Secondary" poc={pocs.secondary} districtId={district.id} />
+          </div>
+
           <div className="bg-white border border-gray-200 rounded-lg p-5">
             <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
               At a glance
@@ -279,6 +290,57 @@ function LogoTile({
     >
       <Building2 className="w-7 h-7" style={branded ? undefined : { color: "#9ca3af" }} />
     </span>
+  );
+}
+
+function PocCard({
+  label,
+  poc,
+  districtId,
+}: {
+  label: string;
+  poc: DistrictPoc | null;
+  districtId: string;
+}) {
+  if (!poc) {
+    return (
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          {label}
+        </p>
+        <p className="mt-1 text-sm text-gray-400">Not set.</p>
+      </div>
+    );
+  }
+
+  const name =
+    [poc.first_name, poc.last_name].filter(Boolean).join(" ") || "—";
+  const invitedLabel = poc.invited_at
+    ? `Invited ${new Date(poc.invited_at).toLocaleDateString()}`
+    : "Not invited yet";
+
+  return (
+    <div>
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-medium text-gray-900">{name}</p>
+      {poc.email && (
+        <a
+          href={`mailto:${poc.email}`}
+          className="block text-sm text-blue-600 hover:text-blue-800 break-all"
+        >
+          {poc.email}
+        </a>
+      )}
+      {poc.phone && <p className="text-sm text-gray-600">{poc.phone}</p>}
+      <p className="mt-1 text-xs text-gray-400">{invitedLabel}</p>
+      <PocInviteButton
+        userId={poc.id}
+        districtId={districtId}
+        alreadyInvited={!!poc.invited_at}
+      />
+    </div>
   );
 }
 

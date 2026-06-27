@@ -178,6 +178,19 @@ export function DistrictForm({
         />
       </Field>
 
+      {mode === "create" && (
+        <fieldset className="border-t border-gray-200 pt-4 mt-2 space-y-5">
+          <legend className="text-sm font-semibold text-gray-900">
+            Points of Contact
+            <span className="ml-2 font-normal text-xs text-gray-500">
+              both required — each becomes a district admin you can invite
+            </span>
+          </legend>
+          <PocFields prefix="primary" label="Primary POC" state={state} />
+          <PocFields prefix="secondary" label="Secondary POC" state={state} />
+        </fieldset>
+      )}
+
       {mode === "edit" && (
         <label htmlFor="active" className="flex items-center gap-2 text-sm">
           <input
@@ -205,6 +218,90 @@ export function DistrictForm({
         {mode === "create" ? "Create district" : "Save changes"}
       </button>
     </form>
+  );
+}
+
+function PocFields({
+  prefix,
+  label,
+  state,
+}: {
+  prefix: "primary" | "secondary";
+  label: string;
+  state: DistrictFormState;
+}) {
+  const fe = state.fieldErrors;
+  const k = (name: string) => `${prefix}_poc_${name}`;
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        <Field
+          label="First name"
+          htmlFor={k("first_name")}
+          error={fe?.[`${prefix}_poc_first_name`]}
+        >
+          <input
+            id={k("first_name")}
+            name={k("first_name")}
+            type="text"
+            required
+            maxLength={100}
+            aria-invalid={!!fe?.[`${prefix}_poc_first_name`]}
+            aria-describedby={
+              fe?.[`${prefix}_poc_first_name`] ? `err-${k("first_name")}` : undefined
+            }
+            className={inputClass}
+          />
+        </Field>
+        <Field
+          label="Last name"
+          htmlFor={k("last_name")}
+          error={fe?.[`${prefix}_poc_last_name`]}
+        >
+          <input
+            id={k("last_name")}
+            name={k("last_name")}
+            type="text"
+            required
+            maxLength={100}
+            aria-invalid={!!fe?.[`${prefix}_poc_last_name`]}
+            aria-describedby={
+              fe?.[`${prefix}_poc_last_name`] ? `err-${k("last_name")}` : undefined
+            }
+            className={inputClass}
+          />
+        </Field>
+      </div>
+      <Field label="Email" htmlFor={k("email")} error={fe?.[`${prefix}_poc_email`]}>
+        <input
+          id={k("email")}
+          name={k("email")}
+          type="email"
+          required
+          maxLength={255}
+          placeholder="name@district.org"
+          aria-invalid={!!fe?.[`${prefix}_poc_email`]}
+          aria-describedby={fe?.[`${prefix}_poc_email`] ? `err-${k("email")}` : undefined}
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Phone" htmlFor={k("phone")} error={fe?.[`${prefix}_poc_phone`]}>
+        <input
+          id={k("phone")}
+          name={k("phone")}
+          type="tel"
+          required
+          maxLength={32}
+          placeholder="(555) 123-4567"
+          aria-invalid={!!fe?.[`${prefix}_poc_phone`]}
+          aria-describedby={fe?.[`${prefix}_poc_phone`] ? `err-${k("phone")}` : undefined}
+          className={inputClass}
+        />
+      </Field>
+    </div>
   );
 }
 

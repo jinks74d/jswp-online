@@ -5,17 +5,40 @@
  * the role at the DB); requireRole is a defense-in-depth gate at the action
  * layer. The audit_log insert uses the admin client because audit_log has no
  * INSERT policy — the service role is its only writer.
+ *
+ * A district is created with two required Points of Contact (POCs), each a real
+ * district_admin login account. Because districts <-> user_profiles form a
+ * circular FK, createDistrict inserts the district first, then the two POC
+ * accounts (which need district_id), then backfills primary_poc_id /
+ * secondary_poc_id. The set-password invite is sent separately and on demand
+ * via inviteDistrictPoc (so a district can be created now and invited later,
+ * and invites can be re-sent).
  */
 
 "use server";
 
 import "server-only";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createScopedUser } from "@/lib/scoped-users";
+import { sendEmail } from "@/lib/email/client";
+import { renderDistrictPocInvite } from "@/lib/email/templates/district-poc-invite";
+
+type PocFieldErrors = {
+  primary_poc_first_name?: string;
+  primary_poc_last_name?: string;
+  primary_poc_email?: string;
+  primary_poc_phone?: string;
+  secondary_poc_first_name?: string;
+  secondary_poc_last_name?: string;
+  secondary_poc_email?: string;
+  secondary_poc_phone?: string;
+};
 
 export type DistrictFormState = {
   error?: string;
@@ -26,7 +49,7 @@ export type DistrictFormState = {
     primary_color?: string;
     secondary_color?: string;
     logo_url?: string;
-  };
+  } & PocFieldErrors;
   success?: string;
 };
 
@@ -38,6 +61,10 @@ const URL_RE = /^https?:\/\//;
 function emptyToNull(s: string): string | null {
   const v = s.trim();
   return v === "" ? null : v;
+}
+
+function digitCount(s: string): number {
+  return (s.match(/\d/g) ?? []).length;
 }
 
 function parseDistrictForm(formData: FormData) {
@@ -73,8 +100,50 @@ function validate(f: ParsedDistrict): DistrictFormState["fieldErrors"] | null {
   return Object.keys(fe).length ? fe : null;
 }
 
+type ParsedPoc = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+};
+
+function parsePoc(formData: FormData, prefix: "primary" | "secondary"): ParsedPoc {
+  return {
+    firstName: String(formData.get(`${prefix}_poc_first_name`) ?? "").trim(),
+    lastName: String(formData.get(`${prefix}_poc_last_name`) ?? "").trim(),
+    email: String(formData.get(`${prefix}_poc_email`) ?? "").trim(),
+    phone: String(formData.get(`${prefix}_poc_phone`) ?? "").trim(),
+  };
+}
+
+/** Validate one POC; writes errors into `fe` under the prefixed keys. */
+function validatePoc(
+  poc: ParsedPoc,
+  prefix: "primary" | "secondary",
+  fe: NonNullable<DistrictFormState["fieldErrors"]>
+): void {
+  if (!poc.firstName) fe[`${prefix}_poc_first_name`] = "First name is required.";
+  if (!poc.lastName) fe[`${prefix}_poc_last_name`] = "Last name is required.";
+  if (!poc.email) fe[`${prefix}_poc_email`] = "Email is required.";
+  else if (!EMAIL_RE.test(poc.email))
+    fe[`${prefix}_poc_email`] = "Enter a valid email address.";
+  if (!poc.phone) fe[`${prefix}_poc_phone`] = "Phone number is required.";
+  else if (digitCount(poc.phone) < 7)
+    fe[`${prefix}_poc_phone`] = "Enter a valid phone number.";
+}
+
 function isUniqueViolation(message: string | undefined): boolean {
   return /duplicate|unique|already exists/i.test(message ?? "");
+}
+
+async function getSiteUrl(): Promise<string> {
+  const h = await headers();
+  const host = h.get("host") ?? "localhost:3000";
+  const protocol =
+    host.startsWith("localhost") || host.startsWith("127.0.0.1")
+      ? "http"
+      : "https";
+  return `${protocol}://${host}`;
 }
 
 export async function createDistrict(
@@ -83,8 +152,20 @@ export async function createDistrict(
 ): Promise<DistrictFormState> {
   const actor = await requireRole("super_admin");
   const f = parseDistrictForm(formData);
-  const fe = validate(f);
-  if (fe) return { fieldErrors: fe };
+  const primary = parsePoc(formData, "primary");
+  const secondary = parsePoc(formData, "secondary");
+
+  const fe: NonNullable<DistrictFormState["fieldErrors"]> = validate(f) ?? {};
+  validatePoc(primary, "primary", fe);
+  validatePoc(secondary, "secondary", fe);
+  if (
+    primary.email &&
+    secondary.email &&
+    primary.email.toLowerCase() === secondary.email.toLowerCase()
+  ) {
+    fe.secondary_poc_email = "Secondary POC must use a different email.";
+  }
+  if (Object.keys(fe).length) return { fieldErrors: fe };
 
   const supabase = await createServerClient();
   const { data, error } = await supabase
@@ -107,19 +188,95 @@ export async function createDistrict(
     return { error: error?.message ?? "Could not create the district." };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "district.create",
-      target_scope: { district_id: data.id },
-      metadata: { name: f.name, subdomain: f.subdomain || null },
-      district_id: data.id,
-      school_id: null,
-    });
+  const districtId = data.id;
+  const admin = createAdminClient();
+
+  // Create the two POC district_admin accounts. On any failure, roll the whole
+  // thing back (delete created accounts + the district) so we never leave a
+  // half-provisioned district behind.
+  const created: string[] = [];
+
+  async function rollback() {
+    for (const uid of created) {
+      // deleting auth.users cascades to user_profiles (FK ON DELETE CASCADE).
+      await admin.auth.admin.deleteUser(uid).catch(() => {});
+    }
+    await supabase.from("districts").delete().eq("id", districtId);
+  }
+
+  const primaryRes = await createScopedUser({
+    role: "district_admin",
+    districtId,
+    schoolId: null,
+    firstName: primary.firstName,
+    lastName: primary.lastName,
+    email: primary.email,
+    phone: primary.phone,
+  });
+  if (!primaryRes.ok) {
+    await rollback();
+    if (primaryRes.duplicateEmail)
+      return {
+        fieldErrors: {
+          primary_poc_email: "An account with this email already exists.",
+        },
+      };
+    return { error: primaryRes.error };
+  }
+  created.push(primaryRes.userId);
+
+  const secondaryRes = await createScopedUser({
+    role: "district_admin",
+    districtId,
+    schoolId: null,
+    firstName: secondary.firstName,
+    lastName: secondary.lastName,
+    email: secondary.email,
+    phone: secondary.phone,
+  });
+  if (!secondaryRes.ok) {
+    await rollback();
+    if (secondaryRes.duplicateEmail)
+      return {
+        fieldErrors: {
+          secondary_poc_email: "An account with this email already exists.",
+        },
+      };
+    return { error: secondaryRes.error };
+  }
+  created.push(secondaryRes.userId);
+
+  // Backfill the POC FKs now that both accounts exist.
+  const { error: pocErr } = await supabase
+    .from("districts")
+    .update({
+      primary_poc_id: primaryRes.userId,
+      secondary_poc_id: secondaryRes.userId,
+    })
+    .eq("id", districtId);
+  if (pocErr) {
+    await rollback();
+    return { error: pocErr.message };
+  }
+
+  await admin.from("audit_log").insert({
+    actor_id: actor.id,
+    action: "district.create",
+    target_scope: { district_id: districtId },
+    metadata: {
+      name: f.name,
+      subdomain: f.subdomain || null,
+      primary_poc_email: primary.email,
+      secondary_poc_email: secondary.email,
+    },
+    district_id: districtId,
+    school_id: null,
+  });
 
   revalidatePath("/admin/districts");
-  return { success: `Created “${f.name}”.` };
+  return {
+    success: `Created “${f.name}”. Send the POC invites from the district page.`,
+  };
 }
 
 export async function updateDistrict(
@@ -168,4 +325,93 @@ export async function updateDistrict(
   revalidatePath("/admin/districts");
   revalidatePath(`/admin/districts/${id}`);
   return { success: "Saved." };
+}
+
+/* ─── POC invitations ────────────────────────────────────────────────────
+ *
+ * Sends (or re-sends) a set-password invite to a district POC. Generates a
+ * Supabase recovery link (?code → /reset-password, same flow as forgot
+ * password) and delivers it through the branded Resend template. Best-effort
+ * email: invited_at is only stamped when the send is attempted.
+ */
+
+export type PocInviteState = { error?: string; success?: string };
+
+export async function inviteDistrictPoc(
+  _prev: PocInviteState,
+  formData: FormData
+): Promise<PocInviteState> {
+  const actor = await requireRole("super_admin");
+  const userId = String(formData.get("user_id") ?? "");
+  const districtId = String(formData.get("district_id") ?? "");
+  if (!userId || !districtId) return { error: "Missing POC or district id." };
+
+  const admin = createAdminClient();
+
+  // Confirm the target is a district_admin POC of this district.
+  const { data: profile } = await admin
+    .from("user_profiles")
+    .select("id, role, first_name, email, district_id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (
+    !profile ||
+    !profile.email ||
+    profile.role !== "district_admin" ||
+    profile.district_id !== districtId
+  ) {
+    return { error: "That contact isn’t a district admin for this district." };
+  }
+
+  const siteUrl = await getSiteUrl();
+  const { data: linkData, error: linkError } =
+    await admin.auth.admin.generateLink({
+      type: "recovery",
+      email: profile.email,
+      options: { redirectTo: `${siteUrl}/reset-password` },
+    });
+
+  const actionLink = linkData?.properties?.action_link;
+  if (linkError || !actionLink) {
+    return {
+      error: linkError?.message ?? "Could not generate the invite link.",
+    };
+  }
+
+  const { data: district } = await admin
+    .from("districts")
+    .select("name")
+    .eq("id", districtId)
+    .maybeSingle();
+
+  const email = renderDistrictPocInvite({
+    firstName: profile.first_name ?? "there",
+    districtName: district?.name ?? "your district",
+    inviteUrl: actionLink,
+  });
+  const sent = await sendEmail({ to: profile.email, ...email });
+
+  await admin
+    .from("user_profiles")
+    .update({ invited_at: new Date().toISOString() })
+    .eq("id", userId);
+
+  await admin.from("audit_log").insert({
+    actor_id: actor.id,
+    action: "district.poc.invite",
+    target_scope: { district_id: districtId, user_id: userId },
+    metadata: { email: profile.email, delivery: sent.ok ? "sent" : "failed" },
+    district_id: districtId,
+    school_id: null,
+  });
+
+  revalidatePath(`/admin/districts/${districtId}`);
+
+  if (!sent.ok) {
+    return {
+      error: "Invite recorded, but the email failed to send. Try again.",
+    };
+  }
+  return { success: `Invite sent to ${profile.email}.` };
 }

@@ -373,6 +373,10 @@ export type Districts = {
   secondary_color: string | null;
   contact_email: string | null;
   active: boolean;
+  // The two required Points of Contact (district_admin accounts). Nullable at
+  // the DB level to break the circular FK; the create action always sets both.
+  primary_poc_id: string | null;
+  secondary_poc_id: string | null;
 } & Timestamps;
 
 export type Schools = {
@@ -393,9 +397,12 @@ export type UserProfiles = {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
+  phone: string | null;
   student_id_external: string | null;
   grade_level: string | null;
   active: boolean;
+  // When the set-password invite email was last sent; NULL = never invited.
+  invited_at: string | null;
 } & Timestamps;
 
 export type Subjects = {

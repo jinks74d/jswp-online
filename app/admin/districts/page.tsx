@@ -1,123 +1,54 @@
 /**
- * /admin/districts — super-admin district management: list every district and
- * create a new one. Super-admin-only (the admin layout gates to all three
- * admin roles, so this page re-gates).
+ * /admin/districts — super-admin district management, redesigned as a grid of
+ * branded "tenant cards". A quiet stats strip rolls up the platform totals; the
+ * client <DistrictsBrowser> owns search/sort + the card grid; the client
+ * <NewDistrictPanel> owns the create/import slide-over. Super-admin-only (the
+ * admin layout gates to all three admin roles, so this page re-gates).
  */
 
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { requireRole } from "@/lib/auth";
-import { listDistricts } from "@/lib/queries/districts";
-import { CsvImporter } from "@/components/admin/csv-importer";
-import { DistrictForm } from "./district-form";
+import { listDistrictsOverview } from "@/lib/queries/districts";
+import { DistrictsBrowser } from "./districts-browser";
+import { NewDistrictPanel } from "./new-district-panel";
 
 export const dynamic = "force-dynamic";
 
 export default async function DistrictsPage() {
   await requireRole("super_admin");
 
-  const districts = await listDistricts();
-  const dateFmt = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
+  const overview = await listDistrictsOverview();
 
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-2xl font-bold text-gray-900">Districts</h1>
-        <p className="text-gray-600">
-          Every district on the platform. Create one to begin onboarding its
-          schools and admins.
-        </p>
+    <div className="space-y-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Districts</h1>
+          <p className="text-gray-600">
+            Every district on the platform. Create one to begin onboarding its
+            schools and admins.
+          </p>
+        </div>
+        <NewDistrictPanel />
       </header>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-          All districts
-        </h2>
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-gray-500">
-              <tr>
-                <th scope="col" className="px-4 py-2 font-medium">Name</th>
-                <th scope="col" className="px-4 py-2 font-medium">Subdomain</th>
-                <th scope="col" className="px-4 py-2 font-medium">Status</th>
-                <th scope="col" className="px-4 py-2 font-medium">Created</th>
-                <th scope="col" className="px-4 py-2" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {districts.map((d) => (
-                <tr key={d.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-gray-900 font-medium">
-                    <Link
-                      href={`/admin/districts/${d.id}`}
-                      className="hover:text-blue-700"
-                    >
-                      {d.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2 text-gray-700">
-                    {d.subdomain ? (
-                      <span className="font-mono text-xs">
-                        {d.subdomain}.jswponline.com
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-4 py-2">
-                    {d.active ? (
-                      <span className="text-green-700">Active</span>
-                    ) : (
-                      <span className="text-gray-400">Inactive</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2 text-gray-500">
-                    {d.created_at ? dateFmt.format(new Date(d.created_at)) : "—"}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    <Link
-                      href={`/admin/districts/${d.id}`}
-                      className="inline-flex items-center text-gray-400 hover:text-gray-700"
-                      aria-label={`Manage ${d.name}`}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-              {districts.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-6 text-center text-gray-400"
-                  >
-                    No districts yet. Create the first one below.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <dl className="grid grid-cols-3 gap-3 sm:max-w-md">
+        <StatTile label="Districts" value={overview.stats.total} />
+        <StatTile label="Active" value={overview.stats.active} />
+        <StatTile label="Schools" value={overview.stats.schools} />
+      </dl>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-            Add a district
-          </h2>
-          <DistrictForm mode="create" />
-        </section>
+      <DistrictsBrowser districts={overview.districts} />
+    </div>
+  );
+}
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-            Import districts (CSV)
-          </h2>
-          <CsvImporter
-            entity="districts"
-            sampleHeaders={["name", "subdomain", "contact_email"]}
-          />
-        </section>
-      </div>
+function StatTile({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+      <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-xl font-bold text-gray-900">{value}</dd>
     </div>
   );
 }
