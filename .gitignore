@@ -51,3 +51,7 @@ docs/*.csv
 
 # archived design source files (mockups/screenshots — local reference only)
 docs/archive/designs/
+
+# graphify generated artifacts — keep the queryable graph, drop derived data
+graphify-out/cache/
+graphify-out/20*/
