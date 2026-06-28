@@ -18,11 +18,24 @@ import { normalizeSchoolLevel } from "@/lib/school-levels";
 
 export type SchoolFormState = {
   error?: string;
-  fieldErrors?: { name?: string; level?: string };
+  fieldErrors?: {
+    name?: string;
+    level?: string;
+    primary_color?: string;
+    secondary_color?: string;
+    logo_url?: string;
+  };
   success?: string;
 };
 
 const MANAGE_ROLES = ["super_admin", "district_admin"] as const;
+const HEX_RE = /^#[0-9A-Fa-f]{6}$/;
+const URL_RE = /^https?:\/\//;
+
+function emptyToNull(s: string): string | null {
+  const v = s.trim();
+  return v === "" ? null : v;
+}
 
 function parseSchoolForm(formData: FormData) {
   const levelRaw = String(formData.get("level") ?? "").trim();
@@ -33,6 +46,9 @@ function parseSchoolForm(formData: FormData) {
     // Canonical slugs pass through unchanged; custom "Other…" text is slugified
     // and capped to the 20-char column. See lib/school-levels.ts.
     level: normalizeSchoolLevel(levelRaw),
+    primaryColor: emptyToNull(String(formData.get("primary_color") ?? "")),
+    secondaryColor: emptyToNull(String(formData.get("secondary_color") ?? "")),
+    logoUrl: emptyToNull(String(formData.get("logo_url") ?? "")),
     active:
       formData.get("active") === "on" || formData.get("active") === "true",
   };
@@ -44,6 +60,12 @@ function validate(f: ReturnType<typeof parseSchoolForm>): SchoolFormState["field
   // The only way to fail level now: typed something that normalizes to nothing.
   if (f.levelRaw && !f.level)
     fe.level = "Enter a valid level name (letters and numbers).";
+  if (f.primaryColor && !HEX_RE.test(f.primaryColor))
+    fe.primary_color = "Use a hex color like #1E40AF.";
+  if (f.secondaryColor && !HEX_RE.test(f.secondaryColor))
+    fe.secondary_color = "Use a hex color like #1E40AF.";
+  if (f.logoUrl && !URL_RE.test(f.logoUrl))
+    fe.logo_url = "Must start with http:// or https://.";
   return Object.keys(fe).length ? fe : null;
 }
 
@@ -69,6 +91,9 @@ export async function createSchool(
       district_id: f.districtId,
       name: f.name,
       level: f.level,
+      primary_color: f.primaryColor,
+      secondary_color: f.secondaryColor,
+      logo_url: f.logoUrl,
       active: true,
     })
     .select("id")
@@ -110,7 +135,14 @@ export async function updateSchool(
   const supabase = await createServerClient();
   const { error } = await supabase
     .from("schools")
-    .update({ name: f.name, level: f.level, active: f.active })
+    .update({
+      name: f.name,
+      level: f.level,
+      primary_color: f.primaryColor,
+      secondary_color: f.secondaryColor,
+      logo_url: f.logoUrl,
+      active: f.active,
+    })
     .eq("id", schoolId);
 
   if (error) {

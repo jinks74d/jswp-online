@@ -18,6 +18,7 @@ import {
   OTHER_LEVEL,
   isCanonicalLevel,
 } from "@/lib/school-levels";
+import { isValidHexColor } from "@/lib/district-branding.types";
 
 const initialState: SchoolFormState = {};
 
@@ -26,6 +27,9 @@ export type SchoolInitial = {
   name: string;
   level: string | null;
   active: boolean;
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
 };
 
 export function SchoolForm({
@@ -132,14 +136,59 @@ export function SchoolForm({
         )}
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <ColorField
+          name="primary_color"
+          label="Primary color"
+          defaultValue={initial?.primary_color ?? ""}
+          placeholder="#1E40AF"
+          error={state.fieldErrors?.primary_color}
+        />
+        <ColorField
+          name="secondary_color"
+          label="Secondary color"
+          defaultValue={initial?.secondary_color ?? ""}
+          placeholder="#9333EA"
+          error={state.fieldErrors?.secondary_color}
+        />
+      </div>
+
+      <div>
+        <div className="mb-1.5 flex items-baseline justify-between">
+          <label htmlFor="logo_url" className="text-sm font-medium text-gray-700">
+            Logo URL
+          </label>
+          <span className="text-xs text-gray-500">optional</span>
+        </div>
+        <input
+          id="logo_url"
+          name="logo_url"
+          type="url"
+          defaultValue={initial?.logo_url ?? ""}
+          placeholder="https://…/logo.png"
+          aria-invalid={!!state.fieldErrors?.logo_url}
+          aria-describedby={state.fieldErrors?.logo_url ? "err-logo_url" : undefined}
+          className={inputClass}
+        />
+        {state.fieldErrors?.logo_url && (
+          <p id="err-logo_url" className="mt-1 text-sm text-red-600">
+            {state.fieldErrors.logo_url}
+          </p>
+        )}
+      </div>
+
       {mode === "edit" && (
-        <label htmlFor="active" className="flex items-center gap-2 text-sm">
+        <label className="flex w-fit cursor-pointer items-center gap-3 text-sm">
           <input
             id="active"
             type="checkbox"
             name="active"
             defaultChecked={initial?.active ?? true}
-            className="text-blue-600 focus:ring-blue-500"
+            className="peer sr-only"
+          />
+          <span
+            className="relative h-6 w-11 shrink-0 rounded-full bg-gray-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-rose-500"
+            aria-hidden="true"
           />
           <span className="font-medium text-gray-900">Active</span>
         </label>
@@ -148,7 +197,7 @@ export function SchoolForm({
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 disabled:opacity-50"
       >
         {pending && (
           <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
@@ -160,7 +209,62 @@ export function SchoolForm({
 }
 
 const inputClass =
-  "w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500";
+  "w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
+
+function ColorField({
+  name,
+  label,
+  defaultValue,
+  placeholder,
+  error,
+}: {
+  name: string;
+  label: string;
+  defaultValue: string;
+  placeholder: string;
+  error?: string;
+}) {
+  const [value, setValue] = useState(defaultValue);
+  const swatch = isValidHexColor(value) ? value : null;
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between">
+        <label htmlFor={name} className="text-sm font-medium text-gray-700">
+          {label}
+        </label>
+        <span className="text-xs text-gray-500">hex</span>
+      </div>
+      <div className="flex items-stretch">
+        <span
+          className="w-10 shrink-0 rounded-l-md border border-r-0 border-gray-300"
+          style={{
+            backgroundColor: swatch ?? undefined,
+            backgroundImage: swatch
+              ? undefined
+              : "repeating-linear-gradient(45deg,#f3f4f6,#f3f4f6 4px,#e5e7eb 4px,#e5e7eb 8px)",
+          }}
+          aria-hidden="true"
+        />
+        <input
+          id={name}
+          name={name}
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={placeholder}
+          aria-invalid={!!error}
+          aria-describedby={error ? `err-${name}` : undefined}
+          className={`${inputClass} rounded-l-none`}
+        />
+      </div>
+      {error && (
+        <p id={`err-${name}`} className="mt-1 text-sm text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
 
 function Banner({
   kind,
