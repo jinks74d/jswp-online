@@ -213,6 +213,7 @@ export async function createSubjectClass(
     });
 
   revalidatePath("/admin/districts");
+  revalidatePath("/district/classes");
   return {
     success: `Added “${className}” (${subjectName}) — period ${periodLabel}.`,
   };

@@ -27,6 +27,7 @@ export type SchoolInitial = {
   name: string;
   level: string | null;
   active: boolean;
+  address: string | null;
   logo_url: string | null;
   primary_color: string | null;
   secondary_color: string | null;
@@ -134,6 +135,24 @@ export function SchoolForm({
             {state.fieldErrors.level}
           </p>
         )}
+      </div>
+
+      <div>
+        <div className="mb-1.5 flex items-baseline justify-between">
+          <label htmlFor="address" className="text-sm font-medium text-gray-700">
+            Address
+          </label>
+          <span className="text-xs text-gray-500">optional</span>
+        </div>
+        <input
+          id="address"
+          name="address"
+          type="text"
+          maxLength={500}
+          defaultValue={initial?.address ?? ""}
+          placeholder="e.g. 800 N. White Chapel Blvd, Southlake, TX"
+          className={inputClass}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

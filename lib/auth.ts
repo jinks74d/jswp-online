@@ -134,8 +134,9 @@ export function canAccessDistrict(
 /** Get the default redirect path after login based on role. */
 export function getRedirectPath(userRole: JswpRole): string {
   switch (userRole) {
-    case "super_admin":
     case "district_admin":
+      return "/district";
+    case "super_admin":
     case "school_admin":
       return "/admin";
     case "teacher":

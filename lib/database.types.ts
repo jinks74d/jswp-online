@@ -385,6 +385,7 @@ export type Schools = {
   name: string;
   level: string | null;
   active: boolean;
+  address: string | null;
   logo_url: string | null;
   primary_color: string | null;
   secondary_color: string | null;

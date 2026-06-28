@@ -42,6 +42,7 @@ function parseSchoolForm(formData: FormData) {
   return {
     districtId: String(formData.get("district_id") ?? ""),
     name: String(formData.get("name") ?? "").trim(),
+    address: emptyToNull(String(formData.get("address") ?? "")),
     levelRaw,
     // Canonical slugs pass through unchanged; custom "Other…" text is slugified
     // and capped to the 20-char column. See lib/school-levels.ts.
@@ -91,6 +92,7 @@ export async function createSchool(
       district_id: f.districtId,
       name: f.name,
       level: f.level,
+      address: f.address,
       primary_color: f.primaryColor,
       secondary_color: f.secondaryColor,
       logo_url: f.logoUrl,
@@ -117,6 +119,7 @@ export async function createSchool(
     });
 
   revalidatePath(`/admin/districts/${f.districtId}`);
+  revalidatePath("/district/schools");
   return { success: `Created “${f.name}”.` };
 }
 
@@ -138,6 +141,7 @@ export async function updateSchool(
     .update({
       name: f.name,
       level: f.level,
+      address: f.address,
       primary_color: f.primaryColor,
       secondary_color: f.secondaryColor,
       logo_url: f.logoUrl,
@@ -164,5 +168,6 @@ export async function updateSchool(
 
   if (f.districtId) revalidatePath(`/admin/districts/${f.districtId}`);
   revalidatePath(`/admin/districts/${f.districtId}/schools/${schoolId}`);
+  revalidatePath("/district/schools");
   return { success: "Saved." };
 }

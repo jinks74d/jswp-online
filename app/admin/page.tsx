@@ -12,8 +12,12 @@ import { adminDashboardPath } from "@/lib/admin-kinds";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
-  // School admins have role-specific dashboards; super/district admins stay here.
+  // District admins live in the /district sidebar shell; school admins have
+  // role-specific dashboards; super admins stay here.
   const profile = await requireUser();
+  if (profile.role === "district_admin") {
+    redirect("/district");
+  }
   if (profile.role === "school_admin") {
     redirect(adminDashboardPath(profile.admin_kind));
   }
