@@ -48,3 +48,6 @@ next-env.d.ts
 
 # local DB dumps / fixtures (may contain PII — keep out of git)
 docs/*.csv
+
+# archived design source files (mockups/screenshots — local reference only)
+docs/archive/designs/

@@ -19,14 +19,8 @@
       "output_tokens": 0,
       "files": 2,
       "note": "docx user guides (inline extraction, no LLM)"
-    },
-    {
-      "date": "2026-06-27T15:48:09.940468+00:00",
-      "input_tokens": 0,
-      "output_tokens": 378886,
-      "files": 250
     }
   ],
   "total_input_tokens": 1332740,
-  "total_output_tokens": 712068
+  "total_output_tokens": 333182
 }

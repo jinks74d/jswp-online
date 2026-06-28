@@ -5,13 +5,13 @@
     "semantic_hash": "068ac01b5b6d1f96c8384175254d6310"
   },
   ".remember/tmp/last-ndc.ts": {
-    "mtime": 1782647827.783913,
-    "ast_hash": "595d80d97057c3dfc7ba0dd0be06eb69",
+    "mtime": 1782587381.1781929,
+    "ast_hash": "1a2aabca9438daf01dadc2984835fa7e",
     "semantic_hash": ""
   },
   ".remember/tmp/last-save.json": {
-    "mtime": 1782647824.643302,
-    "ast_hash": "a63577f76a00ecfec71e71e00efaeb0a",
+    "mtime": 1782587378.1294024,
+    "ast_hash": "fb3204a2695595607b494f353e61aaa9",
     "semantic_hash": ""
   },
   ".vscode/settings.json": {
@@ -145,19 +145,19 @@
     "semantic_hash": ""
   },
   "app/admin/districts/[id]/school-form.tsx": {
-    "mtime": 1782597494.3206017,
-    "ast_hash": "1112302435d8f85977410c28b1669b2d",
-    "semantic_hash": ""
+    "mtime": 1782247488.3475797,
+    "ast_hash": "5b900546902c88df42c528e89aa32437",
+    "semantic_hash": "5b900546902c88df42c528e89aa32437"
   },
   "app/admin/districts/[id]/schools/[sid]/add-school-user-form.tsx": {
-    "mtime": 1782596067.6778996,
-    "ast_hash": "87a91dab13fa14dda3be24ccc9f15858",
-    "semantic_hash": ""
+    "mtime": 1782247901.9514847,
+    "ast_hash": "21de4fc0155343f878ce2981864edbed",
+    "semantic_hash": "21de4fc0155343f878ce2981864edbed"
   },
   "app/admin/districts/[id]/schools/[sid]/page.tsx": {
-    "mtime": 1782598664.849825,
-    "ast_hash": "68e6f06746730cc737367f1df551eb8c",
-    "semantic_hash": ""
+    "mtime": 1782248440.2262137,
+    "ast_hash": "004c5dd6a18a2a048785321e18a89aa1",
+    "semantic_hash": "004c5dd6a18a2a048785321e18a89aa1"
   },
   "app/admin/districts/[id]/schools/[sid]/subjects/[subjectId]/class-form.tsx": {
     "mtime": 1782248052.2072167,
@@ -1150,9 +1150,9 @@
     "semantic_hash": "6efbb0529b9e175c13a3f0f1b3e967e6"
   },
   "lib/actions/schools.ts": {
-    "mtime": 1782597433.807084,
-    "ast_hash": "5f69461e7c50d11a0e1ff9ec627c1645",
-    "semantic_hash": ""
+    "mtime": 1780918002.0164063,
+    "ast_hash": "f82354bdbd809ca0179b6e6f00379172",
+    "semantic_hash": "f82354bdbd809ca0179b6e6f00379172"
   },
   "lib/actions/shaping.ts": {
     "mtime": 1779918096.5740054,
@@ -1335,8 +1335,8 @@
     "semantic_hash": "960e2491e75525cc7deadc6908f2fe02"
   },
   "lib/database.types.ts": {
-    "mtime": 1782597381.8052032,
-    "ast_hash": "2777202d010008e5d05d26ea8742152a",
+    "mtime": 1782577790.4274623,
+    "ast_hash": "7aee86d3bf39552d1dd9edcaec213f3b",
     "semantic_hash": ""
   },
   "lib/district-branding.types.ts": {
@@ -2035,7 +2035,7 @@
     "semantic_hash": "c9dc1c713615fca2b30e5e1e182fcd8e"
   },
   ".remember/now.md": {
-    "mtime": 1782647876.872878,
+    "mtime": 1782587434.951583,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
@@ -2435,12 +2435,12 @@
     "semantic_hash": "a2760511c65806022ad20adf74370ff3"
   },
   "graphify-out/converted/Quick Start Guide - Expos - Health_b5c44fb8.md": {
-    "mtime": 1782647920.6329815,
+    "mtime": 1782594920.8426747,
     "ast_hash": "0c67465ff329655d84b0d81674e96974",
     "semantic_hash": "0c67465ff329655d84b0d81674e96974"
   },
   "graphify-out/converted/User Guide - All_3ad5cfeb.md": {
-    "mtime": 1782647920.8777778,
+    "mtime": 1782594921.1064384,
     "ast_hash": "9f778a000e3b65437bbd952f7d9a12c3",
     "semantic_hash": "9f778a000e3b65437bbd952f7d9a12c3"
   },
@@ -2970,8 +2970,8 @@
     "semantic_hash": "ecbd3a6ce27520a9c17fe8f15f2f7ac5"
   },
   ".remember/today-2026-06-27.md": {
-    "mtime": 1782595872.1789148,
-    "ast_hash": "203c0941351bd8f6b82ef139ee10b2ec",
+    "mtime": 1782587434.9461389,
+    "ast_hash": "9dcf02f57e820dcb5eb079a1746c57ed",
     "semantic_hash": ""
   },
   "app/admin/districts/[id]/poc-invite-button.tsx": {
@@ -3032,21 +3032,6 @@
   "Screenshot 2026-06-27 134153.png": {
     "mtime": 1782585718.4410186,
     "ast_hash": "9c1bde2150d0d3e7f75a1a70247f94b4",
-    "semantic_hash": ""
-  },
-  "migrations/0034_school_branding.sql": {
-    "mtime": 1782597367.9176338,
-    "ast_hash": "907eac7f59cf21b28ec81dd24e33435f",
-    "semantic_hash": ""
-  },
-  ".remember/today-2026-06-28.md": {
-    "mtime": 1782647876.8616703,
-    "ast_hash": "dee6c7a5aeb7344926a76b4ff2ac2f55",
-    "semantic_hash": ""
-  },
-  "School Detail.html": {
-    "mtime": 1782595057.2244308,
-    "ast_hash": "222ae4ea32d0bcc775464a894faa4400",
     "semantic_hash": ""
   }
 }
