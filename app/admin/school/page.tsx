@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
-import { adminDashboardPath } from "@/lib/admin-kinds";
 
 export const dynamic = "force-dynamic";
 
-// Bare /admin/school — send the admin to their own kind's dashboard.
+// School admins moved to the /school sidebar shell — keep this path working for
+// any old links/bookmarks by redirecting there.
 export default async function SchoolAdminHome() {
-  const profile = await requireRole("school_admin");
-  redirect(adminDashboardPath(profile.admin_kind));
+  await requireRole("school_admin");
+  redirect("/school");
 }

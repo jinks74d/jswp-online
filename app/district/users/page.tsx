@@ -1,16 +1,32 @@
-import { Users } from "lucide-react";
+/**
+ * /district/users — district-wide users. Stat cards, name/email search with
+ * role + school filters, and a table of every user. "Create User" opens a modal
+ * (School Admin / Teacher). RLS scopes all reads to the district.
+ */
+
 import { requireRole } from "@/lib/auth";
-import { ComingSoon } from "../_components/coming-soon";
+import { listDistrictUsers } from "@/lib/queries/district-users";
+import { listSchoolsForDistrict } from "@/lib/queries/schools";
+import { UsersView } from "./users-view";
 
 export const dynamic = "force-dynamic";
 
 export default async function DistrictUsersPage() {
-  await requireRole("district_admin");
-  return (
-    <ComingSoon
-      title="Users"
-      description="Invite and manage admins, teachers, and students."
-      icon={Users}
-    />
-  );
+  const profile = await requireRole("district_admin");
+  if (!profile.district_id) {
+    return (
+      <p className="text-sm text-gray-500">
+        Your account isn’t linked to a district yet.
+      </p>
+    );
+  }
+
+  const [users, schoolRows] = await Promise.all([
+    listDistrictUsers(),
+    listSchoolsForDistrict(profile.district_id),
+  ]);
+
+  const schools = schoolRows.map((s) => ({ id: s.id, name: s.name }));
+
+  return <UsersView users={users} schools={schools} />;
 }

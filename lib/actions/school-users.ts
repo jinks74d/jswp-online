@@ -81,7 +81,24 @@ async function createSchoolUser(
     });
 
   revalidatePath(`/admin/districts/${school.district_id}/schools/${school.id}`);
+  revalidatePath("/district/users");
   return { success: { email, password: res.password } };
+}
+
+/**
+ * Create a school-scoped user (school_admin or teacher) from a form that
+ * carries the role — used by the district Users "Create User" modal, where the
+ * role is chosen in the UI rather than fixed by the page.
+ */
+export async function createSchoolUserFromForm(
+  _prev: ScopedUserFormState,
+  formData: FormData
+): Promise<ScopedUserFormState> {
+  const role = String(formData.get("role") ?? "");
+  if (role !== "school_admin" && role !== "teacher") {
+    return { error: "Choose a role (School Admin or Teacher)." };
+  }
+  return createSchoolUser(role, formData);
 }
 
 export async function createSchoolAdmin(
