@@ -403,6 +403,7 @@ export type UserProfiles = {
   email: string | null;
   phone: string | null;
   student_id_external: string | null;
+  teacher_id_external: string | null;
   grade_level: string | null;
   active: boolean;
   // When the set-password invite email was last sent; NULL = never invited.

@@ -30,9 +30,9 @@ type NavItem = {
 const NAV: readonly NavItem[] = [
   { href: "/school", label: "Dashboard", icon: LayoutDashboard, ready: true },
   { href: "/school/classes", label: "Classes", icon: BookOpen, ready: true },
-  { href: "/school/teachers", label: "Teachers", icon: GraduationCap },
-  { href: "/school/students", label: "Students", icon: Users },
-  { href: "/school/assignments", label: "Assignments", icon: ClipboardList },
+  { href: "/school/teachers", label: "Teachers", icon: GraduationCap, ready: true },
+  { href: "/school/students", label: "Students", icon: Users, ready: true },
+  { href: "/school/assignments", label: "Assignments", icon: ClipboardList, ready: true },
   { href: "/school/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/school/settings", label: "Settings", icon: Settings },
 ];

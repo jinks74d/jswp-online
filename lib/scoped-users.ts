@@ -52,6 +52,7 @@ export type CreateScopedUserInput = {
   phone?: string | null;
   gradeLevel?: string | null;
   studentIdExternal?: string | null;
+  teacherIdExternal?: string | null;
   /** School-admin dashboard discriminator; ignored for other roles. */
   adminKind?: AdminKind | null;
 };
@@ -92,6 +93,7 @@ export async function createScopedUser(
     phone: input.phone ?? null,
     grade_level: input.gradeLevel ?? null,
     student_id_external: input.studentIdExternal ?? null,
+    teacher_id_external: input.teacherIdExternal ?? null,
     // Only school admins carry a kind; the column CHECK enforces this too.
     admin_kind: input.role === "school_admin" ? input.adminKind ?? null : null,
   });
