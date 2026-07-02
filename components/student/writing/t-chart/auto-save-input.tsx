@@ -17,6 +17,13 @@ interface BaseProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  /**
+   * Drop the default bordered-box chrome so the caller fully controls the
+   * field's look via `className` (used by the worksheet-style T-Chart, whose
+   * fields sit on ruled/underlined "paper" rather than in input boxes). The
+   * autosave logic and "Saved" indicator are unchanged.
+   */
+  bare?: boolean;
   onSave: (value: string) => Promise<void>;
 }
 
@@ -61,8 +68,9 @@ export function AutoSaveInput(props: Props) {
     }
   };
 
-  const baseClassName =
-    "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50";
+  const baseClassName = props.bare
+    ? "w-full resize-none bg-transparent focus:outline-none disabled:opacity-70"
+    : "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50";
   const className = `${baseClassName} ${props.className ?? ""}`.trim();
 
   const indicator = (

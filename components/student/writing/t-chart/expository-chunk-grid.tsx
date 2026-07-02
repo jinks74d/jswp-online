@@ -1,24 +1,29 @@
 "use client";
 
 /**
- * One Expository chunk rendered as the guide's CD | CM two-column grid
- * (chunk 4.5d-2). For 2+:1 each CD sits in grid column 1 with its
- * commentary in the aligned column-2 cell — CSS grid keeps the rows
- * level. For 3+:0 (summary) only the single CDs column renders; the
- * CM column is suppressed entirely, consistent with chunk 4.5d-1.
+ * One Expository chunk rendered as the worksheet's CD | CM "T" (design base:
+ * T-Chart Worksheet.html). Left column: red concrete details, each headed
+ * "Nth CHUNK, Nth CD:". Right column: green commentary "clouds" (ovals with
+ * rays) — one per CD. A black top bar + under-header rule + a vertical stem
+ * between the columns form the T; the header row (CDs / CMs) renders once, on
+ * the first chunk.
  *
- * CMs stay grouped by parent CD: every server-action call
- * (createConcreteDetail, createCommentaryItem with parentCdId,
- * update/delete*) is identical to the shared chunk-editor's — this is
- * a layout re-placement, not a data change. chunk-editor.tsx and
- * cd-cm-t-chart.tsx are deliberately untouched so argumentation and
- * literary T-Charts render exactly as before.
+ * For 3+:0 (summary) the CM clouds are suppressed — a summary has no
+ * commentary — and the right column shows a quiet placeholder.
+ *
+ * Data flow is unchanged from the pre-restyle grid: createConcreteDetail /
+ * createCommentaryItem(parentCdId) / update / delete are identical to the
+ * shared chunk-editor's. The CD text + Embedding-Quotations affordance stays
+ * in the shared <CdEditor>. chunk-editor.tsx and cd-cm-t-chart.tsx are
+ * untouched so argumentation and literary render exactly as before.
  */
 
 import { useTransition } from "react";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { AutoSaveInput } from "./auto-save-input";
 import { CdEditor } from "./cd-editor";
+import { CmCloud } from "./cm-cloud";
+import { WORKSHEET_INK, ordinal } from "./worksheet-style";
 import {
   createConcreteDetail,
   deleteConcreteDetail,
@@ -36,19 +41,6 @@ import type { Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 
-/* ─── Numbered order badge (shared with expository-t-chart) ────────── */
-
-export function OrderBadge({ n }: { n: number }) {
-  return (
-    <span
-      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-900 text-base font-semibold text-white"
-      aria-hidden="true"
-    >
-      {n}
-    </span>
-  );
-}
-
 /* ─── Chunk grid ──────────────────────────────────────────────────── */
 
 export function ExpositoryChunkGrid({
@@ -57,8 +49,7 @@ export function ExpositoryChunkGrid({
   mode,
   chunkNumber,
   totalChunks,
-  cdsBadge,
-  cmsBadge,
+  showHeader,
   onRemove,
 }: {
   writingId: string;
@@ -66,21 +57,20 @@ export function ExpositoryChunkGrid({
   mode: Mode;
   chunkNumber: number;
   totalChunks: number;
-  cdsBadge?: number;
-  cmsBadge?: number;
+  /** Render the CDs / CMs header band (only the first chunk does). */
+  showHeader: boolean;
   onRemove: () => void;
 }) {
   const { isReadOnly } = useWritingMode();
-  // 3+:0 (summary) has no commentary — render a single CDs column.
   const isSummaryRatio = chunk.ratio === "three_plus_to_zero";
   const cds = chunk.concrete_details;
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-3">
+    <section>
       {totalChunks > 1 && (
-        <header className="mb-2 flex items-center justify-between">
+        <header className="mb-1 flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-            Chunk {chunkNumber}
+            {ordinal(chunkNumber)} Chunk
           </span>
           {!isReadOnly && (
             <button
@@ -95,101 +85,120 @@ export function ExpositoryChunkGrid({
         </header>
       )}
 
-      {isSummaryRatio ? (
-        /* 3+:0 — two-column grid matching printed p.54: the CDs column
-           plus an EMPTY CMs column header (no inputs). A summary has
-           zero commentary by definition, but the guide prints the CMs
-           header for layout symmetry, so the two-column "T" shape is
-           preserved. (Decision: Raymond, 2026-06-08 — show the empty
-           header rather than suppress the column.) The CMs side is
-           hidden on mobile so phones don't show a dangling empty box. */
-        <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
-          <ColumnHeader badge={cdsBadge} role="cd" label="CDs" />
-          <div className="hidden sm:block">
-            <ColumnHeader role="cm" label="CMs" />
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2">
+        {showHeader && (
+          <>
+            <ColumnHeader role="cd" label="CDs" />
+            <ColumnHeader
+              role="cm"
+              label="CMs"
+              subtitle={
+                isSummaryRatio ? undefined : "(This is/was important because…) Why?"
+              }
+            />
+          </>
+        )}
 
-          <div className="space-y-2">
-            {cds.map((cd) => (
-              <CdCell
-                key={cd.id}
-                writingId={writingId}
-                cd={cd}
-                disabled={isReadOnly}
-              />
-            ))}
-            {!isReadOnly && (
-              <AddCdButton
-                writingId={writingId}
-                chunkId={chunk.id}
-                mode={mode}
-                ratio={chunk.ratio}
-              />
-            )}
-          </div>
-
-          <div className="hidden rounded-md border border-dashed border-gray-200 bg-gray-50/60 p-3 text-xs italic text-gray-400 sm:block">
-            No commentary in a 3+:0 summary — the CMs column stays empty.
-          </div>
-        </div>
-      ) : (
-        /* 2+:1 — two-column CD | CM grid, rows aligned per CD */
-        <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
-          <ColumnHeader badge={cdsBadge} role="cd" label="CDs" />
-          <ColumnHeader badge={cmsBadge} role="cm" label="CMs" />
-          {cds.map((cd) => (
+        {isSummaryRatio ? (
+          <>
+            {/* CDs column */}
+            <div className="space-y-4 py-4 sm:pr-5">
+              {cds.map((cd, i) => (
+                <CdCell
+                  key={cd.id}
+                  writingId={writingId}
+                  cd={cd}
+                  chunkNumber={chunkNumber}
+                  cdNumber={i + 1}
+                  disabled={isReadOnly}
+                  canDelete={cds.length > 1}
+                />
+              ))}
+              {!isReadOnly && (
+                <AddCdButton
+                  writingId={writingId}
+                  chunkId={chunk.id}
+                  mode={mode}
+                  ratio={chunk.ratio}
+                />
+              )}
+            </div>
+            {/* Empty CMs column */}
+            <div className="hidden items-center justify-center border-l-2 border-black p-4 sm:flex">
+              <p className="max-w-[220px] text-center text-xs italic text-gray-400">
+                No commentary in a 3+:0 summary — the CMs side stays empty.
+              </p>
+            </div>
+          </>
+        ) : (
+          cds.map((cd, i) => (
             <CdCmRow
               key={cd.id}
               writingId={writingId}
               chunkId={chunk.id}
               cd={cd}
+              chunkNumber={chunkNumber}
+              cdNumber={i + 1}
               cms={chunk.commentary_items.filter(
                 (c) => c.parent_cd_id === cd.id && c.kind === "sentence"
               )}
               disabled={isReadOnly}
+              canDelete={cds.length > 1}
             />
-          ))}
-          {!isReadOnly && (
-            <>
+          ))
+        )}
+
+        {!isReadOnly && !isSummaryRatio && (
+          <>
+            <div className="pt-1 sm:pr-5">
               <AddCdButton
                 writingId={writingId}
                 chunkId={chunk.id}
                 mode={mode}
                 ratio={chunk.ratio}
               />
-              <div aria-hidden="true" />
-            </>
-          )}
-        </div>
-      )}
+            </div>
+            <div className="border-l-2 border-black" aria-hidden="true" />
+          </>
+        )}
+      </div>
     </section>
   );
 }
 
-/* ─── Column header pill ──────────────────────────────────────────── */
+/* ─── Column header (red CDs / green CMs, black rules) ────────────── */
 
 function ColumnHeader({
-  badge,
   role,
   label,
+  subtitle,
 }: {
-  badge?: number;
   role: "cd" | "cm";
   label: string;
+  subtitle?: string;
 }) {
-  const color =
-    role === "cd" ? "var(--jswp-color-cd)" : "var(--jswp-color-cm)";
+  const color = role === "cd" ? WORKSHEET_INK.cd : WORKSHEET_INK.cm;
   const symbol = role === "cd" ? "▲" : "■";
   return (
-    <div className="flex items-center gap-2">
-      {badge !== undefined && <OrderBadge n={badge} />}
-      <span
-        className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide"
-        style={{ color, borderColor: color }}
+    <div
+      className={`border-y-2 border-black px-3 py-2 text-center ${
+        role === "cm" ? "sm:border-l-2" : ""
+      }`}
+    >
+      <div
+        className="text-xl font-extrabold leading-tight"
+        style={{ color }}
       >
-        <span aria-hidden="true">{symbol}</span>
+        <span aria-hidden="true" className="mr-1 align-middle text-sm">
+          {symbol}
+        </span>
         {label}
-      </span>
+      </div>
+      {subtitle && (
+        <div className="mt-0.5 text-[11px] leading-tight text-gray-500">
+          {subtitle}
+        </div>
+      )}
     </div>
   );
 }
@@ -199,96 +208,137 @@ function ColumnHeader({
 function CdCell({
   writingId,
   cd,
+  chunkNumber,
+  cdNumber,
   disabled,
+  canDelete,
 }: {
   writingId: string;
   cd: ConcreteDetailData;
+  chunkNumber: number;
+  cdNumber: number;
   disabled: boolean;
+  canDelete: boolean;
 }) {
   return (
-    <div className="flex items-start gap-2">
-      <div className="flex-1 min-w-0">
-        <CdEditor writingId={writingId} cd={cd} disabled={disabled} />
-      </div>
-      {!disabled && (
-        <DeleteButton
-          title="Remove CD"
-          onConfirm={() => deleteConcreteDetail(writingId, cd.id)}
-        />
-      )}
-    </div>
-  );
-}
-
-/* ─── CD + aligned CM group (two-column 2+:1 variant) ─────────────── */
-
-function CdCmRow({
-  writingId,
-  chunkId,
-  cd,
-  cms,
-  disabled,
-}: {
-  writingId: string;
-  chunkId: string;
-  cd: ConcreteDetailData;
-  cms: CommentaryItemData[];
-  disabled: boolean;
-}) {
-  return (
-    <>
-      {/* Column 1 — the concrete detail */}
+    <div>
+      <CdHeading chunkNumber={chunkNumber} cdNumber={cdNumber} />
       <div className="flex items-start gap-2">
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <CdEditor writingId={writingId} cd={cd} disabled={disabled} />
         </div>
-        {!disabled && (
+        {!disabled && canDelete && (
           <DeleteButton
             title="Remove CD"
             onConfirm={() => deleteConcreteDetail(writingId, cd.id)}
           />
         )}
       </div>
+    </div>
+  );
+}
 
-      {/* Column 2 — commentary for this CD */}
-      <div className="space-y-2">
-        {cms.map((cm) => (
-          <div key={cm.id} className="flex items-start gap-2">
-            <div className="flex-1">
+/* ─── CD + aligned CM cloud (two-column 2+:1 variant) ─────────────── */
+
+function CdCmRow({
+  writingId,
+  chunkId,
+  cd,
+  chunkNumber,
+  cdNumber,
+  cms,
+  disabled,
+  canDelete,
+}: {
+  writingId: string;
+  chunkId: string;
+  cd: ConcreteDetailData;
+  chunkNumber: number;
+  cdNumber: number;
+  cms: CommentaryItemData[];
+  disabled: boolean;
+  canDelete: boolean;
+}) {
+  return (
+    <>
+      {/* Column 1 — the concrete detail */}
+      <div className="py-4 sm:pr-5">
+        <CdHeading chunkNumber={chunkNumber} cdNumber={cdNumber} />
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <CdEditor writingId={writingId} cd={cd} disabled={disabled} />
+          </div>
+          {!disabled && canDelete && (
+            <DeleteButton
+              title="Remove CD"
+              onConfirm={() => deleteConcreteDetail(writingId, cd.id)}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Column 2 — commentary cloud for this CD */}
+      <div className="border-l-2 border-black py-4 sm:pl-5">
+        <CmCloud>
+          {cms.map((cm) => (
+            <div key={cm.id} className="flex w-full items-start justify-center gap-1">
               <AutoSaveInput
+                bare
                 multiline
                 rows={2}
                 initialValue={cm.text}
                 placeholder="Why is this important? What does it mean?"
                 disabled={disabled}
-                className="text-[color:var(--jswp-color-cm)]"
+                className="text-center text-sm text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/40"
                 onSave={async (text) => {
                   await updateCommentaryItem(writingId, cm.id, text);
                 }}
               />
+              {!disabled && (
+                <DeleteButton
+                  small
+                  title="Remove CM"
+                  onConfirm={() => deleteCommentaryItem(writingId, cm.id)}
+                />
+              )}
             </div>
-            {!disabled && (
-              <DeleteButton
-                title="Remove CM"
-                onConfirm={() => deleteCommentaryItem(writingId, cm.id)}
-              />
-            )}
-          </div>
-        ))}
-        {!disabled && (
-          <AddCmButton
-            writingId={writingId}
-            chunkId={chunkId}
-            parentCdId={cd.id}
-          />
-        )}
+          ))}
+          {!disabled && (
+            <AddCmButton
+              writingId={writingId}
+              chunkId={chunkId}
+              parentCdId={cd.id}
+            />
+          )}
+        </CmCloud>
       </div>
     </>
   );
 }
 
-/* ─── Local add/delete buttons (kept local so chunk-editor.tsx stays
-   100% untouched — see file header) ───────────────────────────────── */
+/* ─── CD heading ("1st CHUNK, 2nd CD:") ───────────────────────────── */
+
+function CdHeading({
+  chunkNumber,
+  cdNumber,
+}: {
+  chunkNumber: number;
+  cdNumber: number;
+}) {
+  return (
+    <div
+      className="mb-1.5 text-center text-sm font-bold uppercase tracking-wide"
+      style={{ color: WORKSHEET_INK.cd }}
+    >
+      <span aria-hidden="true" className="mr-1 text-xs">
+        ▲
+      </span>
+      {ordinal(chunkNumber)} Chunk, {ordinal(cdNumber)} CD:
+    </div>
+  );
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────────── */
 
 function AddCdButton({
   writingId,
@@ -311,8 +361,8 @@ function AddCdButton({
         })
       }
       disabled={pending}
-      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-50"
-      style={{ color: "var(--jswp-color-cd)" }}
+      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs hover:bg-red-50 disabled:opacity-50"
+      style={{ color: WORKSHEET_INK.cd }}
     >
       {pending ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -343,8 +393,8 @@ function AddCmButton({
         })
       }
       disabled={pending}
-      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-50"
-      style={{ color: "var(--jswp-color-cm)" }}
+      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs hover:bg-emerald-50 disabled:opacity-50"
+      style={{ color: WORKSHEET_INK.cm }}
     >
       {pending ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -359,11 +409,14 @@ function AddCmButton({
 function DeleteButton({
   title,
   onConfirm,
+  small,
 }: {
   title: string;
   onConfirm: () => Promise<void> | void;
+  small?: boolean;
 }) {
   const [pending, start] = useTransition();
+  const size = small ? "h-3.5 w-3.5" : "h-4 w-4";
   return (
     <button
       type="button"
@@ -378,9 +431,9 @@ function DeleteButton({
       className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
     >
       {pending ? (
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        <Loader2 className={`${size} animate-spin`} aria-hidden="true" />
       ) : (
-        <Trash2 className="h-4 w-4" aria-hidden="true" />
+        <Trash2 className={size} aria-hidden="true" />
       )}
     </button>
   );
