@@ -31,7 +31,6 @@ export type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
  *               Stored in DB; referenced by URL; never displayed to students.
  *   * `slug`   — URL segment ('gather-cds').
  *   * `label`  — displayed to students/teachers ('Gathering CDs').
- *   * `subLabel` — secondary detail ('Step 3 of 6').
  *   * `groupOrigin` — which paper-guide artifact this screen represents.
  *               Helps the UI mirror what students see in the printed guide.
  *   * `pedagogyHint` — short guidance text shown at top of the screen
@@ -51,7 +50,6 @@ export interface StepConfig {
   readonly key: string;
   readonly slug: string;
   readonly label: string;
-  readonly subLabel?: string;
   readonly groupOrigin: GroupOrigin;
   readonly pedagogyHint?: string;
   readonly required: boolean;
@@ -100,7 +98,6 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
     key: "expository.decode_prompt",
     slug: "decode-prompt",
     label: "Decoding the Prompt",
-    subLabel: "Step 1",
     groupOrigin: "decode_prompt",
     pedagogyHint:
       "Before you write, identify what the prompt is asking. Look for the form (paragraph, short answer, essay), the ratio, and the key verbs.",
@@ -111,7 +108,6 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
     key: "expository.annotate_text",
     slug: "annotate-text",
     label: "Reading & Annotating the Text",
-    subLabel: "Step 2",
     groupOrigin: "annotate_text",
     pedagogyHint:
       "Read carefully. Underline concrete details in red. Underline commentary in green. Notes in the margin help you find evidence later.",
@@ -126,7 +122,6 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
     key: "expository.gather_cds",
     slug: "gather-cds",
     label: "Gathering & Prioritizing CDs",
-    subLabel: "Step 3",
     groupOrigin: "gathering_cds",
     pedagogyHint:
       "List 5 or more concrete details that fit the prompt. Highlight the 2 or more you want to use. Drag them into the order you want them to appear.",
@@ -140,7 +135,6 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
     key: "expository.t_chart",
     slug: "t-chart",
     label: "Completing the T-Chart",
-    subLabel: "Step 4",
     groupOrigin: "t_chart",
     pedagogyHint:
       "Write your topic sentence at the top. Place CDs on the left and brainstorm 'Why is this important?' commentary on the right. Revise your TS and write your concluding sentence.",
@@ -151,7 +145,6 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
     key: "expository.shaping_sheet",
     slug: "shaping-sheet",
     label: "Editing & Revising on the Shaping Sheet",
-    subLabel: "Step 5",
     groupOrigin: "shaping_sheet",
     pedagogyHint:
       "Move and improve your sentences. Apply Dr. Louis's grammar rules. 'Once you use a word, you lose it' — don't repeat phrases between sentences.",
@@ -193,7 +186,6 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
     key: "expository.paragraph_form",
     slug: "paragraph-form",
     label: "Paragraph Form",
-    subLabel: "Final Step",
     groupOrigin: "paragraph_form",
     pedagogyHint:
       "Assemble the paragraph in color: blue for TS and CS, red for CDs, green for CMs. Black if writing the final clean copy.",
@@ -218,7 +210,6 @@ const ARGUMENTATION_STEPS: readonly StepConfig[] = [
     key: "argumentation.decode_prompt",
     slug: "decode-prompt",
     label: "Decoding the Prompt",
-    subLabel: "Step 1",
     groupOrigin: "decode_prompt",
     pedagogyHint:
       "Identify what the prompt asks you to argue. Note the form, the ratio, and which side(s) you'll need to consider.",
@@ -229,7 +220,6 @@ const ARGUMENTATION_STEPS: readonly StepConfig[] = [
     key: "argumentation.annotate_text",
     slug: "annotate-text",
     label: "Reading & Annotating the Text",
-    subLabel: "Step 2",
     groupOrigin: "annotate_text",
     pedagogyHint:
       "Annotate sources for evidence. CDs in red. Commentary in green. Note quotations you may want to embed.",
@@ -241,7 +231,6 @@ const ARGUMENTATION_STEPS: readonly StepConfig[] = [
     key: "argumentation.gather_cds",
     slug: "gather-cds",
     label: "Gathering CDs",
-    subLabel: "Step 3",
     groupOrigin: "gathering_cds",
     pedagogyHint:
       "Brainstorm 4 or more CDs that could support an argument. Some will be Pro, some Con — you'll sort them next.",
@@ -252,7 +241,6 @@ const ARGUMENTATION_STEPS: readonly StepConfig[] = [
     key: "argumentation.topic_sentence_dev",
     slug: "topic-sentence-development",
     label: "Topic Sentence Development",
-    subLabel: "Step 4",
     groupOrigin: "topic_sentence_dev",
     pedagogyHint:
       "Mark each CD as For (Pro) or Against (Con). The side with more CDs becomes your topic sentence direction.",
@@ -263,7 +251,6 @@ const ARGUMENTATION_STEPS: readonly StepConfig[] = [
     key: "argumentation.t_chart",
     slug: "t-chart",
     label: "Completing the T-Chart",
-    subLabel: "Step 5",
     groupOrigin: "t_chart",
     pedagogyHint:
       "Place CDs on the left. Brainstorm 'why is this important?' commentary on the right. Embed quotations carefully — every quote needs a transitional lead-in.",
@@ -285,7 +272,6 @@ const ARGUMENTATION_STEPS: readonly StepConfig[] = [
     key: "argumentation.shaping_sheet",
     slug: "shaping-sheet",
     label: "Editing & Revising on the Shaping Sheet",
-    subLabel: "Step 6",
     groupOrigin: "shaping_sheet",
     pedagogyHint:
       "Move and improve. Apply grammar rules. Pick-n-stitch the strongest CMs into your sentences.",
@@ -329,7 +315,6 @@ const ARGUMENTATION_STEPS: readonly StepConfig[] = [
     key: "argumentation.paragraph_form",
     slug: "paragraph-form",
     label: "Paragraph Form",
-    subLabel: "Final Step",
     groupOrigin: "paragraph_form",
     required: true,
     repeatPerBP: true,
@@ -354,7 +339,6 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     key: "literary.decode_prompt",
     slug: "decode-prompt",
     label: "Decoding the Prompt",
-    subLabel: "Step 1",
     groupOrigin: "decode_prompt",
     pedagogyHint:
       "Identify what literary element the prompt is asking about — character, conflict, figurative language, theme. The ratio will be 1:2+.",
@@ -365,7 +349,6 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     key: "literary.annotate_text",
     slug: "annotate-text",
     label: "Close Reading & Annotation",
-    subLabel: "Step 2",
     groupOrigin: "annotate_text",
     pedagogyHint:
       "Read closely. Underline plot details (CD) in red. Underline reactions/inferences (CM) in green. Note speaker, imagery, tone.",
@@ -377,7 +360,6 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     key: "literary.gather_cds",
     slug: "gather-cds",
     label: "Gathering CDs",
-    subLabel: "Step 3",
     groupOrigin: "gathering_cds",
     pedagogyHint:
       "List 3-5 concrete details from the text. Pick the single strongest CD for each chunk — one CD per chunk (1:2+). Drag to reorder.",
@@ -388,7 +370,6 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     key: "literary.cm_dev",
     slug: "generate-commentary",
     label: "Generating Commentary",
-    subLabel: "Step 4",
     groupOrigin: "literary_cm_dev",
     pedagogyHint:
       "Brainstorm 5 single words for each CD. These should describe tone, mood, character — not full sentences. Words come first; sentences come later.",
@@ -399,7 +380,6 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     key: "literary.decisions",
     slug: "making-decisions",
     label: "Making Decisions",
-    subLabel: "Step 5",
     groupOrigin: "literary_decisions",
     pedagogyHint:
       "Pick the BEST single word for your topic sentence — one that captures the whole paragraph. Then pick 2 best words per chunk.",
@@ -410,7 +390,6 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     key: "literary.elaboration",
     slug: "elaboration",
     label: "Elaboration",
-    subLabel: "Step 6",
     groupOrigin: "literary_elaboration",
     pedagogyHint:
       "For each CM word, write a synonym, then two phrases of 3+ words that explain what you mean. These 'cloud' phrases will become your CM sentences.",
@@ -421,7 +400,6 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     key: "literary.t_chart",
     slug: "t-chart",
     label: "Completing the T-Chart",
-    subLabel: "Step 7",
     groupOrigin: "t_chart",
     pedagogyHint:
       "Working topic sentence at top. CD on the left (one combined sentence). 2+ CM sentences on the right. Concluding sentence is all commentary.",
@@ -432,7 +410,6 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     key: "literary.shaping_sheet",
     slug: "shaping-sheet",
     label: "Shaping Sheet",
-    subLabel: "Step 8",
     groupOrigin: "shaping_sheet",
     pedagogyHint:
       "Introduce the title and author. Embed quotations with citations. Pick-n-stitch your cloud phrases into CM sentences. Don't repeat phrasing across CMs.",
@@ -472,7 +449,6 @@ const LITERARY_STEPS: readonly StepConfig[] = [
     key: "literary.paragraph_form",
     slug: "paragraph-form",
     label: "Paragraph Form",
-    subLabel: "Final Step",
     groupOrigin: "paragraph_form",
     required: true,
     repeatPerBP: true,
@@ -495,7 +471,6 @@ const NARRATIVE_STEPS: readonly StepConfig[] = [
     key: "narrative.decode_prompt",
     slug: "decode-prompt",
     label: "Decoding the Prompt",
-    subLabel: "Step 1",
     groupOrigin: "decode_prompt",
     required: true,
     repeatPerBP: false,
@@ -504,7 +479,6 @@ const NARRATIVE_STEPS: readonly StepConfig[] = [
     key: "narrative.discovery",
     slug: "discovery",
     label: "Discovering the Topic",
-    subLabel: "Step 2",
     groupOrigin: "narrative_discovery",
     pedagogyHint:
       "List ideas pertaining to your topic. Consider family, friends, school, work, play. When and where do these things happen? Pick the concrete example you know best.",
@@ -515,7 +489,6 @@ const NARRATIVE_STEPS: readonly StepConfig[] = [
     key: "narrative.topic_sentences",
     slug: "topic-sentences",
     label: "Topic Sentences",
-    subLabel: "Step 3",
     groupOrigin: "topic_sentence_dev",
     pedagogyHint:
       "Each body paragraph needs a topic sentence — a feeling or insight that reflects on the moment you'll narrate.",
@@ -526,7 +499,6 @@ const NARRATIVE_STEPS: readonly StepConfig[] = [
     key: "narrative.t_chart",
     slug: "t-chart",
     label: "T-Chart with WOW Brainstorm",
-    subLabel: "Step 4",
     groupOrigin: "t_chart",
     pedagogyHint:
       "Web off the When, Where, Who, What Happened, Dialogue. Capture how you felt and what you were thinking. Concrete details on the left, feelings on the right.",
@@ -537,7 +509,6 @@ const NARRATIVE_STEPS: readonly StepConfig[] = [
     key: "narrative.shaping_sheet",
     slug: "shaping-sheet",
     label: "Shaping Sheet",
-    subLabel: "Step 5",
     groupOrigin: "shaping_sheet",
     pedagogyHint:
       "Move and improve. Vary sentence openings. Use transitions to show changes in time, place, character, or action.",
@@ -570,7 +541,6 @@ const NARRATIVE_STEPS: readonly StepConfig[] = [
     key: "narrative.paragraph_form",
     slug: "paragraph-form",
     label: "Paragraph Form",
-    subLabel: "Final Step",
     groupOrigin: "paragraph_form",
     required: true,
     repeatPerBP: true,

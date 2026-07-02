@@ -32,21 +32,6 @@ CSV-imported school admins all default to `administrator` (`school-user.ts` pass
 - **Identified:** chunk school-admin-roles
 - **Priority:** polish
 
-### Expository step subLabels are off-by-one for 3+:0
-`jswp-modes.ts` hard-codes each Expository step's `subLabel` as a static
-`"Step N"` string ("Step 1" … "Step 5"), numbered for the 2+:1 sequence.
-Chunk 4.5d-1 made the sequence ratio-dependent (3+:0 drops `gather_cds`),
-so for a 3+:0 writing every step from `t_chart` onward is labelled one
-higher than its real position — the step sidebar shows "Step 4" for what
-is actually step 3, etc. Chunk 4.5d-2 renders the *correct* number in the
-T-Chart's own header band (from `chunkRatio` via `getExpositoryTChartSpec`),
-but the sidebar is still wrong. Fix = derive step numbers dynamically from
-the resolved (ratio-aware) visible step list rather than ratio-branching
-the static strings. Affects `lib/jswp-modes.ts` (drop/replace the static
-`subLabel` numbers) + the step sidebar that renders them.
-- **Identified:** chunk 4.5d-2
-- **Priority:** before production cutover (Phase 7) — visible but not blocking
-
 ### Is 3+:0 argumentation pedagogically valid? (assignment-form question)
 Chunk 4.5d-1 made the Expository flow ratio-aware: 3+:0 (summary) drops the discrete Gathering & Prioritizing CDs step, and the 3+:0 CM-correctness fixes (zero starter CM slots, no CM rows in the T-Chart, Shaping gate skips the CM requirement) are keyed on per-chunk `chunk.ratio`, so they apply to **any** 3+:0 chunk regardless of mode. But `omitForRatio` is set only on `expository.gather_cds` — so an Argumentation assignment set to 3+:0 lands in a "partially correct" interim state: it gets the CM fixes but keeps its `gather_cds` step. The real question is upstream, not "extend `omitForRatio` to `argumentation.gather_cds`": **should the assignment form offer 3+:0 for Argumentation at all?** Argumentation is inherently a commentary-driven mode (you can't argue with zero commentary) — 3+:0 is the *summary* ratio. If 3+:0 argumentation isn't a real JSWP use case, the fix is to remove that option from the `assignment-form.tsx` ratio dropdown for `mode = "argumentation"` (the `assignments` CHECK constraint could also be tightened), not to special-case the step engine. Needs a pedagogy call from Dr. Louis / Raymond before either path.
 - **Identified:** chunk 4.5d-1
@@ -139,6 +124,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Expository step subLabels off-by-one for 3+:0 (was dead config)
+Investigation (2026-07-02) found the premise stale: `StepConfig.subLabel` ("Step 1"…"Step 8", "Final Step") was populated in `lib/jswp-modes.ts` but **read by nothing** — `step-sidebar.tsx` renders only `step.label`, no numbers, and the only place a step number is shown to students (the Expository T-Chart header band) already computes it ratio-aware via `getExpositoryTChartSpec` (3 for 3+:0, 4 for 2+:1). So the "sidebar shows the wrong number" never actually happened; the wrong numbers only lived latently in unused config. Resolution: removed the dead `subLabel` field entirely (28 value lines + the interface member + its JSDoc; −30 lines), eliminating the latent-wrong numbers by construction rather than computing them. If step numbers are ever wanted in the sidebar, derive them from the resolved ratio-aware visible-step list at that point. No consumer/test referenced `subLabel`; type-check + `jswp-modes`/`expository-t-chart-spec` tests green.
+- **Closed:** subLabel-cleanup (2026-07-02)
 
 ### Mirror TLCD quotation UI into argumentation + literary T-Charts
 Extracted the Expository `CdEditor` (Mark-as-quotation toggle + Lead-in/Citation fields + embedded-quotation preview) into a shared `components/student/writing/t-chart/cd-editor.tsx` and wired it into `chunk-editor.tsx`'s `CdRow`, so argumentation and literary CDs now get the same Embedding-Quotations affordance instead of plain text. UI-only — the `is_quotation` / `transitional_lead_in` / `source_citation` columns, the mode-agnostic `setConcreteDetailQuotation` action, and the typed query fields were all already in place. `expository-chunk-grid.tsx` now imports the shared component (no visual change; −141 net lines from the dedup). Read-only teacher-review path keeps the preview and disables the controls. New `__tests__/components/cd-editor.test.tsx` (5 tests: reveal, persist, preview compose, non-destructive toggle-off, read-only). Scope: `docs/scope/mirror-tlcd-ui.md`. Follow-up (not blocking): browser-verify the read-only teacher-review render on a returned argumentation/literary writing.
