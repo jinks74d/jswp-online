@@ -3,7 +3,9 @@
 /**
  * Green commentary "cloud" for one CM (design base: T-Chart Worksheet.html) —
  * the commentary sentence in the oval, and up to 4 brainstormed supporting
- * words on the rays around it ("1 in the oval, 4 outside"). A 3×3 grid places
+ * words on the rays around it ("1 in the oval, 4 outside"). A small caption
+ * frames the whole cloud; the four ray slots are intentionally unlabelled
+ * (no per-ray pedagogical wording — decided 2026-07-02). A 3×3 grid places
  * the oval in the centre and the four word inputs in the corners; four green
  * rays connect them.
  *
@@ -48,16 +50,58 @@ export function CmCloud({
     await updateCommentaryWebWords(writingId, cm.id, next);
   };
 
-  const oval = (
-    <div className="relative w-full">
-      {/* rays at the four diagonals, pointing to the corner words */}
-      <Ray className="-left-3 -top-2 -rotate-[35deg]" />
-      <Ray className="-right-3 -top-2 rotate-[35deg]" />
-      <Ray className="-bottom-2 -left-3 rotate-[35deg]" />
-      <Ray className="-bottom-2 -right-3 -rotate-[35deg]" />
+  return (
+    <div className="mx-auto w-full max-w-[340px]">
+      {/* caption for the whole cloud (no per-ray labels) */}
+      <p className="mb-2 text-center text-[11px] font-medium leading-tight text-emerald-700/70">
+        Brainstorm words on the rays — why is this important?
+      </p>
+
+      <div className="grid grid-cols-[minmax(46px,1fr)_auto_minmax(46px,1fr)] grid-rows-[auto_auto_auto] items-center justify-items-center gap-x-2 gap-y-3">
+        <RayWord value={words[0]} disabled={isReadOnly} onSave={(v) => saveWord(0, v)} />
+        <span aria-hidden="true" />
+        <RayWord value={words[1]} disabled={isReadOnly} onSave={(v) => saveWord(1, v)} />
+
+        <span aria-hidden="true" />
+        <Oval
+          cm={cm}
+          writingId={writingId}
+          disabled={isReadOnly}
+          onDelete={onDelete}
+        />
+        <span aria-hidden="true" />
+
+        <RayWord value={words[2]} disabled={isReadOnly} onSave={(v) => saveWord(2, v)} />
+        <span aria-hidden="true" />
+        <RayWord value={words[3]} disabled={isReadOnly} onSave={(v) => saveWord(3, v)} />
+      </div>
+    </div>
+  );
+}
+
+/* ─── The oval (holds the commentary sentence + delete) ───────────── */
+
+function Oval({
+  cm,
+  writingId,
+  disabled,
+  onDelete,
+}: {
+  cm: CommentaryItemData;
+  writingId: string;
+  disabled: boolean;
+  onDelete?: () => void;
+}) {
+  return (
+    <div className="relative w-[190px] max-w-full">
+      {/* four rays reaching toward the corner words */}
+      <Ray className="left-[8%] top-[10%] -rotate-[38deg]" />
+      <Ray className="right-[8%] top-[10%] rotate-[38deg]" />
+      <Ray className="bottom-[10%] left-[8%] rotate-[38deg]" />
+      <Ray className="bottom-[10%] right-[8%] -rotate-[38deg]" />
 
       <div
-        className="flex min-h-[112px] flex-col items-center justify-center gap-1 rounded-[50%] border-2 px-[16%] py-6 text-center"
+        className="flex min-h-[132px] flex-col items-center justify-center gap-1 rounded-[50%] border-[2.5px] px-8 py-6 text-center"
         style={{ borderColor: GREEN }}
       >
         <AutoSaveInput
@@ -65,33 +109,17 @@ export function CmCloud({
           multiline
           rows={2}
           initialValue={cm.text}
-          placeholder="Why is this important? What does it mean?"
-          disabled={isReadOnly}
-          className="text-center text-sm text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/40"
+          placeholder="Write your commentary…"
+          disabled={disabled}
+          className="text-center text-sm leading-snug text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/40"
           onSave={async (text) => {
             await updateCommentaryItem(writingId, cm.id, text);
           }}
         />
-        {!isReadOnly && onDelete && (
+        {!disabled && onDelete && (
           <DeleteButton title="Remove CM" onConfirm={onDelete} />
         )}
       </div>
-    </div>
-  );
-
-  return (
-    <div className="mx-auto grid w-full max-w-[360px] grid-cols-[minmax(48px,auto)_1fr_minmax(48px,auto)] grid-rows-[auto_1fr_auto] items-center justify-items-center gap-x-1 gap-y-2">
-      <RayWord value={words[0]} disabled={isReadOnly} onSave={(v) => saveWord(0, v)} />
-      <span aria-hidden="true" />
-      <RayWord value={words[1]} disabled={isReadOnly} onSave={(v) => saveWord(1, v)} />
-
-      <span aria-hidden="true" />
-      {oval}
-      <span aria-hidden="true" />
-
-      <RayWord value={words[2]} disabled={isReadOnly} onSave={(v) => saveWord(2, v)} />
-      <span aria-hidden="true" />
-      <RayWord value={words[3]} disabled={isReadOnly} onSave={(v) => saveWord(3, v)} />
     </div>
   );
 }
@@ -108,13 +136,13 @@ function RayWord({
   onSave: (value: string) => Promise<void>;
 }) {
   return (
-    <div className="w-full min-w-[52px] max-w-[80px]">
+    <div className="w-full min-w-[46px] max-w-[84px]">
       <AutoSaveInput
         bare
         initialValue={value}
         placeholder="word"
         disabled={disabled}
-        className="border-b border-emerald-300 pb-0.5 text-center text-xs text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/40"
+        className="border-b border-emerald-300 pb-0.5 text-center text-xs text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/35"
         onSave={onSave}
       />
     </div>
@@ -125,8 +153,8 @@ function Ray({ className }: { className: string }) {
   return (
     <span
       aria-hidden="true"
-      className={`pointer-events-none absolute h-0 w-5 border-t-2 ${className}`}
-      style={{ borderColor: GREEN }}
+      className={`pointer-events-none absolute h-0 w-7 border-t-[1.5px] ${className}`}
+      style={{ borderColor: GREEN, opacity: 0.7 }}
     />
   );
 }
