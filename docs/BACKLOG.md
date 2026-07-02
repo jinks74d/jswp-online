@@ -59,11 +59,6 @@ Affected files (from `grep -c "as unknown as"`):
 - **Identified:** chunk 4.2 (commit `fffc3ac`); rescoped in chunk P7-1 audit
 - **Priority:** before production cutover (Phase 7); blocked on Supabase CLI auth setup
 
-### Cross-district user listing for super-admin
-Carved out of the (now-closed) "Rebuild district management UI" item after the 2026-07-02 reconciliation (`docs/scope/district-management-reconciliation.md`). The district CRUD / branding / POC / district-admin surfaces were rebuilt under `/admin/districts`; the one genuinely-missing, unblocked slice is a flat "all users across all districts" list/search for super-admins. Today super admins reach users only by drilling district → school → subject → class → period, and `/admin/super-admins` lists only super admins. Value is operational (support: "find user X across tenants"), not onboarding-blocking. Small-to-medium build; add to `admin-nav.tsx` + a new RLS-scoped cross-tenant users query.
-- **Identified:** chunk P7-6; carved out 2026-07-02
-- **Priority:** operational polish; not onboarding-blocking
-
 ### Cross-district analytics surface (super-admin)
 Also carved out of the reconciliation. `/admin` dashboard + `/district/analytics` are stubs/ComingSoon. Deferred until the per-assignment analytics shape from chunk 5.2 has stabilized; a cross-district view will likely reuse those card components. Unchanged from the original deferral.
 - **Identified:** chunk P7-6; carved out 2026-07-02
@@ -122,6 +117,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Cross-district user listing for super-admin
+Shipped 2026-07-02 at `/admin/users` (super-admin only). Read-only cross-tenant listing — name/email search + role and district filters over every user in every district, with User / Role / District / School / Created columns and Total / Districts / Admins / Teachers stat cards. No provisioning here (that stays in `/admin/districts` + `/admin/signups`). New `lib/queries/all-users.ts` (`listAllUsers`, mirrors `district-users.ts` with a district embed); page re-gates to `super_admin`; RLS `user_profiles_super_admin_all` already permitted the cross-tenant read (no migration). Nav link added to `admin-nav.tsx` (super-admin only). Live-DB join verified (18 demo users resolve district/school names); `__tests__/components/all-users-view.test.tsx` (5 tests: default rows + admin/district counts, search, role filter, district filter, districtless "No district"). type-check + build + tests green.
+- **Closed:** cross-district user list (2026-07-02)
 
 ### Product decision — 2-POC ceiling for district admins
 Resolved 2026-07-02 (Raymond): **two POCs is the intentional ceiling.** District admins = primary + secondary POC, managed via `createDistrict`/`updateDistrict`/`inviteDistrictPoc`. No "add an Nth district admin" table will be built in the super-admin UI. The `/admin/signups` approval flow (editable role → `district_admin`) remains the escape hatch for a rare extra admin, not the primary model. Documented in the `lib/actions/districts.ts` header so future work doesn't re-open it without a fresh decision. No code/UI change — confirmation only.

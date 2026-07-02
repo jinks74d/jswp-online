@@ -19,6 +19,7 @@ export function AdminNav({ role }: { role: string }) {
     ...(role === "super_admin"
       ? [
           { href: "/admin/districts", label: "Districts" },
+          { href: "/admin/users", label: "Users" },
           { href: "/admin/super-admins", label: "Super admins" },
         ]
       : []),
