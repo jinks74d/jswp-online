@@ -42,10 +42,15 @@ Chunk 4.5d-1 made the Expository flow ratio-aware: 3+:0 (summary) drops the disc
 - **Identified:** chunk 6.5
 - **Priority:** polish; before production cutover (Phase 7)
 
-### Sweep the orphaned v1 API route surface
-Surfaced 2026-07-02 while closing the storage-upload item. ~13 `app/api/**/route.ts` files still import the v1 `@/lib/supabase` barrel (`createServerSupabaseClient`) and have **no v2 client caller** — v2 does data mutations through server actions + RLS, not these routes. Candidates for deletion (verify each has zero caller first): `analytics/session/start`, `dashboard/classes/create`, `dashboard/classes/[id]/{assign-teacher,enroll-student}`, `dashboard/users/create`, `dashboard/users/[id]/edit`, `debug/profile`, `debug/user-profile`, `districts/[districtId]/{logo,settings}`, `schools/[schoolId]/settings`, plus the orphaned CSV `school-admin/{classes,students}/bulk-upload(-sheets)` routes (superseded by `lib/csv-import` server actions). Matches the P7-5/P7-6 dead-v1-code deletion pattern. Note: after deleting routes, `npm run type-check` reads stale `.next/types` until a `build` (or `npm run clean`) regenerates them — build first, then type-check.
-- **Identified:** 2026-07-02 (storage-upload close-out)
-- **Priority:** before production cutover (Phase 7) — dead-code hygiene
+### Auth REST routes `auth/session` + `auth/signout` — verify then delete
+Held back from the 2026-07-02 v1-API sweep. Both are 0-caller and v1-style (inline `@supabase/ssr`); v2 logout uses the `signOut` server action (`lib/actions/auth.ts`), not `/api/auth/signout`. Not bulk-deleted only because auth breakage is high-blast-radius — do a dedicated check (middleware, Supabase callback, any redirect) before removing.
+- **Identified:** 2026-07-02 (v1-API sweep hold-back)
+- **Priority:** dead-code hygiene; low-risk once the auth-specific check is done
+
+### Possible newly-orphaned lib helpers after the v1-API sweep
+The 2026-07-02 route sweep may have orphaned `lib/api-handler.*` and `lib/performance-monitor.*` (both now show 0 non-self references). Verify and delete if truly unused. `lib/async-handler` still has 1 consumer; the v1 `@/lib/supabase` barrel is still used by the live `districts/[districtId]/logo` route (so it stays until that route is migrated to the v2 client factory).
+- **Identified:** 2026-07-02 (v1-API sweep)
+- **Priority:** dead-code hygiene
 
 ### Remove `as unknown as <Shape>` TS narrowing hacks (chunk P7-2)
 The P7-1 audit revealed the actual count is **34 casts across 23 files**, not 2 across 2 as originally noted. Most narrow Supabase nested-embed results (`assignment:assignment_id ( ... )`) — the same root cause: the hand-written `Database` types don't carry the relationship metadata Supabase needs to infer embed shapes. Two outliers in `lib/actions/assignments.ts` cast a typed rubric to `Json` for a JSONB column (different problem; would not be fixed by regen).
@@ -130,6 +135,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Sweep the orphaned v1 API route surface
+Deleted **20 orphaned v1 `app/api/**/route.ts` handlers** (2026-07-02), each verified 0-caller across the repo (app/components/lib/hooks/middleware/tests/config): the 10 v1-`@/lib/supabase`-barrel routes (`analytics/session/start`, `dashboard/classes/{create,[id]/assign-teacher,[id]/enroll-student}`, `dashboard/users/{create,[id]/edit}`, `debug/{profile,user-profile}`, `districts/[districtId]/settings`, `schools/[schoolId]/settings`); the 4 CSV `school-admin/{classes,students}/bulk-upload(-sheets)` routes (superseded by `lib/csv-import` server actions); the 3 dead v1 analytics routes (`analytics/enhanced`, `analytics/session/{activity,end}` — same feature as the deleted SessionTrackingProvider, P7-5a); and 3 inline-`@supabase/ssr` REST routes superseded by v2 server actions/queries (`assignments`, `student-progress`, `teacher-feedback`). App/api went 25 → 5 routes. **Kept:** `districts/[districtId]/logo` (live — DistrictLogo), `health` (external monitors), `logs` (lib/logger). **Held back** (carved to Open items): the two `auth/*` routes (high-blast-radius, need an auth-specific check) and possible newly-orphaned lib helpers. type-check + build green (build first — deletions leave stale `.next/types` until regenerated).
+- **Closed:** v1-API sweep (2026-07-02)
 
 ### Storage upload UI failure surface
 Reconciliation 2026-07-02 found the live path already handled: the only real storage-upload UI in v2, `components/assignments/source-text-upload.tsx`, surfaces failures inline — `setError` on both the archival-failure branch and the catch (rendered red at the field), plus an amber `role="status"` warning for image-only PDFs. The CSV importer (`app/admin/import/students/import-form.tsx`) likewise shows a `role="alert"` error + per-row errors. The only console-only storage `.upload()` errors left lived in two **orphaned v1 logo-upload routes** (`app/api/districts/[districtId]/upload-logo`, `app/api/schools/[schoolId]/upload-logo`) with zero v2 caller — branding takes a `logo_url` text input, not a file upload. Deleted both routes rather than surfacing errors on dead code. Type-check + build green. The wider orphaned v1 API route cluster this exposed is carved into a new Open item ("Sweep the orphaned v1 API route surface").
