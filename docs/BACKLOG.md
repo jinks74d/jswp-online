@@ -63,14 +63,20 @@ Affected files (from `grep -c "as unknown as"`):
 - **Identified:** chunk 4.2 (commit `fffc3ac`); rescoped in chunk P7-1 audit
 - **Priority:** before production cutover (Phase 7); blocked on Supabase CLI auth setup
 
-### Rebuild district management UI under `/admin/districts`
-Path A in P7-6 deleted the v1 super-admin district CRUD surface (create, edit, branding/POC, add/remove district-admin, cross-district user list) because v2's `/admin/` doesn't have equivalents. Provisioning currently runs via the Supabase SQL Editor. When multi-tenant district onboarding becomes a real need, rebuild in `/admin/` using v2's patterns (server components, RLS-scoped queries, `useActionState` forms). Scope on rebuild:
-- District CRUD (list, detail, create, edit) with branding (logo + primary/secondary colors) and POC fields.
-- District-admin role assignment (add/remove).
-- Cross-district user listing for super-admin.
-- Cross-district analytics surface (deferred until the per-assignment analytics shape from chunk 5.2 has stabilized; a cross-district view will likely reuse the same card components rather than the deleted `AnalyticsDashboard`).
-- **Identified:** chunk P7-6
-- **Priority:** before first production tenant onboarding
+### Cross-district user listing for super-admin
+Carved out of the (now-closed) "Rebuild district management UI" item after the 2026-07-02 reconciliation (`docs/scope/district-management-reconciliation.md`). The district CRUD / branding / POC / district-admin surfaces were rebuilt under `/admin/districts`; the one genuinely-missing, unblocked slice is a flat "all users across all districts" list/search for super-admins. Today super admins reach users only by drilling district → school → subject → class → period, and `/admin/super-admins` lists only super admins. Value is operational (support: "find user X across tenants"), not onboarding-blocking. Small-to-medium build; add to `admin-nav.tsx` + a new RLS-scoped cross-tenant users query.
+- **Identified:** chunk P7-6; carved out 2026-07-02
+- **Priority:** operational polish; not onboarding-blocking
+
+### Cross-district analytics surface (super-admin)
+Also carved out of the reconciliation. `/admin` dashboard + `/district/analytics` are stubs/ComingSoon. Deferred until the per-assignment analytics shape from chunk 5.2 has stabilized; a cross-district view will likely reuse those card components. Unchanged from the original deferral.
+- **Identified:** chunk P7-6; carved out 2026-07-02
+- **Priority:** deferred behind chunk 5.2 analytics
+
+### ⚠ Product question — is the 2-POC model the ceiling for district admins?
+Surfaced by the reconciliation. A district's admins today ARE its two Points of Contact (primary + secondary `district_admin` accounts provisioned by `createDistrict`, edited by `updateDistrict`, invited via `inviteDistrictPoc`), plus anyone approved with `role=district_admin` through `/admin/signups`. There is no explicit "add/remove Nth district admin" table decoupled from the POC slots. If more than two district admins per district is a real need, that's a product change to the POC model — not a bug. Confirm the intended ceiling before building any multi-admin UI.
+- **Identified:** reconciliation 2026-07-02
+- **Priority:** product decision; blocks nothing until multi-admin is requested
 
 ### Consolidate live-count textarea pattern
 Extend `AutoSaveInput` with an optional `onChange` callback prop, OR extract a shared `<LiveCountTextarea>` helper. Currently chunk 4.6b's CD/CM and Narrative paragraph-form panes inline ~40 lines of AutoSaveInput-shaped code each to support live word-count display (which needs `onChange` access). Chunk 4.6c's final-draft surface will likely want the same. Consolidating reduces duplication.
@@ -124,6 +130,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Rebuild district management UI under `/admin/districts`
+Reconciliation 2026-07-02 (`docs/scope/district-management-reconciliation.md`) found the item ~80% already delivered — the v1 CRUD P7-6 deleted was rebuilt under `/admin/districts` (commits `e40efb9`, `8333bc4`, `3959987`, `7d9032e`): list/detail/create/edit, branding (logo + primary/secondary colors, hex-validated), dual POC, and district-admin provisioning via the two-POC model + `/admin/signups` approvals — all RLS-scoped and audit-logged. The two remaining slices were carved out as their own Open items (cross-district user listing; cross-district analytics, still deferred), plus a product question about the 2-POC ceiling. Original "rebuild the deleted CRUD" framing retired as obsolete.
+- **Closed:** reconciliation 2026-07-02 (superseded by carved-out items)
 
 ### Expository step subLabels off-by-one for 3+:0 (was dead config)
 Investigation (2026-07-02) found the premise stale: `StepConfig.subLabel` ("Step 1"…"Step 8", "Final Step") was populated in `lib/jswp-modes.ts` but **read by nothing** — `step-sidebar.tsx` renders only `step.label`, no numbers, and the only place a step number is shown to students (the Expository T-Chart header band) already computes it ratio-aware via `getExpositoryTChartSpec` (3 for 3+:0, 4 for 2+:1). So the "sidebar shows the wrong number" never actually happened; the wrong numbers only lived latently in unused config. Resolution: removed the dead `subLabel` field entirely (28 value lines + the interface member + its JSDoc; −30 lines), eliminating the latent-wrong numbers by construction rather than computing them. If step numbers are ever wanted in the sidebar, derive them from the resolved ratio-aware visible-step list at that point. No consumer/test referenced `subLabel`; type-check + `jswp-modes`/`expository-t-chart-spec` tests green.
