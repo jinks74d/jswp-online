@@ -619,6 +619,8 @@ export type CommentaryItems = {
   // Migration 0032: WOW synonym (box #2) and parent word link for phrase rows (clouds, box #3)
   synonym: string | null;
   parent_cm_id: string | null;
+  // Migration 0037: up to 4 brainstormed supporting words on the Expository CM cloud's rays
+  web_words: string[] | null;
 } & Timestamps;
 
 export type ShapingSheets = {

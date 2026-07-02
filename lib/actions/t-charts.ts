@@ -328,6 +328,31 @@ export async function updateCommentaryItem(
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }
 
+/**
+ * Persist the commentary cloud's "web" — up to 4 brainstormed supporting words
+ * shown on the oval's rays (Expository T-Chart, migration 0037). The caller
+ * passes the full 4-slot array from local state on every save, so this is a
+ * whole-array write (no stale-index race — mirrors the shaping SentenceList).
+ * Empty trailing slots are stored as "" to keep index→ray alignment stable.
+ */
+export async function updateCommentaryWebWords(
+  writingId: string,
+  cmId: string,
+  webWords: readonly string[]
+): Promise<void> {
+  await requireRole("student");
+  const supabase = await createServerClient();
+
+  const { error } = await supabase
+    .from("commentary_items")
+    .update({ web_words: webWords.slice(0, 4) })
+    .eq("id", cmId);
+  if (error) {
+    throw new Error(`updateCommentaryWebWords: ${error.message}`);
+  }
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
 export async function deleteCommentaryItem(
   writingId: string,
   cmId: string

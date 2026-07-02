@@ -75,6 +75,8 @@ export interface CommentaryItemData {
   text: string;
   parent_cd_id: string | null;
   kind: CmKind;
+  /** Up to 4 brainstormed supporting words on the commentary cloud's rays. */
+  web_words: string[] | null;
 }
 
 export interface ChunkData {
@@ -135,7 +137,7 @@ export async function getTChartData(
       chunks (
         id, position, ratio,
         concrete_details ( id, position, text, is_quotation, transitional_lead_in, source_citation ),
-        commentary_items ( id, position, text, parent_cd_id, kind )
+        commentary_items ( id, position, text, parent_cd_id, kind, web_words )
       )
       `
     )

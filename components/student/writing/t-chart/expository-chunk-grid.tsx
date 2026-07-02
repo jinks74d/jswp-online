@@ -20,7 +20,6 @@
 
 import { useTransition } from "react";
 import { Plus, Trash2, Loader2 } from "lucide-react";
-import { AutoSaveInput } from "./auto-save-input";
 import { CdEditor } from "./cd-editor";
 import { CmCloud } from "./cm-cloud";
 import { WORKSHEET_INK, ordinal } from "./worksheet-style";
@@ -28,7 +27,6 @@ import {
   createConcreteDetail,
   deleteConcreteDetail,
   createCommentaryItem,
-  updateCommentaryItem,
   deleteCommentaryItem,
 } from "@/lib/actions/t-charts";
 import { useWritingMode } from "../use-writing-mode";
@@ -277,40 +275,29 @@ function CdCmRow({
         </div>
       </div>
 
-      {/* Column 2 — commentary cloud for this CD */}
-      <div className="border-l-2 border-black py-4 sm:pl-5">
-        <CmCloud>
-          {cms.map((cm) => (
-            <div key={cm.id} className="flex w-full items-start justify-center gap-1">
-              <AutoSaveInput
-                bare
-                multiline
-                rows={2}
-                initialValue={cm.text}
-                placeholder="Why is this important? What does it mean?"
-                disabled={disabled}
-                className="text-center text-sm text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/40"
-                onSave={async (text) => {
-                  await updateCommentaryItem(writingId, cm.id, text);
-                }}
-              />
-              {!disabled && (
-                <DeleteButton
-                  small
-                  title="Remove CM"
-                  onConfirm={() => deleteCommentaryItem(writingId, cm.id)}
-                />
-              )}
-            </div>
-          ))}
-          {!disabled && (
+      {/* Column 2 — one commentary cloud per CM (1 in the oval, 4 on the rays) */}
+      <div className="space-y-4 border-l-2 border-black py-4 sm:pl-5">
+        {cms.map((cm) => (
+          <CmCloud
+            key={cm.id}
+            writingId={writingId}
+            cm={cm}
+            onDelete={
+              disabled
+                ? undefined
+                : () => deleteCommentaryItem(writingId, cm.id)
+            }
+          />
+        ))}
+        {!disabled && (
+          <div className="text-center">
             <AddCmButton
               writingId={writingId}
               chunkId={chunkId}
               parentCdId={cd.id}
             />
-          )}
-        </CmCloud>
+          </div>
+        )}
       </div>
     </>
   );
