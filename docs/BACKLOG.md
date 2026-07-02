@@ -42,10 +42,10 @@ Chunk 4.5d-1 made the Expository flow ratio-aware: 3+:0 (summary) drops the disc
 - **Identified:** chunk 6.5
 - **Priority:** polish; before production cutover (Phase 7)
 
-### Storage upload UI failure surface
-Storage upload errors currently log to console only; users see no feedback when an upload fails. Surface failures inline (toast or form-level error).
-- **Identified:** pre-Phase 4
-- **Priority:** before production cutover (Phase 7)
+### Sweep the orphaned v1 API route surface
+Surfaced 2026-07-02 while closing the storage-upload item. ~13 `app/api/**/route.ts` files still import the v1 `@/lib/supabase` barrel (`createServerSupabaseClient`) and have **no v2 client caller** — v2 does data mutations through server actions + RLS, not these routes. Candidates for deletion (verify each has zero caller first): `analytics/session/start`, `dashboard/classes/create`, `dashboard/classes/[id]/{assign-teacher,enroll-student}`, `dashboard/users/create`, `dashboard/users/[id]/edit`, `debug/profile`, `debug/user-profile`, `districts/[districtId]/{logo,settings}`, `schools/[schoolId]/settings`, plus the orphaned CSV `school-admin/{classes,students}/bulk-upload(-sheets)` routes (superseded by `lib/csv-import` server actions). Matches the P7-5/P7-6 dead-v1-code deletion pattern. Note: after deleting routes, `npm run type-check` reads stale `.next/types` until a `build` (or `npm run clean`) regenerates them — build first, then type-check.
+- **Identified:** 2026-07-02 (storage-upload close-out)
+- **Priority:** before production cutover (Phase 7) — dead-code hygiene
 
 ### Remove `as unknown as <Shape>` TS narrowing hacks (chunk P7-2)
 The P7-1 audit revealed the actual count is **34 casts across 23 files**, not 2 across 2 as originally noted. Most narrow Supabase nested-embed results (`assignment:assignment_id ( ... )`) — the same root cause: the hand-written `Database` types don't carry the relationship metadata Supabase needs to infer embed shapes. Two outliers in `lib/actions/assignments.ts` cast a typed rubric to `Json` for a JSONB column (different problem; would not be fixed by regen).
@@ -130,6 +130,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Storage upload UI failure surface
+Reconciliation 2026-07-02 found the live path already handled: the only real storage-upload UI in v2, `components/assignments/source-text-upload.tsx`, surfaces failures inline — `setError` on both the archival-failure branch and the catch (rendered red at the field), plus an amber `role="status"` warning for image-only PDFs. The CSV importer (`app/admin/import/students/import-form.tsx`) likewise shows a `role="alert"` error + per-row errors. The only console-only storage `.upload()` errors left lived in two **orphaned v1 logo-upload routes** (`app/api/districts/[districtId]/upload-logo`, `app/api/schools/[schoolId]/upload-logo`) with zero v2 caller — branding takes a `logo_url` text input, not a file upload. Deleted both routes rather than surfacing errors on dead code. Type-check + build green. The wider orphaned v1 API route cluster this exposed is carved into a new Open item ("Sweep the orphaned v1 API route surface").
+- **Closed:** storage-upload reconciliation (2026-07-02) — 2 dead routes removed; live UIs already surfaced errors
 
 ### Rebuild district management UI under `/admin/districts`
 Reconciliation 2026-07-02 (`docs/scope/district-management-reconciliation.md`) found the item ~80% already delivered — the v1 CRUD P7-6 deleted was rebuilt under `/admin/districts` (commits `e40efb9`, `8333bc4`, `3959987`, `7d9032e`): list/detail/create/edit, branding (logo + primary/secondary colors, hex-validated), dual POC, and district-admin provisioning via the two-POC model + `/admin/signups` approvals — all RLS-scoped and audit-logged. The two remaining slices were carved out as their own Open items (cross-district user listing; cross-district analytics, still deferred), plus a product question about the 2-POC ceiling. Original "rebuild the deleted CRUD" framing retired as obsolete.
