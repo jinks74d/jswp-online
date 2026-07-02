@@ -42,11 +42,6 @@ Chunk 4.5d-1 made the Expository flow ratio-aware: 3+:0 (summary) drops the disc
 - **Identified:** chunk 6.5
 - **Priority:** polish; before production cutover (Phase 7)
 
-### Auth REST routes `auth/session` + `auth/signout` — verify then delete
-Held back from the 2026-07-02 v1-API sweep. Both are 0-caller and v1-style (inline `@supabase/ssr`); v2 logout uses the `signOut` server action (`lib/actions/auth.ts`), not `/api/auth/signout`. Not bulk-deleted only because auth breakage is high-blast-radius — do a dedicated check (middleware, Supabase callback, any redirect) before removing.
-- **Identified:** 2026-07-02 (v1-API sweep hold-back)
-- **Priority:** dead-code hygiene; low-risk once the auth-specific check is done
-
 ### Possible newly-orphaned lib helpers after the v1-API sweep
 The 2026-07-02 route sweep may have orphaned `lib/api-handler.*` and `lib/performance-monitor.*` (both now show 0 non-self references). Verify and delete if truly unused. `lib/async-handler` still has 1 consumer; the v1 `@/lib/supabase` barrel is still used by the live `districts/[districtId]/logo` route (so it stays until that route is migrated to the v2 client factory).
 - **Identified:** 2026-07-02 (v1-API sweep)
@@ -135,6 +130,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Auth REST routes `auth/session` + `auth/signout` (v1 dead code)
+Dedicated auth check (2026-07-02) confirmed both are dead: the **only** references anywhere are in the `.next/` build cache (compiled artifacts + generated route types) — **zero source references** in app/components/lib/hooks/middleware/callback. The v2 auth flow is fully independent: logout goes through `app/logout/route.ts` (v2 `createServerClient` → `signOut`) and `components/auth/logout-button.tsx` (`signOutAction` server action from `lib/actions/auth.ts`); session handling is `@supabase/ssr` cookie-based + middleware refresh, so the v1 "client POSTs its session to `/api/auth/session` to sync" pattern is obsolete. Deleted both. `app/api` is now 3 live routes (`districts/[districtId]/logo`, `health`, `logs`). type-check + build green.
+- **Closed:** v1-API sweep — auth follow-up (2026-07-02)
 
 ### Sweep the orphaned v1 API route surface
 Deleted **20 orphaned v1 `app/api/**/route.ts` handlers** (2026-07-02), each verified 0-caller across the repo (app/components/lib/hooks/middleware/tests/config): the 10 v1-`@/lib/supabase`-barrel routes (`analytics/session/start`, `dashboard/classes/{create,[id]/assign-teacher,[id]/enroll-student}`, `dashboard/users/{create,[id]/edit}`, `debug/{profile,user-profile}`, `districts/[districtId]/settings`, `schools/[schoolId]/settings`); the 4 CSV `school-admin/{classes,students}/bulk-upload(-sheets)` routes (superseded by `lib/csv-import` server actions); the 3 dead v1 analytics routes (`analytics/enhanced`, `analytics/session/{activity,end}` — same feature as the deleted SessionTrackingProvider, P7-5a); and 3 inline-`@supabase/ssr` REST routes superseded by v2 server actions/queries (`assignments`, `student-progress`, `teacher-feedback`). App/api went 25 → 5 routes. **Kept:** `districts/[districtId]/logo` (live — DistrictLogo), `health` (external monitors), `logs` (lib/logger). **Held back** (carved to Open items): the two `auth/*` routes (high-blast-radius, need an auth-specific check) and possible newly-orphaned lib helpers. type-check + build green (build first — deletions leave stale `.next/types` until regenerated).
