@@ -42,10 +42,6 @@ Chunk 4.5d-1 made the Expository flow ratio-aware: 3+:0 (summary) drops the disc
 - **Identified:** chunk 6.5
 - **Priority:** polish; before production cutover (Phase 7)
 
-### Possible newly-orphaned lib helpers after the v1-API sweep
-The 2026-07-02 route sweep may have orphaned `lib/api-handler.*` and `lib/performance-monitor.*` (both now show 0 non-self references). Verify and delete if truly unused. `lib/async-handler` still has 1 consumer; the v1 `@/lib/supabase` barrel is still used by the live `districts/[districtId]/logo` route (so it stays until that route is migrated to the v2 client factory).
-- **Identified:** 2026-07-02 (v1-API sweep)
-- **Priority:** dead-code hygiene
 
 ### Remove `as unknown as <Shape>` TS narrowing hacks (chunk P7-2)
 The P7-1 audit revealed the actual count is **34 casts across 23 files**, not 2 across 2 as originally noted. Most narrow Supabase nested-embed results (`assignment:assignment_id ( ... )`) — the same root cause: the hand-written `Database` types don't carry the relationship metadata Supabase needs to infer embed shapes. Two outliers in `lib/actions/assignments.ts` cast a typed rubric to `Json` for a JSONB column (different problem; would not be fixed by regen).
@@ -130,6 +126,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Orphaned lib helpers after the v1-API sweep
+Traced the dead-code island the sweep exposed (2026-07-02). Deleted 5 fully-unreferenced files: `lib/api-client.ts`, `lib/async-handler.ts` (only `api-client` used it — and the deleted `analytics/enhanced` route), `lib/performance-monitor.ts`, `lib/performance-react.tsx`, `components/DevTools.tsx` (0 importers each; internal cross-refs only). **Kept** `lib/performance.ts` and `lib/monitoring.ts` — both live: `monitoring.ts` imports `./performance` (a **relative** import that the `@/lib/` alias grep missed — nearly deleted `performance.ts` before catching it), and `monitoring.ts` has live importers (`lib/errors.ts`, `lib/auth-cache.ts`, `lib/queries/school-assignments.ts`, the school assignments views). The originally-flagged `lib/api-handler.*` never existed (a phantom 0-match). type-check + build green.
+- **Closed:** v1-API sweep — lib follow-up (2026-07-02)
 
 ### Auth REST routes `auth/session` + `auth/signout` (v1 dead code)
 Dedicated auth check (2026-07-02) confirmed both are dead: the **only** references anywhere are in the `.next/` build cache (compiled artifacts + generated route types) — **zero source references** in app/components/lib/hooks/middleware/callback. The v2 auth flow is fully independent: logout goes through `app/logout/route.ts` (v2 `createServerClient` → `signOut`) and `components/auth/logout-button.tsx` (`signOutAction` server action from `lib/actions/auth.ts`); session handling is `@supabase/ssr` cookie-based + middleware refresh, so the v1 "client POSTs its session to `/api/auth/session` to sync" pattern is obsolete. Deleted both. `app/api` is now 3 live routes (`districts/[districtId]/logo`, `health`, `logs`). type-check + build green.
