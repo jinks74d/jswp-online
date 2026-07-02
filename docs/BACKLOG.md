@@ -69,11 +69,6 @@ Also carved out of the reconciliation. `/admin` dashboard + `/district/analytics
 - **Identified:** chunk P7-6; carved out 2026-07-02
 - **Priority:** deferred behind chunk 5.2 analytics
 
-### ⚠ Product question — is the 2-POC model the ceiling for district admins?
-Surfaced by the reconciliation. A district's admins today ARE its two Points of Contact (primary + secondary `district_admin` accounts provisioned by `createDistrict`, edited by `updateDistrict`, invited via `inviteDistrictPoc`), plus anyone approved with `role=district_admin` through `/admin/signups`. There is no explicit "add/remove Nth district admin" table decoupled from the POC slots. If more than two district admins per district is a real need, that's a product change to the POC model — not a bug. Confirm the intended ceiling before building any multi-admin UI.
-- **Identified:** reconciliation 2026-07-02
-- **Priority:** product decision; blocks nothing until multi-admin is requested
-
 ### Consolidate live-count textarea pattern
 Extend `AutoSaveInput` with an optional `onChange` callback prop, OR extract a shared `<LiveCountTextarea>` helper. Currently chunk 4.6b's CD/CM and Narrative paragraph-form panes inline ~40 lines of AutoSaveInput-shaped code each to support live word-count display (which needs `onChange` access). Chunk 4.6c's final-draft surface will likely want the same. Consolidating reduces duplication.
 - **Identified:** chunk 4.6b
@@ -126,6 +121,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Product decision — 2-POC ceiling for district admins
+Resolved 2026-07-02 (Raymond): **two POCs is the intentional ceiling.** District admins = primary + secondary POC, managed via `createDistrict`/`updateDistrict`/`inviteDistrictPoc`. No "add an Nth district admin" table will be built in the super-admin UI. The `/admin/signups` approval flow (editable role → `district_admin`) remains the escape hatch for a rare extra admin, not the primary model. Documented in the `lib/actions/districts.ts` header so future work doesn't re-open it without a fresh decision. No code/UI change — confirmation only.
+- **Closed:** product decision (2026-07-02)
 
 ### Orphaned lib helpers after the v1-API sweep
 Traced the dead-code island the sweep exposed (2026-07-02). Deleted 5 fully-unreferenced files: `lib/api-client.ts`, `lib/async-handler.ts` (only `api-client` used it — and the deleted `analytics/enhanced` route), `lib/performance-monitor.ts`, `lib/performance-react.tsx`, `components/DevTools.tsx` (0 importers each; internal cross-refs only). **Kept** `lib/performance.ts` and `lib/monitoring.ts` — both live: `monitoring.ts` imports `./performance` (a **relative** import that the `@/lib/` alias grep missed — nearly deleted `performance.ts` before catching it), and `monitoring.ts` has live importers (`lib/errors.ts`, `lib/auth-cache.ts`, `lib/queries/school-assignments.ts`, the school assignments views). The originally-flagged `lib/api-handler.*` never existed (a phantom 0-match). type-check + build green.

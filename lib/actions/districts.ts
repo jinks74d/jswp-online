@@ -13,6 +13,14 @@
  * secondary_poc_id. The set-password invite is sent separately and on demand
  * via inviteDistrictPoc (so a district can be created now and invited later,
  * and invites can be re-sent).
+ *
+ * Two POCs is the intentional ceiling for district-admin management (product
+ * decision, Raymond, 2026-07-02). The super-admin UI manages exactly the
+ * primary + secondary POC; there is deliberately no "add an Nth district admin"
+ * table. A rare additional district_admin can still be granted via the
+ * /admin/signups approval flow (an editable role), but that is the escape
+ * hatch, not the primary model — do not build multi-admin CRUD here without a
+ * fresh decision.
  */
 
 "use server";
