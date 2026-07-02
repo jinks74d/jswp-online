@@ -10,8 +10,8 @@
 import { useTransition } from "react";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { AutoSaveInput } from "./auto-save-input";
+import { CdEditor } from "./cd-editor";
 import {
-  updateConcreteDetail,
   deleteConcreteDetail,
   createConcreteDetail,
   updateCommentaryItem,
@@ -132,17 +132,8 @@ function CdRow({
         <span className="mt-2 text-xs font-semibold text-red-700 uppercase">
           CD
         </span>
-        <div className="flex-1">
-          <AutoSaveInput
-            multiline
-            rows={2}
-            initialValue={cd.text}
-            placeholder="Write a concrete detail from the text or your knowledge…"
-            disabled={isReadOnly}
-            onSave={async (text) => {
-              await updateConcreteDetail(writingId, cd.id, text);
-            }}
-          />
+        <div className="flex-1 min-w-0">
+          <CdEditor writingId={writingId} cd={cd} disabled={isReadOnly} />
         </div>
         {!isReadOnly && canDelete && (
           <DeleteCdButton writingId={writingId} cdId={cd.id} />

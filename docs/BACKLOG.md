@@ -62,11 +62,6 @@ Storage upload errors currently log to console only; users see no feedback when 
 - **Identified:** pre-Phase 4
 - **Priority:** before production cutover (Phase 7)
 
-### Mirror TLCD quotation UI into `cd-cm-t-chart.tsx` (argumentation + literary)
-Chunk 4.5f-1 wired the "Mark as quotation" toggle + Lead-in / Citation fields + embedded-quotation preview into the **Expository** T-Chart (`expository-chunk-grid.tsx` → shared `CdEditor`). Argumentation and literary render their T-Charts through the deliberately-frozen `cd-cm-t-chart.tsx` + `chunk-editor.tsx` (untouched since 4.5d-2), so they still store CDs as plain text. Embedding quotations is canonical for all three modes (schema comment `0001:425`, CLAUDE.md §4, guide pp.77–78). Port the `CdEditor` affordance (extract it to a shared component) into the argumentation/literary CD cells. The `transitional_lead_in` / `source_citation` columns and the `setConcreteDetailQuotation` action already exist — UI-only lift.
-- **Identified:** chunk 4.5f-1 (split out of the original "TLCD support on CDs" item)
-- **Priority:** before production cutover (Phase 7) — pedagogically canonical
-
 ### Remove `as unknown as <Shape>` TS narrowing hacks (chunk P7-2)
 The P7-1 audit revealed the actual count is **34 casts across 23 files**, not 2 across 2 as originally noted. Most narrow Supabase nested-embed results (`assignment:assignment_id ( ... )`) — the same root cause: the hand-written `Database` types don't carry the relationship metadata Supabase needs to infer embed shapes. Two outliers in `lib/actions/assignments.ts` cast a typed rubric to `Json` for a JSONB column (different problem; would not be fixed by regen).
 
@@ -144,6 +139,10 @@ _(none currently)_
 ---
 
 ## Closed
+
+### Mirror TLCD quotation UI into argumentation + literary T-Charts
+Extracted the Expository `CdEditor` (Mark-as-quotation toggle + Lead-in/Citation fields + embedded-quotation preview) into a shared `components/student/writing/t-chart/cd-editor.tsx` and wired it into `chunk-editor.tsx`'s `CdRow`, so argumentation and literary CDs now get the same Embedding-Quotations affordance instead of plain text. UI-only — the `is_quotation` / `transitional_lead_in` / `source_citation` columns, the mode-agnostic `setConcreteDetailQuotation` action, and the typed query fields were all already in place. `expository-chunk-grid.tsx` now imports the shared component (no visual change; −141 net lines from the dedup). Read-only teacher-review path keeps the preview and disables the controls. New `__tests__/components/cd-editor.test.tsx` (5 tests: reveal, persist, preview compose, non-destructive toggle-off, read-only). Scope: `docs/scope/mirror-tlcd-ui.md`. Follow-up (not blocking): browser-verify the read-only teacher-review render on a returned argumentation/literary writing.
+- **Closed:** mirror-tlcd-ui chunk (2026-07-02)
 
 ### Phrase-to-word linking on `commentary_items`
 Implemented by the Literary WOW-fidelity chunk (migration `0032`): `commentary_items.parent_cm_id UUID REFERENCES commentary_items(id) ON DELETE CASCADE` links each elaboration phrase to the best CM word it elaborates, and `synonym TEXT` stores WOW box #2. The Elaboration step now webs per best word (synonym + 2+ phrases), the Continue gate requires 2+ phrases per best word, and Shaping pick-n-stitch groups phrases under their word. Plan: `docs/superpowers/plans/2026-06-22-literary-wow-fidelity.md`.
