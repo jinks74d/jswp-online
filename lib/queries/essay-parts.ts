@@ -39,8 +39,7 @@ export async function getEssayParts(
     .maybeSingle();
 
   if (error) {
-    console.error("getEssayParts:", error);
-    return null;
+    throw new Error(`getEssayParts: ${error.message}`);
   }
   return data;
 }

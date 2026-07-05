@@ -92,8 +92,7 @@ export async function listAssignmentWritings(
     .order("updated_at", { ascending: false });
 
   if (error) {
-    console.error("listAssignmentWritings:", error);
-    return [];
+    throw new Error(`listAssignmentWritings: ${error.message}`);
   }
 
   // Supabase types don't infer the embed shape; narrow once.
@@ -149,8 +148,7 @@ export async function getWritingForTeacherReview(
     .maybeSingle();
 
   if (error) {
-    console.error("getWritingForTeacherReview:", error);
-    return null;
+    throw new Error(`getWritingForTeacherReview: ${error.message}`);
   }
   if (!data) return null;
 
@@ -199,8 +197,7 @@ export async function countAssignmentWritingsByStatus(
     graded: 0,
   };
   if (error) {
-    console.error("countAssignmentWritingsByStatus:", error);
-    return counts;
+    throw new Error(`countAssignmentWritingsByStatus: ${error.message}`);
   }
   for (const row of data ?? []) {
     counts[row.status] = (counts[row.status] ?? 0) + 1;

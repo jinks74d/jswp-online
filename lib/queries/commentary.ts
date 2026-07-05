@@ -98,8 +98,7 @@ export async function getCommentaryByWriting(
     .order("position", { ascending: true });
 
   if (error) {
-    console.error("getCommentaryByWriting:", error);
-    return [];
+    throw new Error(`getCommentaryByWriting: ${error.message}`);
   }
 
   const rows = (data ?? []) as unknown as RawBpRow[];

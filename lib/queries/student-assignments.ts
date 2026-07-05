@@ -136,12 +136,14 @@ export async function getStudentAssignmentsList(
   ]);
 
   if (assignmentsRes.error) {
-    console.error("getStudentAssignmentsList assignments:", assignmentsRes.error);
-    return [];
+    throw new Error(
+      `getStudentAssignmentsList assignments: ${assignmentsRes.error.message}`
+    );
   }
   if (writingsRes.error) {
-    console.error("getStudentAssignmentsList writings:", writingsRes.error);
-    return [];
+    throw new Error(
+      `getStudentAssignmentsList writings: ${writingsRes.error.message}`
+    );
   }
 
   const writingByAssignment = indexWritingsByAssignment(
@@ -189,8 +191,7 @@ export async function getStudentAssignmentDetail(
     .maybeSingle();
 
   if (error) {
-    console.error("getStudentAssignmentDetail assignment:", error);
-    return null;
+    throw new Error(`getStudentAssignmentDetail assignment: ${error.message}`);
   }
   if (!assignment) return null;
 
@@ -205,8 +206,9 @@ export async function getStudentAssignmentDetail(
     .limit(1);
 
   if (writingsError) {
-    console.error("getStudentAssignmentDetail writing:", writingsError);
-    return null;
+    throw new Error(
+      `getStudentAssignmentDetail writing: ${writingsError.message}`
+    );
   }
 
   const w = (writings?.[0] ?? null) as RawWriting | null;

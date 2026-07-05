@@ -23,8 +23,7 @@ export async function getPromptDecoding(
     .maybeSingle();
 
   if (error) {
-    console.error("getPromptDecoding:", error);
-    return null;
+    throw new Error(`getPromptDecoding: ${error.message}`);
   }
   return data;
 }

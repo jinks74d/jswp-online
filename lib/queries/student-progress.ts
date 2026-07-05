@@ -162,16 +162,17 @@ export async function getStudentProgress(
   ]);
 
   if (assignmentsRes.error) {
-    console.error("getStudentProgress assignments:", assignmentsRes.error);
-    return { state: "not_in_scope" };
+    throw new Error(
+      `getStudentProgress assignments: ${assignmentsRes.error.message}`
+    );
   }
   if (writingsRes.error) {
-    console.error("getStudentProgress writings:", writingsRes.error);
-    return { state: "not_in_scope" };
+    throw new Error(`getStudentProgress writings: ${writingsRes.error.message}`);
   }
   if (rubricScoresRes.error) {
-    console.error("getStudentProgress rubric_scores:", rubricScoresRes.error);
-    return { state: "not_in_scope" };
+    throw new Error(
+      `getStudentProgress rubric_scores: ${rubricScoresRes.error.message}`
+    );
   }
 
   type AssignmentRow = {

@@ -24,9 +24,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function classifyDistricts(rows: DistrictRow[]): Promise<RowMatch[]> {
   const supabase = await createServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("districts")
     .select("id, name, subdomain");
+  if (error) {
+    throw new Error(
+      `Failed to load existing districts for import matching: ${error.message}`
+    );
+  }
 
   const bySubdomain = new Map<string, string>();
   const byName = new Map<string, string>();

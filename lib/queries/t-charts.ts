@@ -145,8 +145,7 @@ export async function getTChartData(
     .order("position", { ascending: true });
 
   if (error) {
-    console.error("getTChartData:", error);
-    return [];
+    throw new Error(`getTChartData: ${error.message}`);
   }
 
   const rows = (data ?? []) as unknown as RawRow[];

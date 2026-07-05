@@ -28,10 +28,15 @@ async function classifySchools(
   if (!districtId) return rows.map(() => ({ status: "new" as const }));
 
   const supabase = await createServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("schools")
     .select("id, name")
     .eq("district_id", districtId);
+  if (error) {
+    throw new Error(
+      `Failed to load existing schools for import matching: ${error.message}`
+    );
+  }
 
   const byName = new Map<string, string>();
   for (const s of data ?? []) byName.set(s.name.trim().toLowerCase(), s.id);

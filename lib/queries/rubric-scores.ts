@@ -37,8 +37,7 @@ export async function getRubricScoresForWriting(
     .order("criterion_name", { ascending: true });
 
   if (error) {
-    console.error("getRubricScoresForWriting:", error);
-    return [];
+    throw new Error(`getRubricScoresForWriting: ${error.message}`);
   }
   return (data ?? []) as RubricScoreRow[];
 }

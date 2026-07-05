@@ -32,10 +32,15 @@ async function classifyPeriods(
   if (!classId) return rows.map(() => ({ status: "new" as const }));
 
   const supabase = await createServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("class_periods")
     .select("id, period_label, academic_year")
     .eq("class_id", classId);
+  if (error) {
+    throw new Error(
+      `Failed to load existing class periods for import matching: ${error.message}`
+    );
+  }
 
   const byKey = new Map<string, string>();
   for (const p of data ?? [])

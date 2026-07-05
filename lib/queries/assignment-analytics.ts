@@ -112,8 +112,7 @@ export async function getAssignmentAnalytics(
     .maybeSingle();
 
   if (aErr) {
-    console.error("getAssignmentAnalytics assignment:", aErr);
-    return { state: "not_found" };
+    throw new Error(`getAssignmentAnalytics assignment: ${aErr.message}`);
   }
   if (!assignment) return { state: "not_found" };
 
@@ -163,16 +162,17 @@ export async function getAssignmentAnalytics(
   ]);
 
   if (enrollmentsRes.error) {
-    console.error("getAssignmentAnalytics enrollments:", enrollmentsRes.error);
-    return { state: "not_found" };
+    throw new Error(
+      `getAssignmentAnalytics enrollments: ${enrollmentsRes.error.message}`
+    );
   }
   if (writingsRes.error) {
-    console.error("getAssignmentAnalytics writings:", writingsRes.error);
-    return { state: "not_found" };
+    throw new Error(`getAssignmentAnalytics writings: ${writingsRes.error.message}`);
   }
   if (rubricScoresRes.error) {
-    console.error("getAssignmentAnalytics rubric_scores:", rubricScoresRes.error);
-    return { state: "not_found" };
+    throw new Error(
+      `getAssignmentAnalytics rubric_scores: ${rubricScoresRes.error.message}`
+    );
   }
 
   type EnrollmentRow = {

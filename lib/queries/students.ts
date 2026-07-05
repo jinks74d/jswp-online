@@ -92,8 +92,7 @@ export async function getStudentsForTeacher(
     .eq("teacher_id", teacherId);
 
   if (aErr) {
-    console.error("getStudentsForTeacher (assignments):", aErr);
-    return [];
+    throw new Error(`getStudentsForTeacher (assignments): ${aErr.message}`);
   }
   if (!assignments || assignments.length === 0) return [];
 
@@ -123,8 +122,7 @@ export async function getStudentsForTeacher(
     .is("unenrolled_at", null);
 
   if (eErr) {
-    console.error("getStudentsForTeacher (enrollments):", eErr);
-    return [];
+    throw new Error(`getStudentsForTeacher (enrollments): ${eErr.message}`);
   }
 
   const rows = (data ?? []) as unknown as EnrollmentForListRow[];
@@ -205,8 +203,7 @@ export async function getStudentDetail(
     .is("unenrolled_at", null);
 
   if (enrErr) {
-    console.error("getStudentDetail (enrollments):", enrErr);
-    return null;
+    throw new Error(`getStudentDetail (enrollments): ${enrErr.message}`);
   }
 
   const enrollmentRows =
@@ -223,10 +220,10 @@ export async function getStudentDetail(
     .eq("id", studentId)
     .maybeSingle();
 
-  if (sErr || !studentData) {
-    console.error("getStudentDetail (profile):", sErr);
-    return null;
+  if (sErr) {
+    throw new Error(`getStudentDetail (profile): ${sErr.message}`);
   }
+  if (!studentData) return null;
 
   const enrollments: StudentEnrollmentDetail[] = enrollmentRows
     .map((r) => r.class_period)

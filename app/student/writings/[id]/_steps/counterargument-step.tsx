@@ -62,8 +62,7 @@ async function getCounterargumentData(
     .order("position", { ascending: true });
 
   if (error) {
-    console.error("getCounterargumentData:", error);
-    return [];
+    throw new Error(`getCounterargumentData: ${error.message}`);
   }
 
   return ((data ?? []) as unknown as RawBp[]).map((bp) => ({

@@ -68,8 +68,7 @@ export async function getWriting(
     .maybeSingle();
 
   if (error) {
-    console.error("getWriting:", error);
-    return null;
+    throw new Error(`getWriting: ${error.message}`);
   }
   if (!data) return null;
 
@@ -96,8 +95,7 @@ export async function getCompletedStepKeys(
     .not("completed_at", "is", null);
 
   if (error) {
-    console.error("getCompletedStepKeys:", error);
-    return new Set();
+    throw new Error(`getCompletedStepKeys: ${error.message}`);
   }
 
   return new Set((data ?? []).map((r) => r.step_key));
@@ -131,8 +129,7 @@ export async function getOrCreateWriting(
     .maybeSingle();
 
   if (aErr) {
-    console.error("getOrCreateWriting assignment lookup:", aErr);
-    return null;
+    throw new Error(`getOrCreateWriting assignment lookup: ${aErr.message}`);
   }
   if (!assignment) return null;
 
@@ -147,8 +144,7 @@ export async function getOrCreateWriting(
     .maybeSingle();
 
   if (eErr) {
-    console.error("getOrCreateWriting existing lookup:", eErr);
-    return null;
+    throw new Error(`getOrCreateWriting existing lookup: ${eErr.message}`);
   }
 
   if (existing) {
@@ -183,15 +179,14 @@ export async function getOrCreateWriting(
         .limit(1)
         .maybeSingle();
 
-      if (rErr || !raceExisting) {
-        console.error("getOrCreateWriting race re-fetch:", rErr);
-        return null;
+      if (rErr) {
+        throw new Error(`getOrCreateWriting race re-fetch: ${rErr.message}`);
       }
+      if (!raceExisting) return null;
       return { writing: raceExisting, assignment, created: false };
     }
 
-    console.error("getOrCreateWriting insert:", iErr);
-    return null;
+    throw new Error(`getOrCreateWriting insert: ${iErr.message}`);
   }
 
   return { writing: inserted, assignment, created: true };

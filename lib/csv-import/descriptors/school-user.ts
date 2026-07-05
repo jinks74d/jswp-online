@@ -31,10 +31,15 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 async function classifyByEmail(rows: SchoolUserRow[]): Promise<RowMatch[]> {
   const supabase = await createServerClient();
   const emails = rows.map((r) => r.email);
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_profiles")
     .select("id, email")
     .in("email", emails.length ? emails : ["__none__"]);
+  if (error) {
+    throw new Error(
+      `Failed to load existing accounts for import matching: ${error.message}`
+    );
+  }
 
   const byEmail = new Map<string, string>();
   for (const u of data ?? []) if (u.email) byEmail.set(u.email.toLowerCase(), u.id);

@@ -27,8 +27,7 @@ export async function getAnnotations(
     .order("range_start", { ascending: true });
 
   if (error) {
-    console.error("getAnnotations:", error);
-    return [];
+    throw new Error(`getAnnotations: ${error.message}`);
   }
   return data ?? [];
 }

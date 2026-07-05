@@ -108,8 +108,7 @@ export async function getTeacherAssignments(
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("getTeacherAssignments:", error);
-    return [];
+    throw new Error(`getTeacherAssignments: ${error.message}`);
   }
 
   const rows = (data ?? []) as unknown as AssignmentListRow[];
@@ -149,8 +148,7 @@ export async function getAssignmentForTeacher(
     .maybeSingle();
 
   if (error) {
-    console.error("getAssignmentForTeacher:", error);
-    return null;
+    throw new Error(`getAssignmentForTeacher: ${error.message}`);
   }
   if (!data) return null;
 
@@ -204,8 +202,7 @@ export async function getTeacherClassPeriodsForPicker(
     .eq("teacher_id", teacherId);
 
   if (error) {
-    console.error("getTeacherClassPeriodsForPicker:", error);
-    return [];
+    throw new Error(`getTeacherClassPeriodsForPicker: ${error.message}`);
   }
 
   type Row = {

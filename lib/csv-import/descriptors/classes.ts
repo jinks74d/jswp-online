@@ -23,10 +23,15 @@ async function classifyClasses(
   if (!subjectId) return rows.map(() => ({ status: "new" as const }));
 
   const supabase = await createServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("classes")
     .select("id, name")
     .eq("subject_id", subjectId);
+  if (error) {
+    throw new Error(
+      `Failed to load existing classes for import matching: ${error.message}`
+    );
+  }
 
   const byName = new Map<string, string>();
   for (const c of data ?? []) byName.set(c.name.trim().toLowerCase(), c.id);

@@ -59,8 +59,7 @@ export async function getGatheringSheetsAndCandidates(
     .order("body_paragraph_position", { ascending: true });
 
   if (error) {
-    console.error("getGatheringSheetsAndCandidates:", error);
-    return [];
+    throw new Error(`getGatheringSheetsAndCandidates: ${error.message}`);
   }
 
   const rows = (data ?? []) as unknown as RawSheetRow[];

@@ -45,8 +45,7 @@ export async function countTeacherFeedback(writingId: string): Promise<number> {
     .eq("student_writing_id", writingId)
     .eq("is_resolved", false);
   if (error) {
-    console.error("countTeacherFeedback:", error);
-    return 0;
+    throw new Error(`countTeacherFeedback: ${error.message}`);
   }
   return count ?? 0;
 }
@@ -76,8 +75,7 @@ export async function listFeedback(
     .eq("student_writing_id", writingId)
     .order("created_at", { ascending: false });
   if (error) {
-    console.error("listFeedback:", error);
-    return [];
+    throw new Error(`listFeedback: ${error.message}`);
   }
   return (data ?? []) as unknown as FeedbackItemRow[];
 }
@@ -99,8 +97,7 @@ export async function countTeacherFeedbackByWriting(
     .in("student_writing_id", writingIds)
     .eq("is_resolved", false);
   if (error) {
-    console.error("countTeacherFeedbackByWriting:", error);
-    return new Map();
+    throw new Error(`countTeacherFeedbackByWriting: ${error.message}`);
   }
   const counts = new Map<string, number>();
   for (const row of data ?? []) {

@@ -135,8 +135,7 @@ export async function getParagraphFormData(
     .order("position", { ascending: true });
 
   if (error) {
-    console.error("getParagraphFormData:", error);
-    return [];
+    throw new Error(`getParagraphFormData: ${error.message}`);
   }
 
   const rows = (data ?? []) as unknown as RawBp[];

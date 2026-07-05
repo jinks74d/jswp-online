@@ -28,10 +28,15 @@ async function classifySubjects(
   if (!schoolId) return rows.map(() => ({ status: "new" as const }));
 
   const supabase = await createServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("subjects")
     .select("id, name")
     .eq("school_id", schoolId);
+  if (error) {
+    throw new Error(
+      `Failed to load existing subjects for import matching: ${error.message}`
+    );
+  }
 
   const byName = new Map<string, string>();
   for (const s of data ?? []) byName.set(s.name.trim().toLowerCase(), s.id);

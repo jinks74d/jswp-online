@@ -172,8 +172,7 @@ export async function getShapingData(
     .order("position", { ascending: true });
 
   if (error) {
-    console.error("getShapingData:", error);
-    return [];
+    throw new Error(`getShapingData: ${error.message}`);
   }
 
   const rows = (data ?? []) as unknown as RawBp[];

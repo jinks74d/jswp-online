@@ -107,8 +107,7 @@ export async function getTeacherClassPeriods(
     .eq("teacher_id", teacherId);
 
   if (error) {
-    console.error("getTeacherClassPeriods:", error);
-    return [];
+    throw new Error(`getTeacherClassPeriods: ${error.message}`);
   }
 
   const rows = (data ?? []) as unknown as AssignmentRow[];

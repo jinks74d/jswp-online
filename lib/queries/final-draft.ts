@@ -96,8 +96,10 @@ export async function getFinalDraftData(
     .eq("id", writingId)
     .maybeSingle();
 
-  if (wErr || !writingRow) {
-    console.error("getFinalDraftData writing:", wErr);
+  if (wErr) {
+    throw new Error(`getFinalDraftData writing: ${wErr.message}`);
+  }
+  if (!writingRow) {
     return {
       final_draft: null,
       assembly: { introduction_text: "", paragraphs: [], conclusion_text: "" },
@@ -130,7 +132,7 @@ export async function getFinalDraftData(
     .eq("student_writing_id", writingId)
     .order("position", { ascending: true });
   if (bpErr) {
-    console.error("getFinalDraftData BPs:", bpErr);
+    throw new Error(`getFinalDraftData BPs: ${bpErr.message}`);
   }
 
   const paragraphs: AssemblyParagraph[] = ((bps ?? []) as unknown as RawBp[]).map(
