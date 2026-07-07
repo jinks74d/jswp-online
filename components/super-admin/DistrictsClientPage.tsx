@@ -183,7 +183,7 @@ export default function DistrictsClientPage({ initialDistricts }: DistrictsClien
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/super-admin/districts/edit/${district.id}`}
+                          href={`/super-admin/districts/${district.id}/edit`}
                           className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
                         >
                           <Edit className="w-4 h-4" />
@@ -212,7 +212,7 @@ export default function DistrictsClientPage({ initialDistricts }: DistrictsClien
                                   View Details
                                 </Link>
                                 <Link
-                                  href={`/super-admin/districts/edit/${district.id}`}
+                                  href={`/super-admin/districts/${district.id}/edit`}
                                   className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                   onClick={() => setShowDropdown(null)}
                                 >

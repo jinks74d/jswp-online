@@ -58,7 +58,10 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
       )
     `)
     .eq("id", resolvedParams.id)
-    .eq("school_id", profile.school_id)
+    // Authorization is enforced by RLS (school admins -> their school,
+    // district admins -> their district, super admins -> all). Filtering by
+    // profile.school_id here would wrongly exclude district/super admins,
+    // whose school_id is null.
     .single();
 
   if (classPeriodError || !classPeriod) {

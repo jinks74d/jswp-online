@@ -59,8 +59,9 @@ export default function ClassesPage() {
           data?.map((assignment: any) => assignment.class_period) || [];
         classPeriodsError = error;
       } else {
-        // For admins, show all classes in the school
-        const { data, error } = await supabase
+        // For admins, scope by role: school admins see their school, district
+        // admins see every school in their district, super admins see all.
+        let query = supabase
           .from("class_periods")
           .select(
             `
@@ -75,11 +76,39 @@ export default function ClassesPage() {
               )
             `
           )
-          .eq("school_id", profile.school_id)
           .order("period");
 
-        classPeriodsData = data;
-        classPeriodsError = error;
+        if (profile.role === "district_admin" && profile.district_id) {
+          // class_periods has no district_id, so resolve the district's schools first.
+          const { data: districtSchools, error: schoolsError } = await supabase
+            .from("schools")
+            .select("id")
+            .eq("district_id", profile.district_id);
+
+          if (schoolsError) {
+            classPeriodsError = schoolsError;
+          } else {
+            const schoolIds = (districtSchools || []).map((s: any) => s.id);
+            if (schoolIds.length === 0) {
+              setClassPeriods([]);
+              setDataLoading(false);
+              return;
+            }
+            const { data, error } = await query.in("school_id", schoolIds);
+            classPeriodsData = data;
+            classPeriodsError = error;
+          }
+        } else if (profile.role === "super_admin") {
+          // Super admins see all class periods (no school/district filter).
+          const { data, error } = await query;
+          classPeriodsData = data;
+          classPeriodsError = error;
+        } else {
+          // School admins (and any other single-school admin role).
+          const { data, error } = await query.eq("school_id", profile.school_id);
+          classPeriodsData = data;
+          classPeriodsError = error;
+        }
       }
 
       if (classPeriodsError) {

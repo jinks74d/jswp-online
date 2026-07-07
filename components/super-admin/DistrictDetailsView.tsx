@@ -137,7 +137,7 @@ export default function DistrictDetailsView({
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href={`/super-admin/districts/edit/${district.id}`}
+            href={`/super-admin/districts/${district.id}/edit`}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Edit className="w-4 h-4" />
