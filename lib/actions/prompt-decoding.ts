@@ -38,9 +38,12 @@ export interface PromptDecodingFields {
 
 const VALID_FORMS = new Set(["short_answer", "paragraph", "essay"]);
 const VALID_RATIOS = new Set<ChunkRatio>([
-  "two_plus_to_one",
-  "one_to_two_plus",
-  "three_plus_to_zero",
+  "lit_one_to_two_plus",
+  "lit_three_plus_to_zero",
+  "nar_two_plus_to_one",
+  "nonlit_summary_three_plus_to_zero",
+  "nonlit_expository_two_plus_to_one",
+  "nonlit_argumentation_two_plus_to_one",
 ]);
 
 function sanitize(fields: PromptDecodingFields): PromptDecodingFields {

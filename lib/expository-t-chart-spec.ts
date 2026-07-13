@@ -11,7 +11,7 @@
  * dropped the gather_cds step at 3+:0.
  */
 
-import type { ChunkRatio } from "@/lib/jswp-modes";
+import { isSummaryRatio, type ChunkRatio } from "@/lib/jswp-modes";
 
 export type TChartRegion = "ts" | "revised_ts" | "cds" | "cms" | "cs";
 
@@ -53,12 +53,12 @@ const STANDARD_SPEC: ExpositoryTChartSpec = {
 
 /**
  * Resolve the T-Chart layout spec for an Expository writing's ratio.
- * Expository assignments are only ever 2+:1 or 3+:0; one_to_two_plus
- * (literary) never reaches this component, but is treated as the
+ * Expository assignments are only ever 2+:1 or 3+:0; the 1:2+ (literary)
+ * proportion never reaches this component, but is treated as the
  * standard 2+:1 layout defensively rather than throwing.
  */
 export function getExpositoryTChartSpec(
   ratio: ChunkRatio
 ): ExpositoryTChartSpec {
-  return ratio === "three_plus_to_zero" ? SUMMARY_SPEC : STANDARD_SPEC;
+  return isSummaryRatio(ratio) ? SUMMARY_SPEC : STANDARD_SPEC;
 }

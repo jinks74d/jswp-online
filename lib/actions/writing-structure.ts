@@ -41,6 +41,7 @@
 import "server-only";
 import { requireRole, requireUser } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
+import { isSummaryRatio } from "@/lib/jswp-modes";
 import type { Database } from "@/lib/database.types";
 
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -85,11 +86,7 @@ export function buildStarterCmRows(
 }> {
   const isLiterary = mode === "literary";
   const wordSlots = isLiterary ? 5 : 0;
-  const sentenceSlots = isLiterary
-    ? 2
-    : ratio === "three_plus_to_zero"
-      ? 0
-      : 1;
+  const sentenceSlots = isLiterary ? 2 : isSummaryRatio(ratio) ? 0 : 1;
 
   const rows: ReturnType<typeof buildStarterCmRows> = [];
 

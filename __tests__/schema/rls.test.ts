@@ -143,7 +143,7 @@ beforeAll(async () => {
       mode: "expository",
       is_essay: false,
       num_body_paragraphs: 1,
-      default_chunk_ratio: "two_plus_to_one",
+      default_chunk_ratio: "nonlit_expository_two_plus_to_one",
       default_chunks_per_bp: 1,
       released_at: "2099-01-01T00:00:00Z",
     })
@@ -164,7 +164,7 @@ beforeAll(async () => {
       mode: "expository",
       is_essay: false,
       num_body_paragraphs: 1,
-      default_chunk_ratio: "two_plus_to_one",
+      default_chunk_ratio: "nonlit_expository_two_plus_to_one",
       default_chunks_per_bp: 1,
       released_at: null,
     })
@@ -187,7 +187,7 @@ beforeAll(async () => {
       mode: "expository",
       is_essay: false,
       num_body_paragraphs: 1,
-      default_chunk_ratio: "two_plus_to_one",
+      default_chunk_ratio: "nonlit_expository_two_plus_to_one",
       default_chunks_per_bp: 1,
       released_at: null,
     })
@@ -219,7 +219,7 @@ beforeAll(async () => {
           student_id: IDS.alex,
           draft_number: 1,
           status: "in_progress",
-          chunk_ratio: "two_plus_to_one",
+          chunk_ratio: "nonlit_expository_two_plus_to_one",
         },
         {
           id: TEST.baileyWriting,
@@ -227,7 +227,7 @@ beforeAll(async () => {
           student_id: IDS.bailey,
           draft_number: 1,
           status: "in_progress",
-          chunk_ratio: "two_plus_to_one",
+          chunk_ratio: "nonlit_expository_two_plus_to_one",
         },
       ],
       { onConflict: "assignment_id,student_id,draft_number" }

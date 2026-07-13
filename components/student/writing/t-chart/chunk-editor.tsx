@@ -25,13 +25,17 @@ import type {
   ConcreteDetailData,
 } from "@/lib/queries/t-charts";
 import type { Database } from "@/lib/database.types";
+import { ratioClass } from "@/lib/jswp-modes";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 
 const RATIO_LABELS: Record<ChunkData["ratio"], string> = {
-  two_plus_to_one: "2+ : 1",
-  one_to_two_plus: "1 : 2+",
-  three_plus_to_zero: "3+ : 0",
+  lit_one_to_two_plus: "1 : 2+",
+  lit_three_plus_to_zero: "3+ : 0",
+  nar_two_plus_to_one: "2+ : 1",
+  nonlit_summary_three_plus_to_zero: "3+ : 0",
+  nonlit_expository_two_plus_to_one: "2+ : 1",
+  nonlit_argumentation_two_plus_to_one: "2+ : 1",
 };
 
 export function ChunkEditor({
@@ -124,7 +128,7 @@ function CdRow({
   );
   // 3+:0 (summary) has no commentary — the ratio is concrete details
   // only. Hide the CM rows + "Add CM" affordance entirely.
-  const isSummaryRatio = chunk.ratio === "three_plus_to_zero";
+  const isSummaryRatio = ratioClass(chunk.ratio) === "three_plus_to_zero";
 
   return (
     <div className="border-l-4 border-red-300 pl-3 space-y-2">

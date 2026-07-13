@@ -31,15 +31,19 @@ import type { Database } from "@/lib/database.types";
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
 
 const RATIO_LABELS: Record<ChunkRatio, string> = {
-  two_plus_to_one: "2+:1 (CD : CM)",
-  one_to_two_plus: "1:2+ (CD : CM)",
-  three_plus_to_zero: "3+:0 (summary)",
+  lit_one_to_two_plus: "•	Literary, style, and rhetorical analysis (1:2+)",
+  lit_three_plus_to_zero: "•	Literary plot summary (3+:0)",
+  nar_two_plus_to_one: "•	Personal and fictional narrative (2+:1)",
+  nonlit_summary_three_plus_to_zero: "•	Nonliterary summary (3+:0)",
+  nonlit_expository_two_plus_to_one: "•	Nonliterary expository (2+:1)",
+  nonlit_argumentation_two_plus_to_one: "•	Nonliterary argumentation (2+:1)",
 };
 
 const FORM_LABELS: Record<string, string> = {
-  short_answer: "Short Answer",
-  paragraph: "Paragraph",
-  essay: "Essay",
+  short_answer: "•	Short answer/response",
+  paragraph: "•	Single paragraph (body, intro, or conclusion)",
+  essay: "•	Multi-paragraph essay",
+  research: "•	Research project",
 };
 
 interface InitialFields {
@@ -61,8 +65,8 @@ interface FormState {
   task: string;
   form: string;
   ratio_identified: string;
-  key_verbs: string;       // raw comma-separated input
-  focus_terms: string;     // raw comma-separated input
+  key_verbs: string; // raw comma-separated input
+  focus_terms: string; // raw comma-separated input
   notes: string;
 }
 
@@ -87,8 +91,7 @@ function stateToFields(s: FormState): PromptDecodingFields {
     cd_source: s.cd_source || null,
     task: s.task || null,
     form: s.form || null,
-    ratio_identified:
-      (s.ratio_identified as ChunkRatio) || null,
+    ratio_identified: (s.ratio_identified as ChunkRatio) || null,
     key_verbs: s.key_verbs
       .split(",")
       .map((v) => v.trim())
@@ -117,14 +120,18 @@ export function DecodePromptStep({
   const { isReadOnly } = useWritingMode();
   const [form, setForm] = useState<FormState>(initialToState(initial));
   const [savedFlash, setSavedFlash] = useState<"idle" | "saving" | "saved">(
-    "idle"
+    "idle",
   );
   const [isContinuing, startContinue] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const update =
     <K extends keyof FormState>(key: K) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >,
+    ) => {
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
     };
 
@@ -186,32 +193,22 @@ export function DecodePromptStep({
             Break the prompt into its parts
           </h3>
           <p className="mt-0.5 text-xs text-gray-500">
-            Good prompts have three parts: the background that sets the stage,
-            the trigger that tells you where to find your evidence, and the
-            task itself.
+            <strong>EFFECTIVE PROMPTS</strong> have three distinctive parts: 1)
+            a Background Sentence or Sentences; 2) a Trigger Sentence; and 3)
+            the Task.
           </p>
         </div>
 
         {/* background */}
         <Field
           label="Background"
-          help="The sentence(s) that set the stage. What topic or situation is the prompt about?"
-        >
-          <textarea
-            rows={2}
-            value={form.background_text}
-            onChange={update("background_text")}
-            onBlur={handleBlur}
-            disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-            placeholder="The prompt sets the stage by telling me about…"
-          />
-        </Field>
+          help="The beginning sentence or sentences are designed to introduce the topic of the writing assignment and to START MY THINKING."
+        ></Field>
 
         {/* trigger */}
         <Field
           label="Trigger"
-          help="The sentence that tells you where to look. It points you toward the concrete details you'll gather."
+          help="Typically, this sentence focuses my attention on a source or sources that alert me to where I will GATHER MY CDS: a text or video, class notes, an event or experience, a concept I’m studying, a statement made by someone.  "
         >
           <textarea
             rows={2}
@@ -220,23 +217,7 @@ export function DecodePromptStep({
             onBlur={handleBlur}
             disabled={isReadOnly}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-            placeholder="The trigger tells me to look at / reflect on / read…"
-          />
-        </Field>
-
-        {/* cd_source — the trigger's payoff question */}
-        <Field
-          label="Where will you find your concrete details?"
-          help="Name your source(s): a text or video, your class notes, an experience, something you or someone else said."
-        >
-          <textarea
-            rows={2}
-            value={form.cd_source}
-            onChange={update("cd_source")}
-            onBlur={handleBlur}
-            disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-            placeholder="My concrete details will come from…"
+            placeholder="My concrete detail will come from…"
           />
         </Field>
       </div>
@@ -245,7 +226,7 @@ export function DecodePromptStep({
         {/* task */}
         <Field
           label="What is the prompt asking you to DO?"
-          help="Re-state the task in your own words. What's the verb, and what's it asking about?"
+          help="What must I DO? Look for the word, “Write.”"
           required
         >
           <textarea
@@ -255,15 +236,12 @@ export function DecodePromptStep({
             onBlur={handleBlur}
             disabled={isReadOnly}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-            placeholder="The prompt is asking me to..."
+            placeholder="Re-state the task verbatim."
           />
         </Field>
 
         {/* form */}
-        <Field
-          label="What form does the prompt expect?"
-          help="A short answer, a single paragraph, or a full essay?"
-        >
+        <Field label="What FORMAT does the prompt expect?">
           <select
             value={form.form}
             onChange={update("form")}
@@ -281,10 +259,7 @@ export function DecodePromptStep({
         </Field>
 
         {/* ratio */}
-        <Field
-          label="What CD-to-CM ratio fits this prompt?"
-          help="Most expository / argumentation / narrative prompts are 2+:1. Literary analysis is 1:2+. A summary is 3+:0."
-        >
+        <Field label="What CD-to-CM ratio fits this prompt?">
           <select
             value={form.ratio_identified}
             onChange={update("ratio_identified")}
@@ -303,8 +278,10 @@ export function DecodePromptStep({
 
         {/* key verbs */}
         <Field
-          label="Which VERBS in the prompt tell you what kind of thinking to do?"
-          help="Examples: discuss, argue, analyze, compare, describe, explain. Separate with commas."
+          label="Which VERB or VERBS in the prompt guide my thinking and imply what CD I am to find and/or CM I am to reveal to my reader?"
+          help="Verbs that suggest CD: identify, list, define, categorize Verbs that suggest CM: discuss, analyze, interpret, argue
+Verb that suggests both CD and CM: explain
+"
         >
           <input
             type="text"
@@ -319,8 +296,8 @@ export function DecodePromptStep({
 
         {/* focus terms */}
         <Field
-          label="What KEY TERMS does the prompt focus on?"
-          help="The nouns or concepts the prompt is really about. Separate with commas."
+          label="WHO or WHAT am I writing about?"
+          help="What is the topic of this paragraph or topic for this essay? Look for nouns or key concepts."
         >
           <input
             type="text"
@@ -329,7 +306,7 @@ export function DecodePromptStep({
             onBlur={handleBlur}
             disabled={isReadOnly}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-            placeholder="industrial revolution, child labor"
+            placeholder="steamboat, theme, photosynthesis"
           />
         </Field>
 
@@ -388,7 +365,7 @@ function Field({
   label: string;
   help?: string;
   required?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) {
   return (
     <label className="block">

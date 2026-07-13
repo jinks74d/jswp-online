@@ -15,7 +15,7 @@
  * Tooltip text in the client names the offending BP via `reason`.
  */
 
-import type { JswpMode } from "@/lib/jswp-modes";
+import { isSummaryRatio, type JswpMode } from "@/lib/jswp-modes";
 import type { ShapingBpData } from "@/lib/queries/shaping";
 
 export interface GateResult {
@@ -47,7 +47,7 @@ export function computeGate(
       // has no commentary, so the CM requirement is skipped per chunk.
       for (const chunk of bp.chunks) {
         const out = chunk.output;
-        const isSummaryRatio = chunk.ratio === "three_plus_to_zero";
+        const isSummary = isSummaryRatio(chunk.ratio);
         const cdCount =
           out?.cd_sentences.filter((s) => s.trim().length > 0).length ?? 0;
         const cmCount =
@@ -59,7 +59,7 @@ export function computeGate(
             reason: `chunk ${chunk.position} needs at least one CD sentence`,
           };
         }
-        if (!isSummaryRatio && cmCount === 0) {
+        if (!isSummary && cmCount === 0) {
           return {
             canContinue: false,
             blockerPosition: bp.position,

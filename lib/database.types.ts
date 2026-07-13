@@ -330,9 +330,12 @@ export interface Database {
         | "returned"
         | "graded";
       jswp_chunk_ratio:
-        | "two_plus_to_one"
-        | "one_to_two_plus"
-        | "three_plus_to_zero";
+        | "lit_one_to_two_plus"
+        | "lit_three_plus_to_zero"
+        | "nar_two_plus_to_one"
+        | "nonlit_summary_three_plus_to_zero"
+        | "nonlit_expository_two_plus_to_one"
+        | "nonlit_argumentation_two_plus_to_one";
       jswp_narrative_kind: "personal" | "fictional";
       jswp_narrative_subject: "event" | "person" | "place" | "thing";
       jswp_thesis_frame:

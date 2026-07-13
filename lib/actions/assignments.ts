@@ -32,9 +32,12 @@ const VALID_MODES = new Set<Mode>([
   "narrative",
 ]);
 const VALID_RATIOS = new Set<ChunkRatio>([
-  "two_plus_to_one",
-  "one_to_two_plus",
-  "three_plus_to_zero",
+  "lit_one_to_two_plus",
+  "lit_three_plus_to_zero",
+  "nar_two_plus_to_one",
+  "nonlit_summary_three_plus_to_zero",
+  "nonlit_expository_two_plus_to_one",
+  "nonlit_argumentation_two_plus_to_one",
 ]);
 
 export type AssignmentFormState = {
@@ -77,7 +80,7 @@ function parseCommonFields(formData: FormData) {
     ? Number(defaultChunksPerBpRaw)
     : 1;
   const chunkRatioRaw = String(
-    formData.get("default_chunk_ratio") ?? "two_plus_to_one"
+    formData.get("default_chunk_ratio") ?? "nonlit_expository_two_plus_to_one"
   );
   const hasCounterargument =
     formData.get("has_counterargument") === "on" ||
@@ -284,11 +287,12 @@ function validateCommon(
     };
   }
 
-  // Mode-specific chunk ratio enforcement (CHECK constraint at
-  // migration 0001 line 238-241 rejects literary with anything else).
+  // Mode-specific chunk ratio enforcement. Literary assignments lock to the
+  // 1:2+ literary ratio; the CHECK constraint (migration 0038) rejects a
+  // literary assignment carrying a non-literary ratio.
   let chunkRatio: ChunkRatio;
   if (mode === "literary") {
-    chunkRatio = "one_to_two_plus";
+    chunkRatio = "lit_one_to_two_plus";
   } else {
     if (!VALID_RATIOS.has(f.chunkRatioRaw as ChunkRatio)) {
       return { ok: false, state: { error: "Invalid chunk ratio." } };

@@ -8,7 +8,7 @@ import { describe, it, expect } from "vitest";
 import { getExpositoryTChartSpec } from "@/lib/expository-t-chart-spec";
 
 describe("getExpositoryTChartSpec — 2+:1", () => {
-  const spec = getExpositoryTChartSpec("two_plus_to_one");
+  const spec = getExpositoryTChartSpec("nonlit_expository_two_plus_to_one");
 
   it("uses STEP 4 in the header band", () => {
     expect(spec.stepNumber).toBe(4);
@@ -32,7 +32,7 @@ describe("getExpositoryTChartSpec — 2+:1", () => {
 });
 
 describe("getExpositoryTChartSpec — 3+:0", () => {
-  const spec = getExpositoryTChartSpec("three_plus_to_zero");
+  const spec = getExpositoryTChartSpec("nonlit_summary_three_plus_to_zero");
 
   it("uses STEP 3 in the header band (no gather_cds step at 3+:0)", () => {
     expect(spec.stepNumber).toBe(3);

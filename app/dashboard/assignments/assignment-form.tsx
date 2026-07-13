@@ -38,7 +38,42 @@ import { SourceTextFields } from "@/components/assignments/source-text-fields";
 import { RubricEditor } from "@/components/assignments/rubric-editor";
 
 type Mode = "expository" | "argumentation" | "literary" | "narrative";
-type ChunkRatio = "two_plus_to_one" | "one_to_two_plus" | "three_plus_to_zero";
+type ChunkRatio =
+  | "lit_one_to_two_plus"
+  | "lit_three_plus_to_zero"
+  | "nar_two_plus_to_one"
+  | "nonlit_summary_three_plus_to_zero"
+  | "nonlit_expository_two_plus_to_one"
+  | "nonlit_argumentation_two_plus_to_one";
+
+// Ratio choices are genre-specific: the enum encodes genre + proportion, so
+// each mode exposes only its valid ratio(s). Literary is locked (rendered as a
+// hidden input, not this list). Expository is the only mode with a real choice
+// (standard 2+:1 vs. summary 3+:0).
+const RATIO_OPTIONS: Record<Mode, { value: ChunkRatio; label: string }[]> = {
+  literary: [
+    { value: "lit_one_to_two_plus", label: "1:2+ — Literary analysis" },
+  ],
+  narrative: [
+    { value: "nar_two_plus_to_one", label: "2+:1 — Narrative" },
+  ],
+  argumentation: [
+    {
+      value: "nonlit_argumentation_two_plus_to_one",
+      label: "2+:1 — Argumentation",
+    },
+  ],
+  expository: [
+    {
+      value: "nonlit_expository_two_plus_to_one",
+      label: "2+:1 — multiple details, single commentary",
+    },
+    {
+      value: "nonlit_summary_three_plus_to_zero",
+      label: "3+:0 — Summary (no commentary)",
+    },
+  ],
+};
 
 export type ClassPeriodOption = { id: string; label: string };
 
@@ -98,7 +133,7 @@ export function AssignmentForm({
   );
   const [chunkRatio, setChunkRatio] = useState<ChunkRatio>(
     initial?.default_chunk_ratio ??
-      (isLiterary ? "one_to_two_plus" : "two_plus_to_one")
+      (isLiterary ? "lit_one_to_two_plus" : RATIO_OPTIONS[mode][0].value)
   );
   const [hasCounter, setHasCounter] = useState<boolean>(
     initial?.has_counterargument ?? false
@@ -160,7 +195,7 @@ export function AssignmentForm({
           <input
             type="hidden"
             name="default_chunk_ratio"
-            value="one_to_two_plus"
+            value="lit_one_to_two_plus"
           />
         )}
 
@@ -273,15 +308,11 @@ export function AssignmentForm({
               disabled={isPublished}
               className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 disabled:bg-stone-50"
             >
-              <option value="two_plus_to_one">
-                2+:1 — multiple details, single commentary
-              </option>
-              <option value="one_to_two_plus">
-                1:2+ — single detail, multiple commentary
-              </option>
-              <option value="three_plus_to_zero">
-                3+:0 — Summary (no commentary)
-              </option>
+              {RATIO_OPTIONS[mode].map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </Field>
         )}

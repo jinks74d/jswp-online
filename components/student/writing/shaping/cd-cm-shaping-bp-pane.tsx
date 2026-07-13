@@ -30,6 +30,7 @@ import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { PickNStitchPanel } from "./pick-n-stitch-panel";
 import { SentenceList, ROLE_COLOR_VAR } from "./sentence-list";
 import { RoleShapeLabel, type ShapeRole } from "@/components/jswp-color/role-shape";
+import { ratioClass } from "@/lib/jswp-modes";
 import { findRepeatedContentWords } from "@/lib/once-you-lose-it";
 import {
   updateShapingSheet,
@@ -329,7 +330,7 @@ function ChunkSection({
   chunk: ShapingChunkData;
 }) {
   // 3+:0 (summary) has no commentary — suppress the CM box entirely.
-  const isSummaryRatio = chunk.ratio === "three_plus_to_zero";
+  const isSummaryRatio = ratioClass(chunk.ratio) === "three_plus_to_zero";
 
   if (!chunk.output) {
     return (

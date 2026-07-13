@@ -165,7 +165,7 @@ VALUES (
   'expository',
   FALSE,
   1,
-  'two_plus_to_one',
+  'nonlit_expository_two_plus_to_one',
   1,
   NOW()
 )
@@ -193,7 +193,7 @@ VALUES (
   'argumentation',
   FALSE,
   1,
-  'two_plus_to_one',
+  'nonlit_argumentation_two_plus_to_one',
   1,
   TRUE,
   NOW()
@@ -223,7 +223,7 @@ VALUES (
   'literary',
   FALSE,
   1,
-  'one_to_two_plus',
+  'lit_one_to_two_plus',
   2,
   '[Source text would be pasted here in a real assignment]',
   'Both Sides of the Fence',
@@ -255,7 +255,7 @@ VALUES (
   'narrative',
   FALSE,
   1,
-  'two_plus_to_one',
+  'nar_two_plus_to_one',
   1,
   NOW()
 )

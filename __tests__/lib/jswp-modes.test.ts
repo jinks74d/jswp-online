@@ -31,7 +31,10 @@ function expoCtx(chunkRatio: ChunkRatio): StepResolutionContext {
 
 describe("getSteps — Expository ratio-branching", () => {
   it("drops gather_cds for a 3+:0 expository writing (5-step sequence)", () => {
-    const steps = getSteps("expository", expoCtx("three_plus_to_zero"));
+    const steps = getSteps(
+      "expository",
+      expoCtx("nonlit_summary_three_plus_to_zero")
+    );
     const keys = steps.map((s) => s.key);
 
     expect(keys).toEqual([
@@ -45,7 +48,10 @@ describe("getSteps — Expository ratio-branching", () => {
   });
 
   it("keeps gather_cds for a 2+:1 expository writing (6-step sequence)", () => {
-    const steps = getSteps("expository", expoCtx("two_plus_to_one"));
+    const steps = getSteps(
+      "expository",
+      expoCtx("nonlit_expository_two_plus_to_one")
+    );
     const keys = steps.map((s) => s.key);
 
     expect(keys).toEqual([
@@ -114,14 +120,26 @@ function bp(chunks: ShapingChunkData[]): ShapingBpData {
 describe("computeGate — Shaping-sheet ratio-awareness", () => {
   it("passes a 3+:0 chunk with CD sentences and zero CM sentences (the bug fix)", () => {
     const gate = computeGate("expository", [
-      bp([chunk("three_plus_to_zero", ["A concrete detail sentence."], [])]),
+      bp([
+        chunk(
+          "nonlit_summary_three_plus_to_zero",
+          ["A concrete detail sentence."],
+          []
+        ),
+      ]),
     ]);
     expect(gate.canContinue).toBe(true);
   });
 
   it("still fails a 2+:1 chunk with zero CM sentences (regression check)", () => {
     const gate = computeGate("expository", [
-      bp([chunk("two_plus_to_one", ["A concrete detail sentence."], [])]),
+      bp([
+        chunk(
+          "nonlit_expository_two_plus_to_one",
+          ["A concrete detail sentence."],
+          []
+        ),
+      ]),
     ]);
     expect(gate.canContinue).toBe(false);
     expect(gate.reason).toContain("CM sentence");
@@ -129,7 +147,7 @@ describe("computeGate — Shaping-sheet ratio-awareness", () => {
 
   it("still fails a 3+:0 chunk with zero CD sentences (CD requirement kept)", () => {
     const gate = computeGate("expository", [
-      bp([chunk("three_plus_to_zero", [], [])]),
+      bp([chunk("nonlit_summary_three_plus_to_zero", [], [])]),
     ]);
     expect(gate.canContinue).toBe(false);
     expect(gate.reason).toContain("CD sentence");

@@ -23,6 +23,7 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 import { CdEditor } from "./cd-editor";
 import { CmCloud } from "./cm-cloud";
 import { WORKSHEET_INK, ordinal } from "./worksheet-style";
+import { ratioClass } from "@/lib/jswp-modes";
 import {
   createConcreteDetail,
   deleteConcreteDetail,
@@ -60,7 +61,7 @@ export function ExpositoryChunkGrid({
   onRemove: () => void;
 }) {
   const { isReadOnly } = useWritingMode();
-  const isSummaryRatio = chunk.ratio === "three_plus_to_zero";
+  const isSummaryRatio = ratioClass(chunk.ratio) === "three_plus_to_zero";
   const cds = chunk.concrete_details;
 
   return (

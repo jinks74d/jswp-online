@@ -23,6 +23,39 @@ import type { Database } from "./database.types";
 export type JswpMode = Database["public"]["Enums"]["jswp_mode"];
 export type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
 
+/**
+ * The underlying CD:CM proportion of a chunk ratio, independent of genre.
+ *
+ * `jswp_chunk_ratio` encodes genre + proportion together (e.g.
+ * `nonlit_expository_two_plus_to_one`). The writing-scaffold engine only ever
+ * cares about the *proportion* — how many CD vs CM sentences a chunk needs —
+ * so it branches on this class, not on the full ratio. Genre lives on
+ * `jswp_mode`.
+ */
+export type RatioClass =
+  | "two_plus_to_one"
+  | "one_to_two_plus"
+  | "three_plus_to_zero";
+
+const RATIO_CLASS: Record<ChunkRatio, RatioClass> = {
+  lit_one_to_two_plus: "one_to_two_plus",
+  lit_three_plus_to_zero: "three_plus_to_zero",
+  nar_two_plus_to_one: "two_plus_to_one",
+  nonlit_summary_three_plus_to_zero: "three_plus_to_zero",
+  nonlit_expository_two_plus_to_one: "two_plus_to_one",
+  nonlit_argumentation_two_plus_to_one: "two_plus_to_one",
+};
+
+/** The CD:CM proportion for a ratio, ignoring its genre prefix. */
+export function ratioClass(ratio: ChunkRatio): RatioClass {
+  return RATIO_CLASS[ratio];
+}
+
+/** True for the 3+:0 (summary) proportion — CDs only, no commentary. */
+export function isSummaryRatio(ratio: ChunkRatio): boolean {
+  return RATIO_CLASS[ratio] === "three_plus_to_zero";
+}
+
 /* ─── Step configuration ─────────────────────────────────────────────── */
 
 /**
@@ -57,7 +90,7 @@ export interface StepConfig {
   readonly essayOnly?: boolean;
   readonly requiresCounterargument?: boolean;
   readonly requiresSourceText?: boolean;
-  readonly omitForRatio?: ChunkRatio;
+  readonly omitForRatio?: RatioClass;
 }
 
 export type GroupOrigin =
@@ -562,7 +595,7 @@ export const MODES: Record<JswpMode, ModeConfig> = {
   expository: {
     mode: "expository",
     displayName: "Expository / Informational",
-    defaultChunkRatio: "two_plus_to_one",
+    defaultChunkRatio: "nonlit_expository_two_plus_to_one",
     description:
       "Explains, informs, or summarizes. Across-the-curriculum: science, social studies, math, business.",
     icon: "owl",
@@ -571,7 +604,7 @@ export const MODES: Record<JswpMode, ModeConfig> = {
   argumentation: {
     mode: "argumentation",
     displayName: "Argumentation",
-    defaultChunkRatio: "two_plus_to_one",
+    defaultChunkRatio: "nonlit_argumentation_two_plus_to_one",
     description:
       "Argues for or against a position. May include concession, counterargument, and refutation.",
     icon: "scales",
@@ -580,7 +613,7 @@ export const MODES: Record<JswpMode, ModeConfig> = {
   literary: {
     mode: "literary",
     displayName: "Response to Literature",
-    defaultChunkRatio: "one_to_two_plus",
+    defaultChunkRatio: "lit_one_to_two_plus",
     description:
       "Analyzes a literary work — character, theme, figurative language, style. Ratio is 1:2+.",
     icon: "book",
@@ -589,7 +622,7 @@ export const MODES: Record<JswpMode, ModeConfig> = {
   narrative: {
     mode: "narrative",
     displayName: "Narrative",
-    defaultChunkRatio: "two_plus_to_one",
+    defaultChunkRatio: "nar_two_plus_to_one",
     description:
       "Tells a personal or fictional story. Has a clear beginning, middle, end, with a feeling or insight.",
     icon: "moon",
@@ -620,7 +653,8 @@ export function getSteps(
     if (step.essayOnly && !ctx.isEssay) return false;
     if (step.requiresCounterargument && !ctx.hasCounterargument) return false;
     if (step.requiresSourceText && !ctx.hasSourceText) return false;
-    if (step.omitForRatio && step.omitForRatio === ctx.chunkRatio) return false;
+    if (step.omitForRatio && step.omitForRatio === ratioClass(ctx.chunkRatio))
+      return false;
     return true;
   });
 }
