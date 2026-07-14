@@ -207,7 +207,7 @@ export function AssignmentForm({
             required
             maxLength={255}
             defaultValue={initial?.title ?? ""}
-            className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="e.g. Sports & Teamwork"
           />
         </Field>
@@ -224,7 +224,7 @@ export function AssignmentForm({
             rows={5}
             maxLength={5000}
             defaultValue={initial?.prompt ?? ""}
-            className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Write the question or task students will respond to."
           />
         </Field>
@@ -274,7 +274,7 @@ export function AssignmentForm({
                 value={numBP}
                 onChange={(e) => setNumBP(Number(e.target.value))}
                 disabled={isPublished}
-                className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 disabled:bg-stone-50"
+                className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900 disabled:bg-stone-50"
               />
             </Field>
             <Field
@@ -292,7 +292,7 @@ export function AssignmentForm({
                 value={chunksPerBP}
                 onChange={(e) => setChunksPerBP(Number(e.target.value))}
                 disabled={isPublished}
-                className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 disabled:bg-stone-50"
+                className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900 disabled:bg-stone-50"
               />
             </Field>
           </div>
@@ -306,7 +306,7 @@ export function AssignmentForm({
               value={chunkRatio}
               onChange={(e) => setChunkRatio(e.target.value as ChunkRatio)}
               disabled={isPublished}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900 disabled:bg-stone-50"
+              className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900 disabled:bg-stone-50"
             >
               {RATIO_OPTIONS[mode].map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -395,7 +395,7 @@ export function AssignmentForm({
             defaultValue={
               initial?.due_at ? formatForDateTimeInput(initial.due_at) : ""
             }
-            className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900"
+            className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900"
           />
         </Field>
 
@@ -404,7 +404,7 @@ export function AssignmentForm({
             id="class_period_id"
             name="class_period_id"
             defaultValue={initial?.class_period_id ?? ""}
-            className="w-full px-3 py-2 border border-stone-300 rounded-md text-gray-900"
+            className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900"
           >
             <option value="">— Not assigned to a class —</option>
             {classPeriods.map((p) => (

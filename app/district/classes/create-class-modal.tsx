@@ -14,6 +14,7 @@ import {
   createSubjectClass,
   type SubjectClassFormState,
 } from "@/lib/actions/subject-class";
+import { useDialogA11y } from "@/hooks/use-dialog-a11y";
 
 const initialState: SubjectClassFormState = {};
 
@@ -32,6 +33,7 @@ export function CreateClassModal({
     initialState
   );
   const firstFieldRef = useRef<HTMLSelectElement | HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const titleId = "create-class-title";
 
   // Close + refresh the list once the server action reports success.
@@ -42,20 +44,23 @@ export function CreateClassModal({
     }
   }, [state.success, router, onClose]);
 
-  // Escape to close + lock background scroll while open.
+  // Focus trap, Escape-to-close, initial + restored focus (WCAG 2.1.2/2.4.3).
+  useDialogA11y({
+    isOpen: true,
+    onClose,
+    panelRef,
+    initialFocusRef: firstFieldRef,
+    locked: pending,
+  });
+
+  // Lock background scroll while the dialog is open.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    firstFieldRef.current?.focus();
     return () => {
-      document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div
@@ -65,6 +70,7 @@ export function CreateClassModal({
       }}
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -211,7 +217,7 @@ export function CreateClassModal({
 }
 
 const inputClass =
-  "w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
+  "w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
 
 function Field({
   label,
@@ -235,7 +241,7 @@ function Field({
         className="mb-1.5 block text-sm font-medium text-gray-700"
       >
         {label}
-        {optional && <span className="ml-1 text-gray-400">(optional)</span>}
+        {optional && <span className="ml-1 text-gray-500">(optional)</span>}
       </label>
       {children}
       {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}

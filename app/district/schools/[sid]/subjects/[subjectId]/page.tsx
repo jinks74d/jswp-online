@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /district/schools/[sid]/subjects/[subjectId] — subject detail in the district
  * sidebar shell. Same body as the super-admin route.
@@ -9,6 +10,8 @@ import { SubjectDetailBody } from "../../../../../admin/districts/[id]/schools/[
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ sid: string; subjectId: string }>;
+
+export const metadata: Metadata = { title: "Subject" };
 
 export default async function DistrictSubjectDetailPage({
   params,

@@ -72,7 +72,7 @@ export function TeacherAssignment({
           </li>
         ))}
         {assigned.length === 0 && (
-          <li className="px-4 py-3 text-sm text-gray-400">
+          <li className="px-4 py-3 text-sm text-gray-500">
             No teachers assigned yet.
           </li>
         )}
@@ -86,7 +86,7 @@ export function TeacherAssignment({
             required
             defaultValue=""
             aria-label="Teacher to assign"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
+            className="flex-1 px-3 py-2 border border-gray-400 rounded-md text-sm text-gray-900"
           >
             <option value="" disabled>
               Choose a teacher…
@@ -111,7 +111,7 @@ export function TeacherAssignment({
           </button>
         </form>
       ) : (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-500">
           {schoolTeachers.length === 0
             ? "No teachers at this school yet — add teachers first."
             : "All school teachers are already assigned."}

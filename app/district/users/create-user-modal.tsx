@@ -13,6 +13,7 @@ import { AlertCircle, Check, Copy, KeyRound, Loader2, X } from "lucide-react";
 import { createSchoolUserFromForm } from "@/lib/actions/school-users";
 import type { ScopedUserFormState } from "@/lib/scoped-users";
 import { ADMIN_KINDS, DEFAULT_ADMIN_KIND } from "@/lib/admin-kinds";
+import { useDialogA11y } from "@/hooks/use-dialog-a11y";
 
 const initialState: ScopedUserFormState = {};
 
@@ -32,27 +33,31 @@ export function CreateUserModal({
   );
   const [role, setRole] = useState<"school_admin" | "teacher">("teacher");
   const firstFieldRef = useRef<HTMLSelectElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const titleId = "create-user-title";
-
-  // Escape to close + lock background scroll while open.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    firstFieldRef.current?.focus();
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [onClose]);
 
   const close = () => {
     if (state.success) router.refresh();
     onClose();
   };
+
+  // Focus trap, Escape-to-close, initial + restored focus (WCAG 2.1.2/2.4.3).
+  useDialogA11y({
+    isOpen: true,
+    onClose: close,
+    panelRef,
+    initialFocusRef: firstFieldRef,
+    locked: pending,
+  });
+
+  // Lock background scroll while open.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   return (
     <div
@@ -62,6 +67,7 @@ export function CreateUserModal({
       }}
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -294,7 +300,7 @@ function SuccessPanel({
 }
 
 const inputClass =
-  "w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
+  "w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
 
 function Field({
   label,

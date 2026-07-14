@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /admin/users — cross-district user listing for super admins. Read-only:
  * super admins provision users via /admin/districts (POCs) and /admin/signups,
@@ -12,6 +13,8 @@ import { listAllUsers } from "@/lib/queries/all-users";
 import { AllUsersView } from "./all-users-view";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Users" };
 
 export default async function AdminUsersPage() {
   await requireRole("super_admin");

@@ -216,7 +216,7 @@ export function DecodePromptStep({
             onChange={update("trigger_text")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
             placeholder="My concrete detail will come from…"
           />
         </Field>
@@ -235,7 +235,7 @@ export function DecodePromptStep({
             onChange={update("task")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
             placeholder="Re-state the task verbatim."
           />
         </Field>
@@ -247,7 +247,7 @@ export function DecodePromptStep({
             onChange={update("form")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
           >
             <option value="">— Select —</option>
             {Object.entries(FORM_LABELS).map(([v, label]) => (
@@ -265,7 +265,7 @@ export function DecodePromptStep({
             onChange={update("ratio_identified")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
           >
             <option value="">— Select —</option>
             {(Object.keys(RATIO_LABELS) as ChunkRatio[]).map((v) => (
@@ -289,7 +289,7 @@ Verb that suggests both CD and CM: explain
             onChange={update("key_verbs")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="discuss, analyze"
           />
         </Field>
@@ -305,7 +305,7 @@ Verb that suggests both CD and CM: explain
             onChange={update("focus_terms")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="steamboat, theme, photosynthesis"
           />
         </Field>
@@ -321,7 +321,7 @@ Verb that suggests both CD and CM: explain
             onChange={update("notes")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
           />
         </Field>
       </div>

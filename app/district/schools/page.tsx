@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /district/schools — district-admin Schools dashboard. A searchable grid of
  * school cards (with per-school user counts) plus a district summary, scoped to
@@ -17,6 +18,8 @@ import { SchoolsDashboard, type SchoolCard } from "./schools-dashboard";
 export const dynamic = "force-dynamic";
 
 const dateFmt = new Intl.DateTimeFormat("en-US", { dateStyle: "short" });
+
+export const metadata: Metadata = { title: "District Schools" };
 
 export default async function DistrictSchoolsPage() {
   const profile = await requireRole("district_admin");

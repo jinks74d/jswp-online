@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Full list of the student's assignments, optionally filtered by
  * derived status via the ?status= search param. Filters are simple
@@ -35,6 +36,8 @@ function isDerivedStatus(v: string | undefined): v is DerivedStatus {
     v === "graded"
   );
 }
+
+export const metadata: Metadata = { title: "My Assignments" };
 
 export default async function StudentAssignmentsList({
   searchParams,

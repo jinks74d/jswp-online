@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/assignments/[id]/writings/[writingId] — teacher review
  * surface for a single student writing.
@@ -32,6 +33,8 @@ import { OverallGradeControl } from "@/components/dashboard/writing-review/overa
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ id: string; writingId: string }>;
+
+export const metadata: Metadata = { title: "Grade Writing" };
 
 export default async function TeacherWritingReviewPage({
   params,

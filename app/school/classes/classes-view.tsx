@@ -101,7 +101,7 @@ export function ClassesView({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-900">Class Periods</h2>
-          <p className="mt-0.5 text-sm text-gray-400">
+          <p className="mt-0.5 text-sm text-gray-500">
             {filtered.length} of {periods.length} class{" "}
             {periods.length === 1 ? "period" : "periods"}
           </p>
@@ -129,14 +129,14 @@ export function ClassesView({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search classes, subjects, or periods…"
             aria-label="Search classes"
-            className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+            className="w-full rounded-lg border border-gray-400 bg-white py-3 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
           />
         </div>
         <select
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           aria-label="Filter by subject"
-          className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm text-gray-900 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)] sm:min-w-[180px]"
+          className="rounded-lg border border-gray-400 bg-white px-3 py-3 text-sm text-gray-900 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)] sm:min-w-[180px]"
         >
           <option value="all">All Subjects</option>
           {subjectOrder.map((s) => (
@@ -180,7 +180,7 @@ export function ClassesView({
                           <p className="truncate text-sm font-bold text-gray-900">
                             {p.className}
                           </p>
-                          <p className="truncate text-xs text-gray-400">
+                          <p className="truncate text-xs text-gray-500">
                             {p.periodLabel}
                           </p>
                         </div>

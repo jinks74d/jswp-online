@@ -125,7 +125,7 @@ export function SignupForm({ schools }: { schools: SchoolOption[] }) {
           <select
             id="requested_school_id"
             name="requested_school_id"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             defaultValue=""
           >
             <option value="">— I&apos;m not sure —</option>
@@ -151,7 +151,7 @@ export function SignupForm({ schools }: { schools: SchoolOption[] }) {
           rows={3}
           maxLength={1000}
           placeholder="e.g. I teach 9th grade English at Lincoln HS"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+          className="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
         />
       </div>
 
@@ -216,7 +216,7 @@ function Field({
         placeholder={placeholder}
         aria-invalid={!!error}
         aria-describedby={error ? `err-${id}` : undefined}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+        className="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
       />
       {error && (
         <p id={`err-${id}`} className="mt-1 text-sm text-red-600">
@@ -264,7 +264,7 @@ function PasswordField({
           placeholder={placeholder}
           aria-invalid={!!error}
           aria-describedby={error ? `err-${id}` : undefined}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10 text-gray-900"
+          className="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10 text-gray-900"
         />
         <button
           type="button"

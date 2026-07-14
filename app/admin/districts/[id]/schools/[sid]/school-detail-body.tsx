@@ -251,7 +251,7 @@ export async function SchoolDetailBody({
                       teachers.
                     </div>
                   </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
                 </Link>
               ),
             },
@@ -303,7 +303,7 @@ function DataTable({
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-4 py-8 text-center text-gray-400"
+                className="px-4 py-8 text-center text-gray-500"
               >
                 {empty}
               </td>
@@ -319,7 +319,7 @@ function StatusText({ active }: { active: boolean }) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 text-sm font-medium ${
-        active ? "text-emerald-600" : "text-gray-400"
+        active ? "text-emerald-600" : "text-gray-500"
       }`}
     >
       <span

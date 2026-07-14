@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /district/users — district-wide users. Stat cards, name/email search with
  * role + school filters, and a table of every user. "Create User" opens a modal
@@ -10,6 +11,8 @@ import { listSchoolsForDistrict } from "@/lib/queries/schools";
 import { UsersView } from "./users-view";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "District Users" };
 
 export default async function DistrictUsersPage() {
   const profile = await requireRole("district_admin");

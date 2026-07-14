@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, Check, Copy, KeyRound, Loader2, X } from "lucide-react";
 import { createStudentAtSchool } from "@/lib/actions/school-users";
 import type { ScopedUserFormState } from "@/lib/scoped-users";
+import { useDialogA11y } from "@/hooks/use-dialog-a11y";
 
 const initialState: ScopedUserFormState = {};
 
@@ -21,26 +22,30 @@ export function AddStudentModal({ onClose }: { onClose: () => void }) {
     initialState
   );
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const titleId = "add-student-title";
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    firstFieldRef.current?.focus();
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [onClose]);
 
   const close = () => {
     if (state.success) router.refresh();
     onClose();
   };
+
+  // Focus trap, Escape-to-close, initial + restored focus (WCAG 2.1.2/2.4.3).
+  useDialogA11y({
+    isOpen: true,
+    onClose: close,
+    panelRef,
+    initialFocusRef: firstFieldRef,
+    locked: pending,
+  });
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   return (
     <div
@@ -50,6 +55,7 @@ export function AddStudentModal({ onClose }: { onClose: () => void }) {
       }}
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -236,7 +242,7 @@ function SuccessPanel({
 }
 
 const inputClass =
-  "w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
+  "w-full rounded-md border border-gray-400 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
 
 function Field({
   label,
@@ -275,7 +281,7 @@ function Labeled({
     <div>
       <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-gray-700">
         {label}
-        {optional && <span className="ml-1 text-gray-400">(optional)</span>}
+        {optional && <span className="ml-1 text-gray-500">(optional)</span>}
       </label>
       {children}
     </div>

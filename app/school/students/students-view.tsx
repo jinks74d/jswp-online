@@ -117,7 +117,7 @@ export function StudentsView({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search students by name, email, or ID…"
             aria-label="Search students"
-            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
           />
         </div>
         <span className="whitespace-nowrap text-sm text-gray-500">
@@ -148,12 +148,12 @@ export function StudentsView({
                       <p className="truncate font-medium text-gray-900">
                         {studentName(s)}
                         {s.studentIdExternal && (
-                          <span className="ml-2 font-normal text-gray-400">
+                          <span className="ml-2 font-normal text-gray-500">
                             #{s.studentIdExternal}
                           </span>
                         )}
                       </p>
-                      <p className="flex items-center gap-1 truncate text-xs text-gray-400">
+                      <p className="flex items-center gap-1 truncate text-xs text-gray-500">
                         <Mail className="h-3 w-3 shrink-0" aria-hidden="true" />
                         {s.email ?? "—"}
                       </p>
@@ -161,7 +161,7 @@ export function StudentsView({
                   </div>
                 </td>
                 <td className="px-5 py-3">
-                  <span className={s.gradeLevel ? "text-gray-700" : "text-gray-400"}>
+                  <span className={s.gradeLevel ? "text-gray-700" : "text-gray-500"}>
                     {s.gradeLevel ? `Grade ${s.gradeLevel}` : "—"}
                   </span>
                 </td>
@@ -173,7 +173,7 @@ export function StudentsView({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={4} className="px-5 py-12 text-center text-gray-500">
                   {total === 0
                     ? "No students yet. Use “Add Student” to add the first one."
                     : "No students match your search."}

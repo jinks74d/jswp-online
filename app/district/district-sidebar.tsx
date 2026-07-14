@@ -73,12 +73,12 @@ export function DistrictSidebar({
             <span className="block text-sm font-bold text-gray-900">
               Jane Schaffer
             </span>
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+            <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-500">
               Academic Writing Program®
             </span>
           </span>
         </div>
-        <p className="mt-2 truncate text-xs text-gray-400">{districtName}</p>
+        <p className="mt-2 truncate text-xs text-gray-500">{districtName}</p>
       </div>
 
       {/* Nav */}
@@ -122,7 +122,7 @@ export function DistrictSidebar({
           })}
         </ul>
 
-        <p className="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-wider text-gray-300">
+        <p className="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-wider text-gray-500">
           Quick Actions
         </p>
         <Link
@@ -144,7 +144,7 @@ export function DistrictSidebar({
             <span className="block truncate text-sm font-semibold text-gray-900">
               {userName}
             </span>
-            <span className="block text-xs text-gray-400">District Admin</span>
+            <span className="block text-xs text-gray-500">District Admin</span>
           </span>
         </div>
         <LogoutButton className="mt-3.5 inline-flex items-center gap-2 text-sm font-semibold text-rose-600 hover:text-rose-700 disabled:opacity-50">

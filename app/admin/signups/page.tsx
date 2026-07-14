@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Signup review queue. RLS-scoped — admins only see requests in their
  * district/school (super_admin sees all). Filter chips toggle between
@@ -11,6 +12,8 @@ import { createServerClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ status?: string }>;
+
+export const metadata: Metadata = { title: "Signup Requests" };
 
 export default async function SignupQueuePage({
   searchParams,

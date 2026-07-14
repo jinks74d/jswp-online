@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Class-period detail (super-admin) — thin wrapper around the shared
  * <PeriodDetailBody>. The district shell renders the same body.
@@ -15,6 +16,8 @@ type Params = Promise<{
   classId: string;
   periodId: string;
 }>;
+
+export const metadata: Metadata = { title: "Period" };
 
 export default async function PeriodDetailPage({
   params,

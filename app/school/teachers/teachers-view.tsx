@@ -141,7 +141,7 @@ export function TeachersView({
                       <p className="truncate font-medium text-gray-900">
                         {teacherName(t)}
                       </p>
-                      <p className="flex items-center gap-1 truncate text-xs text-gray-400">
+                      <p className="flex items-center gap-1 truncate text-xs text-gray-500">
                         <Mail className="h-3 w-3 shrink-0" aria-hidden="true" />
                         {t.email ?? "—"}
                       </p>
@@ -162,7 +162,7 @@ export function TeachersView({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={4} className="px-5 py-12 text-center text-gray-500">
                   {total === 0
                     ? "No teachers yet. Use “Add Teacher” to add the first one."
                     : "No teachers match your search."}

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /district/classes — district-wide Class Periods. Counts (classes / subjects /
  * periods), a searchable list of every period with its class/subject/school,
@@ -14,6 +15,8 @@ import { listSchoolsForDistrict } from "@/lib/queries/schools";
 import { ClassesView } from "./classes-view";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "District Classes" };
 
 export default async function DistrictClassesPage() {
   const profile = await requireRole("district_admin");

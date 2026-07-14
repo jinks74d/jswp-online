@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/assignments/[id]/writings — list of every student
  * writing on this assignment, grouped by status. RLS-scoped via
@@ -37,6 +38,8 @@ const SECTION_LABELS: Record<Status, string> = {
 };
 
 type Params = Promise<{ id: string }>;
+
+export const metadata: Metadata = { title: "Student Writings" };
 
 export default async function AssignmentWritingsPage({
   params,

@@ -106,7 +106,7 @@ export function SchoolsDashboard({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search schools…"
             aria-label="Search schools"
-            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
           />
         </div>
         <span className="whitespace-nowrap text-sm text-gray-500">
@@ -131,7 +131,7 @@ export function SchoolsDashboard({
                   <h2 className="truncate text-base font-bold leading-tight text-gray-900">
                     {s.name}
                   </h2>
-                  <p className="mt-0.5 text-xs text-gray-400">
+                  <p className="mt-0.5 text-xs text-gray-500">
                     Added {s.addedLabel}
                   </p>
                 </div>
@@ -148,7 +148,7 @@ export function SchoolsDashboard({
                     className="mt-0.5 h-4 w-4 shrink-0 text-rose-500"
                     aria-hidden="true"
                   />
-                  <span className={s.address ? "" : "text-gray-400"}>
+                  <span className={s.address ? "" : "text-gray-500"}>
                     {s.address ?? "No address yet"}
                   </span>
                 </div>

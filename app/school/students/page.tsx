@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /school/students — students at the admin's school. Same style as Teachers:
  * stat cards, search, a table (with grade + enrollment), and a roster overview.
@@ -13,6 +14,8 @@ import {
 import { StudentsView, type StudentRow } from "./students-view";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "School Students" };
 
 export default async function SchoolStudentsPage() {
   const profile = await requireRole("school_admin");

@@ -37,7 +37,7 @@ export default async function AdminLayout({
           <div className="flex items-center gap-4 text-sm">
             <span className="text-gray-600">
               {profile.email}{" "}
-              <span className="text-gray-400">· {profile.role}</span>
+              <span className="text-gray-500">· {profile.role}</span>
             </span>
             <LogoutButton className="inline-flex items-center gap-1.5 font-medium text-rose-600 hover:text-rose-700 disabled:opacity-50" />
           </div>

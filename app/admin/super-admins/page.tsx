@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Super admin management. Super-admin-only: lists existing super admins and
  * lets one create another. The admin layout gates to all three admin roles,
@@ -9,6 +10,8 @@ import { createServerClient } from "@/lib/supabase/server";
 import { AddSuperAdminForm } from "./add-form";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Super Admins" };
 
 export default async function SuperAdminsPage() {
   await requireRole("super_admin");
@@ -62,7 +65,7 @@ export default async function SuperAdminsPage() {
                     {a.active ? (
                       <span className="text-green-700">Active</span>
                     ) : (
-                      <span className="text-gray-400">Inactive</span>
+                      <span className="text-gray-500">Inactive</span>
                     )}
                   </td>
                   <td className="px-4 py-2 text-gray-500">
@@ -74,7 +77,7 @@ export default async function SuperAdminsPage() {
               ))}
               {(admins ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                  <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
                     No super admins yet.
                   </td>
                 </tr>

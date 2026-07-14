@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /school — school-admin dashboard home. Stat cards (teachers / students /
  * classes / assignments), a Recent Users feed, a School Performance panel, and
@@ -32,6 +33,8 @@ const fmtDate = (iso: string | null) =>
 function gcd(a: number, b: number): number {
   return b === 0 ? a : gcd(b, a % b);
 }
+
+export const metadata: Metadata = { title: "School Dashboard" };
 
 export default async function SchoolDashboardPage() {
   const profile = await requireRole("school_admin");
@@ -159,7 +162,7 @@ export default async function SchoolDashboardPage() {
                         {meta.label}
                       </p>
                     </div>
-                    <span className="shrink-0 text-xs text-gray-400">
+                    <span className="shrink-0 text-xs text-gray-500">
                       {fmtDate(u.createdAt)}
                     </span>
                   </li>
@@ -167,7 +170,7 @@ export default async function SchoolDashboardPage() {
               })}
             </ul>
           ) : (
-            <p className="px-5 py-8 text-center text-sm text-gray-400">
+            <p className="px-5 py-8 text-center text-sm text-gray-500">
               No teachers or students yet.
             </p>
           )}
@@ -246,11 +249,11 @@ function PerfRow({
     >
       <div>
         <p className="text-sm font-semibold text-gray-900">{label}</p>
-        <p className="mt-0.5 text-xs text-gray-400">{sub}</p>
+        <p className="mt-0.5 text-xs text-gray-500">{sub}</p>
       </div>
       <div className="text-right">
         <p className={`text-2xl font-bold ${accent}`}>{value}</p>
-        <p className="text-[11px] text-gray-400">{unit}</p>
+        <p className="text-[11px] text-gray-500">{unit}</p>
       </div>
     </div>
   );

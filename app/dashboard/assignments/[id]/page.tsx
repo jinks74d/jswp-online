@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/assignments/[id] — load the draft (or published) assignment
  * and render the same shared form pre-filled. notFound() if the
@@ -20,6 +21,8 @@ import { AssignmentForm } from "../assignment-form";
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ id: string }>;
+
+export const metadata: Metadata = { title: "Assignment" };
 
 export default async function AssignmentDetailPage({
   params,

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Signup page — server component. Creates an auth.users row + a
  * signup_requests row (status='pending'). Admin reviews under
@@ -14,6 +15,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { SignupForm, type SchoolOption } from "./signup-form";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Sign up" };
 
 export default async function SignupPage() {
   const { profile } = await getCurrentUser();

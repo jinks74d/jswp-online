@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Teacher landing. Server-rendered greeting. If the teacher has zero
  * classes AND zero assignments, show a "getting started" empty state
@@ -11,6 +12,8 @@ import { getTeacherClassPeriods } from "@/lib/queries/classes";
 import { getTeacherAssignments } from "@/lib/queries/assignments";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Teacher Dashboard" };
 
 export default async function DashboardHome() {
   const profile = await requireUser();

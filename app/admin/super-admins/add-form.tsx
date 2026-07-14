@@ -94,7 +94,7 @@ export function AddSuperAdminForm() {
             aria-describedby={
               state.fieldErrors?.first_name ? "err-first_name" : undefined
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+            className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
           />
           {state.fieldErrors?.first_name && (
             <p id="err-first_name" className="mt-1 text-sm text-red-600">
@@ -119,7 +119,7 @@ export function AddSuperAdminForm() {
             aria-describedby={
               state.fieldErrors?.last_name ? "err-last_name" : undefined
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+            className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
           />
           {state.fieldErrors?.last_name && (
             <p id="err-last_name" className="mt-1 text-sm text-red-600">
@@ -177,13 +177,13 @@ export function AddSuperAdminForm() {
                   ? "hint-password err-password"
                   : "hint-password"
               }
-              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md text-gray-900 font-mono"
+              className="w-full px-3 py-2 pr-10 border border-gray-400 rounded-md text-gray-900 font-mono"
             />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-gray-400 hover:text-gray-600"
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" aria-hidden="true" />

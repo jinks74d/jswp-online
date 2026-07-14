@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Student landing page. Friendly greeting + status counts + a short
  * peek at the most-pressing items (overdue / due-soon / needs-revision).
@@ -15,6 +16,8 @@ import {
 import { AssignmentCard } from "@/components/student/assignment-card";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Student Home" };
 
 export default async function StudentHome() {
   const profile = await requireRole("student");

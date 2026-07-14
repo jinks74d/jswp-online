@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Landing page for users whose role doesn't grant access to the requested
  * route. Reached via requireRole() in lib/auth.ts.
@@ -8,9 +9,11 @@ import { LogoutButton } from "@/components/auth/logout-button";
 
 export const dynamic = "force-dynamic";
 
+export const metadata: Metadata = { title: "Access Denied" };
+
 export default function ForbiddenPage() {
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <main id="main-content" className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white border border-gray-200 rounded-lg shadow-sm p-8 space-y-4">
         <h1 className="text-2xl font-bold text-gray-900">Access denied</h1>
         <p className="text-sm text-gray-600">

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/classes — list every class period the logged-in teacher
  * teaches. Server-rendered. RLS-scoped via the teacher's session.
@@ -9,6 +10,8 @@ import { requireUser } from "@/lib/auth";
 import { getTeacherClassPeriods } from "@/lib/queries/classes";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "My Classes" };
 
 export default async function ClassesPage() {
   const profile = await requireUser();

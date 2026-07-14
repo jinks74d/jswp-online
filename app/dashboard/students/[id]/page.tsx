@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/students/[id] — single student detail + progress (chunk 5.3).
  *
@@ -26,6 +27,8 @@ import { AssignmentList } from "@/components/dashboard/students/assignment-list"
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ id: string }>;
+
+export const metadata: Metadata = { title: "Student" };
 
 export default async function StudentDetailPage({
   params,

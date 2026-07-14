@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /school/classes — class periods at the admin's school, grouped by subject,
  * with counts, search + subject filter, and a Create Class modal. RLS scopes
@@ -14,6 +15,8 @@ import {
 import { ClassesView } from "./classes-view";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "School Classes" };
 
 export default async function SchoolClassesPage() {
   const profile = await requireRole("school_admin");

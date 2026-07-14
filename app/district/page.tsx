@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /district — District-admin dashboard home. Four headline stat cards, a
  * two-column Recent Schools / Recent Users feed, and a Quick Actions card.
@@ -28,6 +29,8 @@ export const dynamic = "force-dynamic";
 const dateFmt = new Intl.DateTimeFormat("en-US", { dateStyle: "short" });
 const fmtDate = (iso: string | null) =>
   iso ? dateFmt.format(new Date(iso)) : "—";
+
+export const metadata: Metadata = { title: "District Dashboard" };
 
 export default async function DistrictDashboardPage() {
   const profile = await requireRole("district_admin");
@@ -106,11 +109,11 @@ export default async function DistrictDashboardPage() {
                     <p className="truncate text-sm font-semibold text-gray-900">
                       {s.name}
                     </p>
-                    <p className="truncate text-xs text-gray-400">
+                    <p className="truncate text-xs text-gray-500">
                       {s.address ?? "No address yet"}
                     </p>
                   </div>
-                  <span className="shrink-0 text-right text-xs text-gray-400">
+                  <span className="shrink-0 text-right text-xs text-gray-500">
                     Added
                     <br />
                     {fmtDate(s.created_at)}
@@ -137,12 +140,12 @@ export default async function DistrictDashboardPage() {
                     </p>
                     <div className="mt-0.5 flex items-center gap-2">
                       <RoleBadge role={u.role} />
-                      <span className="truncate text-xs text-gray-400">
+                      <span className="truncate text-xs text-gray-500">
                         {u.school_name ?? "District"}
                       </span>
                     </div>
                   </div>
-                  <span className="shrink-0 text-right text-xs text-gray-400">
+                  <span className="shrink-0 text-right text-xs text-gray-500">
                     Joined
                     <br />
                     {fmtDate(u.created_at)}
@@ -213,7 +216,7 @@ function Panel({
 
 function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-5 py-8 text-center text-sm text-gray-400">{children}</p>
+    <p className="px-5 py-8 text-center text-sm text-gray-500">{children}</p>
   );
 }
 

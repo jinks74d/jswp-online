@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Login page — server component.
  *
@@ -20,6 +21,8 @@ type SearchParams = Promise<{
   reset?: string;
   error?: string;
 }>;
+
+export const metadata: Metadata = { title: "Log in" };
 
 export default async function LoginPage({
   searchParams,
@@ -94,7 +97,7 @@ export default async function LoginPage({
                 ? "bg-green-50 border-green-200"
                 : "bg-red-50 border-red-200"
             }`}
-            role="status"
+            role={banner.kind === "success" ? "status" : "alert"}
           >
             {banner.kind === "success" ? (
               <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />

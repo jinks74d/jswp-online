@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Reset-password page — server component.
  *
@@ -19,6 +20,8 @@ import { RequestForm } from "./request-form";
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ code?: string }>;
+
+export const metadata: Metadata = { title: "Reset password" };
 
 export default async function ResetPasswordPage({
   searchParams,

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /district/schools/[sid]/subjects/[subjectId]/classes/[classId]/periods/[periodId]
  * — class-period detail in the district sidebar shell. Same body as super-admin.
@@ -14,6 +15,8 @@ type Params = Promise<{
   classId: string;
   periodId: string;
 }>;
+
+export const metadata: Metadata = { title: "Period" };
 
 export default async function DistrictPeriodDetailPage({
   params,

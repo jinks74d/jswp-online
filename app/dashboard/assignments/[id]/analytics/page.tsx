@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/assignments/[id]/analytics — teacher analytics surface.
  *
@@ -26,6 +27,8 @@ import { InterventionCandidates } from "@/components/dashboard/analytics/interve
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ id: string }>;
+
+export const metadata: Metadata = { title: "Assignment Analytics" };
 
 export default async function AssignmentAnalyticsPage({
   params,

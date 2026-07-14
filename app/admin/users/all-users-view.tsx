@@ -205,7 +205,7 @@ export function AllUsersView({
                         <p className="truncate font-medium text-gray-900">
                           {userName(u)}
                         </p>
-                        <p className="flex items-center gap-1 truncate text-xs text-gray-400">
+                        <p className="flex items-center gap-1 truncate text-xs text-gray-500">
                           <Mail className="h-3 w-3 shrink-0" aria-hidden="true" />
                           {u.email ?? "—"}
                         </p>
@@ -223,12 +223,12 @@ export function AllUsersView({
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    <span className={u.districtName ? "text-gray-700" : "text-gray-400"}>
+                    <span className={u.districtName ? "text-gray-700" : "text-gray-500"}>
                       {u.districtName ?? "—"}
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    <span className={u.schoolName ? "text-gray-700" : "text-gray-400"}>
+                    <span className={u.schoolName ? "text-gray-700" : "text-gray-500"}>
                       {u.schoolName ?? "—"}
                     </span>
                   </td>
@@ -240,7 +240,7 @@ export function AllUsersView({
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={5} className="px-5 py-12 text-center text-gray-500">
                   No users match your filters.
                 </td>
               </tr>

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /school/assignments — read-only monitoring of assignments across the school,
  * grouped by teacher, with status + submission counts. School admins can view
@@ -10,6 +11,8 @@ import { getSchoolAssignments } from "@/lib/queries/school-assignments";
 import { AssignmentsView } from "./assignments-view";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "School Assignments" };
 
 export default async function SchoolAssignmentsPage() {
   const profile = await requireRole("school_admin");

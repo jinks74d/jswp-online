@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Bare /student/writings/[id] redirects to the writing's current step.
  * Direct entry into a writing always lands you wherever you left off.
@@ -9,6 +10,8 @@ import { getWriting } from "@/lib/queries/student-writings";
 import { MODES, getStepByKey, type JswpMode } from "@/lib/jswp-modes";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Writing" };
 
 export default async function WritingIndex({
   params,

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /admin/districts — super-admin district management, redesigned as a grid of
  * branded "tenant cards". A quiet stats strip rolls up the platform totals; the
@@ -12,6 +13,8 @@ import { DistrictsBrowser } from "./districts-browser";
 import { NewDistrictPanel } from "./new-district-panel";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Districts" };
 
 export default async function DistrictsPage() {
   await requireRole("super_admin");

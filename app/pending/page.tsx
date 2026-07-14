@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Status landing for users who are signed in but have no user_profiles
  * row yet. Reads their signup_requests row (RLS-scoped — user can SELECT
@@ -11,6 +12,8 @@ import { getCurrentUser, getRedirectPath } from "@/lib/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Account Pending" };
 
 export default async function PendingPage() {
   const { user, profile } = await getCurrentUser();
@@ -40,7 +43,7 @@ export default async function PendingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <main id="main-content" className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white border border-gray-200 rounded-lg shadow-sm p-8 space-y-4">
         <StatusHeader status={sr.status} />
         <Body sr={sr} />

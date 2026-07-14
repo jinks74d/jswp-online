@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Step dispatcher. Resolves the slug to a step config, enforces the
  * reachability gate (no skip-ahead), and renders either the real step
@@ -38,6 +39,8 @@ import { ConclusionStep } from "../_steps/conclusion-step";
 import { FinalDraftStep } from "../_steps/final-draft-step";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Writing Step" };
 
 export default async function StepDispatcher({
   params,

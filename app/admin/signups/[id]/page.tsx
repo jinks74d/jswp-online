@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Signup request detail view. Shows submitter info, the user's optional
  * message, and an admin form to either approve (with editable role +
@@ -13,6 +14,8 @@ import { DecisionForm, type DistrictOption, type SchoolOption } from "./decision
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ id: string }>;
+
+export const metadata: Metadata = { title: "Signup Request" };
 
 export default async function SignupDetailPage({ params }: { params: Params }) {
   const { id } = await params;

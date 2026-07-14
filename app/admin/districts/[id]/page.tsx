@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /admin/districts/[id] — district detail (super-admin). A white header card
  * with a crimson accent + Edit-details modal, a four-up stats row, a Schools
@@ -24,6 +25,8 @@ import { PocInviteButton } from "./poc-invite-button";
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ id: string }>;
+
+export const metadata: Metadata = { title: "District" };
 
 export default async function DistrictDetailPage({
   params,
@@ -111,7 +114,7 @@ export default async function DistrictDetailPage({
                   {district.subdomain}.jswponline.com
                 </p>
               ) : (
-                <p className="mt-0.5 text-sm text-gray-400">No subdomain set</p>
+                <p className="mt-0.5 text-sm text-gray-500">No subdomain set</p>
               )}
             </div>
           </div>
@@ -138,7 +141,7 @@ export default async function DistrictDetailPage({
             <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
               Schools
             </h2>
-            <span className="text-xs text-gray-400">{schools.length} total</span>
+            <span className="text-xs text-gray-500">{schools.length} total</span>
           </div>
 
           <table className="w-full text-sm">
@@ -171,7 +174,7 @@ export default async function DistrictDetailPage({
                         Active
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-gray-400">
+                      <span className="inline-flex items-center gap-1.5 text-gray-500">
                         <span className="h-1.5 w-1.5 rounded-full border border-gray-400" aria-hidden="true" />
                         Inactive
                       </span>
@@ -180,7 +183,7 @@ export default async function DistrictDetailPage({
                   <td className="px-5 py-3 text-right">
                     <Link
                       href={`/admin/districts/${district.id}/schools/${s.id}`}
-                      className="inline-flex items-center text-gray-400 hover:text-gray-700"
+                      className="inline-flex h-6 w-6 items-center justify-center rounded text-gray-500 hover:text-gray-700"
                       aria-label={`Manage ${s.name}`}
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -190,7 +193,7 @@ export default async function DistrictDetailPage({
               ))}
               {schools.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-gray-400">
+                  <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
                     No schools yet. Add one below.
                   </td>
                 </tr>
@@ -213,7 +216,7 @@ export default async function DistrictDetailPage({
               <Swatch label="Primary" color={primary} />
               <Swatch label="Secondary" color={secondary} />
               {!primary && !secondary && !district.logo_url && (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-500">
                   No custom branding yet. Add a logo and colors in Edit.
                 </p>
               )}
@@ -329,7 +332,7 @@ function PocCard({
         <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
           {label}
         </p>
-        <p className="mt-1 text-sm text-gray-400">Not set.</p>
+        <p className="mt-1 text-sm text-gray-500">Not set.</p>
       </div>
     );
   }
@@ -354,7 +357,7 @@ function PocCard({
         </a>
       )}
       {poc.phone && <p className="text-sm text-gray-600">{poc.phone}</p>}
-      <p className="mt-1 text-xs text-gray-400">{invitedLabel}</p>
+      <p className="mt-1 text-xs text-gray-500">{invitedLabel}</p>
       <PocInviteButton
         userId={poc.id}
         districtId={districtId}

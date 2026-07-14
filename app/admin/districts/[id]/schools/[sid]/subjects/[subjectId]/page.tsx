@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Subject detail (super-admin) — thin wrapper around the shared
  * <SubjectDetailBody>. The district shell renders the same body.
@@ -9,6 +10,8 @@ import { SubjectDetailBody } from "./subject-detail-body";
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ id: string; sid: string; subjectId: string }>;
+
+export const metadata: Metadata = { title: "Subject" };
 
 export default async function SubjectDetailPage({
   params,

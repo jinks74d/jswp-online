@@ -73,12 +73,12 @@ export function SchoolSidebar({
             <span className="block text-sm font-bold text-gray-900">
               Jane Schaffer
             </span>
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+            <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-500">
               Academic Writing Program®
             </span>
           </span>
         </div>
-        <p className="mt-2 truncate text-xs text-gray-400">{districtName}</p>
+        <p className="mt-2 truncate text-xs text-gray-500">{districtName}</p>
       </div>
 
       {/* Nav */}
@@ -133,7 +133,7 @@ export function SchoolSidebar({
             <span className="block truncate text-sm font-semibold text-gray-900">
               {userName}
             </span>
-            <span className="block truncate text-xs text-gray-400">
+            <span className="block truncate text-xs text-gray-500">
               School Admin · {schoolName}
             </span>
           </span>

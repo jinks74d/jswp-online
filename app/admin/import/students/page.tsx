@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Import students page. Server component — fetches the class periods
  * available to the current admin (RLS scopes the query) and renders the
@@ -16,6 +17,8 @@ type ClassPeriodRow = {
   classes: { name: string; subjects: { name: string } | null } | null;
   schools: { name: string } | null;
 };
+
+export const metadata: Metadata = { title: "Import Students" };
 
 export default async function ImportStudentsPage() {
   const supabase = await createServerClient();

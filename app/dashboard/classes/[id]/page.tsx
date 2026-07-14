@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/classes/[id] — class period detail with full roster.
  * notFound() if the period doesn't exist or is outside the teacher's
@@ -15,6 +16,8 @@ import {
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ id: string }>;
+
+export const metadata: Metadata = { title: "Class" };
 
 export default async function ClassDetailPage({ params }: { params: Params }) {
   const { id } = await params;

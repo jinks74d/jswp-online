@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /district/schools/[sid] — school detail inside the district-admin sidebar
  * shell. Renders the same <SchoolDetailBody> as the super-admin route, scoped
@@ -10,6 +11,8 @@ import { SchoolDetailBody } from "../../../admin/districts/[id]/schools/[sid]/sc
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ sid: string }>;
+
+export const metadata: Metadata = { title: "School" };
 
 export default async function DistrictSchoolDetailPage({
   params,

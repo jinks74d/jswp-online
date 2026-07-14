@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/assignments/new — picks the writing mode if no ?mode is
  * set, otherwise renders the create form for that mode. Splitting the
@@ -24,6 +25,8 @@ const VALID_MODES = new Set<Mode>([
 ]);
 
 type SearchParams = Promise<{ mode?: string }>;
+
+export const metadata: Metadata = { title: "New Assignment" };
 
 export default async function NewAssignmentPage({
   searchParams,

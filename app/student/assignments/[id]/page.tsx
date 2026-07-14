@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Student-facing assignment detail. Shows title / mode / prompt /
  * due-date prominently; source text and rubric are collapsed by
@@ -30,6 +31,8 @@ const MODE_LABELS = {
   literary: "Literary Analysis",
   narrative: "Narrative",
 } as const;
+
+export const metadata: Metadata = { title: "Assignment" };
 
 export default async function StudentAssignmentDetail({
   params,
@@ -66,7 +69,7 @@ export default async function StudentAssignmentDetail({
       <header className="space-y-2">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500">
           {MODE_LABELS[item.mode]}
-          {item.is_essay && <span className="text-gray-400">· essay</span>}
+          {item.is_essay && <span className="text-gray-500">· essay</span>}
         </div>
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-2xl font-bold text-gray-900">{item.title}</h1>

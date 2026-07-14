@@ -57,7 +57,7 @@ export function StudentEnrollment({
                 </span>
               )}
               {s.email && (
-                <span className="ml-2 text-xs text-gray-400">{s.email}</span>
+                <span className="ml-2 text-xs text-gray-500">{s.email}</span>
               )}
             </span>
             <form action={removeA}>
@@ -74,7 +74,7 @@ export function StudentEnrollment({
           </li>
         ))}
         {enrolled.length === 0 && (
-          <li className="px-4 py-3 text-sm text-gray-400">
+          <li className="px-4 py-3 text-sm text-gray-500">
             No students enrolled yet.
           </li>
         )}
@@ -154,7 +154,7 @@ function Input({
         required={required}
         aria-invalid={!!error}
         aria-describedby={error ? `err-${name}` : undefined}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
       {error && (
         <p id={`err-${name}`} className="mt-1 text-sm text-red-600">

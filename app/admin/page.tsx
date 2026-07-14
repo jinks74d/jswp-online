@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * Admin landing. Minimal — links to the available tools. Replaced with a
  * proper dashboard (analytics, recent activity) in Phase 6.
@@ -9,6 +10,8 @@ import { Upload } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Admin Tools" };
 
 export default async function AdminHome() {
   // District and school admins live in their own sidebar shells; super admins

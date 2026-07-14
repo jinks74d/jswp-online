@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/assignments — minimal list. Title + mode + status. Filters
  * and dashboards land in chunk 3.4.
@@ -17,6 +18,8 @@ const iconLink =
   "inline-flex items-center justify-center p-1.5 rounded-md text-stone-600 hover:bg-stone-100 hover:text-stone-700";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "My Assignments" };
 
 export default async function AssignmentsPage() {
   const profile = await requireUser();

@@ -181,7 +181,7 @@ function DistrictTenantCard({ district }: { district: DistrictCard }) {
             {district.subdomain}.jswponline.com
           </span>
         ) : (
-          <span className="text-xs text-gray-400">No subdomain</span>
+          <span className="text-xs text-gray-500">No subdomain</span>
         )}
 
         <dl className="mt-auto flex items-center gap-4 pt-1 text-sm text-gray-600">
@@ -205,7 +205,7 @@ function StatusPill({ active }: { active: boolean }) {
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1.5 text-xs font-medium ${
-        active ? "text-emerald-600" : "text-gray-400"
+        active ? "text-emerald-600" : "text-gray-500"
       }`}
     >
       <span

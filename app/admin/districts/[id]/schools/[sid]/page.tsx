@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /admin/districts/[id]/schools/[sid] — school detail (super-admin view).
  * Thin wrapper around the shared <SchoolDetailBody>; the district-admin shell
@@ -10,6 +11,8 @@ import { SchoolDetailBody } from "./school-detail-body";
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ id: string; sid: string }>;
+
+export const metadata: Metadata = { title: "School" };
 
 export default async function SchoolDetailPage({
   params,

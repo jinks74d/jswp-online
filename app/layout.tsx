@@ -10,7 +10,7 @@ import {
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "JSWP Online",
+  title: { default: "JSWP Online", template: "%s · JSWP Online" },
   description: "Assignment management system for educators",
 };
 

@@ -140,7 +140,7 @@ export function UsersView({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or email…"
             aria-label="Search users"
-            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
           />
         </div>
         <select
@@ -202,7 +202,7 @@ export function UsersView({
                         <p className="truncate font-medium text-gray-900">
                           {userName(u)}
                         </p>
-                        <p className="flex items-center gap-1 truncate text-xs text-gray-400">
+                        <p className="flex items-center gap-1 truncate text-xs text-gray-500">
                           <Mail className="h-3 w-3 shrink-0" aria-hidden="true" />
                           {u.email ?? "—"}
                         </p>
@@ -217,7 +217,7 @@ export function UsersView({
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    <span className={u.schoolName ? "text-gray-700" : "text-gray-400"}>
+                    <span className={u.schoolName ? "text-gray-700" : "text-gray-500"}>
                       {u.schoolName ?? "No school assigned"}
                     </span>
                   </td>
@@ -229,7 +229,7 @@ export function UsersView({
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={4} className="px-5 py-12 text-center text-gray-500">
                   No users match your filters.
                 </td>
               </tr>
@@ -246,7 +246,7 @@ export function UsersView({
 }
 
 const selectClass =
-  "rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
+  "rounded-lg border border-gray-400 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
 
 function StatCard({
   label,

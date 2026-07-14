@@ -103,7 +103,7 @@ export async function SubjectDetailBody({
                   <td className="px-4 py-2 text-right">
                     <Link
                       href={`${subjectBase}/classes/${c.id}`}
-                      className="inline-flex items-center text-gray-400 hover:text-gray-700"
+                      className="inline-flex h-6 w-6 items-center justify-center rounded text-gray-500 hover:text-gray-700"
                       aria-label={`Manage ${c.name}`}
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -113,7 +113,7 @@ export async function SubjectDetailBody({
               ))}
               {classes.length === 0 && (
                 <tr>
-                  <td colSpan={2} className="px-4 py-6 text-center text-gray-400">
+                  <td colSpan={2} className="px-4 py-6 text-center text-gray-500">
                     No classes yet. Add one below.
                   </td>
                 </tr>

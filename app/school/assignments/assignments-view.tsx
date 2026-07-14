@@ -129,7 +129,7 @@ export function AssignmentsView({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by title, class, or teacher…"
             aria-label="Search assignments"
-            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
           />
         </div>
         <select value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Filter by subject" className={selectClass}>
@@ -220,7 +220,7 @@ export function AssignmentsView({
 }
 
 const selectClass =
-  "rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
+  "rounded-lg border border-gray-400 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
 
 function StatCard({
   label,

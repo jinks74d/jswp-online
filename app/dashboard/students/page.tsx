@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /dashboard/students — every student enrolled in any of the logged-in
  * teacher's class periods, deduplicated. A student in two periods
@@ -13,6 +14,8 @@ import {
 } from "@/lib/queries/students";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "My Students" };
 
 export default async function StudentsPage() {
   const profile = await requireUser();

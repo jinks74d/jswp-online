@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 /**
  * /school/teachers — teaching staff at the admin's school. Stat cards, search,
  * a table of teachers, and a staff overview. "Add Teacher" creates a teacher at
@@ -10,6 +11,8 @@ import { listSchoolUsersByRole } from "@/lib/queries/school-users";
 import { TeachersView, type TeacherRow } from "./teachers-view";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Teachers" };
 
 export default async function SchoolTeachersPage() {
   const profile = await requireRole("school_admin");
