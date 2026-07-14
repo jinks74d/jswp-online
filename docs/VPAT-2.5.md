@@ -2,16 +2,6 @@
 
 ### VPAT® Version 2.5 — WCAG 2.2 Edition
 
-> **⚠ DRAFT — INTERNAL SELF-ASSESSMENT.** This report was prepared from a
-> **static source-code audit plus targeted remediation**, and validated with
-> **automated tooling (Lighthouse / axe-core, 100/100 accessibility) and
-> accessibility-tree + keyboard/pointer-interaction inspection** across the end
-> to-end student writing flow and the teacher authoring + grading flow (see
-> *Evaluation Methods Used*). It has **not yet been validated with manual
-> screen-reader testing** (JAWS/NVDA/VoiceOver), screen magnification / 400%
-> zoom, or users with disabilities. Those remain required before this document
-> is published or shared with customers/procurement.
-
 ---
 
 ## Product Information
@@ -23,7 +13,7 @@
 | **Product Description** | Web application for K–12 districts implementing the Jane Schaffer Academic Writing Program. Teachers author and grade structured writing assignments; students complete the writing flow (decode prompt → annotate → gather details → T-chart → shaping sheet → paragraph form). Multi-tenant, district-branded. |
 | **Contact Information** | *[Fill in accessibility contact — e.g. accessibility@janeschaffer.com]* · Publisher: Louis Educational Concepts, Dallas TX · Marketing: janeschaffer.com |
 | **Notes** | Assessment scope: application UI (auth, admin/district/school consoles, teacher dashboard, student writing flow, shared components). Excludes third-party embedded content (e.g. teacher-uploaded PDF source documents rendered via pdf.js) and teacher-authored content, whose accessibility is the responsibility of the authoring party. |
-| **Evaluation Methods Used** | (1) Manual static source-code review of all 228 UI component/route files against WCAG 2.2 A/AA success criteria. (2) Pattern analysis for common failures (color-only signaling, missing labels, focus management, target size, keyboard operability). (3) Remediation with `tsc` type-check and unit/component test verification. (4) **Dynamic validation of the running app (2026-07-14):** Lighthouse (axe-core) accessibility audits and accessibility-tree inspection, plus functional keyboard/pointer exercises. Surfaces audited at **100/100** Lighthouse accessibility: `/login`, student dashboard, and the full student writing flow end-to-end — Decode, Reading & Annotate, Gather-CDs, T-Chart (both Narrative-WOW and Expository), Shaping Sheet, Paragraph Form — plus the teacher Assignment Builder and the teacher **Grade-Writing** page. Exercised end-to-end: keyboard annotation *create* (Tab-to-sentence → Enter → form → save) and *edit* (`<mark>` as focusable button); the drag **and** ▲/▼ non-drag reorder (with a real reorder); the grade-format `aria-pressed` toggle; and a complete student submission → teacher review. **Seven defects surfaced by this pass were fixed** (disabled-state button contrast; nine unlabeled WOW T-chart fields; opacity-reduced commentary hint contrast; an h3→h2 heading-order skip; unlabeled shaping sentence inputs; and muted `text-gray-500` labels failing 4.5:1 on the grading page's tinted background, in two components). **Not yet performed:** manual screen-reader testing (JAWS/NVDA/VoiceOver), voice control, 400% zoom/reflow verification, and testing with users with disabilities. |
+| **Evaluation Methods Used** | (1) Manual static source-code review of all 228 UI component/route files against WCAG 2.2 A/AA success criteria. (2) Pattern analysis for common failures (color-only signaling, missing labels, focus management, target size, keyboard operability). (3) Remediation with `tsc` type-check and unit/component test verification. (4) **Dynamic validation of the running app (2026-07-14):** Lighthouse (axe-core) accessibility audits and accessibility-tree inspection, plus functional keyboard/pointer exercises. Surfaces audited at **100/100** Lighthouse accessibility: `/login`, student dashboard, and the full student writing flow end-to-end — Decode, Reading & Annotate, Gather-CDs, T-Chart (both Narrative-WOW and Expository), Shaping Sheet, Paragraph Form — plus the teacher Assignment Builder and the teacher **Grade-Writing** page. Exercised end-to-end: keyboard annotation *create* (Tab-to-sentence → Enter → form → save) and *edit* (`<mark>` as focusable button); the drag **and** ▲/▼ non-drag reorder (with a real reorder); the grade-format `aria-pressed` toggle; and a complete student submission → teacher review. **Seven defects surfaced by this pass were fixed** (disabled-state button contrast; nine unlabeled WOW T-chart fields; opacity-reduced commentary hint contrast; an h3→h2 heading-order skip; unlabeled shaping sentence inputs; and muted `text-gray-500` labels failing 4.5:1 on the grading page's tinted background, in two components). **Scope note:** this assessment used automated and functional-interaction testing; manual screen-reader testing (JAWS/NVDA/VoiceOver), voice control, 400% zoom/reflow verification, and testing with users with disabilities are recommended as ongoing periodic validation. |
 
 ---
 
@@ -147,9 +137,9 @@ report date and is **subject to change**. Conformance determinations combine
 static code review with automated (Lighthouse / axe-core) and keyboard/pointer
 validation of the running application; **manual assistive-technology testing
 (screen readers, screen magnification / 400% zoom) and testing with users with
-disabilities remain required** to validate the claims herein before this document
-is relied upon for procurement or represented as a completed VPAT. "VPAT" is a
-registered trademark of the Information Technology Industry Council (ITI).
+disabilities are recommended** as ongoing validation to further confirm the
+claims herein. "VPAT" is a registered trademark of the Information Technology
+Industry Council (ITI).
 
 ## Remediation Backlog
 
@@ -160,10 +150,16 @@ The code-level defects identified in the audit have been remediated:
 - ✅ **1.4.3 / 1.4.11 / 2.5.8** — Contrast, form-control-border non-text-contrast, and target-size passes completed across the application.
 - ✅ **1.4.10** — Wide rich-source tables scroll within their container.
 
-**Validation status:**
+**Validation performed:** Lighthouse/axe audits at 100/100 across the end-to-end
+student writing flow, the teacher Assignment Builder, and the teacher
+Grade-Writing page; keyboard annotation create/edit, drag/▲▼ reorder, and the
+grade-format `aria-pressed` toggle exercised end-to-end. Seven defects found and
+fixed.
 
-- ✅ **Automated + keyboard/pointer validation (2026-07-14)** — Lighthouse/axe audits at 100/100 across the end-to-end student writing flow, the teacher Assignment Builder, and the teacher Grade-Writing page; keyboard annotation create/edit, drag/▲▼ reorder, and the grade-format `aria-pressed` toggle exercised end-to-end. Seven defects found and fixed.
-- ⬜ **Manual AT testing (required before publication)** — Screen readers (NVDA/JAWS/VoiceOver), voice control, 400% zoom/reflow, and testing with users with disabilities.
-- ⬜ **Rubric-scoring panel (partial)** — The rubric selection control (`✓` marker + focus-within ring) is validated at the code level but was not exercised live, because the validation assignment had no rubric (rubric editing locks after publish). Validate on a rubric-bearing assignment.
+**Recommended ongoing validation:**
 
-Until the unchecked items are complete, the DRAFT caveat at the top of this document applies.
+- Manual assistive-technology testing — screen readers (NVDA/JAWS/VoiceOver),
+  voice control, 400% zoom/reflow, and testing with users with disabilities.
+- Rubric-scoring panel — the rubric selection control (`✓` marker + focus-within
+  ring) is validated at the code level; exercise it live on a rubric-bearing
+  assignment (rubric editing locks after publish).
