@@ -104,7 +104,7 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             rows={3}
-            className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full rounded-md border border-gray-400 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           <div className="flex items-center justify-end gap-2">
             <button
@@ -155,7 +155,7 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
                   setEditing(true);
                 }}
                 disabled={pending}
-                className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 disabled:opacity-50"
+                className="inline-flex items-center gap-1 py-1 text-gray-600 hover:text-gray-900 disabled:opacity-50"
               >
                 <Pencil className="w-3 h-3" aria-hidden="true" />
                 Edit
@@ -164,7 +164,7 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
                 type="button"
                 onClick={onDelete}
                 disabled={pending}
-                className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                className="inline-flex items-center gap-1 py-1 text-red-600 hover:text-red-800 disabled:opacity-50"
               >
                 <Trash2 className="w-3 h-3" aria-hidden="true" />
                 Delete
@@ -176,7 +176,7 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
               type="button"
               onClick={onResolve}
               disabled={pending}
-              className="inline-flex items-center gap-1 text-green-700 hover:text-green-900 disabled:opacity-50"
+              className="inline-flex items-center gap-1 py-1 text-green-700 hover:text-green-900 disabled:opacity-50"
             >
               {pending ? (
                 <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />

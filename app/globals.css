@@ -7,12 +7,11 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* No dark-theme variant: every surface/text color across the app is a
+ * hardcoded light-mode Tailwind class, so honoring the OS dark preference
+ * here only recolored the <body> behind those light surfaces — a half-dark
+ * seam and an invisibility risk for any unstyled text. The UI is committed
+ * to a single light theme until a full dark theme is built out. */
 
 body {
   background: var(--background);
@@ -215,10 +214,16 @@ body {
   color: #374151;
   font-style: italic;
 }
+/* A wide table must scroll within its own box, not force the page to scroll
+ * horizontally (WCAG 1.4.10 Reflow). display:block + max-content + overflow-x
+ * is the proven responsive-table recipe (as used by GitHub markdown). */
 .source-rich table {
+  display: block;
   border-collapse: collapse;
   margin: 0.75em 0;
-  width: 100%;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
   font-size: 0.95em;
 }
 .source-rich th,
@@ -267,6 +272,15 @@ body {
   font-weight: 600;
   outline: 2px solid #1e40af;
   outline-offset: 2px;
+}
+
+/* ── Focus not obscured by sticky headers (WCAG 2.4.11) ──────────────
+ * The teacher/student shells pin a ~64px header at top:0. When a control
+ * deep in the page receives focus and the browser scrolls it into view, it
+ * could tuck under that header. A scroll-margin-top on focusable content
+ * inside the main region keeps the focused element clear of the header. */
+#main-content :is(a, button, input, textarea, select, summary, [tabindex]) {
+  scroll-margin-top: 5rem;
 }
 
 /* ── Reduced motion (WCAG 2.3.3) ─────────────────────────────────────

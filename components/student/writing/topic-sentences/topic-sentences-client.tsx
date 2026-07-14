@@ -116,7 +116,7 @@ export function TopicSentencesClient({ writingId, stepKey, bps }: Props) {
               style={{
                 backgroundColor: gate.canContinue
                   ? "var(--district-primary)"
-                  : "rgb(156 163 175)", // gray-400 — visible but signals "not ready"
+                  : "rgb(75 85 99)", // gray-600 — muted "not ready" cue, still ≥4.5:1 with white text (WCAG 1.4.3)
               }}
               title={
                 gate.canContinue

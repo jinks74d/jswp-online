@@ -189,7 +189,7 @@ function KindSelect<T extends string>({
           const v = (value || null) as T | null;
           await config.onSave(v);
         }}
-        className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
+        className="mt-1.5 w-full rounded-md border border-gray-400 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
       >
         <option value="">— Select —</option>
         {options.map((opt) => (

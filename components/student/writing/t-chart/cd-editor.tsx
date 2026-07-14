@@ -87,7 +87,7 @@ export function CdEditor({
           checked={isQuotation}
           onChange={toggleQuotation}
           disabled={disabled || pending}
-          className="h-3.5 w-3.5 rounded border-gray-300"
+          className="h-3.5 w-3.5 rounded border-gray-400"
           style={{ accentColor: "var(--jswp-color-cd)" }}
         />
         Mark as quotation
@@ -97,7 +97,7 @@ export function CdEditor({
         <div className="space-y-1.5 rounded-md border border-dashed border-gray-300 bg-gray-50/60 p-2">
           <div className="text-base font-medium text-gray-600">
             Lead-in{" "}
-            <span className="font-normal text-gray-400">
+            <span className="font-normal text-gray-600">
               (After, Although, Before, Because, If, Since, When, While…)
             </span>
           </div>
@@ -134,7 +134,7 @@ export function CdEditor({
           className="rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs"
           aria-label="Embedded quotation preview"
         >
-          <span className="mr-1 text-base uppercase tracking-wide text-gray-400">
+          <span className="mr-1 text-base uppercase tracking-wide text-gray-500">
             Embedded
           </span>
           <span className="text-gray-700">

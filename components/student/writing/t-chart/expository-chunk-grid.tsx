@@ -124,7 +124,7 @@ export function ExpositoryChunkGrid({
             </div>
             {/* Empty CMs column */}
             <div className="hidden items-center justify-center border-l-2 border-black p-4 sm:flex">
-              <p className="max-w-[220px] text-center text-xs italic text-gray-400">
+              <p className="max-w-[220px] text-center text-xs italic text-gray-500">
                 No commentary in a 3+:0 summary — the CMs side stays empty.
               </p>
             </div>
@@ -416,7 +416,7 @@ function DeleteButton({
         })
       }
       disabled={pending}
-      className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+      className="mt-1 flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:text-red-700 disabled:opacity-50"
     >
       {pending ? (
         <Loader2 className={`${size} animate-spin`} aria-hidden="true" />

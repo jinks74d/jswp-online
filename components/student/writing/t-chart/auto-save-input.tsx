@@ -18,6 +18,13 @@ interface BaseProps {
   disabled?: boolean;
   className?: string;
   /**
+   * Accessible name for the field. A placeholder is NOT an accessible name
+   * (it disappears on input and isn't reliably announced), so every caller
+   * should pass the field's role/context here — e.g. "Concrete detail",
+   * "Commentary", "Ray word 1". Threaded to aria-label. WCAG 3.3.2 / 4.1.2.
+   */
+  ariaLabel?: string;
+  /**
    * Drop the default bordered-box chrome so the caller fully controls the
    * field's look via `className` (used by the worksheet-style T-Chart, whose
    * fields sit on ruled/underlined "paper" rather than in input boxes). The
@@ -68,9 +75,13 @@ export function AutoSaveInput(props: Props) {
     }
   };
 
+  // The bare variant drops the input box chrome for the worksheet "paper"
+  // look, but must still show a visible focus indicator (WCAG 2.4.7). A
+  // focus-visible ring gives keyboard users a cue without boxing the field
+  // for mouse users.
   const baseClassName = props.bare
-    ? "w-full resize-none bg-transparent focus:outline-none disabled:opacity-70"
-    : "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50";
+    ? "w-full resize-none bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:rounded-sm disabled:opacity-70"
+    : "w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50";
   const className = `${baseClassName} ${props.className ?? ""}`.trim();
 
   const indicator = (
@@ -95,6 +106,7 @@ export function AutoSaveInput(props: Props) {
           value={value}
           rows={props.rows ?? 3}
           placeholder={props.placeholder}
+          aria-label={props.ariaLabel ?? props.placeholder}
           disabled={props.disabled}
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => {
@@ -114,6 +126,7 @@ export function AutoSaveInput(props: Props) {
         type="text"
         value={value}
         placeholder={props.placeholder}
+        aria-label={props.ariaLabel}
         disabled={props.disabled}
         onChange={(e) => setValue(e.target.value)}
         onFocus={() => {

@@ -12,7 +12,7 @@
  */
 
 import { useTransition } from "react";
-import { GripVertical, Loader2, Trash2 } from "lucide-react";
+import { ChevronUp, ChevronDown, GripVertical, Loader2, Trash2 } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
@@ -34,6 +34,12 @@ interface Props {
   // the stored selection_order — the sheet editor renumbers visually
   // so gaps from past deselections never show.
   priorityNumber?: number;
+  // Single-pointer / keyboard alternative to dragging (WCAG 2.5.7): the
+  // parent renders this row's ▲/▼ move controls, wired to the same reorder
+  // persistence as drag-and-drop.
+  onMove?: (direction: "up" | "down") => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
 }
 
 export function CandidateRow({
@@ -41,6 +47,9 @@ export function CandidateRow({
   candidate,
   sortable = false,
   priorityNumber,
+  onMove,
+  canMoveUp = false,
+  canMoveDown = false,
 }: Props) {
   const { isReadOnly } = useWritingMode();
   const [togglePending, toggleStart] = useTransition();
@@ -91,16 +100,40 @@ export function CandidateRow({
       } ${isDragging ? "opacity-90" : ""}`}
     >
       {sortable && (
-        <button
-          type="button"
-          aria-label="Reorder candidate"
-          {...attributes}
-          {...listeners}
-          disabled={isReadOnly}
-          className="mt-1 text-gray-400 hover:text-gray-700 cursor-grab active:cursor-grabbing touch-none disabled:opacity-50"
-        >
-          <GripVertical className="w-4 h-4" aria-hidden="true" />
-        </button>
+        <div className="mt-1 flex flex-col items-center">
+          {!isReadOnly && (
+            <button
+              type="button"
+              aria-label={`Move “${candidate.text || "this candidate"}” up`}
+              disabled={!canMoveUp}
+              onClick={() => onMove?.("up")}
+              className="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+            >
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
+          <button
+            type="button"
+            aria-label="Reorder candidate by dragging"
+            {...attributes}
+            {...listeners}
+            disabled={isReadOnly}
+            className="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:text-gray-700 cursor-grab active:cursor-grabbing touch-none disabled:opacity-50"
+          >
+            <GripVertical className="w-4 h-4" aria-hidden="true" />
+          </button>
+          {!isReadOnly && (
+            <button
+              type="button"
+              aria-label={`Move “${candidate.text || "this candidate"}” down`}
+              disabled={!canMoveDown}
+              onClick={() => onMove?.("down")}
+              className="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+            >
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
       )}
 
       <div className="flex flex-col items-center pt-1">
@@ -146,7 +179,7 @@ export function CandidateRow({
           disabled={deletePending}
           title="Remove candidate"
           aria-label="Delete this candidate"
-          className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+          className="mt-1 flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-red-700 disabled:opacity-50"
         >
           {deletePending ? (
             <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />

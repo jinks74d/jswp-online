@@ -176,7 +176,7 @@ function GradeComposer({
           disabled={pending}
           aria-label="Score"
           aria-describedby="grade-composer-hint"
-          className="w-32 rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 disabled:opacity-50"
+          className="w-32 rounded-md border border-gray-400 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 disabled:opacity-50"
         />
         <button
           type="button"

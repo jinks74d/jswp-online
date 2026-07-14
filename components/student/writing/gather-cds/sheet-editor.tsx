@@ -113,13 +113,8 @@ export function SheetEditor({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const onDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = orderedIds.indexOf(String(active.id));
-    const newIndex = orderedIds.indexOf(String(over.id));
-    if (oldIndex < 0 || newIndex < 0) return;
-    const next = arrayMove(orderedIds, oldIndex, newIndex);
+  // Shared persistence for both drag-and-drop and the ▲/▼ move buttons.
+  const applyReorder = (next: string[]) => {
     setOrderedIds(next);
     startReorder(async () => {
       try {
@@ -130,6 +125,24 @@ export function SheetEditor({
         setOrderedIds(selected.map((c) => c.id));
       }
     });
+  };
+
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = orderedIds.indexOf(String(active.id));
+    const newIndex = orderedIds.indexOf(String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+    applyReorder(arrayMove(orderedIds, oldIndex, newIndex));
+  };
+
+  // Single-pointer / keyboard reorder alternative (WCAG 2.5.7).
+  const moveItem = (id: string, direction: "up" | "down") => {
+    const i = orderedIds.indexOf(id);
+    if (i < 0) return;
+    const j = direction === "up" ? i - 1 : i + 1;
+    if (j < 0 || j >= orderedIds.length) return;
+    applyReorder(arrayMove(orderedIds, i, j));
   };
 
   return (
@@ -164,8 +177,8 @@ export function SheetEditor({
         </div>
         <p className="text-xs text-gray-500 mb-3">
           List 5 or more. Check the box on the ones you want to use.
-          Drag the selected ones into the order you want them to appear
-          in your paragraph.
+          Put the selected ones in the order you want them to appear in
+          your paragraph — drag them, or use the up/down arrows.
         </p>
 
         {sheet.candidates.length === 0 ? (
@@ -201,6 +214,9 @@ export function SheetEditor({
                           candidate={c}
                           sortable
                           priorityNumber={idx + 1}
+                          onMove={(dir) => moveItem(c.id, dir)}
+                          canMoveUp={idx > 0}
+                          canMoveDown={idx < orderedSelected.length - 1}
                         />
                       ))}
                     </div>

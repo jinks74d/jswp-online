@@ -88,8 +88,11 @@ export async function CombinedView({
         {visible.map((step) => (
           <section
             key={step.key}
-            className="border-l-2 border-gray-100 pl-4"
-            aria-labelledby={`step-${step.key}`}
+            // White surface (not the stone-100 page bg) so the read-only step
+            // content — whose muted gray-500 labels are tuned for a white
+            // background — keeps ≥4.5:1 contrast here too (WCAG 1.4.3).
+            className="rounded-lg border border-gray-200 bg-white p-5"
+            aria-label={step.label}
           >
             {renderStep({
               step,

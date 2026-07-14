@@ -92,7 +92,7 @@ export function PickNStitchPanel({
             <div key={group.word.id}>
               <h4 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--jswp-color-cm)] mb-0.5">
                 {group.word.text.trim() || (
-                  <span className="italic font-normal text-gray-400">(no word)</span>
+                  <span className="italic font-normal text-gray-500">(no word)</span>
                 )}
                 {group.word.synonym && (
                   <span className="ml-1.5 font-normal normal-case text-gray-500">
@@ -101,7 +101,7 @@ export function PickNStitchPanel({
                 )}
               </h4>
               {group.phrases.length === 0 ? (
-                <p className="text-xs text-gray-400 italic pl-1">
+                <p className="text-xs text-gray-500 italic pl-1">
                   No elaboration phrases for this word yet.
                 </p>
               ) : (
@@ -156,7 +156,7 @@ function CmRow({
         <div className="flex-1 min-w-0">
           <div className="text-sm text-gray-900 truncate">
             {cm.text.trim() || (
-              <span className="italic text-gray-400">(empty)</span>
+              <span className="italic text-gray-500">(empty)</span>
             )}
           </div>
           <div className="flex items-center gap-1 mt-0.5 flex-wrap">

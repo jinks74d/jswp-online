@@ -31,7 +31,14 @@
  * assignment prompt renders in the step chrome, not on the T-Chart.
  */
 
-import { useEffect, useRef, useState } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { Cloud as CloudIcon } from "lucide-react";
 import { updateTChart } from "@/lib/actions/t-charts";
 import { useWritingMode } from "../use-writing-mode";
@@ -270,9 +277,22 @@ function CdRow({
       >
         {label}
       </div>
-      <div className="mt-1">{children}</div>
+      <div className="mt-1">{injectAriaLabel(children, label)}</div>
     </div>
   );
+}
+
+/**
+ * Injects the wrapper's visible label into its single WowField child as an
+ * accessible name, so the field is programmatically labelled without an
+ * explicit htmlFor/id pairing (WCAG 1.3.1 / 4.1.2).
+ */
+function injectAriaLabel(children: React.ReactNode, label: string) {
+  return isValidElement(children)
+    ? cloneElement(children as ReactElement<{ ariaLabel?: string }>, {
+        ariaLabel: label,
+      })
+    : children;
 }
 
 /**
@@ -297,7 +317,7 @@ function Cloud({
         />
         <p className="text-xs font-semibold text-green-800">{prompt}</p>
       </div>
-      {children}
+      {injectAriaLabel(children, prompt)}
     </div>
   );
 }
@@ -320,7 +340,7 @@ function Oval({ children }: { children: React.ReactNode }) {
       <p className="mb-2 text-center text-xs font-semibold text-green-800">
         The circle in the middle
       </p>
-      {children}
+      {injectAriaLabel(children, "The circle in the middle")}
     </div>
   );
 }
@@ -339,6 +359,7 @@ function WowField({
   multiline,
   rows,
   placeholder,
+  ariaLabel,
 }: {
   color: "cd" | "cm";
   initialValue: string;
@@ -347,6 +368,10 @@ function WowField({
   multiline?: boolean;
   rows?: number;
   placeholder?: string;
+  /** Accessible name — the WOW cells' visible labels live in the row/cloud
+   *  wrappers, which inject them here so each field is programmatically
+   *  labelled (WCAG 1.3.1 / 4.1.2). */
+  ariaLabel?: string;
 }) {
   const [value, setValue] = useState(initialValue);
   const [status, setStatus] = useState<
@@ -387,6 +412,7 @@ function WowField({
           value={value}
           rows={rows ?? 2}
           placeholder={placeholder}
+          aria-label={ariaLabel}
           disabled={disabled}
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => {
@@ -400,6 +426,7 @@ function WowField({
           type="text"
           value={value}
           placeholder={placeholder}
+          aria-label={ariaLabel}
           disabled={disabled}
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => {
@@ -413,7 +440,7 @@ function WowField({
         className="absolute right-1 top-0.5 text-base pointer-events-none"
         aria-live="polite"
       >
-        {status === "saving" && <span className="text-gray-400">…</span>}
+        {status === "saving" && <span className="text-gray-500">…</span>}
         {status === "saved" && <span className="text-green-600">✓</span>}
         {status === "error" && (
           <span className="text-red-600">retry</span>

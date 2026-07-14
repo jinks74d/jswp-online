@@ -19,7 +19,13 @@ import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 import type { AnnotationKind } from "./annotation-kind-config";
 
 export type RichTextRun =
-  | { readonly marked: false; readonly text: string }
+  | {
+      readonly marked: false;
+      readonly text: string;
+      /** Absolute start offset of this run in source_text. Lets the viewer
+       *  offer keyboard sentence-selection over unmarked text (WCAG 2.1.1). */
+      readonly start: number;
+    }
   | {
       readonly marked: true;
       readonly text: string;
@@ -150,6 +156,7 @@ function splitText(
       runs.push({
         marked: false,
         text: text.slice(cursor - nodeStart, segStart - nodeStart),
+        start: cursor,
       });
     }
     runs.push({
@@ -160,7 +167,7 @@ function splitText(
     cursor = segEnd;
   }
   if (cursor < nodeEnd) {
-    runs.push({ marked: false, text: text.slice(cursor - nodeStart) });
+    runs.push({ marked: false, text: text.slice(cursor - nodeStart), start: cursor });
   }
   return runs;
 }

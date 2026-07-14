@@ -156,7 +156,7 @@ function CandidateRow({
         )}
         <span className="text-sm text-gray-900 whitespace-pre-wrap">
           {candidate.text || (
-            <span className="italic text-gray-400">
+            <span className="italic text-gray-500">
               (empty candidate — fill it in on gather-cds)
             </span>
           )}

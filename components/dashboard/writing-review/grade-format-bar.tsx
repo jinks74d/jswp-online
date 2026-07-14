@@ -51,6 +51,7 @@ export function GradeFormatBar({
               key={o.value}
               type="button"
               disabled={pending}
+              aria-pressed={active}
               onClick={() => choose(o.value)}
               className={`px-3 py-1 text-sm font-medium ${
                 active

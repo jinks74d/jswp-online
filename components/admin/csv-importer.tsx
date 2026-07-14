@@ -155,7 +155,7 @@ export function CsvImporter({
           <button
             type="button"
             onClick={reset}
-            className="text-gray-400 hover:text-gray-700"
+            className="flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-700"
             aria-label="Cancel"
           >
             <X className="w-4 h-4" />
@@ -206,7 +206,7 @@ export function CsvImporter({
                           aria-label={`Include row ${r.rowNumber}`}
                         />
                       </td>
-                      <td className="px-3 py-1.5 text-gray-400">
+                      <td className="px-3 py-1.5 text-gray-500">
                         {r.rowNumber}
                       </td>
                       <td className="px-3 py-1.5">

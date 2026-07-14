@@ -23,15 +23,27 @@ export interface RichSourceBodyProps {
     text: string,
     key: string
   ) => ReactNode;
+  /**
+   * Renders an unmarked text run. Given the run's text and its absolute start
+   * offset in source_text, the caller decides whether to emit plain text
+   * (read-only) or keyboard-selectable sentence targets (editable). Optional:
+   * when omitted the run renders as plain text.
+   */
+  readonly renderPlain?: (text: string, start: number, key: string) => ReactNode;
 }
 
-export function RichSourceBody({ nodes, renderMark }: RichSourceBodyProps) {
-  return <>{renderNodes(nodes, renderMark, "n")}</>;
+export function RichSourceBody({
+  nodes,
+  renderMark,
+  renderPlain,
+}: RichSourceBodyProps) {
+  return <>{renderNodes(nodes, renderMark, renderPlain, "n")}</>;
 }
 
 function renderNodes(
   nodes: readonly RichNode[],
   renderMark: RichSourceBodyProps["renderMark"],
+  renderPlain: RichSourceBodyProps["renderPlain"],
   prefix: string
 ): ReactNode[] {
   return nodes.map((node, i) => {
@@ -42,8 +54,13 @@ function renderNodes(
         <Fragment key={key}>
           {node.runs.map((run, j) => {
             const runKey = `${key}-${j}`;
-            return run.marked ? (
-              renderMark(run.annotation, run.text, runKey)
+            if (run.marked) {
+              return renderMark(run.annotation, run.text, runKey);
+            }
+            return renderPlain ? (
+              <Fragment key={runKey}>
+                {renderPlain(run.text, run.start, runKey)}
+              </Fragment>
             ) : (
               <Fragment key={runKey}>{run.text}</Fragment>
             );
@@ -52,7 +69,7 @@ function renderNodes(
       );
     }
 
-    const children = renderNodes(node.children, renderMark, key);
+    const children = renderNodes(node.children, renderMark, renderPlain, key);
     const props = { key, ...node.attrs };
     // Void elements (img, br) must not be given a children argument.
     return children.length > 0

@@ -69,9 +69,11 @@ export function ExpositoryTChart({
       <div className="mx-auto max-w-[816px] rounded-sm bg-white px-6 py-8 shadow-[0_8px_30px_rgba(20,24,40,0.14),0_1px_2px_rgba(20,24,40,0.08)] sm:px-14 sm:py-10">
         {/* Title */}
         <header className="text-center">
-          <h3 className="text-2xl font-extrabold uppercase leading-tight tracking-tight text-gray-900">
+          {/* h2 (not h3): this is the step's top heading under the page h1,
+              so it must not skip a level (WCAG 1.3.1 heading order). */}
+          <h2 className="text-2xl font-extrabold uppercase leading-tight tracking-tight text-gray-900">
             T-Chart
-          </h3>
+          </h2>
           <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-gray-500">
             {chunkCountWord(bp.chunks.length)} · {spec.ratioLabel} · Step{" "}
             {spec.stepNumber}

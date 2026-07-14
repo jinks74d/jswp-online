@@ -119,6 +119,7 @@ export function SentenceList({
               initialValue={s}
               disabled={isReadOnly}
               className={textClass}
+              ariaLabel={`${label} sentence ${i + 1}`}
               onSave={async (value) => {
                 await persist(updateAt(i, value));
               }}
@@ -131,7 +132,7 @@ export function SentenceList({
               disabled={pending}
               title="Remove sentence"
               aria-label="Remove sentence"
-              className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+              className="mt-1 flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:text-red-700 disabled:opacity-50"
             >
               {pending ? (
                 <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />

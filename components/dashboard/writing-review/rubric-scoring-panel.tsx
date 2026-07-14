@@ -138,7 +138,7 @@ export function RubricScoringPanel({
                   return (
                     <label
                       key={`${criterion.id}-${level.score}`}
-                      className={`flex flex-col gap-1 cursor-pointer rounded-md border p-2 text-left transition-colors ${
+                      className={`flex flex-col gap-1 cursor-pointer rounded-md border p-2 text-left transition-colors focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-1 ${
                         isSelected
                           ? "border-green-600 bg-green-50"
                           : "border-gray-200 bg-white hover:border-gray-400"
@@ -159,6 +159,9 @@ export function RubricScoringPanel({
                             isSelected ? "text-green-800" : "text-gray-800"
                           }`}
                         >
+                          {/* Non-color selected marker (WCAG 1.4.1) so the
+                              choice isn't signalled by green alone. */}
+                          {isSelected && <span aria-hidden="true">✓ </span>}
                           {level.label}
                         </span>
                         <span

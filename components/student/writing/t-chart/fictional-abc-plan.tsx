@@ -435,7 +435,7 @@ function AutoText({
           className="absolute -right-1 -top-1 text-base pointer-events-none"
           aria-live="polite"
         >
-          {status === "saving" && <span className="text-gray-400">…</span>}
+          {status === "saving" && <span className="text-gray-500">…</span>}
           {status === "saved" && <span className="text-green-600">✓</span>}
           {status === "error" && <span className="text-red-600">!</span>}
         </span>

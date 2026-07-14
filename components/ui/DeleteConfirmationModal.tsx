@@ -29,6 +29,7 @@ export default function DeleteConfirmationModal({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const titleId = useId();
+  const confirmFieldId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   // Remember the element that had focus before the dialog opened so we can
@@ -153,7 +154,7 @@ export default function DeleteConfirmationModal({
               onClick={handleClose}
               disabled={isDeleting}
               aria-label="Close dialog"
-              className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              className="flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-600 disabled:opacity-50"
             >
               <X className="w-5 h-5" />
             </button>
@@ -173,17 +174,17 @@ export default function DeleteConfirmationModal({
             </div>
 
             <div>
-              <label htmlFor="confirmText" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor={confirmFieldId} className="block text-sm font-medium text-gray-700 mb-2">
                 Confirmation
               </label>
               <input
-                id="confirmText"
+                id={confirmFieldId}
                 type="text"
                 value={confirmationText}
                 onChange={(e) => setConfirmationText(e.target.value)}
                 placeholder={`Type ${confirmText} to confirm`}
                 disabled={isDeleting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:opacity-50 font-mono"
+                className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:opacity-50 font-mono"
               />
             </div>
 

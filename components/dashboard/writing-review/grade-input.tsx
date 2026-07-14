@@ -117,7 +117,7 @@ export function GradeInput({
           value={value}
           disabled={pending}
           onChange={(e) => save(e.target.value)}
-          className="rounded-md border border-stone-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-md border border-stone-400 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label={ariaLabel ?? "Grade"}
         >
           <option value="">—</option>
@@ -148,7 +148,7 @@ export function GradeInput({
         }}
         placeholder="0–100"
         aria-label={ariaLabel ?? "Grade"}
-        className="w-20 rounded-md border border-stone-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-20 rounded-md border border-stone-400 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       {statusMark}
     </span>

@@ -29,6 +29,7 @@ import {
 } from "./annotation-kind-config";
 import { buildRichTree } from "./rich-source-tree";
 import { RichSourceBody } from "./rich-source-body";
+import { splitSentences, trimmedRange } from "./sentence-split";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 
 export interface SelectionPayload {
@@ -56,6 +57,18 @@ interface Props {
   onClearSelection?: () => void;
   onAnnotationClick?: (annotation: TextAnnotationRow) => void;
   /**
+   * Keyboard alternative to mouse drag-select (WCAG 2.1.1): when provided,
+   * unmarked text renders as focusable sentence targets that open the create
+   * form for that sentence's range. Pointer users keep using free selection;
+   * these targets only respond to keyboard activation so they never hijack a
+   * click that was meant to place a caret or start a drag-selection.
+   */
+  onCreateRange?: (
+    rangeStart: number,
+    rangeEnd: number,
+    selectedText: string
+  ) => void;
+  /**
    * Read-only mode: render the highlights but disable selection
    * detection (no popover) and the <mark> click handler. Used by the
    * T-chart reference panel from chunk 4.4 onward.
@@ -66,6 +79,8 @@ interface Props {
 interface PlainSegment {
   kind: "plain";
   text: string;
+  /** Absolute start offset in source_text — anchors keyboard sentence targets. */
+  start: number;
 }
 interface AnnSegment {
   kind: "ann";
@@ -89,7 +104,11 @@ function buildSegments(
   let lastEnd = 0;
   for (const a of filtered) {
     if (a.range_start > lastEnd) {
-      segs.push({ kind: "plain", text: source.slice(lastEnd, a.range_start) });
+      segs.push({
+        kind: "plain",
+        text: source.slice(lastEnd, a.range_start),
+        start: lastEnd,
+      });
     }
     const effectiveStart = Math.max(lastEnd, a.range_start);
     const effectiveEnd = Math.min(a.range_end, source.length);
@@ -103,7 +122,7 @@ function buildSegments(
     }
   }
   if (lastEnd < source.length) {
-    segs.push({ kind: "plain", text: source.slice(lastEnd) });
+    segs.push({ kind: "plain", text: source.slice(lastEnd), start: lastEnd });
   }
   return segs;
 }
@@ -142,9 +161,11 @@ export function SourceTextViewer({
   onSelection,
   onClearSelection,
   onAnnotationClick,
+  onCreateRange,
   readOnly = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const canCreateByKeyboard = !readOnly && typeof onCreateRange === "function";
 
   // buildRichTree uses DOMParser (browser-only); a "use client" component
   // still server-renders, so gate the rich build behind mount. SSR + first
@@ -232,20 +253,79 @@ export function SourceTextViewer({
     key: string
   ): ReactNode => {
     const cfg = ANNOTATION_KINDS[annotation.kind];
+    // In editable mode the highlight IS the edit affordance. A <mark> is not
+    // natively interactive, so expose it as a keyboard-operable button:
+    // role + tabIndex make it focusable, onKeyDown handles Enter/Space, and
+    // aria-label names the action (kind alone isn't enough for a screen
+    // reader tabbing past dozens of highlights). WCAG 2.1.1 / 4.1.2.
     return (
       <mark
         key={key}
         data-annotation-id={annotation.id}
-        className={`${cfg.highlightBg} rounded px-0.5 ${readOnly ? "" : "cursor-pointer"} text-inherit`}
+        className={`${cfg.highlightBg} rounded px-0.5 ${readOnly ? "" : "cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-600"} text-inherit`}
+        role={readOnly ? undefined : "button"}
+        tabIndex={readOnly ? undefined : 0}
+        aria-label={
+          readOnly
+            ? undefined
+            : `Edit ${cfg.label} annotation: ${annotation.selected_text}`
+        }
         onClick={(e) => {
           if (readOnly) return;
           e.stopPropagation();
           onAnnotationClick?.(annotation);
         }}
+        onKeyDown={(e) => {
+          if (readOnly) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            onAnnotationClick?.(annotation);
+          }
+        }}
         title={cfg.label}
       >
         {text}
       </mark>
+    );
+  };
+
+  // Renders unmarked text. In editable mode (with onCreateRange) each sentence
+  // becomes a keyboard-focusable target so a keyboard-only student can create
+  // an annotation without mouse drag-select (WCAG 2.1.1). Activation is
+  // keyboard-only (Enter/Space) so it never competes with pointer selection.
+  const renderPlain = (text: string, start: number, key: string): ReactNode => {
+    if (!canCreateByKeyboard) return <span key={key}>{text}</span>;
+    return (
+      <span key={key}>
+        {splitSentences(text, start).map((piece, i) => {
+          if (piece.text.trim().length === 0) {
+            // Whitespace-only run: keep the spacing, but nothing to annotate.
+            return <span key={`${key}-w${i}`}>{piece.text}</span>;
+          }
+          const activate = () => {
+            const { start: s, end: e } = trimmedRange(piece);
+            if (e > s) onCreateRange?.(s, e, sourceText.slice(s, e));
+          };
+          return (
+            <span
+              key={`${key}-s${i}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Annotate this sentence: ${piece.text.trim()}`}
+              className="rounded-sm hover:bg-yellow-50 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-600"
+              onKeyDown={(ev) => {
+                if (ev.key === "Enter" || ev.key === " ") {
+                  ev.preventDefault();
+                  activate();
+                }
+              }}
+            >
+              {piece.text}
+            </span>
+          );
+        })}
+      </span>
     );
   };
 
@@ -260,14 +340,18 @@ export function SourceTextViewer({
   return (
     <div ref={containerRef} onMouseUp={handleMouseUp} className={containerClass}>
       {richTree ? (
-        <RichSourceBody nodes={richTree} renderMark={renderMark} />
+        <RichSourceBody
+          nodes={richTree}
+          renderMark={renderMark}
+          renderPlain={renderPlain}
+        />
       ) : (
         segments.map((seg, i) => {
           if (seg.kind === "plain") {
             // Use a stable-ish key per-position; React keys based on index
             // are fine here because the segment list rebuilds on every
             // annotation change.
-            return <span key={`p-${i}`}>{seg.text}</span>;
+            return renderPlain(seg.text, seg.start, `p-${i}`);
           }
           return renderMark(
             seg.annotation,

@@ -49,7 +49,7 @@ export function FeedbackPanel({
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-gray-700" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-gray-900">Feedback</h2>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-600">
             ({unresolved.length} open
             {resolved.length > 0 && ` · ${resolved.length} resolved`})
           </span>
@@ -61,7 +61,7 @@ export function FeedbackPanel({
       )}
 
       {feedback.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-gray-600 italic">
           {mode === "teacher"
             ? "No comments yet. Add one above."
             : "No feedback yet."}
@@ -78,7 +78,7 @@ export function FeedbackPanel({
               />
             ))}
             {unresolved.length === 0 && (
-              <p className="text-xs text-gray-500 italic">
+              <p className="text-xs text-gray-600 italic">
                 No open comments.
               </p>
             )}
@@ -153,10 +153,10 @@ function Composer({ writingId }: { writingId: string }) {
         placeholder="Write feedback for this student…"
         aria-label="Write feedback for this student"
         aria-describedby="feedback-composer-hint"
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
       <div className="flex items-center justify-between gap-3">
-        <p id="feedback-composer-hint" className="text-base text-gray-500">
+        <p id="feedback-composer-hint" className="text-base text-gray-600">
           ⌘/Ctrl + Enter to submit
         </p>
         <button

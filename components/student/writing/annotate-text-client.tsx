@@ -120,6 +120,18 @@ export function AnnotateTextClient({
     setSelection(null);
   };
 
+  // Keyboard-only creation path (WCAG 2.1.1): a sentence target in the viewer
+  // opens the create form directly with that sentence's range, bypassing the
+  // mouse-drag selection + popover flow.
+  const onCreateRange = (
+    rangeStart: number,
+    rangeEnd: number,
+    selectedText: string
+  ) => {
+    setOpenForm({ mode: "create", writingId, rangeStart, rangeEnd, selectedText });
+    setSelection(null);
+  };
+
   const toggleKind = (kind: AnnotationKind) => {
     setVisibleKinds((prev) => {
       const next = new Set(prev);
@@ -181,7 +193,9 @@ export function AnnotateTextClient({
           </div>
           {initialAnnotations.length === 0 && (
             <div className="text-xs text-gray-500 italic">
-              Tip: select any passage to add your first annotation.
+              Tip: select any passage with the mouse — or press Tab to move
+              through the text and Enter on a sentence — to add your first
+              annotation.
             </div>
           )}
           {isPdf && !pdfFailed ? (
@@ -214,6 +228,7 @@ export function AnnotateTextClient({
               onSelection={isReadOnly ? () => {} : setSelection}
               onClearSelection={() => setSelection(null)}
               onAnnotationClick={onAnnotationClick}
+              onCreateRange={isReadOnly ? undefined : onCreateRange}
             />
           )}
         </div>

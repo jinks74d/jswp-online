@@ -105,7 +105,7 @@ export function ReferencePanel({
                   type="checkbox"
                   checked={visibleKinds.has(k)}
                   onChange={() => toggleKind(k)}
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-400"
                 />
                 <span
                   className={`inline-block w-2.5 h-2.5 rounded-full ${cfg.dotBg}`}

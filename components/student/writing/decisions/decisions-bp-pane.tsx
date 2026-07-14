@@ -80,7 +80,7 @@ function CdSection({
         </div>
         <p className="text-sm text-gray-900 whitespace-pre-wrap mt-0.5">
           {cdText.trim() || (
-            <span className="italic text-gray-400">
+            <span className="italic text-gray-500">
               (empty CD — fill it in on gather-cds)
             </span>
           )}
@@ -141,7 +141,7 @@ function WordRow({
       className={`flex items-center gap-3 rounded-md border border-gray-200 p-2 ${tintClass}`}
     >
       <span
-        className={`flex-1 text-sm ${isEmpty ? "italic text-gray-400" : "text-gray-900"}`}
+        className={`flex-1 text-sm ${isEmpty ? "italic text-gray-500" : "text-gray-900"}`}
       >
         {isEmpty ? "(empty word slot)" : word.text}
       </span>
@@ -248,7 +248,7 @@ function BestForChunkToggle({
                   backgroundColor: "rgb(14 165 233)",
                   borderColor: "rgb(14 165 233)",
                 }
-              : { borderColor: "rgb(156 163 175)" }
+              : { borderColor: "rgb(107 114 128)" }
           }
           aria-hidden="true"
         />

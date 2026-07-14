@@ -115,7 +115,7 @@ function CdSection({
         </div>
         <p className="text-sm text-gray-900 whitespace-pre-wrap mt-0.5">
           {cdText.trim() || (
-            <span className="italic text-gray-400">
+            <span className="italic text-gray-500">
               (empty CD — fill it in on gather-cds)
             </span>
           )}
@@ -178,7 +178,7 @@ function WordRow({
           disabled={pending}
           title="Remove word"
           aria-label="Remove word"
-          className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+          className="mt-1 flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:text-red-700 disabled:opacity-50"
         >
           {pending ? (
             <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />

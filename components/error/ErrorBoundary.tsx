@@ -199,7 +199,10 @@ export class ErrorBoundary extends Component<
     const severityIcon = this.getSeverityIcon(error.severity);
 
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div
+        role="alert"
+        className="min-h-screen bg-gray-50 flex items-center justify-center p-4"
+      >
         <div className="max-w-2xl w-full">
           {/* Main Error Card */}
           <div className={`rounded-lg border-2 p-6 ${severityColor}`}>

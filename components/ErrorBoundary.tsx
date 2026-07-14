@@ -84,7 +84,10 @@ export class ErrorBoundary extends React.Component<
 
       // Default error UI
       return (
-        <div className="min-h-screen flex items-center justify-center bg-red-50">
+        <div
+          role="alert"
+          className="min-h-screen flex items-center justify-center bg-red-50"
+        >
           <div className="text-center p-8 max-w-md mx-auto">
             <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-white text-2xl">⚠</span>

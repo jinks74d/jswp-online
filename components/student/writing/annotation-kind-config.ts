@@ -11,6 +11,12 @@
  * dark underline (not a fill) to echo the guide's "underline the main
  * idea in black" convention (Finding the Main Idea, 2024 guide pp.52-53);
  * highlightBg holds underline utilities rather than a background here.
+ *
+ * Accessibility (WCAG 1.4.1 Use of Color, CLAUDE.md §9): kind must not be
+ * conveyed by highlight color alone. Each kind therefore also carries a
+ * distinct underline *line style* — solid (main idea), dotted (CD), dashed
+ * (CM), wavy (transition), double (note) — so the five kinds are
+ * distinguishable without perceiving color.
  */
 
 import type { Database } from "@/lib/database.types";
@@ -44,7 +50,9 @@ export const ANNOTATION_KINDS: Record<AnnotationKind, AnnotationKindConfig> = {
     key: "cd",
     label: "Concrete Detail",
     description: "A fact, example, or piece of evidence from the text.",
-    highlightBg: "bg-red-100",
+    // Dotted underline — the non-color cue distinguishing CD from CM etc.
+    highlightBg:
+      "bg-red-100 underline decoration-dotted decoration-2 decoration-red-700 underline-offset-2",
     accentText: "text-red-700",
     dotBg: "bg-red-500",
   },
@@ -52,7 +60,9 @@ export const ANNOTATION_KINDS: Record<AnnotationKind, AnnotationKindConfig> = {
     key: "cm",
     label: "Commentary",
     description: "Your analysis, reaction, or interpretation.",
-    highlightBg: "bg-green-100",
+    // Dashed underline — non-color cue.
+    highlightBg:
+      "bg-green-100 underline decoration-dashed decoration-2 decoration-green-700 underline-offset-2",
     accentText: "text-green-700",
     dotBg: "bg-green-500",
   },
@@ -60,7 +70,9 @@ export const ANNOTATION_KINDS: Record<AnnotationKind, AnnotationKindConfig> = {
     key: "transition",
     label: "Transition",
     description: "A transition word or phrase that signals movement of ideas.",
-    highlightBg: "bg-sky-100",
+    // Wavy underline — non-color cue.
+    highlightBg:
+      "bg-sky-100 underline decoration-wavy decoration-sky-700 underline-offset-2",
     accentText: "text-sky-700",
     dotBg: "bg-sky-500",
   },
@@ -68,7 +80,9 @@ export const ANNOTATION_KINDS: Record<AnnotationKind, AnnotationKindConfig> = {
     key: "note",
     label: "Note",
     description: "A general margin note about the passage.",
-    highlightBg: "bg-gray-200",
+    // Double underline — non-color cue.
+    highlightBg:
+      "bg-gray-200 underline decoration-double decoration-gray-600 underline-offset-2",
     accentText: "text-gray-700",
     dotBg: "bg-gray-500",
   },

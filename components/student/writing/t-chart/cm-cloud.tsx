@@ -53,7 +53,7 @@ export function CmCloud({
   return (
     <div className="mx-auto w-full max-w-[340px]">
       {/* caption for the whole cloud (no per-ray labels) */}
-      <p className="mb-2 text-center text-[11px] font-medium leading-tight text-emerald-700/70">
+      <p className="mb-2 text-center text-[11px] font-medium leading-tight text-emerald-700">
         Brainstorm words on the rays — why is this important?
       </p>
 
@@ -178,7 +178,7 @@ function DeleteButton({
         })
       }
       disabled={pending}
-      className="text-gray-400 hover:text-red-700 disabled:opacity-50"
+      className="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:text-red-700 disabled:opacity-50"
     >
       {pending ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />

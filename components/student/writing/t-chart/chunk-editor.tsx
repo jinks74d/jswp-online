@@ -246,7 +246,7 @@ function DeleteCdButton({
       disabled={pending}
       title="Remove CD"
       aria-label="Remove CD"
-      className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+      className="mt-1 flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:text-red-700 disabled:opacity-50"
     >
       {pending ? (
         <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
@@ -307,7 +307,7 @@ function DeleteCmButton({
       disabled={pending}
       title="Remove CM"
       aria-label="Remove CM"
-      className="mt-1 text-gray-400 hover:text-red-700 disabled:opacity-50"
+      className="mt-1 flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:text-red-700 disabled:opacity-50"
     >
       {pending ? (
         <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
