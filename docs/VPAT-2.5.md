@@ -108,14 +108,14 @@ Remarks describe the current implementation and any known remaining gaps
 | **1.2.5 Audio Description (Prerecorded)** (AA) | Not Applicable | No pre-recorded synchronized media. |
 | **1.3.4 Orientation** (AA) | Supports | Layout is responsive; no orientation lock. |
 | **1.3.5 Identify Input Purpose** (AA) | Supports | `autocomplete` tokens are set on email, name, and password fields. |
-| **1.4.3 Contrast (Minimum)** (AA) | Supports | A comprehensive sweep darkened low-contrast content text (`text-gray-400/300` on light backgrounds) to `text-gray-500/600` to meet 4.5:1 (large text 3:1) across the application; exempt cases (disabled controls, light-on-dark text) were preserved. JSWP role colors meet AA on white. *Automated contrast scanning is recommended as part of AT validation to confirm.* |
+| **1.4.3 Contrast (Minimum)** (AA) | Supports | A comprehensive sweep darkened low-contrast content text (`text-gray-400/300` on light backgrounds) to `text-gray-500/600` to meet 4.5:1 (large text 3:1) across the application; exempt cases (disabled controls, light-on-dark text) were preserved. JSWP role colors meet AA on white. Contrast was confirmed via Lighthouse/axe on the audited surfaces (100/100), which surfaced and drove fixes for muted text on tinted backgrounds. |
 | **1.4.4 Resize Text** (AA) | Supports | Rem-based type scale (min 16px floors); text scales with browser zoom without loss of content. |
 | **1.4.5 Images of Text** (AA) | Supports | Text is rendered as text; images are limited to logos/branding. |
 | **1.4.10 Reflow** (AA) | Supports | The application reflows to a 320px-wide viewport (mobile drawers, no fixed-width horizontal scroll). Wide teacher-authored tables inside rendered rich source text now scroll within their own container rather than forcing horizontal page scroll. |
 | **1.4.11 Non-text Contrast** (AA) | Supports | Focus indicators render a visible ring (a missing ring-width utility was corrected across input components); idle form-control borders were darkened to `border-gray-400`/`border-stone-400` to meet 3:1; low-contrast icon affordances were darkened; `forced-colors` mode is handled. |
 | **1.4.12 Text Spacing** (AA) | Supports | No fixed line-height/letter-spacing that would clip under user text-spacing overrides. |
 | **1.4.13 Content on Hover or Focus** (AA) | Supports | Custom hover/focus content (selection popover) is dismissible (Escape), hoverable, and persistent. Native `title` tooltips are user-agent controlled. |
-| **2.4.5 Multiple Ways** (AA) | Supports | Multiple navigation paths exist (persistent nav/sidebars, in-context links, breadcrum_trails within nested admin routes). |
+| **2.4.5 Multiple Ways** (AA) | Supports | Multiple navigation paths exist (persistent nav/sidebars, in-context links, and breadcrumb trails within nested admin routes). |
 | **2.4.6 Headings and Labels** (AA) | Supports | Headings and labels are descriptive. |
 | **2.4.7 Focus Visible** (AA) | Supports | A visible focus indicator is present on interactive elements; the borderless autosave field and previously ring-less inputs were corrected. No global `outline:none` without replacement. |
 | **2.4.11 Focus Not Obscured (Minimum)** (AA) *(new in 2.2)* | Supports | A `scroll-margin-top` rule keeps focused controls in the main region clear of the ~64px sticky headers. |
@@ -143,11 +143,13 @@ required to make any AAA claim.
 
 This report is a **self-assessment prepared by the product team** and is provided
 for informational purposes. It reflects the state of the `v2` rebuild as of the
-report date and is **subject to change**. Conformance determinations are based on
-static code review only; **assistive-technology and manual testing are required
-to validate the claims herein** before this document is relied upon for
-procurement or represented as a completed VPAT. "VPAT" is a registered trademark
-of the Information Technology Industry Council (ITI).
+report date and is **subject to change**. Conformance determinations combine
+static code review with automated (Lighthouse / axe-core) and keyboard/pointer
+validation of the running application; **manual assistive-technology testing
+(screen readers, screen magnification / 400% zoom) and testing with users with
+disabilities remain required** to validate the claims herein before this document
+is relied upon for procurement or represented as a completed VPAT. "VPAT" is a
+registered trademark of the Information Technology Industry Council (ITI).
 
 ## Remediation Backlog
 
