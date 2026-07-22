@@ -19,6 +19,7 @@ function ann(id: string, s: number, e: number): TextAnnotationRow {
   return {
     id,
     student_writing_id: "w1",
+    source_id: null,
     range_start: s,
     range_end: e,
     selected_text: "",

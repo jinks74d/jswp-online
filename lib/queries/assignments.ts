@@ -15,6 +15,22 @@ import type { Database, Json } from "@/lib/database.types";
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
 
+// Structurally identical to SourceTextFields' SourceInitial. Defined here to
+// keep this server-only query decoupled from the "use client" component.
+type SourceInitial = {
+  kind: "primary" | "secondary";
+  source_text: string | null;
+  source_title: string | null;
+  source_author: string | null;
+  source_citation: string | null;
+  source_url: string | null;
+  source_html: string | null;
+  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_file_path: string | null;
+  source_file_name: string | null;
+  source_file_mime: string | null;
+};
+
 /* ─── Return types ───────────────────────────────────────────────────── */
 
 export interface AssignmentListItem {
@@ -41,16 +57,7 @@ export interface AssignmentForEdit {
   default_chunk_ratio: ChunkRatio;
   default_chunks_per_bp: number;
   has_counterargument: boolean;
-  source_text: string | null;
-  source_title: string | null;
-  source_author: string | null;
-  source_citation: string | null;
-  source_url: string | null;
-  source_html: string | null;
-  source_render_mode: "pdf" | "rich" | "plain" | null;
-  source_file_path: string | null;
-  source_file_name: string | null;
-  source_file_mime: string | null;
+  sources: SourceInitial[];
   rubric: Json | null;
   due_at: string | null;
   class_period_id: string | null;
@@ -138,10 +145,13 @@ export async function getAssignmentForTeacher(
     .select(
       `id, title, prompt, mode, is_essay, num_body_paragraphs,
        default_chunk_ratio, default_chunks_per_bp, has_counterargument,
-       source_text, source_title, source_author, source_citation, source_url,
-       source_html, source_render_mode, source_file_path, source_file_name,
-       source_file_mime,
-       rubric, due_at, class_period_id, released_at, created_at, updated_at`
+       rubric, due_at, class_period_id, released_at, created_at, updated_at,
+       assignment_sources (
+         position, kind,
+         source_text, source_title, source_author, source_citation, source_url,
+         source_html, source_render_mode, source_file_path, source_file_name,
+         source_file_mime
+       )`
     )
     .eq("id", assignmentId)
     .eq("teacher_id", teacherId)
@@ -152,7 +162,16 @@ export async function getAssignmentForTeacher(
   }
   if (!data) return null;
 
-  return data as AssignmentForEdit;
+  const { assignment_sources, ...rest } = data as unknown as Omit<
+    AssignmentForEdit,
+    "sources"
+  > & { assignment_sources: (SourceInitial & { position: number })[] };
+
+  const sources = [...(assignment_sources ?? [])]
+    .sort((a, b) => a.position - b.position)
+    .map(({ position: _position, ...s }) => s as SourceInitial);
+
+  return { ...rest, sources } as AssignmentForEdit;
 }
 
 /**

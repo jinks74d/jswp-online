@@ -83,6 +83,7 @@ function ann(
   return {
     id,
     student_writing_id: "w1",
+    source_id: null,
     range_start,
     range_end,
     selected_text: "",

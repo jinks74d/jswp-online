@@ -34,7 +34,10 @@ import {
 } from "@/lib/actions/assignments";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { loadRubric, type Rubric } from "@/lib/rubric";
-import { SourceTextFields } from "@/components/assignments/source-text-fields";
+import {
+  SourceTextFields,
+  type SourceInitial,
+} from "@/components/assignments/source-text-fields";
 import { RubricEditor } from "@/components/assignments/rubric-editor";
 
 type Mode = "expository" | "argumentation" | "literary" | "narrative";
@@ -147,16 +150,7 @@ export type AssignmentInitial = {
   default_chunk_ratio: ChunkRatio;
   default_chunks_per_bp: number;
   has_counterargument: boolean;
-  source_text: string | null;
-  source_title: string | null;
-  source_author: string | null;
-  source_citation: string | null;
-  source_url: string | null;
-  source_html: string | null;
-  source_render_mode: "pdf" | "rich" | "plain" | null;
-  source_file_path: string | null;
-  source_file_name: string | null;
-  source_file_mime: string | null;
+  sources: SourceInitial[];
   rubric: unknown;
   due_at: string | null;
   class_period_id: string | null;
@@ -417,22 +411,7 @@ export function AssignmentForm({
 
         {showSourceText && (
           <SourceTextFields
-            initial={
-              initial
-                ? {
-                    source_text: initial.source_text,
-                    source_title: initial.source_title,
-                    source_author: initial.source_author,
-                    source_citation: initial.source_citation,
-                    source_url: initial.source_url,
-                    source_html: initial.source_html,
-                    source_render_mode: initial.source_render_mode,
-                    source_file_path: initial.source_file_path,
-                    source_file_name: initial.source_file_name,
-                    source_file_mime: initial.source_file_mime,
-                  }
-                : undefined
-            }
+            initial={initial?.sources}
             disabled={isPublished}
             schoolId={schoolId}
             assignmentId={sourceAssignmentId}

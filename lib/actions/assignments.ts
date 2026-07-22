@@ -90,44 +90,6 @@ function parseCommonFields(formData: FormData) {
   const classPeriodIdRaw = String(formData.get("class_period_id") ?? "");
   const classPeriodId = classPeriodIdRaw === "" ? null : classPeriodIdRaw;
 
-  // Source text fields — Narrative mode form omits them entirely; the
-  // action coerces missing/empty values to null. Explicit empty-to-null
-  // conversion so accidental whitespace doesn't pollute the column.
-  const sourceText = emptyToNull(String(formData.get("source_text") ?? ""));
-  // Untrimmed variant for the PDF substrate: source_text MUST equal the
-  // pdf.js buildPdfText() output byte-for-byte, because annotation offsets are
-  // created against that exact string at render. Trimming (as emptyToNull does)
-  // would shift every offset if the first/last item carried whitespace. Only
-  // empty→null is applied; the characters are otherwise preserved.
-  const sourceTextRawVal = String(formData.get("source_text") ?? "");
-  const sourceTextRaw =
-    sourceTextRawVal.trim() === "" ? null : sourceTextRawVal;
-  const sourceTitle = emptyToNull(String(formData.get("source_title") ?? ""));
-  const sourceAuthor = emptyToNull(String(formData.get("source_author") ?? ""));
-  const sourceCitation = emptyToNull(
-    String(formData.get("source_citation") ?? "")
-  );
-  const sourceUrl = emptyToNull(String(formData.get("source_url") ?? ""));
-
-  // Rich / PDF-native source fields (Chunk 1). source_html is the candidate
-  // rich body; source_render_mode + source_file_* describe how it renders and
-  // where the original lives. Sanitization + substrate derivation happen in
-  // buildSourceColumns — never trust posted HTML or client source_text for
-  // rich content.
-  const sourceHtml = emptyToNull(String(formData.get("source_html") ?? ""));
-  const sourceRenderModeRaw = String(
-    formData.get("source_render_mode") ?? ""
-  );
-  const sourceFilePath = emptyToNull(
-    String(formData.get("source_file_path") ?? "")
-  );
-  const sourceFileName = emptyToNull(
-    String(formData.get("source_file_name") ?? "")
-  );
-  const sourceFileMime = emptyToNull(
-    String(formData.get("source_file_mime") ?? "")
-  );
-
   return {
     title,
     prompt,
@@ -138,74 +100,123 @@ function parseCommonFields(formData: FormData) {
     hasCounterargument,
     dueAt,
     classPeriodId,
-    sourceText,
-    sourceTextRaw,
-    sourceTitle,
-    sourceAuthor,
-    sourceCitation,
-    sourceUrl,
-    sourceHtml,
-    sourceRenderModeRaw,
-    sourceFilePath,
-    sourceFileName,
-    sourceFileMime,
   };
 }
 
 const VALID_RENDER_MODES = new Set(["pdf", "rich", "plain"]);
 
 /**
- * Resolve the full set of source_* columns for an insert/update.
- *
- * Narrative mode has no source → everything null. Otherwise:
- *   - rich:  sanitize the posted HTML, then DERIVE source_text from it (the
- *            canonical annotation substrate — see lib/source-content.ts). The
- *            client's plain source_text is ignored for rich content.
- *   - pdf/plain: source_text is the extracted/typed text; no source_html.
+ * One source as posted by the client repeater. `source_text` is carried
+ * verbatim (untrimmed) so the PDF substrate stays byte-for-byte equal to the
+ * pdf.js buildPdfText() output the annotate text layer reproduces at render —
+ * trimming would shift every annotation offset.
  */
-function buildSourceColumns(
-  f: ReturnType<typeof parseCommonFields>,
-  isNarrative: boolean
-) {
-  if (isNarrative) {
-    return {
-      source_text: null,
-      source_title: null,
-      source_author: null,
-      source_citation: null,
-      source_url: null,
-      source_html: null,
-      source_render_mode: null,
-      source_file_path: null,
-      source_file_name: null,
-      source_file_mime: null,
-    };
-  }
+type SourceInput = {
+  kind: "primary" | "secondary";
+  source_title: string;
+  source_author: string;
+  source_citation: string;
+  source_url: string;
+  source_html: string;
+  source_render_mode: string;
+  source_text: string;
+  source_file_path: string;
+  source_file_name: string;
+  source_file_mime: string;
+};
 
-  const mode = VALID_RENDER_MODES.has(f.sourceRenderModeRaw)
-    ? (f.sourceRenderModeRaw as "pdf" | "rich" | "plain")
+/** The resolved DB columns for a single assignment_sources row. */
+type SourceColumns = {
+  source_text: string | null;
+  source_title: string | null;
+  source_author: string | null;
+  source_citation: string | null;
+  source_url: string | null;
+  source_html: string | null;
+  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_file_path: string | null;
+  source_file_name: string | null;
+  source_file_mime: string | null;
+};
+
+const NULL_SOURCE_COLUMNS: SourceColumns = {
+  source_text: null,
+  source_title: null,
+  source_author: null,
+  source_citation: null,
+  source_url: null,
+  source_html: null,
+  source_render_mode: null,
+  source_file_path: null,
+  source_file_name: null,
+  source_file_mime: null,
+};
+
+/**
+ * Parse the `sources` hidden input (a JSON array, like `rubric`). Narrative
+ * mode omits it → []. Malformed JSON or non-array → []. Each element is
+ * coerced to a SourceInput with string fields (missing keys become "").
+ */
+function parseSources(formData: FormData): SourceInput[] {
+  const raw = formData.get("sources");
+  if (raw == null || raw === "") return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(raw));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  const str = (v: unknown) => (typeof v === "string" ? v : "");
+  return parsed.map((s): SourceInput => {
+    const o = (s ?? {}) as Record<string, unknown>;
+    return {
+      kind: o.kind === "secondary" ? "secondary" : "primary",
+      source_title: str(o.source_title),
+      source_author: str(o.source_author),
+      source_citation: str(o.source_citation),
+      source_url: str(o.source_url),
+      source_html: str(o.source_html),
+      source_render_mode: str(o.source_render_mode),
+      source_text: str(o.source_text),
+      source_file_path: str(o.source_file_path),
+      source_file_name: str(o.source_file_name),
+      source_file_mime: str(o.source_file_mime),
+    };
+  });
+}
+
+/**
+ * Resolve one posted source into its DB columns, mirroring the render-mode
+ * rules the single-source writer used:
+ *   - rich:  sanitize posted HTML, then DERIVE source_text from it (the
+ *            canonical annotation substrate — see lib/source-content.ts).
+ *   - pdf:   store source_text verbatim (offset-stable).
+ *   - plain: store the typed text (empty→null).
+ */
+function resolveSourceColumns(src: SourceInput): SourceColumns {
+  const mode = VALID_RENDER_MODES.has(src.source_render_mode)
+    ? (src.source_render_mode as "pdf" | "rich" | "plain")
     : null;
 
   const shared = {
-    source_title: f.sourceTitle,
-    source_author: f.sourceAuthor,
-    source_citation: f.sourceCitation,
-    source_url: f.sourceUrl,
-    source_file_path: f.sourceFilePath,
-    source_file_name: f.sourceFileName,
-    source_file_mime: f.sourceFileMime,
+    source_title: emptyToNull(src.source_title),
+    source_author: emptyToNull(src.source_author),
+    source_citation: emptyToNull(src.source_citation),
+    source_url: emptyToNull(src.source_url),
+    source_file_path: emptyToNull(src.source_file_path),
+    source_file_name: emptyToNull(src.source_file_name),
+    source_file_mime: emptyToNull(src.source_file_mime),
   };
 
-  if (mode === "rich" && f.sourceHtml) {
-    const sanitized = sanitizeSourceHtml(f.sourceHtml);
+  if (mode === "rich" && src.source_html) {
+    const sanitized = sanitizeSourceHtml(src.source_html);
     const substrate = sourceHtmlToSubstrate(sanitized);
     return {
       ...shared,
       source_html: emptyToNull(sanitized),
-      // Stored untrimmed so it matches the rendered DOM textContent exactly
-      // (annotation offsets index into this string).
       source_text: substrate.trim() === "" ? null : substrate,
-      source_render_mode: "rich" as const,
+      source_render_mode: "rich",
     };
   }
 
@@ -213,20 +224,80 @@ function buildSourceColumns(
     return {
       ...shared,
       source_html: null,
-      // Verbatim pdf.js substrate (untrimmed) — equal byte-for-byte to the
-      // buildPdfText() output the annotate text layer reproduces at render, so
-      // offsets never drift. See the sourceTextRaw note in parseCommonFields.
-      source_text: f.sourceTextRaw,
-      source_render_mode: "pdf" as const,
+      source_text: src.source_text.trim() === "" ? null : src.source_text,
+      source_render_mode: "pdf",
     };
   }
 
+  const plainText = emptyToNull(src.source_text);
   return {
     ...shared,
     source_html: null,
-    source_text: f.sourceText,
-    source_render_mode: mode ?? (f.sourceText ? "plain" : null),
+    source_text: plainText,
+    source_render_mode: mode ?? (plainText ? "plain" : null),
   };
+}
+
+/**
+ * A source row is "empty" if it carries no body, no file, and no metadata —
+ * an accidental blank repeater row. These are dropped before persisting.
+ */
+function isEmptySource(c: SourceColumns): boolean {
+  return (
+    !c.source_text &&
+    !c.source_html &&
+    !c.source_file_path &&
+    !c.source_title &&
+    !c.source_author &&
+    !c.source_citation &&
+    !c.source_url
+  );
+}
+
+/**
+ * Replace an unpublished assignment's sources with the posted set, and return
+ * the first source's columns to mirror into the legacy assignments.source_*
+ * columns during the transition. Narrative → wipes sources and returns nulls.
+ *
+ * Delete-and-reinsert is safe here because this only runs on UNPUBLISHED
+ * assignments (the published path freezes sources), which have no student
+ * writings and therefore no annotations pointing at these source rows.
+ */
+async function writeAssignmentSources(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  assignmentId: string,
+  sources: SourceInput[],
+  isNarrative: boolean
+): Promise<{ legacy: SourceColumns; error: string | null }> {
+  const { error: delErr } = await supabase
+    .from("assignment_sources")
+    .delete()
+    .eq("assignment_id", assignmentId);
+  if (delErr) return { legacy: NULL_SOURCE_COLUMNS, error: delErr.message };
+
+  if (isNarrative) return { legacy: NULL_SOURCE_COLUMNS, error: null };
+
+  const resolved = sources
+    .map((s) => ({ kind: s.kind, cols: resolveSourceColumns(s) }))
+    .filter((r) => !isEmptySource(r.cols));
+
+  if (resolved.length === 0) {
+    return { legacy: NULL_SOURCE_COLUMNS, error: null };
+  }
+
+  const rows = resolved.map((r, i) => ({
+    assignment_id: assignmentId,
+    position: i + 1,
+    kind: r.kind,
+    ...r.cols,
+  }));
+
+  const { error: insErr } = await supabase
+    .from("assignment_sources")
+    .insert(rows);
+  if (insErr) return { legacy: NULL_SOURCE_COLUMNS, error: insErr.message };
+
+  return { legacy: resolved[0].cols, error: null };
 }
 
 /**
@@ -388,7 +459,9 @@ export async function createDraftAssignment(
       default_chunk_ratio: v.chunkRatio,
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
-      ...buildSourceColumns(f, isNarrative),
+      // Legacy single-source columns start null; the mirror UPDATE below keeps
+      // them in sync with the primary (position 1) assignment_sources row.
+      ...NULL_SOURCE_COLUMNS,
       rubric: r.rubric as unknown as Json,
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,
@@ -398,6 +471,21 @@ export async function createDraftAssignment(
 
   if (error || !data) {
     return { error: error?.message ?? "Failed to create assignment." };
+  }
+
+  const { legacy, error: srcErr } = await writeAssignmentSources(
+    supabase,
+    data.id,
+    parseSources(formData),
+    isNarrative
+  );
+  if (srcErr) return { error: srcErr };
+  if (!isNarrative) {
+    await supabase
+      .from("assignments")
+      .update(legacy)
+      .eq("id", data.id)
+      .eq("teacher_id", profile.id);
   }
 
   redirect(`/dashboard/assignments/${data.id}`);
@@ -457,6 +545,16 @@ export async function updateDraftAssignment(
 
     const isNarrative = existing.mode === "narrative";
 
+    // Replace the child-table sources, then mirror the primary source into the
+    // legacy columns. Safe pre-publish (no writings/annotations reference them).
+    const { legacy, error: srcErr } = await writeAssignmentSources(
+      supabase,
+      assignmentId,
+      parseSources(formData),
+      isNarrative
+    );
+    if (srcErr) return { error: srcErr };
+
     update = {
       title: f.title,
       prompt: f.prompt,
@@ -465,7 +563,7 @@ export async function updateDraftAssignment(
       default_chunk_ratio: v.chunkRatio,
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
-      ...buildSourceColumns(f, isNarrative),
+      ...legacy,
       rubric: r.rubric as unknown as Json,
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,

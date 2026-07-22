@@ -118,6 +118,19 @@ export interface Database {
         Update: UpdateOf<Assignments>;
         Relationships: [];
       };
+      assignment_sources: {
+        Row: AssignmentSources;
+        Insert: InsertOf<AssignmentSources, "assignment_id" | "position">;
+        Update: UpdateOf<AssignmentSources>;
+        Relationships: [
+          {
+            foreignKeyName: "assignment_sources_assignment_id_fkey";
+            columns: ["assignment_id"];
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       student_writings: {
         Row: StudentWritings;
         Insert: InsertOf<
@@ -490,6 +503,24 @@ export type Assignments = {
   rubric: Json | null;
 } & Timestamps;
 
+export type AssignmentSources = {
+  id: string;
+  assignment_id: string;
+  position: number;
+  kind: "primary" | "secondary";
+
+  source_text: string | null;
+  source_title: string | null;
+  source_author: string | null;
+  source_citation: string | null;
+  source_url: string | null;
+  source_html: string | null;
+  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_file_path: string | null;
+  source_file_name: string | null;
+  source_file_mime: string | null;
+} & Timestamps;
+
 export type StudentWritings = {
   id: string;
   assignment_id: string;
@@ -524,6 +555,7 @@ export type PromptDecodings = {
 export type TextAnnotations = {
   id: string;
   student_writing_id: string;
+  source_id: string | null;
   range_start: number;
   range_end: number;
   selected_text: string;
