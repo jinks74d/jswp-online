@@ -238,18 +238,30 @@ function ctaLabelFor(
 
 function formatDue(isoDue: string | null): string | null {
   if (!isoDue) return null;
+  // due_at is a calendar-only date stored as UTC midnight. Format and compare
+  // in UTC so the day is right and "today"/"overdue" track the calendar day.
   const due = new Date(isoDue);
-  const now = Date.now();
-  const diffMs = due.getTime() - now;
   const dayMs = 24 * 60 * 60 * 1000;
+  const now = new Date();
+  const dueDay = Date.UTC(
+    due.getUTCFullYear(),
+    due.getUTCMonth(),
+    due.getUTCDate()
+  );
+  const today = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  );
+  const days = Math.round((dueDay - today) / dayMs);
   const dateStr = due.toLocaleDateString(undefined, {
     weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
-  if (diffMs < 0) return `Due ${dateStr} (overdue)`;
-  if (diffMs < dayMs) return `Due ${dateStr} (today)`;
-  const days = Math.ceil(diffMs / dayMs);
+  if (days < 0) return `Due ${dateStr} (overdue)`;
+  if (days === 0) return `Due ${dateStr} (today)`;
   return `Due ${dateStr} (in ${days} ${days === 1 ? "day" : "days"})`;
 }

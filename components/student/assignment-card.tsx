@@ -46,18 +46,29 @@ function dueCopy(item: StudentAssignmentListItem, now = new Date()): DueCopy | n
 
   if (!item.due_at) return null;
 
+  // due_at is a calendar-only date stored as UTC midnight — compare calendar
+  // days in UTC so "today"/"overdue" don't shift by a day in the viewer's tz.
   const due = new Date(item.due_at);
-  const diffMs = due.getTime() - now.getTime();
   const dayMs = 24 * 60 * 60 * 1000;
+  const dueDay = Date.UTC(
+    due.getUTCFullYear(),
+    due.getUTCMonth(),
+    due.getUTCDate()
+  );
+  const today = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  );
+  const days = Math.round((dueDay - today) / dayMs);
 
-  if (diffMs < 0) {
+  if (days < 0) {
     return { text: "Overdue", tone: "danger" };
   }
-  if (diffMs < dayMs) {
+  if (days === 0) {
     return { text: "Due today", tone: "warning" };
   }
 
-  const days = Math.ceil(diffMs / dayMs);
   return { text: `Due in ${days} ${days === 1 ? "day" : "days"}`, tone: "neutral" };
 }
 

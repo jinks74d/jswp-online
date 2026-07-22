@@ -48,6 +48,7 @@ export type AssignmentFormState = {
     prompt?: string;
     num_body_paragraphs?: string;
     default_chunks_per_bp?: string;
+    due_at?: string;
     rubric?: string;
   };
   success?: string;
@@ -366,6 +367,13 @@ function validateCommon(
     };
   }
 
+  if (!f.dueAt) {
+    return {
+      ok: false,
+      state: { fieldErrors: { due_at: "Due date is required." } },
+    };
+  }
+
   // Mode-specific chunk ratio enforcement. Literary assignments lock to the
   // 1:2+ literary ratio; the CHECK constraint (migration 0038) rejects a
   // literary assignment carrying a non-literary ratio.
@@ -517,6 +525,9 @@ export async function updateDraftAssignment(
   }
   if (!f.prompt) {
     return { fieldErrors: { prompt: "Prompt is required." } };
+  }
+  if (!f.dueAt) {
+    return { fieldErrors: { due_at: "Due date is required." } };
   }
 
   let update: Record<string, unknown>;
@@ -829,7 +840,7 @@ export async function publishAssignment(
   const supabase = await createServerClient();
   const { data: existing } = await supabase
     .from("assignments")
-    .select("released_at, title, prompt, class_period_id")
+    .select("released_at, title, prompt, class_period_id, due_at")
     .eq("id", assignmentId)
     .eq("teacher_id", profile.id)
     .maybeSingle();
@@ -838,6 +849,9 @@ export async function publishAssignment(
   if (existing.released_at) return { error: "Already published." };
   if (!existing.title.trim() || !existing.prompt.trim()) {
     return { error: "Save a title and prompt before publishing." };
+  }
+  if (!existing.due_at) {
+    return { error: "Set a due date before publishing." };
   }
   if (!existing.class_period_id) {
     return { error: "Pick a class period before publishing." };

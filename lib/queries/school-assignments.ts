@@ -140,9 +140,11 @@ export async function getSchoolAssignments(
     const subjectName = subject?.name ?? null;
     if (subjectName) subjectSet.add(subjectName);
 
+    // due_at is a calendar-only date (UTC midnight); it's overdue once the
+    // whole due day has elapsed, not the instant UTC midnight passes.
     const status: AssignmentStatus = !a.released_at
       ? "draft"
-      : a.due_at && new Date(a.due_at).getTime() < now
+      : a.due_at && new Date(a.due_at).getTime() + 86_400_000 <= now
         ? "overdue"
         : "active";
     if (status === "active") active += 1;

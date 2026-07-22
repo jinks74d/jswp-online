@@ -437,13 +437,18 @@ export function AssignmentForm({
           </p>
         )}
 
-        <Field label="Due date (optional)" htmlFor="due_at">
+        <Field
+          label="Due Date"
+          htmlFor="due_at"
+          error={state.fieldErrors?.due_at}
+        >
           <input
             id="due_at"
             name="due_at"
-            type="datetime-local"
+            type="date"
+            required
             defaultValue={
-              initial?.due_at ? formatForDateTimeInput(initial.due_at) : ""
+              initial?.due_at ? formatForDateInput(initial.due_at) : ""
             }
             className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900"
           />
@@ -839,13 +844,16 @@ function Banner({
   );
 }
 
-/* ─── datetime-local helper ──────────────────────────────────────────── */
+/* ─── date-input helper ──────────────────────────────────────────────── */
 
-function formatForDateTimeInput(iso: string): string {
+// The <input type="date"> value is a bare YYYY-MM-DD. A date-only due_at is
+// stored as UTC midnight (new Date("YYYY-MM-DD")), so read it back with UTC
+// components to round-trip to the same calendar day regardless of viewer tz.
+function formatForDateInput(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
-    d.getDate()
-  )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(
+    d.getUTCDate()
+  )}`;
 }

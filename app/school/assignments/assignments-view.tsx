@@ -25,7 +25,12 @@ import type {
   SchoolAssignmentStats,
 } from "@/lib/queries/school-assignments";
 
-const dateFmt = new Intl.DateTimeFormat("en-US", { dateStyle: "short" });
+// due dates are calendar-only, stored as UTC midnight — format in UTC so the
+// displayed day matches what the teacher entered regardless of viewer tz.
+const dateFmt = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "short",
+  timeZone: "UTC",
+});
 const fmtDate = (iso: string | null) =>
   iso ? dateFmt.format(new Date(iso)) : "—";
 
