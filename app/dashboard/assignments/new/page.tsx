@@ -48,7 +48,7 @@ export default async function NewAssignmentPage({
         </Link>
         <header>
           <h1 className="text-2xl font-bold text-gray-900">
-            Pick a writing mode
+            Select a Writing Mode
           </h1>
           <p className="text-stone-600">
             The mode determines the chunk ratio, paragraph structure, and
