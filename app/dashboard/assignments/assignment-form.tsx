@@ -454,7 +454,7 @@ export function AssignmentForm({
           />
         </Field>
 
-        <Field label="Class period" htmlFor="class_period_id">
+        <Field label="Class Period or Block" htmlFor="class_period_id">
           <select
             id="class_period_id"
             name="class_period_id"
