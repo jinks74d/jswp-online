@@ -1,18 +1,17 @@
 "use client";
 
 /**
- * Read-only side panel: source text with the student's annotations
- * highlighted, plus a compact list of annotations grouped by kind.
- * Shared by the t-chart, gather-cds, and any future step that wants
- * to keep the source text + annotations visible while the student
- * works downstream artifacts.
+ * Read-only reference: every attached source with the student's annotations
+ * highlighted (each source rendered against its own substrate, annotations
+ * partitioned by source_id), plus a compact per-kind list. Shared by the
+ * t-chart, gather-cds, cm-dev, decisions, elaboration, and topic-sentence-dev
+ * steps to keep the sources + annotations visible while working downstream.
  *
- * Reuses SourceTextViewer in readOnly mode (selection + mark-click
- * disabled). Kind filter is local; click-an-entry scrolls the viewer
- * to that annotation.
+ * One kind filter governs all sources. Clicking a list entry scrolls its
+ * source viewer to that annotation.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SourceTextViewer } from "./source-text-viewer";
 import { OpenOriginalButton } from "./open-original-button";
 import {
@@ -22,31 +21,43 @@ import {
 } from "./annotation-kind-config";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 
-interface Props {
-  writingId: string;
+export type ReferenceSource = {
+  sourceId: string;
+  kind: "primary" | "secondary";
   sourceText: string;
   sourceTitle: string | null;
   sourceAuthor: string | null;
   sourceFilePath: string | null;
   sourceFileName: string | null;
   sourceHtml: string | null;
+};
+
+interface Props {
+  writingId: string;
+  sources: readonly ReferenceSource[];
   annotations: readonly TextAnnotationRow[];
 }
 
-export function ReferencePanel({
-  writingId,
-  sourceText,
-  sourceTitle,
-  sourceAuthor,
-  sourceFilePath,
-  sourceFileName,
-  sourceHtml,
-  annotations,
-}: Props) {
+export function ReferencePanel({ writingId, sources, annotations }: Props) {
   const [visibleKinds, setVisibleKinds] = useState<ReadonlySet<AnnotationKind>>(
     () => new Set(ANNOTATION_KIND_ORDER)
   );
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
+
+  // Partition annotations by source. Legacy rows (source_id null) fall under
+  // the first source so pre-migration writings still render.
+  const bySource = useMemo(() => {
+    const map = new Map<string, TextAnnotationRow[]>();
+    const firstId = sources[0]?.sourceId ?? null;
+    for (const a of annotations) {
+      const key = a.source_id ?? firstId;
+      if (key == null) continue;
+      const list = map.get(key) ?? [];
+      list.push(a);
+      map.set(key, list);
+    }
+    return map;
+  }, [annotations, sources]);
 
   const toggleKind = (k: AnnotationKind) => {
     setVisibleKinds((prev) => {
@@ -62,32 +73,16 @@ export function ReferencePanel({
     setTimeout(() => setScrollTargetId(null), 800);
   };
 
-  return (
-    <div className="space-y-3">
-      <header className="space-y-1.5">
-        <div className="text-xs uppercase tracking-wide text-gray-500">
-          Reference
-        </div>
-        {(sourceTitle || sourceAuthor) && (
-          <div className="text-sm">
-            {sourceTitle && (
-              <span className="font-medium text-gray-800">{sourceTitle}</span>
-            )}
-            {sourceTitle && sourceAuthor && " · "}
-            {sourceAuthor && <span className="text-gray-700">{sourceAuthor}</span>}
-          </div>
-        )}
-        {sourceFilePath && (
-          <OpenOriginalButton writingId={writingId} fileName={sourceFileName} />
-        )}
-      </header>
+  const multiple = sources.length > 1;
 
-      {annotations.length === 0 ? (
-        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-xs text-amber-900">
-          No annotations from the previous step. You can still type CDs and
-          CMs below — but going back to mark up the text first usually helps.
-        </div>
-      ) : (
+  return (
+    <div className="space-y-4">
+      <div className="text-xs uppercase tracking-wide text-gray-500">
+        Reference
+      </div>
+
+      {/* Shared kind filter, counts across all sources. */}
+      {annotations.length > 0 && (
         <section className="bg-white border border-gray-200 rounded-lg p-2">
           <div className="text-xs uppercase tracking-wide text-gray-500 px-1 mb-1">
             Show
@@ -119,57 +114,95 @@ export function ReferencePanel({
         </section>
       )}
 
-      <SourceTextViewer
-        sourceText={sourceText}
-        sourceHtml={sourceHtml}
-        annotations={annotations}
-        visibleKinds={visibleKinds}
-        scrollToAnnotationId={scrollTargetId}
-        readOnly
-      />
-
-      {annotations.length > 0 && (
-        <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {ANNOTATION_KIND_ORDER.map((k) => {
-            const items = annotations.filter((a) => a.kind === k);
-            if (items.length === 0 || !visibleKinds.has(k)) return null;
-            const cfg = ANNOTATION_KINDS[k];
-            return (
-              <div key={k}>
-                <div
-                  className={`px-3 py-1.5 border-b border-gray-100 text-xs font-semibold uppercase tracking-wide flex items-center gap-2 ${cfg.accentText}`}
-                >
-                  <span
-                    className={`inline-block w-2 h-2 rounded-full ${cfg.dotBg}`}
-                    aria-hidden="true"
-                  />
-                  {cfg.label}
+      {sources.map((source, idx) => {
+        const anns = bySource.get(source.sourceId) ?? [];
+        return (
+          <div key={source.sourceId} className="space-y-2">
+            <header className="space-y-1.5">
+              {multiple && (
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {`Source ${idx + 1}${source.kind === "secondary" ? " · Secondary" : " · Primary"}`}
                 </div>
-                <ul>
-                  {items.map((a) => (
-                    <li key={a.id} className="border-b border-gray-100 last:border-b-0">
-                      <button
-                        type="button"
-                        onClick={() => onSelectAnnotation(a)}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-50"
+              )}
+              {(source.sourceTitle || source.sourceAuthor) && (
+                <div className="text-sm">
+                  {source.sourceTitle && (
+                    <span className="font-medium text-gray-800">
+                      {source.sourceTitle}
+                    </span>
+                  )}
+                  {source.sourceTitle && source.sourceAuthor && " · "}
+                  {source.sourceAuthor && (
+                    <span className="text-gray-700">{source.sourceAuthor}</span>
+                  )}
+                </div>
+              )}
+              {source.sourceFilePath && (
+                <OpenOriginalButton
+                  writingId={writingId}
+                  fileName={source.sourceFileName}
+                  filePath={source.sourceFilePath}
+                />
+              )}
+            </header>
+
+            <SourceTextViewer
+              sourceText={source.sourceText}
+              sourceHtml={source.sourceHtml}
+              annotations={anns}
+              visibleKinds={visibleKinds}
+              scrollToAnnotationId={scrollTargetId}
+              readOnly
+            />
+
+            {anns.length > 0 && (
+              <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                {ANNOTATION_KIND_ORDER.map((k) => {
+                  const items = anns.filter((a) => a.kind === k);
+                  if (items.length === 0 || !visibleKinds.has(k)) return null;
+                  const cfg = ANNOTATION_KINDS[k];
+                  return (
+                    <div key={k}>
+                      <div
+                        className={`px-3 py-1.5 border-b border-gray-100 text-xs font-semibold uppercase tracking-wide flex items-center gap-2 ${cfg.accentText}`}
                       >
-                        <div className="text-xs text-gray-900 line-clamp-2">
-                          {a.selected_text}
-                        </div>
-                        {a.note && (
-                          <div className="mt-0.5 text-xs text-gray-500 line-clamp-2">
-                            {a.note}
-                          </div>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </section>
-      )}
+                        <span
+                          className={`inline-block w-2 h-2 rounded-full ${cfg.dotBg}`}
+                          aria-hidden="true"
+                        />
+                        {cfg.label}
+                      </div>
+                      <ul>
+                        {items.map((a) => (
+                          <li
+                            key={a.id}
+                            className="border-b border-gray-100 last:border-b-0"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => onSelectAnnotation(a)}
+                              className="w-full text-left px-3 py-2 hover:bg-gray-50"
+                            >
+                              <div className="text-xs text-gray-900 line-clamp-2">
+                                {a.selected_text}
+                              </div>
+                              {a.note && (
+                                <div className="mt-0.5 text-xs text-gray-500 line-clamp-2">
+                                  {a.note}
+                                </div>
+                              )}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </section>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

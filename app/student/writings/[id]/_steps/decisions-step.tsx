@@ -8,6 +8,7 @@
 
 import { getCommentaryByWriting } from "@/lib/queries/commentary";
 import { getAnnotations } from "@/lib/queries/text-annotations";
+import type { ReferenceSource } from "@/components/student/writing/reference-panel";
 import { DecisionsClient } from "@/components/student/writing/decisions/decisions-client";
 
 interface Props {
@@ -15,12 +16,7 @@ interface Props {
   stepKey: string;
   stepLabel: string;
   pedagogyHint: string | null;
-  sourceText: string | null;
-  sourceTitle: string | null;
-  sourceAuthor: string | null;
-  sourceFilePath: string | null;
-  sourceFileName: string | null;
-  sourceHtml: string | null;
+  sources: ReferenceSource[];
 }
 
 export async function DecisionsStep({
@@ -28,16 +24,11 @@ export async function DecisionsStep({
   stepKey,
   stepLabel,
   pedagogyHint,
-  sourceText,
-  sourceTitle,
-  sourceAuthor,
-  sourceFilePath,
-  sourceFileName,
-  sourceHtml,
+  sources,
 }: Props) {
   const [bps, annotations] = await Promise.all([
     getCommentaryByWriting(writingId),
-    sourceText ? getAnnotations(writingId) : Promise.resolve([]),
+    sources.length > 0 ? getAnnotations(writingId) : Promise.resolve([]),
   ]);
 
   return (
@@ -56,12 +47,7 @@ export async function DecisionsStep({
         writingId={writingId}
         stepKey={stepKey}
         bps={bps}
-        sourceText={sourceText}
-        sourceTitle={sourceTitle}
-        sourceAuthor={sourceAuthor}
-        sourceFilePath={sourceFilePath}
-        sourceFileName={sourceFileName}
-        sourceHtml={sourceHtml}
+        sources={sources}
         annotations={annotations}
       />
     </div>

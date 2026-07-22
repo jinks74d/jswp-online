@@ -20,6 +20,7 @@ import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { groupSectionFeedback } from "@/lib/section-feedback";
 import { SectionFeedbackNote } from "@/components/dashboard/writing-review/section-feedback-note";
 import type { AnnotateSource } from "@/components/student/writing/annotate-text-client";
+import type { ReferenceSource } from "@/components/student/writing/reference-panel";
 import { DecodePromptStep } from "../_steps/decode-prompt-step";
 import { PlaceholderStep } from "../_steps/placeholder-step";
 import { AnnotateTextStep } from "../_steps/annotate-text-step";
@@ -56,6 +57,17 @@ export default async function StepDispatcher({
 
   const a = writing.assignment;
   const mode = a.mode as JswpMode;
+  // Read-only reference sources for downstream step panels (all sources).
+  const refSources: ReferenceSource[] = writing.sources.map((sc) => ({
+    sourceId: sc.id,
+    kind: sc.kind,
+    sourceText: sc.source_text ?? "",
+    sourceTitle: sc.source_title,
+    sourceAuthor: sc.source_author,
+    sourceFilePath: sc.source_file_path,
+    sourceFileName: sc.source_file_name,
+    sourceHtml: sc.source_html,
+  }));
   const visible = getSteps(mode, {
     isEssay: a.is_essay,
     hasCounterargument: a.has_counterargument,
@@ -177,12 +189,7 @@ export default async function StepDispatcher({
           stepKey={target.key}
           stepLabel={target.label}
           pedagogyHint={target.pedagogyHint ?? null}
-          sourceText={a.source_text}
-          sourceTitle={a.source_title}
-          sourceAuthor={a.source_author}
-          sourceFilePath={a.source_file_path}
-          sourceFileName={a.source_file_name}
-          sourceHtml={a.source_html}
+          sources={refSources}
         />
       );
     }
@@ -219,12 +226,7 @@ export default async function StepDispatcher({
         stepKey={target.key}
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
-        sourceText={a.source_text}
-        sourceTitle={a.source_title}
-        sourceAuthor={a.source_author}
-        sourceFilePath={a.source_file_path}
-        sourceFileName={a.source_file_name}
-        sourceHtml={a.source_html}
+        sources={refSources}
       />
     );
   }
@@ -236,12 +238,7 @@ export default async function StepDispatcher({
         stepKey={target.key}
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
-        sourceText={a.source_text}
-        sourceTitle={a.source_title}
-        sourceAuthor={a.source_author}
-        sourceFilePath={a.source_file_path}
-        sourceFileName={a.source_file_name}
-        sourceHtml={a.source_html}
+        sources={refSources}
       />
     );
   }
@@ -253,12 +250,7 @@ export default async function StepDispatcher({
         stepKey={target.key}
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
-        sourceText={a.source_text}
-        sourceTitle={a.source_title}
-        sourceAuthor={a.source_author}
-        sourceFilePath={a.source_file_path}
-        sourceFileName={a.source_file_name}
-        sourceHtml={a.source_html}
+        sources={refSources}
       />
     );
   }
@@ -270,12 +262,7 @@ export default async function StepDispatcher({
         stepKey={target.key}
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
-        sourceText={a.source_text}
-        sourceTitle={a.source_title}
-        sourceAuthor={a.source_author}
-        sourceFilePath={a.source_file_path}
-        sourceFileName={a.source_file_name}
-        sourceHtml={a.source_html}
+        sources={refSources}
       />
     );
   }
@@ -302,12 +289,7 @@ export default async function StepDispatcher({
         pedagogyHint={target.pedagogyHint ?? null}
         mode={mode}
         chunkRatio={writing.chunk_ratio}
-        sourceText={a.source_text}
-        sourceTitle={a.source_title}
-        sourceAuthor={a.source_author}
-        sourceFilePath={a.source_file_path}
-        sourceFileName={a.source_file_name}
-        sourceHtml={a.source_html}
+        sources={refSources}
       />
     );
   }

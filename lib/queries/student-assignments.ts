@@ -47,6 +47,20 @@ export interface StudentAssignmentListItem {
   } | null;
 }
 
+export interface StudentSource {
+  id: string;
+  kind: "primary" | "secondary";
+  source_text: string | null;
+  source_title: string | null;
+  source_author: string | null;
+  source_citation: string | null;
+  source_url: string | null;
+  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_html: string | null;
+  source_file_path: string | null;
+  source_file_name: string | null;
+}
+
 export interface StudentAssignmentDetail {
   id: string;
   title: string;
@@ -64,6 +78,7 @@ export interface StudentAssignmentDetail {
   source_html: string | null;
   source_file_path: string | null;
   source_file_name: string | null;
+  sources: StudentSource[];
   rubric: Database["public"]["Tables"]["assignments"]["Row"]["rubric"];
   due_at: string | null;
   released_at: string | null;
@@ -185,7 +200,12 @@ export async function getStudentAssignmentDetail(
       `id, title, prompt, mode, is_essay, num_body_paragraphs,
        has_counterargument, source_text, source_title, source_author,
        source_citation, source_url, source_render_mode, source_html,
-       source_file_path, source_file_name, rubric, due_at, released_at`
+       source_file_path, source_file_name, rubric, due_at, released_at,
+       assignment_sources (
+         position, id, kind, source_text, source_title, source_author,
+         source_citation, source_url, source_render_mode, source_html,
+         source_file_path, source_file_name
+       )`
     )
     .eq("id", assignmentId)
     .maybeSingle();
@@ -194,6 +214,14 @@ export async function getStudentAssignmentDetail(
     throw new Error(`getStudentAssignmentDetail assignment: ${error.message}`);
   }
   if (!assignment) return null;
+
+  const { assignment_sources, ...flat } = assignment as unknown as Omit<
+    StudentAssignmentDetail,
+    "sources" | "status" | "writing"
+  > & { assignment_sources?: (StudentSource & { position: number })[] };
+  const sources = [...(assignment_sources ?? [])]
+    .sort((s1, s2) => s1.position - s2.position)
+    .map(({ position: _position, ...s }) => s as StudentSource);
 
   const { data: writings, error: writingsError } = await supabase
     .from("student_writings")
@@ -214,7 +242,8 @@ export async function getStudentAssignmentDetail(
   const w = (writings?.[0] ?? null) as RawWriting | null;
 
   return {
-    ...assignment,
+    ...flat,
+    sources,
     status: deriveStatus(w?.status ?? null),
     writing: w
       ? {

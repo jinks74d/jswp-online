@@ -13,6 +13,7 @@
 import { bootstrapGatheringSheets } from "@/lib/actions/candidate-cds";
 import { getGatheringSheetsAndCandidates } from "@/lib/queries/candidate-cds";
 import { getAnnotations } from "@/lib/queries/text-annotations";
+import type { ReferenceSource } from "@/components/student/writing/reference-panel";
 import { TsdClient } from "@/components/student/writing/topic-sentence-dev/tsd-client";
 
 interface Props {
@@ -20,12 +21,7 @@ interface Props {
   stepKey: string;
   stepLabel: string;
   pedagogyHint: string | null;
-  sourceText: string | null;
-  sourceTitle: string | null;
-  sourceAuthor: string | null;
-  sourceFilePath: string | null;
-  sourceFileName: string | null;
-  sourceHtml: string | null;
+  sources: ReferenceSource[];
 }
 
 export async function TopicSentenceDevStep({
@@ -33,12 +29,7 @@ export async function TopicSentenceDevStep({
   stepKey,
   stepLabel,
   pedagogyHint,
-  sourceText,
-  sourceTitle,
-  sourceAuthor,
-  sourceFilePath,
-  sourceFileName,
-  sourceHtml,
+  sources,
 }: Props) {
   // Idempotent: bootstraps if the student arrived here via URL hack
   // without visiting gather-cds. Race-safe via UNIQUE constraint.
@@ -46,7 +37,7 @@ export async function TopicSentenceDevStep({
 
   const [sheets, annotations] = await Promise.all([
     getGatheringSheetsAndCandidates(writingId),
-    sourceText ? getAnnotations(writingId) : Promise.resolve([]),
+    sources.length > 0 ? getAnnotations(writingId) : Promise.resolve([]),
   ]);
 
   return (
@@ -65,12 +56,7 @@ export async function TopicSentenceDevStep({
         writingId={writingId}
         stepKey={stepKey}
         sheets={sheets}
-        sourceText={sourceText}
-        sourceTitle={sourceTitle}
-        sourceAuthor={sourceAuthor}
-        sourceFilePath={sourceFilePath}
-        sourceFileName={sourceFileName}
-        sourceHtml={sourceHtml}
+        sources={sources}
         annotations={annotations}
       />
     </div>

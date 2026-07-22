@@ -13,7 +13,7 @@
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { DecisionsBpPane } from "./decisions-bp-pane";
-import { ReferencePanel } from "../reference-panel";
+import { ReferencePanel, type ReferenceSource } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useWritingMode } from "../use-writing-mode";
 import type { CommentaryBpData } from "@/lib/queries/commentary";
@@ -23,12 +23,7 @@ interface Props {
   writingId: string;
   stepKey: string;
   bps: readonly CommentaryBpData[];
-  sourceText: string | null;
-  sourceTitle: string | null;
-  sourceAuthor: string | null;
-  sourceFilePath: string | null;
-  sourceFileName: string | null;
-  sourceHtml: string | null;
+  sources: readonly ReferenceSource[];
   annotations: readonly TextAnnotationRow[];
 }
 
@@ -60,12 +55,7 @@ export function DecisionsClient({
   writingId,
   stepKey,
   bps,
-  sourceText,
-  sourceTitle,
-  sourceAuthor,
-  sourceFilePath,
-  sourceFileName,
-  sourceHtml,
+  sources,
   annotations,
 }: Props) {
   const { isReadOnly } = useWritingMode();
@@ -75,7 +65,7 @@ export function DecisionsClient({
 
   const gate = computeGate(bps);
   const activeBp = bps[activeIdx] ?? bps[0];
-  const showReference = sourceText !== null;
+  const showReference = sources.length > 0;
 
   const onContinue = () => {
     setError(null);
@@ -137,7 +127,7 @@ export function DecisionsClient({
 
   return (
     <div className="space-y-4">
-      {showReference && sourceText && (
+      {showReference && (
         <details className="lg:hidden bg-white border border-gray-200 rounded-lg group">
           <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between">
             <span className="text-sm font-medium text-gray-900">
@@ -151,12 +141,7 @@ export function DecisionsClient({
           <div className="px-4 pb-4 border-t border-gray-100 pt-3">
             <ReferencePanel
               writingId={writingId}
-              sourceText={sourceText}
-              sourceTitle={sourceTitle}
-              sourceAuthor={sourceAuthor}
-              sourceFilePath={sourceFilePath}
-              sourceFileName={sourceFileName}
-              sourceHtml={sourceHtml}
+              sources={sources}
               annotations={annotations}
             />
           </div>
@@ -172,16 +157,11 @@ export function DecisionsClient({
       >
         {formColumn}
 
-        {showReference && sourceText && (
+        {showReference && (
           <aside className="hidden lg:block lg:sticky lg:top-20 lg:self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
             <ReferencePanel
               writingId={writingId}
-              sourceText={sourceText}
-              sourceTitle={sourceTitle}
-              sourceAuthor={sourceAuthor}
-              sourceFilePath={sourceFilePath}
-              sourceFileName={sourceFileName}
-              sourceHtml={sourceHtml}
+              sources={sources}
               annotations={annotations}
             />
           </aside>

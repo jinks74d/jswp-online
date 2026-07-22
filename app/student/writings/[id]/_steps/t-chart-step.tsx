@@ -12,6 +12,7 @@
 import { bootstrapWritingStructure } from "@/lib/actions/writing-structure";
 import { getTChartData } from "@/lib/queries/t-charts";
 import { getAnnotations } from "@/lib/queries/text-annotations";
+import type { ReferenceSource } from "@/components/student/writing/reference-panel";
 import { TChartClient } from "@/components/student/writing/t-chart/t-chart-client";
 import type { Database } from "@/lib/database.types";
 
@@ -25,12 +26,7 @@ interface Props {
   pedagogyHint: string | null;
   mode: Mode;
   chunkRatio: ChunkRatio;
-  sourceText: string | null;
-  sourceTitle: string | null;
-  sourceAuthor: string | null;
-  sourceFilePath: string | null;
-  sourceFileName: string | null;
-  sourceHtml: string | null;
+  sources: ReferenceSource[];
 }
 
 export async function TChartStep({
@@ -40,12 +36,7 @@ export async function TChartStep({
   pedagogyHint,
   mode,
   chunkRatio,
-  sourceText,
-  sourceTitle,
-  sourceAuthor,
-  sourceFilePath,
-  sourceFileName,
-  sourceHtml,
+  sources,
 }: Props) {
   // Bootstrap is idempotent: safe to call on every visit. Concurrent
   // tabs racing through this won't create duplicates — see the
@@ -54,7 +45,7 @@ export async function TChartStep({
 
   const [data, annotations] = await Promise.all([
     getTChartData(writingId),
-    sourceText ? getAnnotations(writingId) : Promise.resolve([]),
+    sources.length > 0 ? getAnnotations(writingId) : Promise.resolve([]),
   ]);
 
   return (
@@ -85,12 +76,7 @@ export async function TChartStep({
         mode={mode}
         writingChunkRatio={chunkRatio}
         bodyParagraphs={data}
-        sourceText={sourceText}
-        sourceTitle={sourceTitle}
-        sourceAuthor={sourceAuthor}
-        sourceFilePath={sourceFilePath}
-        sourceFileName={sourceFileName}
-        sourceHtml={sourceHtml}
+        sources={sources}
         annotations={annotations}
       />
     </div>

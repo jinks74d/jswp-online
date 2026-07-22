@@ -51,17 +51,19 @@ export default async function StudentAssignmentDetail({
   const ctaLabel = ctaLabelFor(item.status);
   const rubric = loadRubric(item.rubric);
 
-  // Mint a signed URL server-side for any uploaded source file so the viewer
-  // can embed the PDF or render the .docx faithfully on first paint. (Typed/
-  // pasted rich + plain sources have no file and don't need one.)
-  let fileUrl: string | null = null;
-  if (item.source_file_path) {
+  // Mint a signed URL server-side for each source that has an uploaded file so
+  // the viewer can embed the PDF / render the .docx faithfully on first paint.
+  // (Typed/pasted rich + plain sources have no file and don't need one.)
+  const sourceFileUrls = new Map<string, string>();
+  const filePaths = item.sources
+    .map((s) => s.source_file_path)
+    .filter((p): p is string => p !== null);
+  if (filePaths.length > 0) {
     const supabase = await createServerClient();
-    const res = await getAssignmentSourceSignedUrl(
-      supabase,
-      item.source_file_path
-    );
-    if (res.ok) fileUrl = res.url;
+    for (const path of filePaths) {
+      const res = await getAssignmentSourceSignedUrl(supabase, path);
+      if (res.ok) sourceFileUrls.set(path, res.url);
+    }
   }
 
   return (
@@ -95,44 +97,57 @@ export default async function StudentAssignmentDetail({
         <p className="text-gray-800 whitespace-pre-wrap">{item.prompt}</p>
       </section>
 
-      {item.source_text && (
-        <details className="bg-white border border-gray-200 rounded-lg group">
-          <summary className="flex items-center justify-between gap-3 p-5 cursor-pointer list-none">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-gray-500" />
-              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
-                Source text
-              </h2>
-              {item.source_title && (
-                <span className="text-sm text-gray-600 normal-case font-normal">
-                  · {item.source_title}
-                  {item.source_author ? ` — ${item.source_author}` : ""}
-                </span>
+      {item.sources.map((s, idx) => {
+        const label =
+          item.sources.length > 1
+            ? `Source ${idx + 1} · ${s.kind === "secondary" ? "Secondary" : "Primary"}`
+            : "Source text";
+        return (
+          <details
+            key={s.id}
+            className="bg-white border border-gray-200 rounded-lg group"
+          >
+            <summary className="flex items-center justify-between gap-3 p-5 cursor-pointer list-none">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-gray-500" />
+                <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                  {label}
+                </h2>
+                {s.source_title && (
+                  <span className="text-sm text-gray-600 normal-case font-normal">
+                    · {s.source_title}
+                    {s.source_author ? ` — ${s.source_author}` : ""}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-gray-500 group-open:hidden">
+                Show
+              </span>
+              <span className="text-xs text-gray-500 hidden group-open:inline">
+                Hide
+              </span>
+            </summary>
+            <div className="px-5 pb-5 border-t border-gray-100 pt-4">
+              <SourceDocViewer
+                renderMode={s.source_render_mode}
+                plainText={s.source_text ?? ""}
+                html={s.source_html}
+                fileUrl={
+                  s.source_file_path
+                    ? sourceFileUrls.get(s.source_file_path) ?? null
+                    : null
+                }
+                fileName={s.source_file_name}
+              />
+              {s.source_citation && (
+                <p className="mt-4 text-xs text-gray-500 italic">
+                  {s.source_citation}
+                </p>
               )}
             </div>
-            <span className="text-xs text-gray-500 group-open:hidden">
-              Show
-            </span>
-            <span className="text-xs text-gray-500 hidden group-open:inline">
-              Hide
-            </span>
-          </summary>
-          <div className="px-5 pb-5 border-t border-gray-100 pt-4">
-            <SourceDocViewer
-              renderMode={item.source_render_mode}
-              plainText={item.source_text}
-              html={item.source_html}
-              fileUrl={fileUrl}
-              fileName={item.source_file_name}
-            />
-            {item.source_citation && (
-              <p className="mt-4 text-xs text-gray-500 italic">
-                {item.source_citation}
-              </p>
-            )}
-          </div>
-        </details>
-      )}
+          </details>
+        );
+      })}
 
       {rubric.criteria.length > 0 && (
         <details className="bg-white border border-gray-200 rounded-lg group">

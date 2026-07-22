@@ -152,6 +152,20 @@ function renderStep({
     pedagogyHint: step.pedagogyHint ?? null,
   };
 
+  // Read-only reference sources for downstream review panels. Teacher review
+  // renders each source's flat substrate (sourceHtml null); annotations still
+  // group per source via source_id.
+  const refSources = assignment.sources.map((sc) => ({
+    sourceId: sc.id,
+    kind: sc.kind,
+    sourceText: sc.source_text ?? "",
+    sourceTitle: sc.source_title,
+    sourceAuthor: sc.source_author,
+    sourceFilePath: sc.source_file_path,
+    sourceFileName: sc.source_file_name,
+    sourceHtml: null,
+  }));
+
   if (step.groupOrigin === "decode_prompt") {
     return (
       <DecodePromptStep
@@ -203,12 +217,7 @@ function renderStep({
       return (
         <TopicSentenceDevStep
           {...baseProps}
-          sourceText={assignment.source_text}
-          sourceTitle={assignment.source_title}
-          sourceAuthor={assignment.source_author}
-          sourceFilePath={assignment.source_file_path}
-          sourceFileName={assignment.source_file_name}
-          sourceHtml={null}
+          sources={refSources}
         />
       );
     }
@@ -225,12 +234,7 @@ function renderStep({
     return (
       <CmDevStep
         {...baseProps}
-        sourceText={assignment.source_text}
-        sourceTitle={assignment.source_title}
-        sourceAuthor={assignment.source_author}
-        sourceFilePath={assignment.source_file_path}
-        sourceFileName={assignment.source_file_name}
-        sourceHtml={null}
+        sources={refSources}
       />
     );
   }
@@ -239,12 +243,7 @@ function renderStep({
     return (
       <DecisionsStep
         {...baseProps}
-        sourceText={assignment.source_text}
-        sourceTitle={assignment.source_title}
-        sourceAuthor={assignment.source_author}
-        sourceFilePath={assignment.source_file_path}
-        sourceFileName={assignment.source_file_name}
-        sourceHtml={null}
+        sources={refSources}
       />
     );
   }
@@ -253,12 +252,7 @@ function renderStep({
     return (
       <ElaborationStep
         {...baseProps}
-        sourceText={assignment.source_text}
-        sourceTitle={assignment.source_title}
-        sourceAuthor={assignment.source_author}
-        sourceFilePath={assignment.source_file_path}
-        sourceFileName={assignment.source_file_name}
-        sourceHtml={null}
+        sources={refSources}
       />
     );
   }
@@ -267,12 +261,7 @@ function renderStep({
     return (
       <GatherCdsStep
         {...baseProps}
-        sourceText={assignment.source_text}
-        sourceTitle={assignment.source_title}
-        sourceAuthor={assignment.source_author}
-        sourceFilePath={assignment.source_file_path}
-        sourceFileName={assignment.source_file_name}
-        sourceHtml={null}
+        sources={refSources}
       />
     );
   }
@@ -286,12 +275,7 @@ function renderStep({
         {...baseProps}
         mode={mode}
         chunkRatio={chunkRatio}
-        sourceText={assignment.source_text}
-        sourceTitle={assignment.source_title}
-        sourceAuthor={assignment.source_author}
-        sourceFilePath={assignment.source_file_path}
-        sourceFileName={assignment.source_file_name}
-        sourceHtml={null}
+        sources={refSources}
       />
     );
   }

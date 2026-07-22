@@ -21,7 +21,7 @@ import { CdCmTChart } from "./cd-cm-t-chart";
 import { ExpositoryTChart } from "./expository-t-chart";
 import { NarrativeTChart } from "./narrative-t-chart";
 import { FictionalAbcPlan } from "./fictional-abc-plan";
-import { ReferencePanel } from "../reference-panel";
+import { ReferencePanel, type ReferenceSource } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
@@ -39,12 +39,7 @@ interface Props {
   writingChunkRatio: ChunkRatio;
   bodyParagraphs: readonly BodyParagraphData[];
   // Reference panel data (only present when assignment has source text)
-  sourceText: string | null;
-  sourceTitle: string | null;
-  sourceAuthor: string | null;
-  sourceFilePath: string | null;
-  sourceFileName: string | null;
-  sourceHtml: string | null;
+  sources: readonly ReferenceSource[];
   annotations: readonly TextAnnotationRow[];
 }
 
@@ -115,12 +110,7 @@ export function TChartClient({
   mode,
   writingChunkRatio,
   bodyParagraphs,
-  sourceText,
-  sourceTitle,
-  sourceAuthor,
-  sourceFilePath,
-  sourceFileName,
-  sourceHtml,
+  sources,
   annotations,
 }: Props) {
   const { isReadOnly } = useWritingMode();
@@ -136,7 +126,7 @@ export function TChartClient({
   // T-Chart gets the full width. Argumentation/literary keep it (they
   // cite the source while building the chart). Decision: Raymond,
   // 2026-06-08.
-  const showReference = sourceText !== null && mode !== "expository";
+  const showReference = sources.length > 0 && mode !== "expository";
 
   const onContinue = () => {
     setError(null);
@@ -223,7 +213,7 @@ export function TChartClient({
 
   return (
     <div className="space-y-4">
-      {showReference && sourceText && (
+      {showReference && (
         <details className="lg:hidden bg-white border border-gray-200 rounded-lg group">
           <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between">
             <span className="text-sm font-medium text-gray-900">
@@ -237,12 +227,7 @@ export function TChartClient({
           <div className="px-4 pb-4 border-t border-gray-100 pt-3">
             <ReferencePanel
               writingId={writingId}
-              sourceText={sourceText}
-              sourceTitle={sourceTitle}
-              sourceAuthor={sourceAuthor}
-              sourceFilePath={sourceFilePath}
-              sourceFileName={sourceFileName}
-              sourceHtml={sourceHtml}
+              sources={sources}
               annotations={annotations}
             />
           </div>
@@ -258,16 +243,11 @@ export function TChartClient({
       >
         {formColumn}
 
-        {showReference && sourceText && (
+        {showReference && (
           <aside className="hidden lg:block lg:sticky lg:top-20 lg:self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
             <ReferencePanel
               writingId={writingId}
-              sourceText={sourceText}
-              sourceTitle={sourceTitle}
-              sourceAuthor={sourceAuthor}
-              sourceFilePath={sourceFilePath}
-              sourceFileName={sourceFileName}
-              sourceHtml={sourceHtml}
+              sources={sources}
               annotations={annotations}
             />
           </aside>
