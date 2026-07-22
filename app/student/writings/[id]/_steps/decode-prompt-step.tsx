@@ -182,7 +182,7 @@ export function DecodePromptStep({
 
       <section className="bg-white border border-gray-200 rounded-lg p-4">
         <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
-          The prompt
+          Writing Prompt
         </div>
         <p className="text-gray-800 whitespace-pre-wrap">{assignmentPrompt}</p>
       </section>
@@ -208,8 +208,8 @@ export function DecodePromptStep({
 
         {/* trigger */}
         <Field
-          label="Trigger"
-          help="Typically, this sentence focuses my attention on a source or sources that alert me to where I will GATHER MY CDS: a text or video, class notes, an event or experience, a concept I’m studying, a statement made by someone.  "
+          label="Trigger Sentence"
+          help="Typically, the “Trigger Sentence” focuses the writer’s attention on a source  – Look for an imperative sentence (command, request, advice), such as “Read the passage carefully”; “Think about what you learned in class about . . .”; View the documentary . . .”)"
         >
           <textarea
             rows={2}
@@ -218,7 +218,7 @@ export function DecodePromptStep({
             onBlur={handleBlur}
             disabled={isReadOnly}
             className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-            placeholder="My concrete detail will come from…"
+            placeholder="Copy and paste the trigger sentence here."
           />
         </Field>
       </div>

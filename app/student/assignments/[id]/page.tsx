@@ -92,16 +92,18 @@ export default async function StudentAssignmentDetail({
 
       <section className="bg-white border border-gray-200 rounded-lg p-5">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
-          Prompt
+          Writing Prompt
         </h2>
         <p className="text-gray-800 whitespace-pre-wrap">{item.prompt}</p>
       </section>
 
       {item.sources.map((s, idx) => {
+        const kindLabel =
+          s.kind === "secondary" ? "Secondary Source" : "Primary Source";
         const label =
           item.sources.length > 1
-            ? `Source ${idx + 1} · ${s.kind === "secondary" ? "Secondary" : "Primary"}`
-            : "Source text";
+            ? `Source ${idx + 1} · ${kindLabel}`
+            : kindLabel;
         return (
           <details
             key={s.id}
