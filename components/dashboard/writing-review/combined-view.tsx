@@ -55,11 +55,23 @@ interface Props {
     prompt: string;
     is_essay: boolean;
     has_counterargument: boolean;
+    // Flat primary-source fields still feed the read-only reference panels in
+    // later steps (topic-sentence-dev, cm-dev, t-chart, …). The annotate step
+    // uses the full `sources` array below.
     source_text: string | null;
     source_title: string | null;
     source_author: string | null;
     source_file_path: string | null;
     source_file_name: string | null;
+    sources: {
+      id: string;
+      kind: "primary" | "secondary";
+      source_text: string | null;
+      source_title: string | null;
+      source_author: string | null;
+      source_file_path: string | null;
+      source_file_name: string | null;
+    }[];
   };
 }
 
@@ -74,7 +86,7 @@ export async function CombinedView({
   const visible = getSteps(mode, {
     isEssay: assignment.is_essay,
     hasCounterargument: assignment.has_counterargument,
-    hasSourceText: !!assignment.source_text,
+    hasSourceText: assignment.sources.length > 0,
     chunkRatio,
   });
 
@@ -163,19 +175,25 @@ function renderStep({
   }
 
   if (step.groupOrigin === "annotate_text") {
+    // Teacher review renders each source's flat substrate for now (renderMode
+    // null → SourceTextViewer); PDF/rich-faithful review is Chunk 3 (spec §11),
+    // out of scope here. Annotations still group per source via source_id.
+    const reviewSources = assignment.sources.map((s) => ({
+      sourceId: s.id,
+      kind: s.kind,
+      sourceText: s.source_text ?? "",
+      sourceTitle: s.source_title,
+      sourceAuthor: s.source_author,
+      sourceFilePath: s.source_file_path,
+      sourceFileName: s.source_file_name,
+      sourceHtml: null,
+      sourceRenderMode: null,
+    }));
     return (
       <AnnotateTextStep
         {...baseProps}
         required={step.required}
-        sourceText={assignment.source_text}
-        sourceTitle={assignment.source_title}
-        sourceAuthor={assignment.source_author}
-        sourceFilePath={assignment.source_file_path}
-        sourceFileName={assignment.source_file_name}
-        sourceHtml={null}
-        // Teacher review renders the flat substrate for now; PDF/rich-faithful
-        // review rendering is Chunk 3 (spec §11), out of scope here.
-        sourceRenderMode={null}
+        sources={reviewSources}
       />
     );
   }

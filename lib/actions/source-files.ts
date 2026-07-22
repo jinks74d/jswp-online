@@ -49,3 +49,48 @@ export async function getWritingSourceUrl(
 
   return getAssignmentSourceSignedUrl(supabase, path);
 }
+
+/**
+ * Source-scoped variant for multi-source assignments: sign a specific source
+ * file path, but only after verifying it belongs to one of the writing's
+ * assignment's sources (or the legacy column). The bucket RLS still enforces
+ * school scope; this membership check stops a student from signing an
+ * arbitrary in-school path.
+ */
+export async function getWritingSourceUrlByPath(
+  writingId: string,
+  filePath: string
+): Promise<OpenSourceResult> {
+  if (!filePath) return { ok: false, error: "No original file is attached." };
+  const supabase = await createServerClient();
+
+  const { data, error } = await supabase
+    .from("student_writings")
+    .select(
+      "assignment:assignment_id ( source_file_path, assignment_sources ( source_file_path ) )"
+    )
+    .eq("id", writingId)
+    .maybeSingle();
+
+  if (error) return { ok: false, error: "Could not load the assignment." };
+
+  const assignment = (
+    data as {
+      assignment?: {
+        source_file_path: string | null;
+        assignment_sources?: { source_file_path: string | null }[];
+      };
+    } | null
+  )?.assignment;
+
+  const allowed = new Set<string>();
+  if (assignment?.source_file_path) allowed.add(assignment.source_file_path);
+  for (const s of assignment?.assignment_sources ?? []) {
+    if (s.source_file_path) allowed.add(s.source_file_path);
+  }
+  if (!allowed.has(filePath)) {
+    return { ok: false, error: "That file isn't part of this assignment." };
+  }
+
+  return getAssignmentSourceSignedUrl(supabase, filePath);
+}

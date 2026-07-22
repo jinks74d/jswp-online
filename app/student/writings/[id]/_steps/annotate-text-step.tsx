@@ -1,16 +1,18 @@
 /**
- * Server entry for the Read-and-Annotate step. Loads the source text +
- * existing annotations and hands them to the client orchestrator.
+ * Server entry for the Read-and-Annotate step. Loads existing annotations
+ * and hands them, with every attached source, to the client orchestrator.
  *
- * Defensive case: if source_text is null (shouldn't happen — the step
- * config has requiresSourceText: true and the step engine filters
- * accordingly), render an error panel with [Skip step] so the student
- * is never stuck on a broken step.
+ * Defensive case: if there are no sources (shouldn't happen — the step
+ * config has requiresSourceText and the step engine filters accordingly),
+ * render an error panel with [Skip step] so the student is never stuck.
  */
 
 import { Construction } from "lucide-react";
 import { getAnnotations } from "@/lib/queries/text-annotations";
-import { AnnotateTextClient } from "@/components/student/writing/annotate-text-client";
+import {
+  AnnotateTextClient,
+  type AnnotateSource,
+} from "@/components/student/writing/annotate-text-client";
 import { SkipStepButton } from "./skip-step-button";
 
 interface Props {
@@ -19,13 +21,7 @@ interface Props {
   stepLabel: string;
   pedagogyHint: string | null;
   required: boolean;
-  sourceText: string | null;
-  sourceTitle: string | null;
-  sourceAuthor: string | null;
-  sourceFilePath: string | null;
-  sourceFileName: string | null;
-  sourceHtml: string | null;
-  sourceRenderMode: "pdf" | "rich" | "plain" | null;
+  sources: AnnotateSource[];
 }
 
 export async function AnnotateTextStep({
@@ -34,15 +30,9 @@ export async function AnnotateTextStep({
   stepLabel,
   pedagogyHint,
   required,
-  sourceText,
-  sourceTitle,
-  sourceAuthor,
-  sourceFilePath,
-  sourceFileName,
-  sourceHtml,
-  sourceRenderMode,
+  sources,
 }: Props) {
-  if (!sourceText) {
+  if (sources.length === 0) {
     return (
       <div className="space-y-5">
         <header>
@@ -87,13 +77,7 @@ export async function AnnotateTextStep({
         writingId={writingId}
         stepKey={stepKey}
         required={required}
-        sourceText={sourceText}
-        sourceTitle={sourceTitle}
-        sourceAuthor={sourceAuthor}
-        sourceFilePath={sourceFilePath}
-        sourceFileName={sourceFileName}
-        sourceHtml={sourceHtml}
-        sourceRenderMode={sourceRenderMode}
+        sources={sources}
         initialAnnotations={annotations}
       />
     </div>

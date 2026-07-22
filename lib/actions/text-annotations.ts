@@ -27,6 +27,8 @@ const VALID_KINDS = new Set<AnnotationKind>([
 
 export interface CreateAnnotationInput {
   writingId: string;
+  /** Which assignment source these offsets index into (null = legacy). */
+  sourceId: string | null;
   rangeStart: number;
   rangeEnd: number;
   selectedText: string;
@@ -57,6 +59,7 @@ export async function createAnnotation(
     .from("text_annotations")
     .insert({
       student_writing_id: input.writingId,
+      source_id: input.sourceId,
       range_start: input.rangeStart,
       range_end: input.rangeEnd,
       selected_text: input.selectedText,

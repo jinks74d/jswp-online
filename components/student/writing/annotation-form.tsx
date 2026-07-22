@@ -34,6 +34,7 @@ export type AnnotationFormPayload =
   | {
       mode: "create";
       writingId: string;
+      sourceId: string | null;
       rangeStart: number;
       rangeEnd: number;
       selectedText: string;
@@ -73,6 +74,7 @@ export function AnnotationForm({ payload, onClose }: Props) {
         if (payload.mode === "create") {
           await createAnnotation({
             writingId: payload.writingId,
+            sourceId: payload.sourceId,
             rangeStart: payload.rangeStart,
             rangeEnd: payload.rangeEnd,
             selectedText: payload.selectedText,

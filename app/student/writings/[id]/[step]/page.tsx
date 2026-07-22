@@ -19,6 +19,7 @@ import { getSteps, getNextStep, type JswpMode } from "@/lib/jswp-modes";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { groupSectionFeedback } from "@/lib/section-feedback";
 import { SectionFeedbackNote } from "@/components/dashboard/writing-review/section-feedback-note";
+import type { AnnotateSource } from "@/components/student/writing/annotate-text-client";
 import { DecodePromptStep } from "../_steps/decode-prompt-step";
 import { PlaceholderStep } from "../_steps/placeholder-step";
 import { AnnotateTextStep } from "../_steps/annotate-text-step";
@@ -58,7 +59,7 @@ export default async function StepDispatcher({
   const visible = getSteps(mode, {
     isEssay: a.is_essay,
     hasCounterargument: a.has_counterargument,
-    hasSourceText: !!a.source_text,
+    hasSourceText: writing.sources.length > 0,
     chunkRatio: writing.chunk_ratio,
   });
 
@@ -142,6 +143,17 @@ export default async function StepDispatcher({
   }
 
   if (target.groupOrigin === "annotate_text") {
+    const annotateSources: AnnotateSource[] = writing.sources.map((s) => ({
+      sourceId: s.id,
+      kind: s.kind,
+      sourceText: s.source_text ?? "",
+      sourceTitle: s.source_title,
+      sourceAuthor: s.source_author,
+      sourceFilePath: s.source_file_path,
+      sourceFileName: s.source_file_name,
+      sourceHtml: s.source_html,
+      sourceRenderMode: s.source_render_mode,
+    }));
     return withNote(
       <AnnotateTextStep
         writingId={id}
@@ -149,13 +161,7 @@ export default async function StepDispatcher({
         stepLabel={target.label}
         pedagogyHint={target.pedagogyHint ?? null}
         required={target.required}
-        sourceText={a.source_text}
-        sourceTitle={a.source_title}
-        sourceAuthor={a.source_author}
-        sourceFilePath={a.source_file_path}
-        sourceFileName={a.source_file_name}
-        sourceHtml={a.source_html}
-        sourceRenderMode={a.source_render_mode}
+        sources={annotateSources}
       />
     );
   }

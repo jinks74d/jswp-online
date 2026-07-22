@@ -65,6 +65,16 @@ export interface WritingForTeacherReview {
     num_body_paragraphs: number;
     default_chunks_per_bp: number;
     rubric: Json | null;
+    sources: {
+      id: string;
+      position: number;
+      kind: "primary" | "secondary";
+      source_text: string | null;
+      source_title: string | null;
+      source_author: string | null;
+      source_file_path: string | null;
+      source_file_name: string | null;
+    }[];
   };
 }
 
@@ -140,7 +150,12 @@ export async function getWritingForTeacherReview(
         id, title, prompt, mode, is_essay, has_counterargument,
         source_text, source_title, source_author, source_file_path,
         source_file_name, default_chunk_ratio,
-        num_body_paragraphs, default_chunks_per_bp, rubric
+        num_body_paragraphs, default_chunks_per_bp, rubric,
+        assignment_sources (
+          id, position, kind,
+          source_text, source_title, source_author, source_file_path,
+          source_file_name
+        )
       )
       `
     )
@@ -154,9 +169,17 @@ export async function getWritingForTeacherReview(
 
   const row = data as unknown as WritingForTeacherReview & {
     student: WritingForTeacherReview["student"] | null;
-    assignment: WritingForTeacherReview["assignment"] | null;
+    assignment:
+      | (Omit<WritingForTeacherReview["assignment"], "sources"> & {
+          assignment_sources?: WritingForTeacherReview["assignment"]["sources"];
+        })
+      | null;
   };
   if (!row.student || !row.assignment) return null;
+
+  const sources = [...(row.assignment.assignment_sources ?? [])].sort(
+    (a, b) => a.position - b.position
+  );
 
   return {
     id: row.id,
@@ -172,7 +195,7 @@ export async function getWritingForTeacherReview(
     current_step: row.current_step,
     chunk_ratio: row.chunk_ratio,
     student: row.student,
-    assignment: row.assignment,
+    assignment: { ...row.assignment, sources },
   };
 }
 

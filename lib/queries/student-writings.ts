@@ -20,6 +20,19 @@ import { MODES, type JswpMode } from "@/lib/jswp-modes";
 type WritingRow = Database["public"]["Tables"]["student_writings"]["Row"];
 type AssignmentRow = Database["public"]["Tables"]["assignments"]["Row"];
 
+export type WritingAssignmentSource = {
+  id: string;
+  position: number;
+  kind: "primary" | "secondary";
+  source_text: string | null;
+  source_title: string | null;
+  source_author: string | null;
+  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_html: string | null;
+  source_file_path: string | null;
+  source_file_name: string | null;
+};
+
 export type WritingForStepEngine = WritingRow & {
   assignment: Pick<
     AssignmentRow,
@@ -40,6 +53,8 @@ export type WritingForStepEngine = WritingRow & {
     | "num_body_paragraphs"
     | "default_chunks_per_bp"
   >;
+  /** All sources for the assignment, ascending by position (may be empty). */
+  sources: WritingAssignmentSource[];
 };
 
 const PG_UNIQUE_VIOLATION = "23505";
@@ -60,7 +75,12 @@ export async function getWriting(
         id, title, prompt, mode, is_essay, has_counterargument,
         source_text, source_title, source_author, source_render_mode,
         source_html, source_file_path, source_file_name, default_chunk_ratio,
-        num_body_paragraphs, default_chunks_per_bp
+        num_body_paragraphs, default_chunks_per_bp,
+        assignment_sources (
+          id, position, kind,
+          source_text, source_title, source_author, source_render_mode,
+          source_html, source_file_path, source_file_name
+        )
       )
       `
     )
@@ -72,10 +92,19 @@ export async function getWriting(
   }
   if (!data) return null;
 
-  // Supabase returns the embed as `assignment` — narrow the shape.
-  const row = data as unknown as WritingForStepEngine;
+  // Supabase returns the embed as `assignment` (with a nested
+  // assignment_sources array). Lift the sources up and sort by position.
+  const row = data as unknown as WritingForStepEngine & {
+    assignment: (WritingForStepEngine["assignment"] & {
+      assignment_sources?: WritingAssignmentSource[];
+    }) | null;
+  };
   if (!row.assignment) return null;
-  return row;
+
+  const sources = [...(row.assignment.assignment_sources ?? [])].sort(
+    (a, b) => a.position - b.position
+  );
+  return { ...row, sources };
 }
 
 /**
