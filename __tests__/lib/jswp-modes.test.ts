@@ -63,6 +63,23 @@ describe("getSteps — Expository ratio-branching", () => {
       "expository.paragraph_form",
     ]);
   });
+
+  it("keeps gather_cds for a 1:1 expository writing (6-step sequence)", () => {
+    const steps = getSteps(
+      "expository",
+      expoCtx("nonlit_expository_one_to_one")
+    );
+    const keys = steps.map((s) => s.key);
+
+    expect(keys).toEqual([
+      "expository.decode_prompt",
+      "expository.annotate_text",
+      "expository.gather_cds",
+      "expository.t_chart",
+      "expository.shaping_sheet",
+      "expository.paragraph_form",
+    ]);
+  });
 });
 
 /* ─── computeGate ratio-awareness ────────────────────────────────── */
@@ -143,6 +160,33 @@ describe("computeGate — Shaping-sheet ratio-awareness", () => {
     ]);
     expect(gate.canContinue).toBe(false);
     expect(gate.reason).toContain("CM sentence");
+  });
+
+  it("fails a 1:1 chunk with zero CM sentences (commentary still required)", () => {
+    const gate = computeGate("expository", [
+      bp([
+        chunk(
+          "nonlit_expository_one_to_one",
+          ["A concrete detail sentence."],
+          []
+        ),
+      ]),
+    ]);
+    expect(gate.canContinue).toBe(false);
+    expect(gate.reason).toContain("CM sentence");
+  });
+
+  it("passes a 1:1 chunk with one CD and one CM sentence", () => {
+    const gate = computeGate("expository", [
+      bp([
+        chunk(
+          "nonlit_expository_one_to_one",
+          ["A concrete detail sentence."],
+          ["A commentary sentence."]
+        ),
+      ]),
+    ]);
+    expect(gate.canContinue).toBe(true);
   });
 
   it("still fails a 3+:0 chunk with zero CD sentences (CD requirement kept)", () => {

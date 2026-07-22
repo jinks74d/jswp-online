@@ -31,6 +31,24 @@ describe("getExpositoryTChartSpec — 2+:1", () => {
   });
 });
 
+describe("getExpositoryTChartSpec — 1:1", () => {
+  const spec = getExpositoryTChartSpec("nonlit_expository_one_to_one");
+
+  it("labels the ratio (1:1) but keeps the STEP 4 standard layout", () => {
+    expect(spec.stepNumber).toBe(4);
+    expect(spec.ratioLabel).toBe("(1:1)");
+  });
+
+  it("renders the same 5 badges as 2+:1 (TS, CDs, CMs, Revised TS, CS)", () => {
+    expect(spec.badges).toEqual({ ts: 1, cds: 2, cms: 3, revised_ts: 4, cs: 5 });
+  });
+
+  it("shows the Revised TS row and the CM column (it has commentary)", () => {
+    expect(spec.showRevisedTs).toBe(true);
+    expect(spec.showCmColumn).toBe(true);
+  });
+});
+
 describe("getExpositoryTChartSpec — 3+:0", () => {
   const spec = getExpositoryTChartSpec("nonlit_summary_three_plus_to_zero");
 

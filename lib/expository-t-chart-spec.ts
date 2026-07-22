@@ -11,7 +11,7 @@
  * dropped the gather_cds step at 3+:0.
  */
 
-import { isSummaryRatio, type ChunkRatio } from "@/lib/jswp-modes";
+import { isSummaryRatio, ratioClass, type ChunkRatio } from "@/lib/jswp-modes";
 
 export type TChartRegion = "ts" | "revised_ts" | "cds" | "cms" | "cs";
 
@@ -51,14 +51,23 @@ const STANDARD_SPEC: ExpositoryTChartSpec = {
   csLabel: "CS:",
 };
 
+// 1:1 shares the standard CD + CM layout (revised-TS row, CM column) — it
+// differs from 2+:1 only in proportion, and thus only in the ratio label.
+const ONE_TO_ONE_SPEC: ExpositoryTChartSpec = {
+  ...STANDARD_SPEC,
+  ratioLabel: "(1:1)",
+};
+
 /**
  * Resolve the T-Chart layout spec for an Expository writing's ratio.
- * Expository assignments are only ever 2+:1 or 3+:0; the 1:2+ (literary)
+ * Expository assignments are 2+:1, 1:1, or 3+:0; the 1:2+ (literary)
  * proportion never reaches this component, but is treated as the
  * standard 2+:1 layout defensively rather than throwing.
  */
 export function getExpositoryTChartSpec(
   ratio: ChunkRatio
 ): ExpositoryTChartSpec {
-  return isSummaryRatio(ratio) ? SUMMARY_SPEC : STANDARD_SPEC;
+  if (isSummaryRatio(ratio)) return SUMMARY_SPEC;
+  if (ratioClass(ratio) === "one_to_one") return ONE_TO_ONE_SPEC;
+  return STANDARD_SPEC;
 }

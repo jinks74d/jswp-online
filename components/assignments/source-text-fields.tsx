@@ -48,12 +48,16 @@ export function SourceTextFields({
   schoolId,
   assignmentId,
   supabase,
+  legend = "Source text",
+  citationExample,
 }: {
   initial?: SourceTextInitial;
   disabled?: boolean;
   schoolId: string;
   assignmentId?: string;
   supabase: SupabaseClient<Database>;
+  legend?: string;
+  citationExample?: string;
 }) {
   const [mode, setMode] = useState<RenderMode>(
     initial?.source_render_mode ?? (initial?.source_html ? "rich" : "plain")
@@ -89,7 +93,7 @@ export function SourceTextFields({
   return (
     <fieldset className="space-y-4 bg-white border border-gray-200 rounded-lg p-5">
       <legend className="text-sm font-semibold text-gray-700 px-1">
-        Source text
+        {legend}
       </legend>
 
       <div className="grid grid-cols-2 gap-3">
@@ -127,6 +131,9 @@ export function SourceTextFields({
           placeholder="e.g. Dweck, Carol S. Scientific American Mind, Nov. 2007."
           className={inputClass}
         />
+        {citationExample && (
+          <p className="mt-1 text-xs text-gray-500">{citationExample}</p>
+        )}
         <p className="mt-1 text-xs text-gray-500">
           You can include the publication and any reproduction-permission note
           here.

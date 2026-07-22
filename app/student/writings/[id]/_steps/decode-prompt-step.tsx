@@ -37,6 +37,7 @@ const RATIO_LABELS: Record<ChunkRatio, string> = {
   nonlit_summary_three_plus_to_zero: "•	Nonliterary summary (3+:0)",
   nonlit_expository_two_plus_to_one: "•	Nonliterary expository (2+:1)",
   nonlit_argumentation_two_plus_to_one: "•	Nonliterary argumentation (2+:1)",
+  nonlit_expository_one_to_one: "•	Nonliterary expository (1:1)",
 };
 
 const FORM_LABELS: Record<string, string> = {

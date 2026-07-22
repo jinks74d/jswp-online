@@ -36,6 +36,7 @@ const RATIO_LABELS: Record<ChunkData["ratio"], string> = {
   nonlit_summary_three_plus_to_zero: "3+ : 0",
   nonlit_expository_two_plus_to_one: "2+ : 1",
   nonlit_argumentation_two_plus_to_one: "2+ : 1",
+  nonlit_expository_one_to_one: "1 : 1",
 };
 
 export function ChunkEditor({

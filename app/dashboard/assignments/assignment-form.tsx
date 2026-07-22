@@ -44,7 +44,8 @@ type ChunkRatio =
   | "nar_two_plus_to_one"
   | "nonlit_summary_three_plus_to_zero"
   | "nonlit_expository_two_plus_to_one"
-  | "nonlit_argumentation_two_plus_to_one";
+  | "nonlit_argumentation_two_plus_to_one"
+  | "nonlit_expository_one_to_one";
 
 // Ratio choices are genre-specific: the enum encodes genre + proportion, so
 // each mode exposes only its valid ratio(s). Literary is locked (rendered as a
@@ -66,13 +67,73 @@ const RATIO_OPTIONS: Record<Mode, { value: ChunkRatio; label: string }[]> = {
   expository: [
     {
       value: "nonlit_expository_two_plus_to_one",
-      label: "2+:1 — multiple details, single commentary",
+      label:
+        "(2+:1) – two or more sentences of concrete detail to one sentence of commentary",
     },
     {
       value: "nonlit_summary_three_plus_to_zero",
-      label: "3+:0 — Summary (no commentary)",
+      label:
+        "(3+:0) – three or more sentences of concrete detail; no commentary",
+    },
+    {
+      value: "nonlit_expository_one_to_one",
+      label: "(1:1) – APUSH, AP World History",
     },
   ],
+};
+
+// Field copy varies by mode — the shared form component stays single, but each
+// mode speaks its own language. Only expository diverges today; the other three
+// fall back to the neutral defaults until their copy is specified.
+type FormCopy = {
+  titleLabel: string;
+  titlePlaceholder: string;
+  titleDescription?: string;
+  promptLabel: string;
+  promptPlaceholder: string;
+  promptDescription?: string;
+  essayLabel: string;
+  essayAside?: string;
+  essayUncheckedHint: string;
+  ratioLabel: string;
+  sourceLegend: string;
+  citationExample?: string;
+};
+
+const DEFAULT_FORM_COPY: FormCopy = {
+  titleLabel: "Title",
+  titlePlaceholder: "e.g. Sports & Teamwork",
+  promptLabel: "Prompt",
+  promptPlaceholder: "Write the question or task students will respond to.",
+  essayLabel: "Essay format",
+  essayAside: "(multiple body paragraphs)",
+  essayUncheckedHint:
+    "Unchecked: students write a single one-chunk paragraph (e.g. a 3+:0 summary).",
+  ratioLabel: "Chunk ratio",
+  sourceLegend: "Source text",
+};
+
+const FORM_COPY: Record<Mode, FormCopy> = {
+  expository: {
+    titleLabel: "Name of Unit or Assignment",
+    titlePlaceholder: "",
+    titleDescription:
+      "e.g., ecosystems, early colonization, volume/surface area, the Enlightenment",
+    promptLabel: "Writing Prompt",
+    promptPlaceholder: "",
+    promptDescription:
+      "Written as statements, not questions; quantifies the assignment (length and ratio); uses verbs that fit the subject and assignment; narrows the focus of the topic.",
+    essayLabel: "Multi-paragraph Essay",
+    essayUncheckedHint:
+      "Unchecked: students write a single paragraph (body, introduction, or conclusion).",
+    ratioLabel: "The JSWP® Ratio",
+    sourceLegend: "Primary or Secondary Sources",
+    citationExample:
+      'e.g., Dweck, Carol S. “The Secret to Raising Smart Kids.” Scientific American Mind, vol. 18, no. 6, Dec. 2007 / Jan. 2008, pp. 36–43.',
+  },
+  argumentation: DEFAULT_FORM_COPY,
+  literary: DEFAULT_FORM_COPY,
+  narrative: DEFAULT_FORM_COPY,
 };
 
 export type ClassPeriodOption = { id: string; label: string };
@@ -119,6 +180,7 @@ export function AssignmentForm({
   schoolId: string;
   studentWritingCount?: number;
 }) {
+  const copy = FORM_COPY[mode];
   const isPublished = initial?.released_at != null;
   const isLiterary = mode === "literary";
   const isArgumentation = mode === "argumentation";
@@ -199,7 +261,12 @@ export function AssignmentForm({
           />
         )}
 
-        <Field label="Title" htmlFor="title" error={state.fieldErrors?.title}>
+        <Field
+          label={copy.titleLabel}
+          htmlFor="title"
+          error={state.fieldErrors?.title}
+          description={copy.titleDescription}
+        >
           <input
             id="title"
             name="title"
@@ -208,14 +275,15 @@ export function AssignmentForm({
             maxLength={255}
             defaultValue={initial?.title ?? ""}
             className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="e.g. Sports & Teamwork"
+            placeholder={copy.titlePlaceholder}
           />
         </Field>
 
         <Field
-          label="Prompt"
+          label={copy.promptLabel}
           htmlFor="prompt"
           error={state.fieldErrors?.prompt}
+          description={copy.promptDescription}
         >
           <textarea
             id="prompt"
@@ -225,7 +293,7 @@ export function AssignmentForm({
             maxLength={5000}
             defaultValue={initial?.prompt ?? ""}
             className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Write the question or task students will respond to."
+            placeholder={copy.promptPlaceholder}
           />
         </Field>
 
@@ -244,15 +312,16 @@ export function AssignmentForm({
               aria-describedby={!isEssay ? "is_essay-hint" : undefined}
               className="text-blue-600 focus:ring-blue-500"
             />
-            <span className="font-medium text-gray-900">Essay format</span>
-            <span className="text-stone-600">
-              (multiple body paragraphs)
+            <span className="font-medium text-gray-900">
+              {copy.essayLabel}
             </span>
+            {copy.essayAside && (
+              <span className="text-stone-600">{copy.essayAside}</span>
+            )}
           </label>
           {!isEssay && (
             <p id="is_essay-hint" className="mt-1 text-xs text-stone-600">
-              Unchecked: students write a single one-chunk paragraph (e.g. a
-              3+:0 summary).
+              {copy.essayUncheckedHint}
             </p>
           )}
         </div>
@@ -299,7 +368,7 @@ export function AssignmentForm({
         )}
 
         {!isLiterary && (
-          <Field label="Chunk ratio" htmlFor="chunk_ratio">
+          <Field label={copy.ratioLabel} htmlFor="chunk_ratio">
             <select
               id="chunk_ratio"
               name="default_chunk_ratio"
@@ -368,6 +437,8 @@ export function AssignmentForm({
             schoolId={schoolId}
             assignmentId={sourceAssignmentId}
             supabase={supabase}
+            legend={copy.sourceLegend}
+            citationExample={copy.citationExample}
           />
         )}
 
@@ -700,18 +771,21 @@ function Field({
   htmlFor,
   error,
   hint,
+  description,
   children,
 }: {
   label: string;
   htmlFor: string;
   error?: string;
   hint?: string;
+  description?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const hintId = hint ? `${htmlFor}-hint` : undefined;
+  const descId = description ? `${htmlFor}-desc` : undefined;
   const errorId = error ? `${htmlFor}-error` : undefined;
   const describedBy =
-    [hintId, errorId].filter(Boolean).join(" ") || undefined;
+    [hintId, descId, errorId].filter(Boolean).join(" ") || undefined;
   return (
     <div>
       <div className="flex items-baseline justify-between mb-2">
@@ -739,6 +813,11 @@ function Field({
             }
           )
         : children}
+      {description && (
+        <p id={descId} className="mt-1 text-xs text-stone-600">
+          {description}
+        </p>
+      )}
       {error && (
         <p id={errorId} className="mt-1 text-sm text-red-600">
           {error}

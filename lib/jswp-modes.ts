@@ -35,7 +35,8 @@ export type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
 export type RatioClass =
   | "two_plus_to_one"
   | "one_to_two_plus"
-  | "three_plus_to_zero";
+  | "three_plus_to_zero"
+  | "one_to_one";
 
 const RATIO_CLASS: Record<ChunkRatio, RatioClass> = {
   lit_one_to_two_plus: "one_to_two_plus",
@@ -44,6 +45,7 @@ const RATIO_CLASS: Record<ChunkRatio, RatioClass> = {
   nonlit_summary_three_plus_to_zero: "three_plus_to_zero",
   nonlit_expository_two_plus_to_one: "two_plus_to_one",
   nonlit_argumentation_two_plus_to_one: "two_plus_to_one",
+  nonlit_expository_one_to_one: "one_to_one",
 };
 
 /** The CD:CM proportion for a ratio, ignoring its genre prefix. */
