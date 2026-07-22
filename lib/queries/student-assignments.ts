@@ -69,15 +69,6 @@ export interface StudentAssignmentDetail {
   is_essay: boolean;
   num_body_paragraphs: number;
   has_counterargument: boolean;
-  source_text: string | null;
-  source_title: string | null;
-  source_author: string | null;
-  source_citation: string | null;
-  source_url: string | null;
-  source_render_mode: "pdf" | "rich" | "plain" | null;
-  source_html: string | null;
-  source_file_path: string | null;
-  source_file_name: string | null;
   sources: StudentSource[];
   rubric: Database["public"]["Tables"]["assignments"]["Row"]["rubric"];
   due_at: string | null;
@@ -138,7 +129,7 @@ export async function getStudentAssignmentsList(
     supabase
       .from("assignments")
       .select(
-        "id, title, mode, due_at, released_at, source_text"
+        "id, title, mode, due_at, released_at, assignment_sources(count)"
       )
       .order("due_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false }),
@@ -167,13 +158,16 @@ export async function getStudentAssignmentsList(
 
   return (assignmentsRes.data ?? []).map((a) => {
     const w = writingByAssignment.get(a.id) ?? null;
+    const sourceCount =
+      (a as { assignment_sources?: { count: number }[] }).assignment_sources?.[0]
+        ?.count ?? 0;
     return {
       id: a.id,
       title: a.title,
       mode: a.mode,
       due_at: a.due_at,
       released_at: a.released_at,
-      has_source_text: !!a.source_text,
+      has_source_text: sourceCount > 0,
       status: deriveStatus(w?.status ?? null),
       writing: w
         ? {
@@ -198,9 +192,7 @@ export async function getStudentAssignmentDetail(
     .from("assignments")
     .select(
       `id, title, prompt, mode, is_essay, num_body_paragraphs,
-       has_counterargument, source_text, source_title, source_author,
-       source_citation, source_url, source_render_mode, source_html,
-       source_file_path, source_file_name, rubric, due_at, released_at,
+       has_counterargument, rubric, due_at, released_at,
        assignment_sources (
          position, id, kind, source_text, source_title, source_author,
          source_citation, source_url, source_render_mode, source_html,

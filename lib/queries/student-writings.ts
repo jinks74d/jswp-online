@@ -42,13 +42,6 @@ export type WritingForStepEngine = WritingRow & {
     | "mode"
     | "is_essay"
     | "has_counterargument"
-    | "source_text"
-    | "source_title"
-    | "source_author"
-    | "source_render_mode"
-    | "source_html"
-    | "source_file_path"
-    | "source_file_name"
     | "default_chunk_ratio"
     | "num_body_paragraphs"
     | "default_chunks_per_bp"
@@ -73,9 +66,7 @@ export async function getWriting(
       *,
       assignment:assignment_id (
         id, title, prompt, mode, is_essay, has_counterargument,
-        source_text, source_title, source_author, source_render_mode,
-        source_html, source_file_path, source_file_name, default_chunk_ratio,
-        num_body_paragraphs, default_chunks_per_bp,
+        default_chunk_ratio, num_body_paragraphs, default_chunks_per_bp,
         assignment_sources (
           id, position, kind,
           source_text, source_title, source_author, source_render_mode,
@@ -136,7 +127,7 @@ interface GetOrCreateResult {
   writing: WritingRow;
   assignment: Pick<
     AssignmentRow,
-    "id" | "mode" | "default_chunk_ratio" | "is_essay" | "has_counterargument" | "source_text"
+    "id" | "mode" | "default_chunk_ratio" | "is_essay" | "has_counterargument"
   >;
   created: boolean;
 }
@@ -152,7 +143,7 @@ export async function getOrCreateWriting(
   const { data: assignment, error: aErr } = await supabase
     .from("assignments")
     .select(
-      "id, mode, default_chunk_ratio, is_essay, has_counterargument, source_text"
+      "id, mode, default_chunk_ratio, is_essay, has_counterargument"
     )
     .eq("id", assignmentId)
     .maybeSingle();

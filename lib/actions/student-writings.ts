@@ -67,7 +67,7 @@ export async function markStepComplete(
     .select(
       `
       id, current_step, chunk_ratio,
-      assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )
+      assignment:assignment_id ( mode, is_essay, has_counterargument, assignment_sources(count) )
       `
     )
     .eq("id", writingId)
@@ -87,11 +87,12 @@ export async function markStepComplete(
       mode: JswpMode;
       is_essay: boolean;
       has_counterargument: boolean;
-      source_text: string | null;
+      assignment_sources: { count: number }[];
     };
   };
   const w = writing as unknown as WritingShape;
   const a = w.assignment;
+  const hasSourceText = (a.assignment_sources?.[0]?.count ?? 0) > 0;
 
   // 2. Upsert step_progress for this step.
   const nowIso = new Date().toISOString();
@@ -115,7 +116,7 @@ export async function markStepComplete(
   const visible = getSteps(a.mode, {
     isEssay: a.is_essay,
     hasCounterargument: a.has_counterargument,
-    hasSourceText: !!a.source_text,
+    hasSourceText,
     chunkRatio: w.chunk_ratio,
   });
   const next = getNextStep(stepKey, visible);
@@ -236,7 +237,7 @@ export async function advanceCurrentStep(
   const { data: writing, error: wErr } = await supabase
     .from("student_writings")
     .select(
-      `id, chunk_ratio, assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )`
+      `id, chunk_ratio, assignment:assignment_id ( mode, is_essay, has_counterargument, assignment_sources(count) )`
     )
     .eq("id", writingId)
     .maybeSingle();
@@ -251,7 +252,7 @@ export async function advanceCurrentStep(
       mode: JswpMode;
       is_essay: boolean;
       has_counterargument: boolean;
-      source_text: string | null;
+      assignment_sources: { count: number }[];
     };
   };
   const a = w.assignment;
@@ -259,7 +260,7 @@ export async function advanceCurrentStep(
   const visible = getSteps(a.mode, {
     isEssay: a.is_essay,
     hasCounterargument: a.has_counterargument,
-    hasSourceText: !!a.source_text,
+    hasSourceText: (a.assignment_sources?.[0]?.count ?? 0) > 0,
     chunkRatio: w.chunk_ratio,
   });
   const next = getNextStep(fromStepKey, visible);

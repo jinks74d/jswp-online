@@ -40,7 +40,7 @@ export default async function WritingLayout({
   const visibleSteps = getSteps(a.mode as JswpMode, {
     isEssay: a.is_essay,
     hasCounterargument: a.has_counterargument,
-    hasSourceText: !!a.source_text,
+    hasSourceText: writing.sources.length > 0,
     chunkRatio: writing.chunk_ratio,
   });
 

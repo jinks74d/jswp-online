@@ -107,7 +107,7 @@ export async function completePromptDecoding(
   const { data: writing } = await supabase
     .from("student_writings")
     .select(
-      "chunk_ratio, assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )"
+      "chunk_ratio, assignment:assignment_id ( mode, is_essay, has_counterargument, assignment_sources(count) )"
     )
     .eq("id", writingId)
     .maybeSingle();
@@ -118,7 +118,7 @@ export async function completePromptDecoding(
       mode: JswpMode;
       is_essay: boolean;
       has_counterargument: boolean;
-      source_text: string | null;
+      assignment_sources: { count: number }[];
     };
   } | null;
   const a = w?.assignment;
@@ -130,7 +130,7 @@ export async function completePromptDecoding(
   const visible = getSteps(a.mode, {
     isEssay: a.is_essay,
     hasCounterargument: a.has_counterargument,
-    hasSourceText: !!a.source_text,
+    hasSourceText: (a.assignment_sources?.[0]?.count ?? 0) > 0,
     chunkRatio: w.chunk_ratio,
   });
 

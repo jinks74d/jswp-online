@@ -139,18 +139,7 @@ type SourceColumns = {
   source_file_mime: string | null;
 };
 
-const NULL_SOURCE_COLUMNS: SourceColumns = {
-  source_text: null,
-  source_title: null,
-  source_author: null,
-  source_citation: null,
-  source_url: null,
-  source_html: null,
-  source_render_mode: null,
-  source_file_path: null,
-  source_file_name: null,
-  source_file_mime: null,
-};
+const SOURCE_BUCKET = "assignment-sources";
 
 /**
  * Parse the `sources` hidden input (a JSON array, like `rubric`). Narrative
@@ -255,9 +244,9 @@ function isEmptySource(c: SourceColumns): boolean {
 }
 
 /**
- * Replace an unpublished assignment's sources with the posted set, and return
- * the first source's columns to mirror into the legacy assignments.source_*
- * columns during the transition. Narrative → wipes sources and returns nulls.
+ * Replace an unpublished assignment's sources with the posted set. Any
+ * uploaded files that are no longer referenced are removed from the
+ * assignment-sources bucket (best-effort) so they don't orphan.
  *
  * Delete-and-reinsert is safe here because this only runs on UNPUBLISHED
  * assignments (the published path freezes sources), which have no student
@@ -268,36 +257,54 @@ async function writeAssignmentSources(
   assignmentId: string,
   sources: SourceInput[],
   isNarrative: boolean
-): Promise<{ legacy: SourceColumns; error: string | null }> {
+): Promise<{ error: string | null }> {
+  const { data: existing } = await supabase
+    .from("assignment_sources")
+    .select("source_file_path")
+    .eq("assignment_id", assignmentId);
+  const oldPaths = new Set(
+    (existing ?? [])
+      .map((r) => r.source_file_path)
+      .filter((p): p is string => !!p)
+  );
+
   const { error: delErr } = await supabase
     .from("assignment_sources")
     .delete()
     .eq("assignment_id", assignmentId);
-  if (delErr) return { legacy: NULL_SOURCE_COLUMNS, error: delErr.message };
+  if (delErr) return { error: delErr.message };
 
-  if (isNarrative) return { legacy: NULL_SOURCE_COLUMNS, error: null };
+  const resolved = isNarrative
+    ? []
+    : sources
+        .map((s) => ({ kind: s.kind, cols: resolveSourceColumns(s) }))
+        .filter((r) => !isEmptySource(r.cols));
 
-  const resolved = sources
-    .map((s) => ({ kind: s.kind, cols: resolveSourceColumns(s) }))
-    .filter((r) => !isEmptySource(r.cols));
-
-  if (resolved.length === 0) {
-    return { legacy: NULL_SOURCE_COLUMNS, error: null };
+  if (resolved.length > 0) {
+    const rows = resolved.map((r, i) => ({
+      assignment_id: assignmentId,
+      position: i + 1,
+      kind: r.kind,
+      ...r.cols,
+    }));
+    const { error: insErr } = await supabase
+      .from("assignment_sources")
+      .insert(rows);
+    if (insErr) return { error: insErr.message };
   }
 
-  const rows = resolved.map((r, i) => ({
-    assignment_id: assignmentId,
-    position: i + 1,
-    kind: r.kind,
-    ...r.cols,
-  }));
+  // Remove files no longer referenced by any source (best-effort).
+  const newPaths = new Set(
+    resolved
+      .map((r) => r.cols.source_file_path)
+      .filter((p): p is string => !!p)
+  );
+  const orphaned = [...oldPaths].filter((p) => !newPaths.has(p));
+  if (orphaned.length > 0) {
+    await supabase.storage.from(SOURCE_BUCKET).remove(orphaned);
+  }
 
-  const { error: insErr } = await supabase
-    .from("assignment_sources")
-    .insert(rows);
-  if (insErr) return { legacy: NULL_SOURCE_COLUMNS, error: insErr.message };
-
-  return { legacy: resolved[0].cols, error: null };
+  return { error: null };
 }
 
 /**
@@ -459,9 +466,6 @@ export async function createDraftAssignment(
       default_chunk_ratio: v.chunkRatio,
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
-      // Legacy single-source columns start null; the mirror UPDATE below keeps
-      // them in sync with the primary (position 1) assignment_sources row.
-      ...NULL_SOURCE_COLUMNS,
       rubric: r.rubric as unknown as Json,
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,
@@ -473,20 +477,13 @@ export async function createDraftAssignment(
     return { error: error?.message ?? "Failed to create assignment." };
   }
 
-  const { legacy, error: srcErr } = await writeAssignmentSources(
+  const { error: srcErr } = await writeAssignmentSources(
     supabase,
     data.id,
     parseSources(formData),
     isNarrative
   );
   if (srcErr) return { error: srcErr };
-  if (!isNarrative) {
-    await supabase
-      .from("assignments")
-      .update(legacy)
-      .eq("id", data.id)
-      .eq("teacher_id", profile.id);
-  }
 
   redirect(`/dashboard/assignments/${data.id}`);
 }
@@ -545,9 +542,9 @@ export async function updateDraftAssignment(
 
     const isNarrative = existing.mode === "narrative";
 
-    // Replace the child-table sources, then mirror the primary source into the
-    // legacy columns. Safe pre-publish (no writings/annotations reference them).
-    const { legacy, error: srcErr } = await writeAssignmentSources(
+    // Replace the child-table sources. Safe pre-publish (no writings/
+    // annotations reference them; the published path freezes sources).
+    const { error: srcErr } = await writeAssignmentSources(
       supabase,
       assignmentId,
       parseSources(formData),
@@ -563,7 +560,6 @@ export async function updateDraftAssignment(
       default_chunk_ratio: v.chunkRatio,
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
-      ...legacy,
       rubric: r.rubric as unknown as Json,
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,
@@ -648,6 +644,18 @@ export async function deleteAssignment(
     };
   }
 
+  // Remove uploaded source files before the row cascade (best-effort).
+  const { data: srcFiles } = await supabase
+    .from("assignment_sources")
+    .select("source_file_path")
+    .eq("assignment_id", assignmentId);
+  const filePaths = (srcFiles ?? [])
+    .map((r) => r.source_file_path)
+    .filter((p): p is string => !!p);
+  if (filePaths.length > 0) {
+    await supabase.storage.from(SOURCE_BUCKET).remove(filePaths);
+  }
+
   const { error } = await supabase
     .from("assignments")
     .delete()
@@ -728,6 +736,18 @@ export async function cancelAssignment(
     .eq("assignment_id", assignmentId);
   if (writingsErr) {
     return { error: `Failed to remove student work: ${writingsErr.message}` };
+  }
+
+  // Remove uploaded source files before the assignment cascade (best-effort).
+  const { data: srcFiles } = await admin
+    .from("assignment_sources")
+    .select("source_file_path")
+    .eq("assignment_id", assignmentId);
+  const filePaths = (srcFiles ?? [])
+    .map((r) => r.source_file_path)
+    .filter((p): p is string => !!p);
+  if (filePaths.length > 0) {
+    await admin.storage.from(SOURCE_BUCKET).remove(filePaths);
   }
 
   const { error: assignmentErr } = await admin

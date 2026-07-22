@@ -56,11 +56,6 @@ export interface WritingForTeacherReview {
     mode: Mode;
     is_essay: boolean;
     has_counterargument: boolean;
-    source_text: string | null;
-    source_title: string | null;
-    source_author: string | null;
-    source_file_path: string | null;
-    source_file_name: string | null;
     default_chunk_ratio: Database["public"]["Enums"]["jswp_chunk_ratio"];
     num_body_paragraphs: number;
     default_chunks_per_bp: number;
@@ -148,8 +143,7 @@ export async function getWritingForTeacherReview(
       student:student_id ( id, first_name, last_name, email ),
       assignment:assignment_id (
         id, title, prompt, mode, is_essay, has_counterargument,
-        source_text, source_title, source_author, source_file_path,
-        source_file_name, default_chunk_ratio,
+        default_chunk_ratio,
         num_body_paragraphs, default_chunks_per_bp, rubric,
         assignment_sources (
           id, position, kind,

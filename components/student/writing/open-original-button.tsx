@@ -13,10 +13,7 @@
 
 import { useTransition, useState } from "react";
 import { FileText, Loader2 } from "lucide-react";
-import {
-  getWritingSourceUrl,
-  getWritingSourceUrlByPath,
-} from "@/lib/actions/source-files";
+import { getWritingSourceUrlByPath } from "@/lib/actions/source-files";
 
 export function OpenOriginalButton({
   writingId,
@@ -25,8 +22,8 @@ export function OpenOriginalButton({
 }: {
   writingId: string;
   fileName?: string | null;
-  /** When set, opens this specific source file (multi-source assignments). */
-  filePath?: string | null;
+  /** The specific source file to open. */
+  filePath: string;
 }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -34,9 +31,7 @@ export function OpenOriginalButton({
   const open = () => {
     setError(null);
     start(async () => {
-      const res = filePath
-        ? await getWritingSourceUrlByPath(writingId, filePath)
-        : await getWritingSourceUrl(writingId);
+      const res = await getWritingSourceUrlByPath(writingId, filePath);
       if (res.ok) {
         window.open(res.url, "_blank", "noopener,noreferrer");
       } else {

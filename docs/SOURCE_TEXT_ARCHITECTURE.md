@@ -1,12 +1,51 @@
 # Source Text Architecture — Structured / Rich / PDF-native Source
 
-> **Status:** Design locked 2026-05-31. **Chunk 1 (teacher source layer) built
-> 2026-06-01; migration 0025 applied to live v2.** Chunks 2–3 pending.
+> **Status:** Design locked 2026-05-31. Chunk 1 built 2026-06-01 (migration
+> 0025). **Multi-source cutover 2026-07-22 (migrations 0040 + 0041) — see
+> Section 0, which supersedes the single-substrate parts of this document.**
 > **Provenance:** Driven by the Expository walkthrough against the 2024 guide,
 > pp. 48–57 (the *Scientific American* / Carol Dweck "Two Views of Intelligence"
 > summary example). Supersedes the earlier "normalized `source_paragraphs` /
 > `source_vocabulary` tables" plan (audited then dropped when the requirement
 > became *render the artifact faithfully*, not re-store its structure).
+
+---
+
+## 0. Multi-source update (2026-07-22) — supersedes single-substrate assumptions
+
+Assignments now carry **many** sources instead of one. The offset invariant is
+unchanged in spirit — annotations are still character offsets into a substrate —
+but the substrate is now **per source**, and each annotation records *which*
+source it indexes.
+
+**Schema.** A child table `assignment_sources` (migration 0040) holds one row
+per source, each with the full source column set (`source_text`, `source_html`,
+`source_render_mode`, `source_file_*`, `source_title/author/citation/url`) plus
+`position` and a `kind` of `'primary' | 'secondary'`. `text_annotations` gains a
+nullable `source_id` FK. Migration 0041 **drops the legacy
+`assignments.source_*` columns** — they no longer exist; read sources from
+`assignment_sources`.
+
+**Offsets.** Each source keeps its own `source_text` substrate produced by the
+same pipeline that renders it (the Section 1 rule, now applied per source).
+`range_start / range_end` index the substrate of the source named by
+`source_id`. Rendering runs the two renderer functions once per source with that
+source's annotation subset.
+
+**RLS.** `assignment_sources` no longer rides the `assignments` policies (it is
+its own table). Two `SECURITY DEFINER` helpers —
+`auth_user_can_read_assignment` / `auth_user_can_write_assignment` — mirror the
+assignment visibility rules (teacher-owner, co-teacher, in-scope admin, and —
+read only — an enrolled student once released). The `assignment-sources` storage
+bucket is unchanged; files are cleaned up on source removal / assignment delete.
+
+**Step visibility.** "Has a source" is now "has ≥ 1 `assignment_sources` row"
+(a `count` embed), not `source_text IS NOT NULL`.
+
+The sections below describe the original single-source design; treat any
+reference to `assignments.source_*` columns or "one substrate per assignment" as
+historical — the mechanics (pipeline-produced substrate, two renderer
+functions, school-scoped bucket) still hold, now per source.
 
 ---
 

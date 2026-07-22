@@ -55,14 +55,6 @@ interface Props {
     prompt: string;
     is_essay: boolean;
     has_counterargument: boolean;
-    // Flat primary-source fields still feed the read-only reference panels in
-    // later steps (topic-sentence-dev, cm-dev, t-chart, …). The annotate step
-    // uses the full `sources` array below.
-    source_text: string | null;
-    source_title: string | null;
-    source_author: string | null;
-    source_file_path: string | null;
-    source_file_name: string | null;
     sources: {
       id: string;
       kind: "primary" | "secondary";
