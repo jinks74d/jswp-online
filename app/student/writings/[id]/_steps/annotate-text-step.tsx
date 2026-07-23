@@ -36,9 +36,6 @@ export async function AnnotateTextStep({
     return (
       <div className="space-y-5">
         <header>
-          <div className="text-xs uppercase tracking-wide text-gray-500">
-            {stepLabel}
-          </div>
           <h2 className="text-xl font-semibold text-gray-900">{stepLabel}</h2>
         </header>
         <div className="bg-white border border-amber-300 rounded-lg p-8 text-center">
@@ -64,9 +61,6 @@ export async function AnnotateTextStep({
   return (
     <div className="space-y-5">
       <header>
-        <div className="text-xs uppercase tracking-wide text-gray-500">
-          {stepLabel}
-        </div>
         <h2 className="text-xl font-semibold text-gray-900">{stepLabel}</h2>
         {pedagogyHint && (
           <p className="mt-1 text-sm text-gray-600">{pedagogyHint}</p>
