@@ -149,7 +149,7 @@ export function SheetEditor({
     <div className="space-y-4">
       <div>
         <div className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
-          What part of the prompt does this paragraph address?
+          My throwaway topic sentence
         </div>
         <p className="text-xs text-gray-500 mb-2">
           Optional — but worth noting if the prompt has multiple parts.
@@ -168,7 +168,8 @@ export function SheetEditor({
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-semibold text-gray-900">
+          {/* Red per the JSWP color canon (CLAUDE.md §4) — these are CDs. */}
+          <h4 className="text-sm font-semibold text-red-700">
             Candidate concrete details
           </h4>
           <span className="text-xs text-gray-600">
