@@ -301,8 +301,9 @@ function SourceAnnotatePane({
           </div>
           {annotations.length === 0 && (
             <div className="text-xs text-gray-500 italic">
-              Tip: select any passage with the mouse — or press Tab to move
-              through the text and Enter on a sentence — to add an annotation.
+              Tip: select any word or phrase — or press “Tab” to move through
+              the text and “Enter” on a word or phrase — to add your first
+              annotation.
             </div>
           )}
           {isPdf && !pdfFailed ? (
