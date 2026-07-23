@@ -47,6 +47,7 @@ import {
   buildPdfText,
   isPositionedTextItem,
   itemsCoveringRange,
+  marginMask,
   pageFromPdfJsItems,
   type PdfJsTextItemLike,
   type PdfTextSegment,
@@ -459,10 +460,11 @@ export function PdfSourceViewer({
         }
 
         // Canonical offsets over every page IN ORDER → matches source_text.
-        // Segments align 1:1 with positioned items (same predicate).
-        const { text: fullText, items: segments } = buildPdfText(
-          rendered.map((p) => pageFromPdfJsItems(p.items))
-        );
+        // Segments align 1:1 with the positioned items that SURVIVE the margin
+        // mask (same predicate, same mask as buildPdfText applies internally).
+        const maskedPages = rendered.map((p) => pageFromPdfJsItems(p.items));
+        const { text: fullText, items: segments } = buildPdfText(maskedPages);
+        const keepMask = marginMask(maskedPages);
 
         // Scanned/image PDF: canvas rendered fine but there's no text layer.
         // Leave the (readable) canvases up, skip the text layer, and tell the
@@ -507,15 +509,26 @@ export function PdfSourceViewer({
         let seg = 0;
 
         rendered.forEach((p, pageIndex) => {
+          // Index into THIS page's positioned items, to read the margin mask.
+          let posIndex = 0;
           for (const raw of p.items) {
             if (!isPositionedTextItem(raw)) continue;
+            const kept = keepMask[pageIndex][posIndex++];
+            // Margin furniture: no text-layer span, so it is neither
+            // selectable nor keyboard-reachable, matching its absence from
+            // source_text. The page canvas still shows it — we exclude it
+            // from the annotatable text, we do not censor the page image.
+            if (!kept) continue;
             const item = raw as PdfJsTextItemLike;
             const s = segments[seg++];
 
             const tx = Util.transform(p.viewport.transform, item.transform);
             const fontHeight = Math.hypot(tx[2], tx[3]);
             const span = document.createElement("span");
-            span.textContent = item.str;
+            // The SEGMENT's string, not the raw item's — buildPdfText folds CR
+            // out, and the span's characters must index the same way the
+            // offsets do or per-character highlight math drifts.
+            span.textContent = s.str;
             span.dataset.startOffset = String(s.startOffset);
             const spanId = `${idPrefix}-${s.startOffset}`;
             span.id = spanId;

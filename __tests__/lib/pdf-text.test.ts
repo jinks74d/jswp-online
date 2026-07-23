@@ -15,6 +15,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildPdfText,
   itemsCoveringRange,
+  marginMask,
   pageFromPdfJsItems,
   type PdfPage,
 } from "@/lib/pdf-text";
@@ -310,5 +311,183 @@ describe("itemsCoveringRange — offset → highlightable items", () => {
     const covered = itemsCoveringRange(items, 7, 9); // inside World only
     expect(covered).toHaveLength(1);
     expect(covered[0].item.str).toBe("World");
+  });
+});
+
+describe("marginMask — running heads, footers, folios", () => {
+  const BODY_Y = 400;
+  const HEAD_Y = 720;
+  const FOOT_Y = 40;
+
+  /** A page of body prose wrapped in the usual furniture. */
+  function guidePage(body: string, folio: string) {
+    return page(
+      item("COPYRIGHT 2024", 0, 120, { y: HEAD_Y }),
+      item(body, 0, body.length * 6, { y: BODY_Y }),
+      item("Louis Educational Concepts, LLC", 0, 200, { y: FOOT_Y }),
+      item(folio, 300, 16, { y: FOOT_Y - 20 })
+    );
+  }
+
+  const guide = [
+    guidePage("The steamboat changed river commerce.", "38"),
+    guidePage("Cargo moved upstream for the first time.", "39"),
+    guidePage("Towns grew where the boats stopped.", "40"),
+  ];
+
+  it("drops a running header repeated at the same slot on every page", () => {
+    const { text } = buildPdfText(guide);
+    expect(text).not.toContain("COPYRIGHT");
+  });
+
+  it("drops a running footer repeated at the same slot on every page", () => {
+    const { text } = buildPdfText(guide);
+    expect(text).not.toContain("Louis Educational Concepts");
+  });
+
+  it("drops lone folios whose digits change page to page", () => {
+    const { text } = buildPdfText(guide);
+    expect(text).not.toMatch(/\b(38|39|40)\b/);
+  });
+
+  it("keeps every line of body prose", () => {
+    const { text } = buildPdfText(guide);
+    expect(text).toContain("The steamboat changed river commerce.");
+    expect(text).toContain("Cargo moved upstream for the first time.");
+    expect(text).toContain("Towns grew where the boats stopped.");
+  });
+
+  it("leaves offsets sliceable after stripping (the core invariant)", () => {
+    const { text, items } = buildPdfText(guide);
+    for (const s of items) {
+      expect(text.slice(s.startOffset, s.endOffset)).toBe(s.str);
+    }
+  });
+
+  it("keeps a number sharing its line with surviving prose", () => {
+    // The folio rule fires only when everything ELSE on the line is furniture.
+    // Here the neighbouring prose differs per page, so it survives — and its
+    // survival protects the number beside it.
+    const pages = [
+      page(
+        item("In 1849 the count reached", 0, 150, { y: 300 }),
+        item("38", 200, 16, { y: 300 })
+      ),
+      page(
+        item("By 1850 it had grown to", 0, 140, { y: 300 }),
+        item("39", 200, 16, { y: 300 })
+      ),
+      page(
+        item("The final tally was", 0, 120, { y: 300 }),
+        item("40", 200, 16, { y: 300 })
+      ),
+    ];
+    const { text } = buildPdfText(pages);
+    expect(text).toContain("38");
+    expect(text).toContain("40");
+  });
+
+  it("treats a verbatim-repeating table row as furniture (known limit)", () => {
+    // Documented consequence of repetition-based detection: a row whose label
+    // is byte-identical at the same baseline on every page is indistinguishable
+    // from a running footer, and goes. Real data rows differ and survive (above).
+    const pages = [
+      page(item("Population", 0, 90, { y: 300 }), item("38", 200, 16, { y: 300 })),
+      page(item("Population", 0, 90, { y: 300 }), item("39", 200, 16, { y: 300 })),
+      page(item("Population", 0, 90, { y: 300 }), item("40", 200, 16, { y: 300 })),
+    ];
+    const { text } = buildPdfText(pages);
+    expect(text.trim()).toBe("");
+  });
+
+  it("keeps a one-off note in the side margin", () => {
+    const pages = [
+      page(item("Body one.", 0, 60, { y: 400 }), item("see ch. 4", 500, 50, { y: 400 })),
+      page(item("Body two.", 0, 60, { y: 400 })),
+      page(item("Body three.", 0, 70, { y: 400 })),
+    ];
+    const { text } = buildPdfText(pages);
+    expect(text).toContain("see ch. 4");
+  });
+
+  it("leaves single-page documents untouched — repetition cannot be established", () => {
+    const pages = [
+      page(
+        item("Louis Educational Concepts, LLC", 0, 200, { y: FOOT_Y }),
+        item("Body.", 0, 40, { y: BODY_Y })
+      ),
+    ];
+    const { text } = buildPdfText(pages);
+    expect(text).toContain("Louis Educational Concepts, LLC");
+  });
+
+  it("strips furniture on a two-page source (the common real case)", () => {
+    // Real JSWP excerpts are routinely 2 pages; a 3-page threshold no-ops here.
+    const pages = [
+      page(
+        item("Louis Educational Concepts, LLC", 0, 200, { y: FOOT_Y }),
+        item("Gold drew thousands west.", 0, 150, { y: BODY_Y })
+      ),
+      page(
+        item("Louis Educational Concepts, LLC", 0, 200, { y: FOOT_Y }),
+        item("Few of them struck it rich.", 0, 160, { y: BODY_Y })
+      ),
+    ];
+    const { text } = buildPdfText(pages);
+    expect(text).not.toContain("Louis Educational Concepts");
+    expect(text).toContain("Gold drew thousands west.");
+    expect(text).toContain("Few of them struck it rich.");
+  });
+
+  it("strips a folio sharing its line with a running footer", () => {
+    // The real shape: "COPYRIGHT 2022. Louis Educational Concepts, LLC" and the
+    // page number sit on ONE baseline, so the folio is not alone on its line.
+    // It still goes, because everything else on that line is furniture.
+    const pages = [
+      page(
+        item("COPYRIGHT 2022. Louis Educational Concepts, LLC", 0, 300, { y: FOOT_Y }),
+        item("78", 320, 16, { y: FOOT_Y }),
+        item("Gold drew thousands west.", 0, 150, { y: BODY_Y })
+      ),
+      page(
+        item("COPYRIGHT 2022. Louis Educational Concepts, LLC", 0, 300, { y: FOOT_Y }),
+        item("79", 320, 16, { y: FOOT_Y }),
+        item("Few of them struck it rich.", 0, 160, { y: BODY_Y })
+      ),
+    ];
+    const { text } = buildPdfText(pages);
+    expect(text).not.toContain("COPYRIGHT");
+    expect(text).not.toMatch(/\b7[89]\b/);
+    expect(text).toContain("Gold drew thousands west.");
+  });
+
+  it("folds CR out of item text so browser and Node extraction agree", () => {
+    // pdf.js emits a trailing CR in the browser build but not the Node legacy
+    // build; unnormalized, the same PDF yields two different substrates.
+    const { text, items } = buildPdfText([
+      page(item("Line one.\r", 0, 80, { hasEOL: true }), item("Line two.", 0, 80)),
+    ]);
+    expect(text).not.toContain("\r");
+    expect(text).toBe("Line one.\n\nLine two.");
+    // Offsets must still slice back to the STORED (normalized) string.
+    for (const s of items) {
+      expect(text.slice(s.startOffset, s.endOffset)).toBe(s.str);
+    }
+  });
+
+  it("returns a mask index-aligned with each page's items", () => {
+    const mask = marginMask(guide);
+    expect(mask).toHaveLength(guide.length);
+    guide.forEach((p, i) => expect(mask[i]).toHaveLength(p.items.length));
+    // header, body, footer, folio → only the body survives.
+    expect(mask[0]).toEqual([false, true, false, false]);
+  });
+
+  it("no longer glues furniture to body text", () => {
+    // The artifact the separator rule used to paper over: with "LLC" and "38"
+    // stripped outright, the glue case cannot arise at all.
+    const { text } = buildPdfText(guide);
+    expect(text).not.toContain("LLC38");
+    expect(text).not.toContain("WritingCOPYRIGHT");
   });
 });

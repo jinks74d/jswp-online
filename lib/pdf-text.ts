@@ -154,9 +154,154 @@ export function pageFromPdfJsItems(items: readonly unknown[]): PdfPage {
   return { items: out };
 }
 
+/* ------------------------------------------------------------------ *
+ * Margin stripping (running heads / footers / page numbers)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Pages an item must recur on (at the same vertical slot) before it counts as
+ * furniture rather than prose. Two, because real JSWP source excerpts are
+ * routinely 2 pages — a threshold of 3 silently no-ops on the common case.
+ * Requiring byte-identical text at a byte-identical baseline on both pages is
+ * still a strong signal: prose does not land twice at the same y.
+ * Single-page sources cannot establish repetition and are left untouched.
+ */
+const MIN_REPEAT_PAGES = 2;
+
+/**
+ * Vertical bucket size (PDF user-space units) for deciding two items sit at
+ * "the same" slot across pages. Running heads land on an identical baseline
+ * page to page; this only absorbs sub-point rounding.
+ */
+const Y_BUCKET = 2;
+
+/** Bucket an item's baseline so the same slot on different pages collides. */
+function yKey(y: number): number {
+  return Math.round(y / Y_BUCKET);
+}
+
+/** Normalized text used to match a running head/footer across pages. */
+function textKey(str: string): string {
+  return str.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/**
+ * A folio: bare digits, roman numerals, or the usual decorations ("38",
+ * "- 38 -", "Page 38", "iv"). Shape alone is not enough — see `marginMask`,
+ * which additionally requires everything else on the folio's line to be
+ * furniture, so table data and prose numerals survive.
+ */
+function isPageNumberLike(str: string): boolean {
+  const s = str.trim();
+  if (s.length === 0 || s.length > 12) return false;
+  return (
+    /^[[(\-–—\s]*(?:page\s+)?\d{1,4}[\])\-–—.\s]*$/i.test(s) ||
+    /^[[(\-–—\s]*[ivxlcdm]{1,7}[\])\-–—.\s]*$/i.test(s)
+  );
+}
+
+/**
+ * Per-page keep/drop mask, index-aligned with each `PdfPage.items`.
+ *
+ * Exported (rather than folded into `buildPdfText`) because the annotate text
+ * layer walks the RAW pdf.js items to read their transform matrices, and must
+ * skip exactly the items `buildPdfText` skipped — otherwise its 1:1 walk over
+ * the returned segments desynchronizes and every span gets the wrong offset.
+ * One mask function, two consumers, no drift.
+ *
+ * Detection is repetition-based, never geometric: an item is dropped when it
+ * recurs at the same vertical slot on `MIN_REPEAT_PAGES`+ pages, either with
+ * identical text (running head, copyright line) or as a lone folio whose digits
+ * change page to page. Body prose does not repeat at a fixed baseline, so it
+ * survives; a one-off note sitting in the side margin also survives, by design.
+ */
+export function marginMask(pages: readonly PdfPage[]): boolean[][] {
+  const mask = pages.map((p) => p.items.map(() => true));
+  if (pages.length < MIN_REPEAT_PAGES) return mask;
+
+  // Pass 1: identical text recurring at the same vertical slot across pages.
+  const textPages = new Map<string, Set<number>>();
+  pages.forEach((p, pageIndex) => {
+    for (const it of p.items) {
+      const t = it.str.trim();
+      if (t.length === 0) continue;
+      const key = `${yKey(it.y)} ${textKey(t)}`;
+      const seen = textPages.get(key) ?? new Set<number>();
+      seen.add(pageIndex);
+      textPages.set(key, seen);
+    }
+  });
+
+  const droppedByText = pages.map((p, pageIndex) =>
+    p.items.map((it) => {
+      const t = it.str.trim();
+      if (t.length === 0) return false;
+      const seen = textPages.get(`${yKey(it.y)} ${textKey(t)}`);
+      return !!seen && seen.size >= MIN_REPEAT_PAGES;
+    })
+  );
+
+  const isFolioCandidate = pages.map((p, pageIndex) =>
+    p.items.map((it, i) => {
+      const t = it.str.trim();
+      if (t.length === 0 || droppedByText[pageIndex][i]) return false;
+      if (!isPageNumberLike(t)) return false;
+      const slot = yKey(it.y);
+      return p.items.every((other, j) => {
+        if (j === i) return true;
+        if (other.str.trim().length === 0) return true;
+        if (yKey(other.y) !== slot) return true;
+        return droppedByText[pageIndex][j];
+      });
+    })
+  );
+
+  // A number is a folio when everything ELSE on its line is already furniture.
+  // That covers the lone page number AND the far more common combined footer
+  // ("COPYRIGHT 2022. Louis Educational Concepts, LLC  78"), while still
+  // sparing a number that shares a line with surviving prose.
+  const folioSlotPages = new Map<number, Set<number>>();
+  pages.forEach((p, pageIndex) => {
+    p.items.forEach((it, i) => {
+      if (!isFolioCandidate[pageIndex][i]) return;
+      const slot = yKey(it.y);
+      const seen = folioSlotPages.get(slot) ?? new Set<number>();
+      seen.add(pageIndex);
+      folioSlotPages.set(slot, seen);
+    });
+  });
+
+  pages.forEach((p, pageIndex) => {
+    p.items.forEach((it, i) => {
+      if (droppedByText[pageIndex][i]) {
+        mask[pageIndex][i] = false;
+        return;
+      }
+      if (!isFolioCandidate[pageIndex][i]) return;
+      const seen = folioSlotPages.get(yKey(it.y));
+      if (seen && seen.size >= MIN_REPEAT_PAGES) mask[pageIndex][i] = false;
+    });
+  });
+
+  return mask;
+}
+
 interface Placed {
   readonly item: PdfTextItem;
   readonly pageIndex: number;
+}
+
+/**
+ * Normalize an item's text before it enters the substrate.
+ *
+ * pdf.js emits a trailing CR on some items in the browser build that the Node
+ * legacy build does not, so the same PDF yielded "\r\n" in one and "\n" in the
+ * other. Since `source_text` written by one environment must be reproducible by
+ * the other (the viewer's live-vs-stored guard, and the re-extract script),
+ * every CR is folded to a single LF here — one definition, both environments.
+ */
+function normalizeStr(str: string): string {
+  return str.replace(/\r\n?/g, "\n");
 }
 
 /** A space, unless the adjacent items already carry one (avoid doubling). */
@@ -201,19 +346,29 @@ function separatorBetween(prev: Placed, curr: Placed): string {
   return "";
 }
 
+/**
+ * Build the annotation substrate. Margin furniture (running heads, footers,
+ * folios) is dropped via `marginMask` before any offset is assigned, so it
+ * never enters `source_text` and is never annotatable. Because separators are
+ * computed between SURVIVING neighbours, this also removes the glue artifacts
+ * dropped furniture used to cause ("LLC" + "38" → "LLC38").
+ */
 export function buildPdfText(pages: readonly PdfPage[]): PdfTextResult {
   let text = "";
   const items: PdfTextSegment[] = [];
   let prev: Placed | null = null;
+  const keep = marginMask(pages);
 
   pages.forEach((page, pageIndex) => {
-    for (const item of page.items) {
+    page.items.forEach((item, i) => {
+      if (!keep[pageIndex][i]) return;
       const curr: Placed = { item, pageIndex };
       if (prev) text += separatorBetween(prev, curr);
       const startOffset = text.length;
-      text += item.str;
+      const str = normalizeStr(item.str);
+      text += str;
       items.push({
-        str: item.str,
+        str,
         pageIndex,
         startOffset,
         endOffset: text.length,
@@ -222,7 +377,7 @@ export function buildPdfText(pages: readonly PdfPage[]): PdfTextResult {
         width: item.width,
       });
       prev = curr;
-    }
+    });
   });
 
   return { text, items };

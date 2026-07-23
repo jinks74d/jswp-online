@@ -25,6 +25,7 @@
     "seed:auth": "tsx scripts/seed-auth.ts",
     "db:check": "tsx scripts/db-check.ts",
     "backfill:source-html": "tsx scripts/backfill-source-html.ts",
+    "reextract:pdf-sources": "tsx scripts/reextract-pdf-sources.ts",
     "test:rls": "vitest run --config __tests__/schema/vitest.config.ts"
   },
   "dependencies": {

@@ -72,6 +72,57 @@ Each renderer implements exactly two functions:
 
 The `text_annotations` table and its RLS are **untouched**.
 
+### Margin stripping (2026-07-23)
+
+PDF furniture — running heads, footers, copyright lines, folios — is dropped
+before any offset is assigned, so it never enters `source_text` and is never
+annotatable. Detection is **repetition-based, never geometric**, in two passes:
+
+1. **Repeated text** — an item recurring with identical text at the same
+   vertical slot on `MIN_REPEAT_PAGES`+ pages (currently **2**, because real
+   JSWP excerpts are routinely two pages; a threshold of 3 silently no-ops on
+   the common case).
+2. **Folios** — a page-number-shaped item is dropped when everything *else* on
+   its line is already furniture. This catches the lone page number and the
+   more common combined footer, e.g.
+   `COPYRIGHT 2022. Louis Educational Concepts, LLC   78`, where the folio is
+   not alone on its baseline.
+
+Body prose does not repeat at a fixed baseline, so it survives; so does a
+one-off note in the side margin, and a number sharing its line with surviving
+prose.
+
+**Known limit:** a table row whose label is byte-identical at the same baseline
+on every page is indistinguishable from a running footer and will be dropped.
+Real data rows differ page to page and survive. Covered by a test that asserts
+the limit rather than hiding it.
+
+**CR normalization.** pdf.js emits a trailing CR on some items in the browser
+build that the Node legacy build does not, so the same PDF yielded `\r\n` in one
+and `\n` in the other. `buildPdfText` folds every CR to a single LF, so the
+substrate is reproducible across environments — required by both the viewer's
+live-vs-stored guard and the re-extract script. The text layer sets each span's
+`textContent` from the *segment* string, not the raw item, so per-character
+highlight math indexes the same string the offsets do.
+
+The mask lives in `marginMask()` (`lib/pdf-text.ts`) and has **two** consumers
+that must skip identically or the offset invariant breaks:
+
+- `buildPdfText()` applies it internally (upload substrate + render text).
+- `pdf-source-viewer.tsx` applies it to its raw-item walk, because it reads
+  pdf.js transform matrices the pure `PdfPage` type does not carry.
+
+In PDF-native mode the page canvas still *shows* margin furniture — it is a
+picture of the page. Stripping removes it from the annotatable text layer, not
+from the image. In `plain` mode, where `source_text` itself is displayed, the
+furniture disappears entirely.
+
+Sources uploaded before this landed store an unstripped substrate, so the
+viewer's live-vs-stored guard trips and they fall back to the flat viewer.
+`npm run reextract:pdf-sources` re-extracts them; it refuses to touch a source
+that already has annotations unless `--force` is passed, because stripping
+shifts every offset after the first dropped item.
+
 ---
 
 ## 2. Display modes (driven by file type)
