@@ -679,30 +679,7 @@ Otherwise, work with confidence. Read the file you're about to change. Run the t
 
 ## 16. Useful commands
 
-```bash
-# Dev
-npm run dev                  # next dev
-npm run dev:turbo            # next dev --turbo
-
-# Quality
-npm run lint                 # next lint
-npm run lint:fix             # next lint --fix
-npm run type-check           # tsc --noEmit
-npm run test                 # vitest watch
-npm run test:run             # vitest single run
-npm run test:coverage        # with coverage
-
-# Build
-npm run build                # next build
-npm run build:analyze        # with bundle analyzer
-npm run start                # next start
-
-# Performance
-npm run performance-audit    # lighthouse local
-
-# Cleanup
-npm run clean                # rm .next + cache
-```
+See `package.json` `scripts` for the full list (`dev`, `lint`, `type-check`, `test`/`test:run`/`test:coverage`, `build`, etc.).
 
 Before opening a PR: `npm run lint:fix && npm run type-check && npm run test:run && npm run build`. All must pass.
 
