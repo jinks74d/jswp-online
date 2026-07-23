@@ -87,7 +87,13 @@ export function AnnotationSidebar({
                     aria-hidden="true"
                   />
                   <span className="text-xs font-semibold uppercase tracking-wide">
-                    {cfg.label}
+                    {cfg.sidebarLabelParts
+                      ? cfg.sidebarLabelParts.map((part, i) => (
+                          <span key={i} className={part.className}>
+                            {part.text}
+                          </span>
+                        ))
+                      : cfg.label}
                   </span>
                   <span className="ml-auto text-xs text-gray-500">
                     {items.length}

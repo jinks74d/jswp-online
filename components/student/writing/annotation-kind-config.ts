@@ -26,6 +26,21 @@ export type AnnotationKind = Database["public"]["Enums"]["jswp_annotation_kind"]
 export interface AnnotationKindConfig {
   readonly key: AnnotationKind;
   readonly label: string;
+  /**
+   * Optional longer label for the annotation sidebar's grouped entries, where
+   * there is room to name what the entry actually holds. Falls back to
+   * `label`. Split into parts so each word can carry its JSWP canon color
+   * (CLAUDE.md §4) — red for CD, green for CM, black for connectives. Kept
+   * here rather than hardcoded in the sidebar so kind presentation stays in
+   * one file (see the module note above).
+   *
+   * Color is reinforcement only: the words themselves carry the meaning, so
+   * nothing is conveyed by color alone (WCAG 1.4.1).
+   */
+  readonly sidebarLabelParts?: readonly {
+    readonly text: string;
+    readonly className: string;
+  }[];
   readonly description: string;
   /** Highlight background applied to the rendered <mark> element. */
   readonly highlightBg: string;
@@ -49,6 +64,13 @@ export const ANNOTATION_KINDS: Record<AnnotationKind, AnnotationKindConfig> = {
   cd: {
     key: "cd",
     label: "Concrete Detail",
+    // Every CD annotation now carries required commentary, so the sidebar's
+    // grouped entries name both halves — each in its canon color.
+    sidebarLabelParts: [
+      { text: "Concrete Detail", className: "text-red-700" },
+      { text: " & ", className: "text-gray-900" },
+      { text: "Commentary", className: "text-green-700" },
+    ],
     description: "A fact, example, or piece of evidence from the text.",
     // Dotted underline — the non-color cue distinguishing CD from CM etc.
     highlightBg:

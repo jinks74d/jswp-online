@@ -3,13 +3,18 @@
 /**
  * Modal form for creating + editing annotations. Two modes:
  *
- *   create:  Show the selected snippet (read-only at top), kind dropdown
- *            (default 'cd'), optional note. [Save] / [Cancel].
+ *   create:  Show the selected concrete detail (read-only at top), the kind
+ *            dropdown (default 'cd', label visually hidden), and a REQUIRED
+ *            commentary field. [Save] / [Cancel].
  *
- *   edit:    Show the existing snippet (read-only). Kind + note are
+ *   edit:    Show the existing snippet (read-only). Kind + commentary are
  *            pre-filled and editable. [Save] / [Cancel] / [Delete].
  *            Range columns are immutable per migrations/0001 and the
  *            server-side updateAnnotation contract.
+ *
+ * Commentary is enforced client-side (Save disabled while empty). The server
+ * action still accepts a null note, so pre-existing rows without one remain
+ * valid and editable.
  *
  * Submission round-trips a server action; on success the parent closes
  * the form and revalidatePath refreshes the data.
@@ -67,7 +72,14 @@ export function AnnotationForm({ payload, onClose }: Props) {
   const [pending, startTransition] = useTransition();
   const [deleting, startDeleting] = useTransition();
 
+  /** Commentary is required — a CD may not be recorded without a justification. */
+  const commentaryMissing = note.trim().length === 0;
+
   const onSave = () => {
+    if (commentaryMissing) {
+      setError("Add your commentary before saving.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
       try {
@@ -145,7 +157,7 @@ export function AnnotationForm({ payload, onClose }: Props) {
         <div className="px-5 py-4 space-y-4">
           <div>
             <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
-              Selected text
+              Concrete detail
             </div>
             <blockquote className="text-sm text-gray-800 border-l-4 border-gray-300 pl-3 italic line-clamp-4">
               {snippet}
@@ -153,12 +165,14 @@ export function AnnotationForm({ payload, onClose }: Props) {
           </div>
 
           <label className="block">
-            <div className="text-sm font-medium text-gray-900">Kind</div>
+            {/* Label text is visually removed by request; kept for assistive
+                tech so the dropdown still has an accessible name. */}
+            <span className="sr-only">Kind</span>
             <select
               value={kind}
               onChange={(e) => setKind(e.target.value as AnnotationKind)}
               disabled={busy || isReadOnly}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
             >
               {ANNOTATION_KIND_ORDER.map((k) => {
                 const cfg = ANNOTATION_KINDS[k];
@@ -172,18 +186,40 @@ export function AnnotationForm({ payload, onClose }: Props) {
           </label>
 
           <label className="block">
-            <div className="text-sm font-medium text-gray-900">
-              Note <span className="text-xs text-gray-500">(optional)</span>
+            <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+              Commentary
+              <span className="text-red-600 ml-0.5" aria-hidden="true">
+                *
+              </span>
             </div>
             <textarea
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               disabled={busy || isReadOnly}
+              required
+              aria-describedby="annotation-commentary-help"
               className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-50"
-              placeholder="What did you notice about this passage?"
             />
           </label>
+
+          <div
+            id="annotation-commentary-help"
+            className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-3"
+          >
+            <p>
+              You mustn’t select a CD without being able to justify why. To
+              write your commentary, ask yourself these questions,
+            </p>
+            <ol className="list-none mt-1 space-y-0.5">
+              <li>
+                1) Out of all the CDs I could have chosen, why did I choose this
+                one?
+              </li>
+              <li>2) What is important or significant about this CD?</li>
+              <li>3) What am I trying to show or prove with this CD?</li>
+            </ol>
+          </div>
 
           {error && (
             <div className="text-sm text-red-700" role="alert">
@@ -223,7 +259,7 @@ export function AnnotationForm({ payload, onClose }: Props) {
               <button
                 type="button"
                 onClick={onSave}
-                disabled={busy}
+                disabled={busy || commentaryMissing}
                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-semibold text-white shadow-sm disabled:opacity-50"
                 style={{ backgroundColor: "var(--district-primary)" }}
               >
