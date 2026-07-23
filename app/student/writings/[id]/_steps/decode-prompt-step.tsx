@@ -227,7 +227,7 @@ export function DecodePromptStep({
         {/* task */}
         <Field
           label="What is the prompt asking you to DO?"
-          help="What must I DO? Look for the word, “Write.”"
+          help="What must I DO? Look for verb (e.g., write, explain, identify, discuss, investigate, describe, explore)"
           required
         >
           <textarea
@@ -277,24 +277,6 @@ export function DecodePromptStep({
           </select>
         </Field>
 
-        {/* key verbs */}
-        <Field
-          label="Which VERB or VERBS in the prompt guide my thinking and imply what CD I am to find and/or CM I am to reveal to my reader?"
-          help="Verbs that suggest CD: identify, list, define, categorize Verbs that suggest CM: discuss, analyze, interpret, argue
-Verb that suggests both CD and CM: explain
-"
-        >
-          <input
-            type="text"
-            value={form.key_verbs}
-            onChange={update("key_verbs")}
-            onBlur={handleBlur}
-            disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-            placeholder="discuss, analyze"
-          />
-        </Field>
-
         {/* focus terms */}
         <Field
           label="WHO or WHAT am I writing about?"
@@ -308,6 +290,24 @@ Verb that suggests both CD and CM: explain
             disabled={isReadOnly}
             className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="steamboat, theme, photosynthesis"
+          />
+        </Field>
+
+        {/* key verbs */}
+        <Field
+          label="Which VERB or VERBS in the prompt guide my thinking and imply what CD I am to find and/or CM I am to reveal to my reader?"
+          help={
+            "Verbs that suggest CD only: identify, list, define, categorize.\nVerbs that suggest CM but also require evidence (CDs)"
+          }
+        >
+          <input
+            type="text"
+            value={form.key_verbs}
+            onChange={update("key_verbs")}
+            onBlur={handleBlur}
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            placeholder="discuss, analyze"
           />
         </Field>
 
@@ -374,7 +374,9 @@ function Field({
         {label}
         {required && <span className="text-red-600 ml-0.5">*</span>}
       </div>
-      {help && <div className="mt-0.5 text-xs text-gray-500">{help}</div>}
+      {help && (
+        <div className="mt-0.5 text-xs text-gray-500 whitespace-pre-line">{help}</div>
+      )}
       <div className="mt-2">{children}</div>
     </label>
   );
