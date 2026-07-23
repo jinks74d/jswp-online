@@ -297,13 +297,19 @@ export async function completeStepAndAdvance(
   await markStepComplete(writingId, stepKey);
 
   const supabase = await createServerClient();
-  const { data: writing } = await supabase
+  // Sources live in assignment_sources since 0040/0041 — the legacy
+  // assignments.source_* columns are gone, so presence is a COUNT.
+  const { data: writing, error: wErr } = await supabase
     .from("student_writings")
     .select(
-      `chunk_ratio, assignment:assignment_id ( mode, is_essay, has_counterargument, source_text )`
+      `chunk_ratio, assignment:assignment_id ( mode, is_essay, has_counterargument, assignment_sources(count) )`
     )
     .eq("id", writingId)
     .maybeSingle();
+
+  if (wErr) {
+    throw new Error(`Could not load writing ${writingId}: ${wErr.message}`);
+  }
 
   const w = writing as unknown as {
     chunk_ratio: ChunkRatio;
@@ -311,7 +317,7 @@ export async function completeStepAndAdvance(
       mode: JswpMode;
       is_essay: boolean;
       has_counterargument: boolean;
-      source_text: string | null;
+      assignment_sources: { count: number }[];
     };
   } | null;
   const a = w?.assignment;
@@ -323,7 +329,7 @@ export async function completeStepAndAdvance(
   const visible = getSteps(a.mode, {
     isEssay: a.is_essay,
     hasCounterargument: a.has_counterargument,
-    hasSourceText: !!a.source_text,
+    hasSourceText: (a.assignment_sources?.[0]?.count ?? 0) > 0,
     chunkRatio: w.chunk_ratio,
   });
 
