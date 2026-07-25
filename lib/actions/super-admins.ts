@@ -19,6 +19,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export type CreateSuperAdminState = {
   error?: string;
@@ -100,7 +101,7 @@ export async function createSuperAdmin(
   }
 
   // 4. Audit the privileged action.
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: actingAdmin.id,
     action: "super_admin.create",
     target_scope: { user_profile_id: newUserId },

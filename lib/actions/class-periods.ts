@@ -13,7 +13,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export type ClassPeriodFormState = {
   error?: string;
@@ -72,15 +72,13 @@ export async function createClassPeriod(
     return { error: error?.message ?? "Could not create the period." };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "class_period.create",
-      target_scope: { class_period_id: data.id, class_id: klass.id },
-      metadata: { period_label: periodLabel, academic_year: academicYear },
-      school_id: klass.school_id,
-    });
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "class_period.create",
+    target_scope: { class_period_id: data.id, class_id: klass.id },
+    metadata: { period_label: periodLabel, academic_year: academicYear },
+    school_id: klass.school_id,
+  });
 
   revalidatePath(`/admin/districts`);
   return { success: `Created period “${periodLabel}”.` };
@@ -100,10 +98,11 @@ export async function updateClassPeriod(
     return { fieldErrors: { period_label: "Period label is required." } };
 
   const supabase = await createServerClient();
-  const { error } = await supabase
+  const { data: affected, error } = await supabase
     .from("class_periods")
     .update({ period_label: periodLabel, academic_year: academicYear })
-    .eq("id", periodId);
+    .eq("id", periodId)
+    .select("id");
 
   if (error) {
     if (isUniqueViolation(error.message))
@@ -113,6 +112,14 @@ export async function updateClassPeriod(
         },
       };
     return { error: error.message };
+  }
+
+  // RLS filters rather than errors: zero rows means the row is
+  // outside this admin's scope (or gone). Without this, the action
+  // reports success and writes an audit_log entry for a change that
+  // never happened.
+  if (!affected || affected.length === 0) {
+    return { error: "That period is no longer in your scope." };
   }
 
   revalidatePath(`/admin/districts`);
@@ -166,15 +173,13 @@ export async function assignTeacher(
     return { error: error.message };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "class_period.assign_teacher",
-      target_scope: { class_period_id: periodId, teacher_id: teacherId },
-      metadata: {},
-      school_id: period.school_id,
-    });
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "class_period.assign_teacher",
+    target_scope: { class_period_id: periodId, teacher_id: teacherId },
+    metadata: {},
+    school_id: period.school_id,
+  });
 
   revalidatePath(`/admin/districts`);
   return { success: "Teacher assigned." };
@@ -190,22 +195,29 @@ export async function unassignTeacher(
   if (!periodId || !teacherId) return { error: "Missing period or teacher." };
 
   const supabase = await createServerClient();
-  const { error } = await supabase
+  const { data: affected, error } = await supabase
     .from("class_teacher_assignments")
     .delete()
     .eq("class_period_id", periodId)
-    .eq("teacher_id", teacherId);
+    .eq("teacher_id", teacherId)
+    .select("id");
 
   if (error) return { error: error.message };
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "class_period.unassign_teacher",
-      target_scope: { class_period_id: periodId, teacher_id: teacherId },
-      metadata: {},
-    });
+  // RLS filters rather than errors: zero rows means the row is
+  // outside this admin's scope (or gone). Without this, the action
+  // reports success and writes an audit_log entry for a change that
+  // never happened.
+  if (!affected || affected.length === 0) {
+    return { error: "That teacher assignment is no longer in your scope." };
+  }
+
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "class_period.unassign_teacher",
+    target_scope: { class_period_id: periodId, teacher_id: teacherId },
+    metadata: {},
+  });
 
   revalidatePath(`/admin/districts`);
   return { success: "Teacher removed." };

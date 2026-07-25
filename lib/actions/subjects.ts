@@ -12,7 +12,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export type SubjectFormState = {
   error?: string;
@@ -57,15 +57,13 @@ export async function createSubject(
     return { error: error?.message ?? "Could not create the subject." };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "subject.create",
-      target_scope: { subject_id: data.id, school_id: f.schoolId },
-      metadata: { name: f.name },
-      school_id: f.schoolId,
-    });
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "subject.create",
+    target_scope: { subject_id: data.id, school_id: f.schoolId },
+    metadata: { name: f.name },
+    school_id: f.schoolId,
+  });
 
   revalidatePath(`/admin/districts`);
   return { success: `Created “${f.name}”.` };
@@ -83,10 +81,11 @@ export async function updateSubject(
   if (!f.name) return { fieldErrors: { name: "Subject name is required." } };
 
   const supabase = await createServerClient();
-  const { error } = await supabase
+  const { data: affected, error } = await supabase
     .from("subjects")
     .update({ name: f.name, description: f.description })
-    .eq("id", subjectId);
+    .eq("id", subjectId)
+    .select("id");
 
   if (error) {
     if (isUniqueViolation(error.message))
@@ -94,15 +93,21 @@ export async function updateSubject(
     return { error: error.message };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "subject.update",
-      target_scope: { subject_id: subjectId },
-      metadata: { name: f.name },
-      school_id: f.schoolId || null,
-    });
+  // RLS filters rather than errors: zero rows means the row is
+  // outside this admin's scope (or gone). Without this, the action
+  // reports success and writes an audit_log entry for a change that
+  // never happened.
+  if (!affected || affected.length === 0) {
+    return { error: "That subject is no longer in your scope." };
+  }
+
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "subject.update",
+    target_scope: { subject_id: subjectId },
+    metadata: { name: f.name },
+    school_id: f.schoolId || null,
+  });
 
   revalidatePath(`/admin/districts`);
   return { success: "Saved." };

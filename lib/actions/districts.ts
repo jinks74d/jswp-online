@@ -33,6 +33,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 import { createScopedUser } from "@/lib/scoped-users";
 import { sendEmail } from "@/lib/email/client";
 import { renderDistrictPocInvite } from "@/lib/email/templates/district-poc-invite";
@@ -267,7 +268,7 @@ export async function createDistrict(
     return { error: pocErr.message };
   }
 
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: actor.id,
     action: "district.create",
     target_scope: { district_id: districtId },
@@ -440,7 +441,7 @@ export async function updateDistrict(
     if (fkErr) return { error: fkErr.message };
   }
 
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: actor.id,
     action: "district.update",
     target_scope: { district_id: id },
@@ -524,7 +525,7 @@ export async function inviteDistrictPoc(
     .update({ invited_at: new Date().toISOString() })
     .eq("id", userId);
 
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: actor.id,
     action: "district.poc.invite",
     target_scope: { district_id: districtId, user_id: userId },

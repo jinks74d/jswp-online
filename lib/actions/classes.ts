@@ -13,7 +13,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export type ClassFormState = {
   error?: string;
@@ -57,15 +57,13 @@ export async function createClass(
     return { error: error?.message ?? "Could not create the class." };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "class.create",
-      target_scope: { class_id: data.id, subject_id: subject.id },
-      metadata: { name },
-      school_id: subject.school_id,
-    });
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "class.create",
+    target_scope: { class_id: data.id, subject_id: subject.id },
+    metadata: { name },
+    school_id: subject.school_id,
+  });
 
   revalidatePath(`/admin/districts`);
   return { success: `Created “${name}”.` };
@@ -82,10 +80,11 @@ export async function updateClass(
   if (!name) return { fieldErrors: { name: "Class name is required." } };
 
   const supabase = await createServerClient();
-  const { error } = await supabase
+  const { data: affected, error } = await supabase
     .from("classes")
     .update({ name })
-    .eq("id", classId);
+    .eq("id", classId)
+    .select("id");
 
   if (error) {
     if (isUniqueViolation(error.message))
@@ -93,14 +92,20 @@ export async function updateClass(
     return { error: error.message };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "class.update",
-      target_scope: { class_id: classId },
-      metadata: { name },
-    });
+  // RLS filters rather than errors: zero rows means the row is
+  // outside this admin's scope (or gone). Without this, the action
+  // reports success and writes an audit_log entry for a change that
+  // never happened.
+  if (!affected || affected.length === 0) {
+    return { error: "That class is no longer in your scope." };
+  }
+
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "class.update",
+    target_scope: { class_id: classId },
+    metadata: { name },
+  });
 
   revalidatePath(`/admin/districts`);
   return { success: "Saved." };

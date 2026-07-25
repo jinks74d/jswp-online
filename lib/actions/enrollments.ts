@@ -15,6 +15,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 import { createScopedUser } from "@/lib/scoped-users";
 
 export type EnrollFormState = {
@@ -118,7 +119,7 @@ export async function createAndEnrollStudent(
     );
   if (enrollErr) return { error: enrollErr.message };
 
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: actor.id,
     action: "class_period.enroll_student",
     target_scope: { class_period_id: periodId, student_id: studentId },
@@ -141,22 +142,29 @@ export async function unenrollStudent(
   if (!periodId || !studentId) return { error: "Missing period or student." };
 
   const supabase = await createServerClient();
-  const { error } = await supabase
+  const { data: affected, error } = await supabase
     .from("class_student_enrollments")
     .update({ unenrolled_at: new Date().toISOString() })
     .eq("class_period_id", periodId)
-    .eq("student_id", studentId);
+    .eq("student_id", studentId)
+    .select("id");
 
   if (error) return { error: error.message };
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "class_period.unenroll_student",
-      target_scope: { class_period_id: periodId, student_id: studentId },
-      metadata: {},
-    });
+  // RLS filters rather than errors: zero rows means the row is
+  // outside this admin's scope (or gone). Without this, the action
+  // reports success and writes an audit_log entry for a change that
+  // never happened.
+  if (!affected || affected.length === 0) {
+    return { error: "That enrollment is no longer in your scope." };
+  }
+
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "class_period.unenroll_student",
+    target_scope: { class_period_id: periodId, student_id: studentId },
+    metadata: {},
+  });
 
   revalidatePath(`/admin/districts`);
   return { success: "Student removed." };

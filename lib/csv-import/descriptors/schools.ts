@@ -9,7 +9,7 @@
 import "server-only";
 
 import { createServerClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 import type { ImportContext, ImportDescriptor, RowMatch } from "../descriptor";
 import type { CommitOutcome, ImportScope } from "../types";
 import { normalizeSchoolLevel } from "@/lib/school-levels";
@@ -131,20 +131,18 @@ export const schoolsDescriptor: ImportDescriptor<SchoolRow> = {
       }
     }
 
-    await createAdminClient()
-      .from("audit_log")
-      .insert({
-        actor_id: ctx.actorId,
-        action: "school.import",
-        target_scope: { district_id: districtId },
-        metadata: {
-          created: out.created,
-          updated: out.updated,
-          errors: out.errors,
-        },
-        district_id: districtId,
-        school_id: null,
-      });
+    await writeAuditLog({
+      actor_id: ctx.actorId,
+      action: "school.import",
+      target_scope: { district_id: districtId },
+      metadata: {
+        created: out.created,
+        updated: out.updated,
+        errors: out.errors,
+      },
+      district_id: districtId,
+      school_id: null,
+    });
 
     return out;
   },

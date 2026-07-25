@@ -12,6 +12,7 @@ import "server-only";
 
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 import { createScopedUser } from "@/lib/scoped-users";
 import type { ImportContext, ImportDescriptor, RowMatch } from "../descriptor";
 import type { CommitOutcome, ImportCredential } from "../types";
@@ -204,7 +205,7 @@ export const classStudentsDescriptor: ImportDescriptor<ClassStudentRow> = {
 
     if (credentials.length) out.credentials = credentials;
 
-    await admin.from("audit_log").insert({
+    await writeAuditLog({
       actor_id: ctx.actorId,
       action: "class_period.import_students",
       target_scope: { class_period_id: periodId },

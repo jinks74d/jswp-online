@@ -25,6 +25,7 @@ import * as XLSX from "xlsx";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_VALUE_LENGTH = 1000;
@@ -461,7 +462,7 @@ export async function importRoster(
   }
 
   // Audit log — service role is the only permitted writer.
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: profile.id,
     action: "roster.import.students",
     target_scope: { class_period_id: classPeriodId },

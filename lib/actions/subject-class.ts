@@ -20,7 +20,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export type SubjectClassFormState = {
   error?: string;
@@ -192,25 +192,23 @@ export async function createSubjectClass(
     }
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "subject_class.create",
-      target_scope: {
-        subject_id: subjectId,
-        class_id: classId,
-        class_period_id: periodId,
-        school_id: schoolId,
-      },
-      metadata: {
-        subject_name: subjectName,
-        class_name: className,
-        period_label: periodLabel,
-        teacher_id: teacherId,
-      },
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "subject_class.create",
+    target_scope: {
+      subject_id: subjectId,
+      class_id: classId,
+      class_period_id: periodId,
       school_id: schoolId,
-    });
+    },
+    metadata: {
+      subject_name: subjectName,
+      class_name: className,
+      period_label: periodLabel,
+      teacher_id: teacherId,
+    },
+    school_id: schoolId,
+  });
 
   revalidatePath("/admin/districts");
   revalidatePath("/district/classes");

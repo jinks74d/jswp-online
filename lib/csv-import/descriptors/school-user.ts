@@ -11,6 +11,7 @@ import "server-only";
 
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 import { createScopedUser } from "@/lib/scoped-users";
 import { DEFAULT_ADMIN_KIND } from "@/lib/admin-kinds";
 import type { Database } from "@/lib/database.types";
@@ -178,7 +179,7 @@ export function makeSchoolUserDescriptor(opts: {
 
       if (credentials.length) out.credentials = credentials;
 
-      await admin.from("audit_log").insert({
+      await writeAuditLog({
         actor_id: ctx.actorId,
         action: opts.auditAction,
         target_scope: { school_id: school.id },

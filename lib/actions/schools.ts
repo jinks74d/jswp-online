@@ -13,7 +13,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 import { normalizeSchoolLevel } from "@/lib/school-levels";
 
 export type SchoolFormState = {
@@ -107,16 +107,14 @@ export async function createSchool(
     return { error: error?.message ?? "Could not create the school." };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "school.create",
-      target_scope: { school_id: data.id },
-      metadata: { name: f.name, level: f.level },
-      district_id: f.districtId,
-      school_id: data.id,
-    });
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "school.create",
+    target_scope: { school_id: data.id },
+    metadata: { name: f.name, level: f.level },
+    district_id: f.districtId,
+    school_id: data.id,
+  });
 
   revalidatePath(`/admin/districts/${f.districtId}`);
   revalidatePath("/district/schools");
@@ -136,7 +134,7 @@ export async function updateSchool(
   if (fe) return { fieldErrors: fe };
 
   const supabase = await createServerClient();
-  const { error } = await supabase
+  const { data: affected, error } = await supabase
     .from("schools")
     .update({
       name: f.name,
@@ -147,7 +145,8 @@ export async function updateSchool(
       logo_url: f.logoUrl,
       active: f.active,
     })
-    .eq("id", schoolId);
+    .eq("id", schoolId)
+    .select("id");
 
   if (error) {
     if (isUniqueViolation(error.message))
@@ -155,16 +154,22 @@ export async function updateSchool(
     return { error: error.message };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "school.update",
-      target_scope: { school_id: schoolId },
-      metadata: { name: f.name, level: f.level, active: f.active },
-      district_id: f.districtId || null,
-      school_id: schoolId,
-    });
+  // RLS filters rather than errors: zero rows means the row is
+  // outside this admin's scope (or gone). Without this, the action
+  // reports success and writes an audit_log entry for a change that
+  // never happened.
+  if (!affected || affected.length === 0) {
+    return { error: "That school is no longer in your scope." };
+  }
+
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "school.update",
+    target_scope: { school_id: schoolId },
+    metadata: { name: f.name, level: f.level, active: f.active },
+    district_id: f.districtId || null,
+    school_id: schoolId,
+  });
 
   if (f.districtId) revalidatePath(`/admin/districts/${f.districtId}`);
   revalidatePath(`/admin/districts/${f.districtId}/schools/${schoolId}`);

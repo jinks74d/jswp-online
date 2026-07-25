@@ -14,7 +14,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 import { createScopedUser, type ScopedUserFormState } from "@/lib/scoped-users";
 import { resolveAdminKind } from "@/lib/admin-kinds";
 
@@ -69,16 +69,14 @@ async function createSchoolUser(
       : { error: res.error };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: `${role}.create`,
-      target_scope: { user_profile_id: res.userId, school_id: school.id },
-      metadata: adminKind ? { email, admin_kind: adminKind } : { email },
-      district_id: school.district_id,
-      school_id: school.id,
-    });
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: `${role}.create`,
+    target_scope: { user_profile_id: res.userId, school_id: school.id },
+    metadata: adminKind ? { email, admin_kind: adminKind } : { email },
+    district_id: school.district_id,
+    school_id: school.id,
+  });
 
   revalidatePath(`/admin/districts/${school.district_id}/schools/${school.id}`);
   revalidatePath("/district/users");
@@ -160,16 +158,14 @@ export async function createTeacherAtSchool(
       : { error: res.error };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "teacher.create",
-      target_scope: { user_profile_id: res.userId, school_id: actor.school_id },
-      metadata: { email },
-      district_id: actor.district_id,
-      school_id: actor.school_id,
-    });
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "teacher.create",
+    target_scope: { user_profile_id: res.userId, school_id: actor.school_id },
+    metadata: { email },
+    district_id: actor.district_id,
+    school_id: actor.school_id,
+  });
 
   revalidatePath("/school/teachers");
   return { success: { email, password: res.password } };
@@ -222,16 +218,14 @@ export async function createStudentAtSchool(
       : { error: res.error };
   }
 
-  await createAdminClient()
-    .from("audit_log")
-    .insert({
-      actor_id: actor.id,
-      action: "student.create",
-      target_scope: { user_profile_id: res.userId, school_id: actor.school_id },
-      metadata: { email },
-      district_id: actor.district_id,
-      school_id: actor.school_id,
-    });
+  await writeAuditLog({
+    actor_id: actor.id,
+    action: "student.create",
+    target_scope: { user_profile_id: res.userId, school_id: actor.school_id },
+    metadata: { email },
+    district_id: actor.district_id,
+    school_id: actor.school_id,
+  });
 
   revalidatePath("/school/students");
   return { success: { email, password: res.password } };

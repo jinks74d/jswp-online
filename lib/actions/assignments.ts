@@ -18,6 +18,7 @@ import { revalidatePath } from "next/cache";
 import { requireUser, requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 import { validateRubric, emptyRubric } from "@/lib/rubric";
 import { sanitizeSourceHtml, sourceHtmlToSubstrate } from "@/lib/source-content";
 import type { Database, Json } from "@/lib/database.types";
@@ -770,7 +771,7 @@ export async function cancelAssignment(
   }
 
   // Append-only audit trail of this privileged, destructive action.
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: profile.id,
     action: "assignment.cancel_delete",
     target_scope: { assignment_id: assignmentId },
