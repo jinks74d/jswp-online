@@ -219,7 +219,7 @@ interface ErrorNotificationCardProps {
 function ErrorNotificationCard({
   notification,
   onDismiss,
-  onRetry,
+  onRetry: _onRetry,
 }: ErrorNotificationCardProps) {
   const { error } = notification;
   const [isRetrying, setIsRetrying] = useState(false);

@@ -39,7 +39,7 @@
  */
 
 import "server-only";
-import { requireRole, requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { isSummaryRatio } from "@/lib/jswp-modes";
 import type { Database } from "@/lib/database.types";

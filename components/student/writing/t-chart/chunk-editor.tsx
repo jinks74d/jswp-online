@@ -109,7 +109,7 @@ function CdRow({
   writingId,
   chunk,
   cd,
-  mode,
+  mode: _mode,
   canDelete,
 }: {
   writingId: string;

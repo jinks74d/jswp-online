@@ -294,7 +294,7 @@ function StatusBadge({ status, note }: { status: string; note?: string }) {
 }
 
 function Banner({
-  kind,
+  kind: _kind,
   children,
 }: {
   kind: "error";

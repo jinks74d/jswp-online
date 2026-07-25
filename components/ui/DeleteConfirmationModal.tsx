@@ -23,7 +23,7 @@ export default function DeleteConfirmationModal({
   message,
   confirmText = "DELETE",
   itemName,
-  loading = false,
+  loading: _loading = false,
 }: DeleteConfirmationModalProps) {
   const [confirmationText, setConfirmationText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);

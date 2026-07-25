@@ -16,7 +16,6 @@ import {
   School as SchoolIcon,
   Search,
   UserX,
-  Users as UsersIcon,
   type LucideIcon,
 } from "lucide-react";
 import { AddTeacherModal } from "./add-teacher-modal";

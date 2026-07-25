@@ -1,7 +1,7 @@
 // components/ui/LoadingStates.tsx
 "use client";
 
-import { Shield, User, Database, Wifi, WifiOff } from "lucide-react";
+import { Shield, User, Database, WifiOff } from "lucide-react";
 import { memo } from "react";
 
 interface LoadingStateProps {
@@ -141,7 +141,7 @@ interface RedirectingStateProps {
 export function RedirectingState({
   userType,
   userName,
-  targetPath,
+  targetPath: _targetPath,
 }: RedirectingStateProps) {
   const isAdmin = userType === "super_admin";
 

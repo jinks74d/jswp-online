@@ -6,7 +6,6 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { 
   Home, 
-  BookOpen, 
   Users, 
   BarChart3, 
   FileText, 
@@ -38,7 +37,7 @@ export default function NotFound() {
             Page Not Found
           </h1>
           <p className="text-gray-600 text-lg max-w-md mx-auto">
-            Looks like this page took a study break! Don't worry, we'll help you get back to learning.
+            Looks like this page took a study break! Don&apos;t worry, we&apos;ll help you get back to learning.
           </p>
         </div>
 
@@ -130,12 +129,12 @@ export default function NotFound() {
             <h3 className="text-lg font-semibold text-gray-900">Need Help?</h3>
           </div>
           <p className="text-gray-600 mb-4">
-            If you're having trouble finding what you need, here are some helpful tips:
+            If you&apos;re having trouble finding what you need, here are some helpful tips:
           </p>
           <ul className="text-sm text-gray-600 space-y-2 text-left max-w-md mx-auto">
             <li className="flex items-start">
               <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Check that you're logged in with the correct account
+              Check that you&apos;re logged in with the correct account
             </li>
             <li className="flex items-start">
               <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
@@ -143,7 +142,7 @@ export default function NotFound() {
             </li>
             <li className="flex items-start">
               <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Contact your administrator if you can't access expected content
+              Contact your administrator if you can&apos;t access expected content
             </li>
           </ul>
         </div>

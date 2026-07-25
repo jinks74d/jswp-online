@@ -99,11 +99,9 @@ function isValidLogEntry(entry: any): entry is LogEntry {
 }
 
 async function handleErrorLog(logEntry: LogEntry) {
-  // Count error frequency
-  const errorKey = `error:${logEntry.message}`;
-
-  // In a real implementation, you might use Redis or a database
-  // to track error frequencies and trigger alerts
+  // Error-frequency counting is not implemented yet. A real version would
+  // key on `error:${logEntry.message}` in Redis or a table and trigger alerts
+  // once a threshold is crossed.
 
   logger.warn("Client error logged", {
     message: logEntry.message,

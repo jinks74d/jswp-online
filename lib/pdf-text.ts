@@ -232,7 +232,7 @@ export function marginMask(pages: readonly PdfPage[]): boolean[][] {
     }
   });
 
-  const droppedByText = pages.map((p, pageIndex) =>
+  const droppedByText = pages.map((p) =>
     p.items.map((it) => {
       const t = it.str.trim();
       if (t.length === 0) return false;

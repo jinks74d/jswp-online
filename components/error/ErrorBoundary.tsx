@@ -6,7 +6,6 @@
 import React, { Component, ReactNode } from "react";
 import {
   AppError,
-  ErrorType,
   ErrorSeverity,
   classifyError,
 } from "@/lib/errors";
