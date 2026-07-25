@@ -21,6 +21,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAuditLog } from "@/lib/audit-log";
 import { sendEmail } from "@/lib/email/client";
 import { renderAccountApproved } from "@/lib/email/templates/account-approved";
 import { renderAccountDenied } from "@/lib/email/templates/account-denied";
@@ -87,7 +88,12 @@ export async function approveSignup(
     fieldErrors.school_id = "School is required for this role.";
   if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
 
-  // Use the RLS-scoped client so admins outside scope can't approve.
+  // requireRole above is a convenience gate for the UI, NOT the security
+  // boundary — an RPC is reachable without going through this action. The
+  // real enforcement (caller is an admin, has scope over the request AND over
+  // the target district/school, and is not granting above their own level)
+  // lives inside approve_signup_request itself; see migration 0042. The
+  // actor is taken from auth.uid() there, never passed in from here.
   const supabase = await createServerClient();
 
   const { data: rpcData, error: rpcError } = await supabase.rpc(
@@ -97,7 +103,6 @@ export async function approveSignup(
       p_role: role,
       p_district_id: districtId,
       p_school_id: schoolId,
-      p_decided_by: adminProfile.id,
       p_decision_notes: decisionNotes,
     } as never
   );
@@ -115,7 +120,7 @@ export async function approveSignup(
     .eq("id", signupRequestId)
     .single();
 
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: adminProfile.id,
     action: "signup.approve",
     target_scope: { signup_request_id: signupRequestId },
@@ -168,12 +173,13 @@ export async function denySignup(
     return { fieldErrors: { denial_reason: "A reason is required." } };
   }
 
+  // Authorization is enforced inside the RPC (migration 0042), not here —
+  // see the note in approveSignup. Actor comes from auth.uid().
   const supabase = await createServerClient();
   const { error: rpcError } = await supabase.rpc(
     "deny_signup_request" as never,
     {
       p_signup_request_id: signupRequestId,
-      p_decided_by: adminProfile.id,
       p_denial_reason: denialReason,
       p_decision_notes: decisionNotes,
     } as never
@@ -190,7 +196,7 @@ export async function denySignup(
     .eq("id", signupRequestId)
     .single();
 
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: adminProfile.id,
     action: "signup.deny",
     target_scope: { signup_request_id: signupRequestId },
@@ -253,7 +259,7 @@ export async function deleteDeniedSignup(formData: FormData): Promise<void> {
     await supabase.from("signup_requests").delete().eq("id", signupRequestId);
   }
 
-  await admin.from("audit_log").insert({
+  await writeAuditLog({
     actor_id: adminProfile.id,
     action: "signup.delete",
     target_scope: { signup_request_id: signupRequestId },
