@@ -18,6 +18,13 @@
  * the action keeps stored lead-in/citation; we just collapse the inputs.
  * The delete button is intentionally left to the caller so each layout
  * places it where it wants.
+ *
+ * Quotation marks are the STUDENT's job (decision: Raymond, 2026-07-26).
+ * The preview used to wrap the CD text in “…” itself, which doubled up on
+ * anyone who typed their own marks and mangled the blended quotations the
+ * guide teaches (This "woman" with her "crutch" → ""This "woman"…""). We
+ * render the text verbatim and flag a missing pair instead — placing the
+ * marks correctly is the skill being taught.
  */
 
 import { useState, useTransition } from "react";
@@ -26,6 +33,7 @@ import {
   updateConcreteDetail,
   setConcreteDetailQuotation,
 } from "@/lib/actions/t-charts";
+import { hasQuotationPair } from "@/lib/quotation-marks";
 import type { ConcreteDetailData } from "@/lib/queries/t-charts";
 
 const DEFAULT_CD_PLACEHOLDER =
@@ -62,6 +70,10 @@ export function CdEditor({
   const quote = cd.text.trim();
   const citation = cd.source_citation?.trim() ?? "";
   const showPreview = isQuotation && quote.length > 0;
+  // Blocks Continue on the T-Chart (see computeGate in t-chart-client.tsx),
+  // so this reads as a required fix rather than a suggestion. Only fires
+  // once there is text to judge — an empty CD isn't yet a mistake.
+  const needsQuotationMarks = showPreview && !hasQuotationPair(quote);
 
   return (
     <div className="space-y-2">
@@ -71,7 +83,7 @@ export function CdEditor({
         initialValue={cd.text}
         placeholder={
           isQuotation
-            ? "Type the exact words you're quoting — keep it short (under ~7 words)…"
+            ? 'Type the exact words you’re quoting, with "quotation marks" around them — keep it short (under ~7 words)…'
             : placeholder
         }
         disabled={disabled}
@@ -139,12 +151,20 @@ export function CdEditor({
           </span>
           <span className="text-gray-700">
             {leadIn && <span>{leadIn} </span>}
-            <span className="text-[color:var(--jswp-color-cd)]">
-              &ldquo;{quote}&rdquo;
-            </span>
+            {/* Verbatim — the student's own quotation marks, wherever they
+                put them. The app adds none. */}
+            <span className="text-[color:var(--jswp-color-cd)]">{quote}</span>
             {citation && <span> {citation}</span>}
           </span>
         </div>
+      )}
+
+      {needsQuotationMarks && (
+        <p className="text-xs font-medium text-red-700" role="status">
+          Add “quotation marks” around the exact words you took from the text —
+          at the beginning and at the end of the quote. You’ll need them before
+          you can continue.
+        </p>
       )}
     </div>
   );
