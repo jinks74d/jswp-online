@@ -20,6 +20,24 @@ export const WORKSHEET_INK = {
   ts: "#1e40af", // blue — topic / concluding sentence
 } as const;
 
+/**
+ * The non-colour signal for each role (CLAUDE.md §9): every colour-coded
+ * region also carries its shape glyph, so a student who can't distinguish
+ * red from green can still tell a CD from a CM.
+ *
+ * Shapes are the ones Dr. Louis uses on the board — blue five-pointed star
+ * for the topic sentence, red rectangle for a concrete detail, green circle
+ * for commentary, and the concluding sentence's star with an exclamation
+ * point ("end it with a bang"). Rendered aria-hidden alongside the visible
+ * role label, which is what a screen reader announces.
+ */
+export const WORKSHEET_GLYPH = {
+  ts: "★",
+  cd: "▬",
+  cm: "●",
+  cs: "★!",
+} as const;
+
 const ORDINALS = [
   "Zero",
   "One",

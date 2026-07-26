@@ -584,6 +584,9 @@ export type TCharts = {
   body_paragraph_id: string;
   working_topic_sentence: string | null;
   revised_topic_sentence: string | null;
+  // The T-Chart's full-width COMMENTARY SENTENCE row (migration 0044) —
+  // distinct from commentary_items.text (the per-CD CM clouds).
+  commentary_sentence: string | null;
   concluding_sentence: string | null;
   concession: string | null;
   counterargument: string | null;
@@ -646,6 +649,9 @@ export type CommentaryItems = {
   parent_cm_id: string | null;
   // Migration 0037: up to 4 brainstormed supporting words on the Expository CM cloud's rays
   web_words: string[] | null;
+  // Migration 0045: index-aligned with web_words — where each ray was spent
+  // ("ts" | "cm" | "cs" | "" ). See lib/pick-n-stitch.ts.
+  web_word_uses: string[] | null;
 } & Timestamps;
 
 export type ShapingSheets = {

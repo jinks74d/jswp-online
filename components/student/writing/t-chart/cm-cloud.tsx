@@ -2,15 +2,29 @@
 
 /**
  * Green commentary "cloud" for one CM (design base: T-Chart Worksheet.html) —
- * the commentary sentence in the oval, and up to 4 brainstormed supporting
- * words on the rays around it ("1 in the oval, 4 outside"). A small caption
- * frames the whole cloud; the four ray slots are intentionally unlabelled
- * (no per-ray pedagogical wording — decided 2026-07-02). A 3×3 grid places
- * the oval in the centre and the four word inputs in the corners; four green
- * rays connect them.
+ * the commentary sentence in the oval, and four brainstormed "lofty thoughts"
+ * on the rays around it ("1 in the oval, 4 outside"). A small caption frames
+ * the whole cloud; the four ray slots are intentionally unlabelled (no
+ * per-ray pedagogical wording — decided 2026-07-02).
+ *
+ * Layout (revised 2026-07-26, Raymond): the rays hold *phrases* of three or
+ * more words, not single words, so the old 3×3 grid — which squeezed each ray
+ * into ~70px beside a 190px oval — could not fit what students are asked to
+ * write. The cloud is now a 2-column grid, two ray boxes above the oval and
+ * two below, each roughly half the column wide and free to stack onto extra
+ * lines as the phrase grows:
+ *
+ *      [ phrase ]  [ phrase ]
+ *            ╲        ╱
+ *         (  commentary  )
+ *            ╱        ╲
+ *      [ phrase ]  [ phrase ]
+ *
+ * The ray boxes carry a green wash rather than sitting on white, so the CM
+ * side of the T reads as a block of green the way the printed sheet does.
  *
  * Owns one CM's editing: the central sentence (updateCommentaryItem) and the
- * four ray words (updateCommentaryWebWords). The four words live in local
+ * four ray phrases (updateCommentaryWebWords). The four entries live in local
  * state and the whole 4-slot array is written on every save, so no stale-index
  * race (mirrors the shaping SentenceList). web_words persists via migration 0037.
  */
@@ -18,10 +32,14 @@
 import { useState, useTransition } from "react";
 import { Trash2, Loader2 } from "lucide-react";
 import { AutoSaveInput } from "./auto-save-input";
+import { StitchControl } from "./stitch-control";
 import {
   updateCommentaryItem,
   updateCommentaryWebWords,
+  setCommentaryWebWordUse,
+  setCommentaryItemUse,
 } from "@/lib/actions/t-charts";
+import { ovalUse, rayUse } from "@/lib/pick-n-stitch";
 import { useWritingMode } from "../use-writing-mode";
 import type { CommentaryItemData } from "@/lib/queries/t-charts";
 
@@ -51,29 +69,28 @@ export function CmCloud({
   };
 
   return (
-    <div className="mx-auto w-full max-w-[340px]">
+    <div className="mx-auto w-full">
       {/* caption for the whole cloud (no per-ray labels) */}
-      <p className="mb-2 text-center text-[11px] font-medium leading-tight text-emerald-700">
-        Brainstorm words on the rays — why is this important?
+      <p className="mb-2 text-center text-[11px] font-medium leading-snug text-emerald-700">
+        Brainstorm lofty thoughts with one or two single words and the remaining
+        in phrases (3 or more words). Do not write sentences.
       </p>
 
-      <div className="grid grid-cols-[minmax(46px,1fr)_auto_minmax(46px,1fr)] grid-rows-[auto_auto_auto] items-center justify-items-center gap-x-2 gap-y-3">
-        <RayWord value={words[0]} disabled={isReadOnly} onSave={(v) => saveWord(0, v)} />
-        <span aria-hidden="true" />
-        <RayWord value={words[1]} disabled={isReadOnly} onSave={(v) => saveWord(1, v)} />
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
+        <RayPhrase index={0} value={words[0]!} cm={cm} writingId={writingId} onSave={saveWord} />
+        <RayPhrase index={1} value={words[1]!} cm={cm} writingId={writingId} onSave={saveWord} />
 
-        <span aria-hidden="true" />
-        <Oval
-          cm={cm}
-          writingId={writingId}
-          disabled={isReadOnly}
-          onDelete={onDelete}
-        />
-        <span aria-hidden="true" />
+        <div className="col-span-2">
+          <Oval
+            cm={cm}
+            writingId={writingId}
+            disabled={isReadOnly}
+            onDelete={onDelete}
+          />
+        </div>
 
-        <RayWord value={words[2]} disabled={isReadOnly} onSave={(v) => saveWord(2, v)} />
-        <span aria-hidden="true" />
-        <RayWord value={words[3]} disabled={isReadOnly} onSave={(v) => saveWord(3, v)} />
+        <RayPhrase index={2} value={words[2]!} cm={cm} writingId={writingId} onSave={saveWord} />
+        <RayPhrase index={3} value={words[3]!} cm={cm} writingId={writingId} onSave={saveWord} />
       </div>
     </div>
   );
@@ -92,17 +109,22 @@ function Oval({
   disabled: boolean;
   onDelete?: () => void;
 }) {
+  const usedIn = ovalUse(cm);
+  const spent = usedIn !== null;
+
   return (
-    <div className="relative w-[190px] max-w-full">
-      {/* four rays reaching toward the corner words */}
-      <Ray className="left-[8%] top-[10%] -rotate-[38deg]" />
-      <Ray className="right-[8%] top-[10%] rotate-[38deg]" />
-      <Ray className="bottom-[10%] left-[8%] rotate-[38deg]" />
-      <Ray className="bottom-[10%] right-[8%] -rotate-[38deg]" />
+    <div className="relative mx-auto w-full">
+      {/* four rays reaching toward the phrase boxes above and below */}
+      <Ray className="left-[12%] top-[6%] -rotate-[42deg]" />
+      <Ray className="right-[12%] top-[6%] rotate-[42deg]" />
+      <Ray className="bottom-[6%] left-[12%] rotate-[42deg]" />
+      <Ray className="bottom-[6%] right-[12%] -rotate-[42deg]" />
 
       <div
-        className="flex min-h-[132px] flex-col items-center justify-center gap-1 rounded-[50%] border-[2.5px] px-8 py-6 text-center"
-        style={{ borderColor: GREEN }}
+        className={`flex min-h-[112px] flex-col items-center justify-center gap-0.5 rounded-[50%] border-[2.5px] px-9 py-5 text-center ${
+          spent ? "bg-emerald-50/20" : "bg-emerald-50/40"
+        }`}
+        style={{ borderColor: GREEN, opacity: spent ? 0.75 : 1 }}
       >
         <AutoSaveInput
           bare
@@ -110,12 +132,22 @@ function Oval({
           rows={2}
           initialValue={cm.text}
           placeholder="Write your commentary…"
+          ariaLabel="Commentary sentence"
           disabled={disabled}
-          className="text-center text-sm leading-snug text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/40"
+          className={`text-center text-sm leading-snug text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/40 ${
+            spent ? "line-through opacity-60" : ""
+          }`}
           onSave={async (text) => {
             await updateCommentaryItem(writingId, cm.id, text);
           }}
         />
+        {cm.text.trim() && (
+          <StitchControl
+            label={cm.text.trim()}
+            usedIn={usedIn}
+            onChange={(use) => setCommentaryItemUse(writingId, cm.id, use)}
+          />
+        )}
         {!disabled && onDelete && (
           <DeleteButton title="Remove CM" onConfirm={onDelete} />
         )}
@@ -124,27 +156,59 @@ function Oval({
   );
 }
 
-/* ─── One ray word (a small green write-on-the-line input) ────────── */
+/* ─── One ray slot — a green box roomy enough for a 3-4 word phrase ─
+   Once spent on a sentence the text is struck through and faded, so the
+   remaining rays are the ones still available to stitch from. */
 
-function RayWord({
+function RayPhrase({
+  index,
   value,
-  disabled,
+  cm,
+  writingId,
   onSave,
 }: {
+  /** 0-3, the web_words slot. */
+  index: number;
   value: string;
-  disabled: boolean;
-  onSave: (value: string) => Promise<void>;
+  cm: CommentaryItemData;
+  writingId: string;
+  onSave: (index: number, value: string) => Promise<void>;
 }) {
+  const { isReadOnly } = useWritingMode();
+  const usedIn = rayUse(cm, index);
+  const spent = usedIn !== null;
+  const hasText = value.trim().length > 0;
+
   return (
-    <div className="w-full min-w-[46px] max-w-[84px]">
+    <div
+      className={`rounded-md border px-2 py-1.5 ${
+        spent
+          ? "border-emerald-200 bg-emerald-50/30"
+          : "border-emerald-300 bg-emerald-50/70"
+      }`}
+    >
       <AutoSaveInput
         bare
+        multiline
+        rows={2}
         initialValue={value}
-        placeholder="word"
-        disabled={disabled}
-        className="border-b border-emerald-300 pb-0.5 text-center text-xs text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/35"
-        onSave={onSave}
+        placeholder="word or phrase"
+        ariaLabel={`Commentary word or phrase ${index + 1} of 4`}
+        disabled={isReadOnly}
+        className={`text-center text-[13px] leading-snug text-[color:var(--jswp-color-cm)] placeholder:text-emerald-600/40 ${
+          spent ? "line-through opacity-50" : ""
+        }`}
+        onSave={(v) => onSave(index, v)}
       />
+      {hasText && (
+        <StitchControl
+          label={value.trim()}
+          usedIn={usedIn}
+          onChange={(use) =>
+            setCommentaryWebWordUse(writingId, cm.id, index, use)
+          }
+        />
+      )}
     </div>
   );
 }
@@ -153,7 +217,7 @@ function Ray({ className }: { className: string }) {
   return (
     <span
       aria-hidden="true"
-      className={`pointer-events-none absolute h-0 w-7 border-t-[1.5px] ${className}`}
+      className={`pointer-events-none absolute h-0 w-6 border-t-[1.5px] ${className}`}
       style={{ borderColor: GREEN, opacity: 0.7 }}
     />
   );

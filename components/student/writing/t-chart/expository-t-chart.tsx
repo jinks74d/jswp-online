@@ -9,31 +9,52 @@
  * commentary rendered as green "clouds" (ovals with rays).
  *
  *   ┌────────────── T-CHART · (2+:1) ──────────────┐
- *   │ PROMPT / TOPIC SENTENCE  [blue, ruled]        │
- *   │ REVISED TOPIC SENTENCE   [blue] (2+:1 only)   │
+ *   │ ① THROWAWAY TOPIC SENTENCE  [blue ★, ruled]   │
+ *   │ ④ REVISED TOPIC SENTENCE    [blue ★] (2+:1)   │
  *   ├──────────────────┬────────────────────────────┤
- *   │ CDs (red)        │ CMs (green clouds)          │  per-chunk grid
+ *   │ ② CDs (red ▬)    │ ③ CMs (green ● clouds)     │  per-chunk grid
  *   ├──────────────────┴────────────────────────────┤
- *   │ COMMENTARY / CONCLUDING SENTENCE  [blue]      │
+ *   │ ⑤ COMMENTARY (CM)           [green ●]         │
+ *   │ ⑥ CONCLUDING SENTENCE (CS)  [blue ★!]         │
  *   └───────────────────────────────────────────────┘
+ *
+ * The circled numbers are real UI (OrderBadge), not just documentation:
+ * the printed sheet stamps them on each region because the student does
+ * not work top-to-bottom. The Revised TS, the COMMENTARY sentence and the
+ * CS are all Pick-n-Stitched from commentary words the student has not
+ * spent yet ("once you use it, you lose it"), so all three come after the
+ * CD/CM work — hence 4, 5, 6 against a 1, 2, 3 visual order.
  *
  * Expository-only. argumentation + literary still render through
  * CdCmTChart / chunk-editor — untouched. The 3+:0 (summary) variant drops
- * the Revised TS row and the CM clouds (per-chunk suppression lives in
- * ExpositoryChunkGrid). Layout/spec config resolves from
- * lib/expository-t-chart-spec.ts. All editing stays on AutoSaveInput +
- * server actions; the worksheet look is presentation only.
+ * the Revised TS row, the COMMENTARY row and the CM clouds (per-chunk
+ * suppression lives in ExpositoryChunkGrid), leaving a 1-2-3 order.
+ * Layout/spec config resolves from lib/expository-t-chart-spec.ts. All
+ * editing stays on AutoSaveInput + server actions; the worksheet look is
+ * presentation only.
  */
 
 import { useTransition } from "react";
 import { Plus, Loader2 } from "lucide-react";
 import { AutoSaveInput } from "./auto-save-input";
 import { ExpositoryChunkGrid } from "./expository-chunk-grid";
-import { RULED_FIELD, chunkCountWord } from "./worksheet-style";
+import { OrderBadge } from "./order-badge";
+import {
+  RULED_FIELD,
+  WORKSHEET_GLYPH,
+  WORKSHEET_INK,
+  chunkCountWord,
+} from "./worksheet-style";
 import { updateTChart, addChunk, removeChunk } from "@/lib/actions/t-charts";
 import { useWritingMode } from "../use-writing-mode";
 import { getExpositoryTChartSpec } from "@/lib/expository-t-chart-spec";
+import {
+  collectStitchPool,
+  unusedEntries,
+  type StitchEntry,
+} from "@/lib/pick-n-stitch";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
+import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 import type { Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
@@ -44,11 +65,14 @@ export function ExpositoryTChart({
   bp,
   mode,
   writingChunkRatio,
+  annotations,
 }: {
   writingId: string;
   bp: BodyParagraphData;
   mode: Mode;
   writingChunkRatio: ChunkRatio;
+  /** Read & Annotate commentary, surfaced in the CMs column. */
+  annotations: readonly TextAnnotationRow[];
 }) {
   const { isReadOnly } = useWritingMode();
   const spec = getExpositoryTChartSpec(writingChunkRatio);
@@ -62,6 +86,13 @@ export function ExpositoryTChart({
     );
   }
   const tc = bp.t_chart;
+  // Total for the badges' "Work order: n of N" screenreader phrasing —
+  // 6 regions at 2+:1 / 1:1, 3 at 3+:0.
+  const orderTotal = Object.keys(spec.badges).length;
+  // "Once you use it, you lose it" — what the three Pick-n-Stitch rows still
+  // have left to draw on. Recomputed from props on every render, so marking a
+  // phrase spent in a cloud updates these lists immediately.
+  const stitchable = unusedEntries(collectStitchPool(bp.chunks));
 
   return (
     <div className="bg-[#e9eaed] px-2 py-6 sm:px-6">
@@ -78,12 +109,22 @@ export function ExpositoryTChart({
             {chunkCountWord(bp.chunks.length)} · {spec.ratioLabel} · Step{" "}
             {spec.stepNumber}
           </p>
+          {spec.showRevisedTs && (
+            <p className="mx-auto mt-3 max-w-md text-[13px] leading-snug text-gray-600">
+              The numbers show the order you work in — not top to bottom. Draft
+              the throwaway topic sentence first, then the CDs and CMs, and come
+              back up to revise.
+            </p>
+          )}
         </header>
 
         <div className="mt-7 space-y-5">
-          {/* Topic Sentence */}
+          {/* ① Throwaway Topic Sentence */}
           <SentenceRow
             label={spec.tsLabel}
+            badge={spec.badges.ts}
+            orderTotal={orderTotal}
+            role="ts"
             initialValue={tc.working_topic_sentence ?? ""}
             placeholder="Write the topic sentence for this paragraph…"
             disabled={isReadOnly}
@@ -92,10 +133,15 @@ export function ExpositoryTChart({
             }}
           />
 
-          {/* Revised Topic Sentence — 2+:1 only */}
+          {/* ④ Revised Topic Sentence — 2+:1 only */}
           {spec.showRevisedTs && (
             <SentenceRow
-              label="Revised Topic Sentence:"
+              label="Revised Topic Sentence (TS):"
+              badge={spec.badges.revised_ts}
+              orderTotal={orderTotal}
+              role="ts"
+              hint="“Pick-n-Stitch” unused commentary words and phrases to revise your topic sentence."
+              stillUnused={stitchable}
               initialValue={tc.revised_topic_sentence ?? ""}
               placeholder="Revise your topic sentence using unused CM words…"
               disabled={isReadOnly}
@@ -105,7 +151,7 @@ export function ExpositoryTChart({
             />
           )}
 
-          {/* Chunks — the two-column CD | CM "T" */}
+          {/* ② CDs | ③ CMs — the two-column "T" */}
           <div className="space-y-4">
             {bp.chunks.map((chunk, i) => (
               <ExpositoryChunkGrid
@@ -116,6 +162,10 @@ export function ExpositoryTChart({
                 chunkNumber={i + 1}
                 totalChunks={bp.chunks.length}
                 showHeader={i === 0}
+                cdBadge={spec.badges.cds}
+                cmBadge={spec.badges.cms}
+                orderTotal={orderTotal}
+                annotations={annotations}
                 onRemove={() => {
                   void removeChunk(writingId, chunk.id);
                 }}
@@ -131,11 +181,41 @@ export function ExpositoryTChart({
             )}
           </div>
 
-          {/* Concluding Sentence */}
+          {/* ⑤ Commentary (CM) — the printed sheet's full-width COMMENTARY
+              SENTENCE line. Suppressed at 3+:0 (a summary has no CMs to
+              stitch from). */}
+          {spec.showCmSentence && (
+            <SentenceRow
+              label="Commentary (CM):"
+              badge={spec.badges.cm_sentence}
+              orderTotal={orderTotal}
+              role="cm"
+              hint="“Pick-n-Stitch” unused commentary words and phrases to write your commentary sentence."
+              stillUnused={stitchable}
+              initialValue={tc.commentary_sentence ?? ""}
+              placeholder="Write your commentary sentence…"
+              disabled={isReadOnly}
+              onSave={async (commentary_sentence) => {
+                await updateTChart(writingId, tc.id, { commentary_sentence });
+              }}
+            />
+          )}
+
+          {/* ⑥ Concluding Sentence — the ★! row. No ellipsis anywhere in
+              this row: the CS lands the paragraph, it doesn't trail off. */}
           <SentenceRow
-            label={spec.csLabel === "CS:" ? "Concluding Sentence:" : spec.csLabel}
+            label={spec.csLabel}
+            badge={spec.badges.cs}
+            orderTotal={orderTotal}
+            role="cs"
+            hint={
+              spec.showCmSentence
+                ? "“Pick-n-Stitch” unused commentary words and phrases to write your concluding sentence."
+                : undefined
+            }
+            stillUnused={spec.showCmSentence ? stitchable : undefined}
             initialValue={tc.concluding_sentence ?? ""}
-            placeholder="Write the concluding sentence…"
+            placeholder="Write the concluding sentence"
             disabled={isReadOnly}
             onSave={async (concluding_sentence) => {
               await updateTChart(writingId, tc.id, { concluding_sentence });
@@ -147,44 +227,134 @@ export function ExpositoryTChart({
   );
 }
 
-/* ─── Blue ruled sentence row (TS / Revised TS / CS) ──────────────────
-   Inline bold label on a "sticky note" white chip, then the writing on
-   ruled paper lines — the worksheet's TOPIC SENTENCE / COMMENTARY rows.
-   Blue is the JSWP TS/CS colour; the ● glyph is the non-colour signal. */
+/* ─── Full-width ruled sentence row (TS / Revised TS / CM / CS) ───────
+   Order badge, then the shape glyph, then the bold role label, then the
+   writing on ruled paper lines. The glyph is the non-colour signal
+   (CLAUDE.md §9): blue ★ for the topic sentence, green ● for commentary,
+   blue ★! for the concluding sentence. Ink colour comes from the
+   --jswp-color-* tokens, never a hard-coded hex (§14.10). */
+
+type SentenceRole = "ts" | "cm" | "cs";
+
+/**
+ * Per-role glyph + ink. `textClass` is a full literal Tailwind class (not
+ * built by interpolation) so the JIT compiler can see it; `ink` is the raw
+ * hex the OrderBadge's inline border/text style needs.
+ */
+const ROLE_TOKEN: Record<
+  SentenceRole,
+  { glyph: string; textClass: string; ink: string }
+> = {
+  ts: {
+    glyph: WORKSHEET_GLYPH.ts,
+    textClass: "text-[color:var(--jswp-color-ts)]",
+    ink: WORKSHEET_INK.ts,
+  },
+  cm: {
+    glyph: WORKSHEET_GLYPH.cm,
+    textClass: "text-[color:var(--jswp-color-cm)]",
+    ink: WORKSHEET_INK.cm,
+  },
+  cs: {
+    glyph: WORKSHEET_GLYPH.cs,
+    textClass: "text-[color:var(--jswp-color-cs)]",
+    ink: WORKSHEET_INK.ts,
+  },
+};
 
 function SentenceRow({
   label,
+  badge,
+  orderTotal,
+  role,
+  hint,
+  stillUnused,
   initialValue,
   placeholder,
   disabled,
   onSave,
 }: {
   label: string;
+  /** Completion-order number from the spec; undefined = no badge at this ratio. */
+  badge?: number;
+  orderTotal: number;
+  role: SentenceRole;
+  /** Pick-n-Stitch instruction shown under the label, where the guide has one. */
+  hint?: string;
+  /**
+   * Commentary still available to stitch from. Passed only to the three
+   * Pick-n-Stitch rows; undefined elsewhere (and at 3+:0, which has no CMs).
+   */
+  stillUnused?: readonly StitchEntry[];
   initialValue: string;
   placeholder: string;
   disabled: boolean;
   onSave: (value: string) => Promise<void>;
 }) {
+  const token = ROLE_TOKEN[role];
   return (
     <div>
       <div className="mb-1 flex items-center gap-1.5">
-        <span aria-hidden="true" className="text-[color:var(--jswp-color-ts)]">
-          ●
+        {badge !== undefined && (
+          <OrderBadge n={badge} total={orderTotal} color={token.ink} />
+        )}
+        <span aria-hidden="true" className={token.textClass}>
+          {token.glyph}
         </span>
-        <span className="text-sm font-semibold uppercase tracking-wide text-[color:var(--jswp-color-ts)]">
+        <span
+          className={`text-sm font-semibold uppercase tracking-wide ${token.textClass}`}
+        >
           {label}
         </span>
       </div>
+      {hint && (
+        <p className="mb-1.5 text-[13px] leading-snug text-gray-600">{hint}</p>
+      )}
+      {stillUnused && <StillUnused entries={stillUnused} />}
       <AutoSaveInput
         bare
         multiline
         rows={2}
         initialValue={initialValue}
         placeholder={placeholder}
+        ariaLabel={label.replace(/:$/, "")}
         disabled={disabled}
-        className={`${RULED_FIELD} text-[color:var(--jswp-color-ts)]`}
+        className={`${RULED_FIELD} ${token.textClass}`}
         onSave={onSave}
       />
+    </div>
+  );
+}
+
+/* ─── Still-unused commentary ─────────────────────────────────────────
+   The other half of "once you use it, you lose it": having struck spent
+   phrases out in the clouds, each Pick-n-Stitch row shows what is left,
+   so the student doesn't scroll back up to find out. Read-only chips —
+   the spending happens in the cloud, where the phrase lives. */
+
+function StillUnused({ entries }: { entries: readonly StitchEntry[] }) {
+  if (entries.length === 0) {
+    return (
+      <p className="mb-1.5 text-[12px] italic leading-snug text-amber-700">
+        Every commentary word and phrase has been used. Add more to a cloud
+        above if you need something to stitch from.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mb-1.5 flex flex-wrap items-center gap-1">
+      <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-800">
+        Still unused:
+      </span>
+      {entries.map((entry) => (
+        <span
+          key={`${entry.cmId}:${entry.slot ?? "oval"}`}
+          className="rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[12px] leading-tight text-[color:var(--jswp-color-cm)]"
+        >
+          {entry.text}
+        </span>
+      ))}
     </div>
   );
 }

@@ -31,6 +31,8 @@ export interface TChartRowData {
   id: string;
   working_topic_sentence: string | null;
   revised_topic_sentence: string | null;
+  /** Full-width COMMENTARY SENTENCE row on the T-Chart (migration 0044). */
+  commentary_sentence: string | null;
   concluding_sentence: string | null;
   // Argumentation extensions (written by the separate argumentation.counterargument step)
   concession: string | null;
@@ -77,6 +79,13 @@ export interface CommentaryItemData {
   kind: CmKind;
   /** Up to 4 brainstormed supporting words on the commentary cloud's rays. */
   web_words: string[] | null;
+  /* Pick-n-Stitch ("once you use it, you lose it") — see lib/pick-n-stitch.ts.
+     The booleans track the oval's own sentence; web_word_uses is index-aligned
+     with web_words and tracks each ray. */
+  used_in_topic_sentence: boolean;
+  used_in_cm_sentence: boolean;
+  used_in_concluding_sentence: boolean;
+  web_word_uses: string[] | null;
 }
 
 export interface ChunkData {
@@ -123,7 +132,8 @@ export async function getTChartData(
       `
       id, position, label, num_chunks, has_counterargument,
       t_chart:t_charts (
-        id, working_topic_sentence, revised_topic_sentence, concluding_sentence,
+        id, working_topic_sentence, revised_topic_sentence,
+        commentary_sentence, concluding_sentence,
         concession, counterargument, refutation,
         narrative_kind, narrative_subject, narrative_key_word,
         narrative_general_ideas, narrative_concrete_example,
@@ -137,7 +147,10 @@ export async function getTChartData(
       chunks (
         id, position, ratio,
         concrete_details ( id, position, text, is_quotation, transitional_lead_in, source_citation ),
-        commentary_items ( id, position, text, parent_cd_id, kind, web_words )
+        commentary_items (
+          id, position, text, parent_cd_id, kind, web_words, web_word_uses,
+          used_in_topic_sentence, used_in_cm_sentence, used_in_concluding_sentence
+        )
       )
       `
     )

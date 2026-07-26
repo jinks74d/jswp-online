@@ -13,6 +13,9 @@
  * computes the per-BP Continue gate from the current data prop. Data
  * stays in props (not local state) so revalidatePath after each
  * mutation flows fresh state down without manual sync.
+ *
+ * The gate rules themselves live in ./compute-gate so they can be unit
+ * tested without this component's `server-only` import chain.
  */
 
 import { useState, useTransition } from "react";
@@ -24,6 +27,7 @@ import { FictionalAbcPlan } from "./fictional-abc-plan";
 import { ReferencePanel, type ReferenceSource } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
+import { computeGate, gateMessage } from "./compute-gate";
 import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
@@ -41,67 +45,6 @@ interface Props {
   // Reference panel data (only present when assignment has source text)
   sources: readonly ReferenceSource[];
   annotations: readonly TextAnnotationRow[];
-}
-
-type BlockerKind = "fictional" | "wow" | "cdcm";
-
-interface GateResult {
-  canContinue: boolean;
-  blockerPosition: number | null;
-  blockerKind: BlockerKind | null;
-}
-
-function computeGate(
-  mode: Mode,
-  bps: readonly BodyParagraphData[]
-): GateResult {
-  const isNarrative = mode === "narrative";
-  for (const bp of bps) {
-    const tc = bp.t_chart;
-    // Fictional narratives use the ABC plan, not the WOW fields — gate on
-    // ABC content (key word / concrete example / story conflict) instead.
-    if (isNarrative && tc?.narrative_kind === "fictional") {
-      const hasContent = !!(
-        (tc?.narrative_key_word && tc.narrative_key_word.trim()) ||
-        (tc?.narrative_concrete_example &&
-          tc.narrative_concrete_example.trim()) ||
-        (tc?.abc_conflict && tc.abc_conflict.trim())
-      );
-      if (!hasContent) {
-        return {
-          canContinue: false,
-          blockerPosition: bp.position,
-          blockerKind: "fictional",
-        };
-      }
-    } else if (isNarrative) {
-      const hasContent = !!(
-        (tc?.narrative_when && tc.narrative_when.trim()) ||
-        (tc?.narrative_where && tc.narrative_where.trim()) ||
-        (tc?.narrative_who && tc.narrative_who.trim()) ||
-        (tc?.narrative_what_happened && tc.narrative_what_happened.trim())
-      );
-      if (!hasContent) {
-        return {
-          canContinue: false,
-          blockerPosition: bp.position,
-          blockerKind: "wow",
-        };
-      }
-    } else {
-      const hasCD = bp.chunks.some((c) =>
-        c.concrete_details.some((cd) => cd.text.trim().length > 0)
-      );
-      if (!hasCD) {
-        return {
-          canContinue: false,
-          blockerPosition: bp.position,
-          blockerKind: "cdcm",
-        };
-      }
-    }
-  }
-  return { canContinue: true, blockerPosition: null, blockerKind: null };
 }
 
 export function TChartClient({
@@ -194,6 +137,7 @@ export function TChartClient({
             bp={activeBp}
             mode={mode}
             writingChunkRatio={writingChunkRatio}
+            annotations={annotations}
           />
         ) : (
           <CdCmTChart
@@ -257,15 +201,7 @@ export function TChartClient({
       {!isReadOnly && (
         <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
           <div className="text-xs text-gray-500">
-            {gate.canContinue
-              ? `${bodyParagraphs.length} body paragraph${
-                  bodyParagraphs.length === 1 ? "" : "s"
-                } ready`
-              : gate.blockerKind === "fictional"
-                ? `Body paragraph ${gate.blockerPosition} needs ABC planning — a key word, concrete example, or story conflict.`
-                : gate.blockerKind === "wow"
-                  ? `Body paragraph ${gate.blockerPosition} needs at least one WOW detail (when, where, who, or what happened).`
-                  : `Body paragraph ${gate.blockerPosition} needs at least one concrete detail.`}
+            {gateMessage(gate, bodyParagraphs.length)}
           </div>
           <div className="flex items-center gap-3">
             {error && (

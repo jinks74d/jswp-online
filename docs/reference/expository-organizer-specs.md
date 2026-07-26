@@ -49,21 +49,30 @@ In the printed organizers the role-label *shapes* (blue trapezoid "TS", red rect
 ├──────────────────────┬──────────────────────┤
 │ CDs                  │ CMs                  │  ← two-column grid
 │ [CD sentence rows]   │ [CM word/phrase grid]│
-│                      │  + CM sentence(s)    │
 ├──────────────────────┴──────────────────────┤
+│ COMMENTARY:    [____________________]       │  ← full width
 │ CS:            [____________________]       │  ← full width, bottom
 └─────────────────────────────────────────────┘
 ```
 - **TS** and **Revised TS** are stacked full-width rows at the top.
 - The middle is a **two-column grid**: left column header `CDs`, right column header `CMs`.
-- **CS** spans full-width at the bottom. Top + bottom spanning rows + the two-column
-  middle are what make the "T".
-- The guide places small **numbered order badges (1–7)** on each region to teach
-  completion sequence. Canonical JSWP order: (1) TS first draft → (2) CD sentences in
+- **COMMENTARY SENTENCE** and **CS** span full-width at the bottom. Top + bottom
+  spanning rows + the two-column middle are what make the "T".
+- **Correction (2026-07-26, from the printed sheet p.79):** the CM *sentence* is its own
+  full-width `COMMENTARY SENTENCE:` line between the grid and the CS — **not** a box
+  inside the CMs column, as an earlier draft of this spec said. The CMs column holds
+  only the brainstormed words/phrases the student stitches *from*; one paragraph gets
+  one CM sentence, which is what makes a 2+:1 chunk 2 CDs to 1 CM. Backed by
+  `t_charts.commentary_sentence` (migration `0044`).
+- The guide places small **numbered order badges** on each region to teach completion
+  sequence. Canonical JSWP order: (1) throwaway TS first draft → (2) CD sentences in
   the left column → (3) CM words/phrases brainstormed in the right column → (4) Revised
-  TS, pulling from unused CM words → (5) CM sentence(s) from unused CM words → (6) CS
+  TS, pulling from unused CM words → (5) CM sentence from unused CM words → (6) CS
   from unused CM words. Render small numbered badges reflecting this order; exact badge
   placement is on PDF p.103 if pixel-level fidelity is wanted.
+- **Role glyphs (per Raymond, 2026-07-26):** blue five-pointed star ★ for TS and
+  Revised TS, red rectangle ▬ for CDs, green circle ● for CMs and the COMMENTARY
+  sentence, and ★ followed by `!` for the CS. No ellipsis on the CS.
 - **Color:** TS/Revised TS blue, CDs column red, CMs column green, CS blue. Color the
   T-Chart as part of this chunk — color is intrinsic to the layout, not a separable pass.
 
@@ -88,6 +97,9 @@ In the printed organizers the role-label *shapes* (blue trapezoid "TS", red rect
   No CM inputs (a summary has zero commentary); the CMs side shows a muted "no
   commentary at 3+:0" note and is hidden on mobile. This supersedes the original
   chunk 4.5d-1 decision to suppress the column entirely.
+- **No `COMMENTARY SENTENCE` line either**, for the same reason as the Revised TS: the
+  CM sentence is Pick-n-Stitched from unused CM words, and 3+:0 has none. This leaves a
+  straight 1-2-3 badge order (TS → CDs → CS) with no out-of-sequence regions.
 - Net 3+:0 layout: `TOPIC SENTENCE:` (full width) → two-column `CDs` (3+ CD rows) |
   empty `CMs` header → `CONCLUDING SENTENCE:` (full width). Color: blue / red / blue.
 

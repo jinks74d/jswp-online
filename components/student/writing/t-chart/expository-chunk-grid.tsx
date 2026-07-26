@@ -22,7 +22,9 @@ import { useTransition } from "react";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { CdEditor } from "./cd-editor";
 import { CmCloud } from "./cm-cloud";
-import { WORKSHEET_INK, ordinal } from "./worksheet-style";
+import { AnnotationCommentary } from "./annotation-commentary";
+import { OrderBadge } from "./order-badge";
+import { WORKSHEET_GLYPH, WORKSHEET_INK, ordinal } from "./worksheet-style";
 import { ratioClass } from "@/lib/jswp-modes";
 import {
   createConcreteDetail,
@@ -36,6 +38,7 @@ import type {
   ConcreteDetailData,
   CommentaryItemData,
 } from "@/lib/queries/t-charts";
+import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 import type { Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
@@ -49,6 +52,10 @@ export function ExpositoryChunkGrid({
   chunkNumber,
   totalChunks,
   showHeader,
+  cdBadge,
+  cmBadge,
+  orderTotal,
+  annotations,
   onRemove,
 }: {
   writingId: string;
@@ -58,6 +65,12 @@ export function ExpositoryChunkGrid({
   totalChunks: number;
   /** Render the CDs / CMs header band (only the first chunk does). */
   showHeader: boolean;
+  /** Completion-order numbers from getExpositoryTChartSpec().badges. */
+  cdBadge?: number;
+  cmBadge?: number;
+  orderTotal: number;
+  /** Read & Annotate commentary, listed once at the top of the CMs column. */
+  annotations: readonly TextAnnotationRow[];
   onRemove: () => void;
 }) {
   const { isReadOnly } = useWritingMode();
@@ -87,14 +100,33 @@ export function ExpositoryChunkGrid({
       <div className="grid grid-cols-1 sm:grid-cols-2">
         {showHeader && (
           <>
-            <ColumnHeader role="cd" label="CDs" />
+            <ColumnHeader
+              role="cd"
+              label="CDs"
+              badge={cdBadge}
+              orderTotal={orderTotal}
+            />
             <ColumnHeader
               role="cm"
               label="CMs"
+              badge={cmBadge}
+              orderTotal={orderTotal}
               subtitle={
                 isSummaryRatio ? undefined : "(This is/was important because…) Why?"
               }
             />
+          </>
+        )}
+
+        {/* The student's own annotation commentary, once, at the top of the
+            CMs column — the raw material for the clouds below. The empty
+            left cell keeps the two columns in step so the "T" holds. */}
+        {showHeader && !isSummaryRatio && (
+          <>
+            <div className="sm:pr-5" aria-hidden="true" />
+            <div className="border-l-2 border-black sm:pl-5">
+              <AnnotationCommentary annotations={annotations} />
+            </div>
           </>
         )}
 
@@ -170,14 +202,20 @@ export function ExpositoryChunkGrid({
 function ColumnHeader({
   role,
   label,
+  badge,
+  orderTotal,
   subtitle,
 }: {
   role: "cd" | "cm";
   label: string;
+  badge?: number;
+  orderTotal: number;
   subtitle?: string;
 }) {
   const color = role === "cd" ? WORKSHEET_INK.cd : WORKSHEET_INK.cm;
-  const symbol = role === "cd" ? "▲" : "■";
+  // Red rectangle for a CD, green circle for a CM — the non-colour signal
+  // (CLAUDE.md §9), matching the shapes Dr. Louis draws on the board.
+  const symbol = role === "cd" ? WORKSHEET_GLYPH.cd : WORKSHEET_GLYPH.cm;
   return (
     <div
       className={`border-y-2 border-black px-3 py-2 text-center ${
@@ -185,13 +223,18 @@ function ColumnHeader({
       }`}
     >
       <div
-        className="text-xl font-extrabold leading-tight"
+        className="flex items-center justify-center gap-1.5 text-xl font-extrabold leading-tight"
         style={{ color }}
       >
-        <span aria-hidden="true" className="mr-1 align-middle text-sm">
-          {symbol}
+        {badge !== undefined && (
+          <OrderBadge n={badge} total={orderTotal} color={color} />
+        )}
+        <span>
+          <span aria-hidden="true" className="mr-1 align-middle text-sm">
+            {symbol}
+          </span>
+          {label}
         </span>
-        {label}
       </div>
       {subtitle && (
         <div className="mt-0.5 text-[11px] leading-tight text-gray-500">
@@ -319,7 +362,7 @@ function CdHeading({
       style={{ color: WORKSHEET_INK.cd }}
     >
       <span aria-hidden="true" className="mr-1 text-xs">
-        ▲
+        {WORKSHEET_GLYPH.cd}
       </span>
       {ordinal(chunkNumber)} Chunk, {ordinal(cdNumber)} CD:
     </div>

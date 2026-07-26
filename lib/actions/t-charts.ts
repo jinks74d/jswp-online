@@ -19,6 +19,11 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { buildStarterCmRows } from "@/lib/actions/writing-structure";
+import {
+  isStitchTarget,
+  withRayUse,
+  type StitchTarget,
+} from "@/lib/pick-n-stitch";
 import type { Database } from "@/lib/database.types";
 
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -32,6 +37,8 @@ type Mode = Database["public"]["Enums"]["jswp_mode"];
 export interface TChartFieldUpdates {
   working_topic_sentence?: string | null;
   revised_topic_sentence?: string | null;
+  /** Full-width COMMENTARY SENTENCE row on the T-Chart (migration 0044). */
+  commentary_sentence?: string | null;
   concluding_sentence?: string | null;
   // Argumentation drafts (written by argumentation.counterargument step,
   // chunk 4.6a). Polished into shaping_sheets.final_* by shaping step.
@@ -349,6 +356,86 @@ export async function updateCommentaryWebWords(
     .eq("id", cmId);
   if (error) {
     throw new Error(`updateCommentaryWebWords: ${error.message}`);
+  }
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
+/* ─── Pick-n-Stitch: "once you use it, you lose it" ─────────────────
+   Marking where a commentary word/phrase was spent so the T-Chart can
+   strike it through and the student can see what is left for the other
+   sentences. Two storage shapes (see lib/pick-n-stitch.ts): the oval is
+   the commentary_items row itself; the rays are slots in web_words. */
+
+/**
+ * Spend (or release) one ray word/phrase. The whole web_word_uses array is
+ * rewritten on every call so it stays index-aligned with web_words and no
+ * stale index can race — same contract as updateCommentaryWebWords.
+ *
+ * `use` is single-valued on purpose: a phrase spent on the Revised TS is
+ * gone from the CM and CS. Passing null releases it.
+ */
+export async function setCommentaryWebWordUse(
+  writingId: string,
+  cmId: string,
+  slot: number,
+  use: StitchTarget | null
+): Promise<void> {
+  await requireRole("student");
+  if (use !== null && !isStitchTarget(use)) {
+    throw new Error(`setCommentaryWebWordUse: bad target ${String(use)}`);
+  }
+  const supabase = await createServerClient();
+
+  // Read-modify-write: the stored array is the source of truth for the
+  // other three slots, so we never clobber them from stale client state.
+  const { data: row, error: readErr } = await supabase
+    .from("commentary_items")
+    .select("web_word_uses")
+    .eq("id", cmId)
+    .single();
+  if (readErr || !row) {
+    throw new Error(
+      `setCommentaryWebWordUse read: ${readErr?.message ?? "no row"}`
+    );
+  }
+
+  const { error } = await supabase
+    .from("commentary_items")
+    .update({ web_word_uses: withRayUse(row.web_word_uses, slot, use) })
+    .eq("id", cmId);
+  if (error) {
+    throw new Error(`setCommentaryWebWordUse: ${error.message}`);
+  }
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
+/**
+ * Spend (or release) the cloud's oval sentence, via the used_in_* booleans
+ * that have tracked this since migration 0001. Exactly one is set, so the
+ * T-Chart's single-use rule holds even though the columns could express a
+ * multi-use state (the Shaping Sheet toggles them independently).
+ */
+export async function setCommentaryItemUse(
+  writingId: string,
+  cmId: string,
+  use: StitchTarget | null
+): Promise<void> {
+  await requireRole("student");
+  if (use !== null && !isStitchTarget(use)) {
+    throw new Error(`setCommentaryItemUse: bad target ${String(use)}`);
+  }
+  const supabase = await createServerClient();
+
+  const { error } = await supabase
+    .from("commentary_items")
+    .update({
+      used_in_topic_sentence: use === "ts",
+      used_in_cm_sentence: use === "cm",
+      used_in_concluding_sentence: use === "cs",
+    })
+    .eq("id", cmId);
+  if (error) {
+    throw new Error(`setCommentaryItemUse: ${error.message}`);
   }
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }
