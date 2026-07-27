@@ -150,7 +150,7 @@ export function SignupForm({ schools }: { schools: SchoolOption[] }) {
           name="message"
           rows={3}
           maxLength={1000}
-          placeholder="e.g. I teach 9th grade English at Lincoln HS"
+          placeholder="e.g., I teach 9th grade English at Lincoln HS"
           className="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
         />
       </div>

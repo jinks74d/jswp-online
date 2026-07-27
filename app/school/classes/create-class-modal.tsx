@@ -139,7 +139,7 @@ export function CreateClassModal({
                 value={newSubject}
                 onChange={(e) => setNewSubject(e.target.value)}
                 maxLength={255}
-                placeholder="New subject name (e.g. Language Arts)"
+                placeholder="New subject name (e.g., Language Arts)"
                 aria-label="New subject name"
                 autoFocus
                 className={`${inputClass} mt-2`}
@@ -158,7 +158,7 @@ export function CreateClassModal({
               type="text"
               required
               maxLength={255}
-              placeholder="e.g. AP English"
+              placeholder="e.g., AP English"
               className={inputClass}
             />
           </Field>
@@ -178,7 +178,7 @@ export function CreateClassModal({
               type="text"
               required
               maxLength={50}
-              placeholder="e.g. Period 1"
+              placeholder="e.g., Period 1"
               className={inputClass}
             />
           </Field>

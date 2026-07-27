@@ -49,7 +49,7 @@ export function AddSubjectClassForm({
           type="text"
           required
           maxLength={255}
-          placeholder="e.g. English"
+          placeholder="e.g., English"
           aria-invalid={!!state.fieldErrors?.subject_name}
           aria-describedby={
             state.fieldErrors?.subject_name
@@ -78,7 +78,7 @@ export function AddSubjectClassForm({
           type="text"
           required
           maxLength={255}
-          placeholder="e.g. American Literature"
+          placeholder="e.g., American Literature"
           aria-invalid={!!state.fieldErrors?.class_name}
           aria-describedby={
             state.fieldErrors?.class_name ? "err-class_name" : undefined
@@ -114,7 +114,7 @@ export function AddSubjectClassForm({
           type="text"
           required
           maxLength={50}
-          placeholder="e.g. Block 3"
+          placeholder="e.g., Block 3"
           aria-invalid={!!state.fieldErrors?.period_label}
           aria-describedby={
             state.fieldErrors?.period_label ? "err-period_label" : undefined

@@ -141,7 +141,7 @@ export function AddTeacherModal({ onClose }: { onClose: () => void }) {
                 name="teacher_id_external"
                 type="text"
                 maxLength={50}
-                placeholder="e.g. T-10482"
+                placeholder="e.g., T-10482"
                 className={inputClass}
               />
             </div>

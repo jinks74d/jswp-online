@@ -105,13 +105,13 @@ type FormCopy = {
 
 const DEFAULT_FORM_COPY: FormCopy = {
   titleLabel: "Title",
-  titlePlaceholder: "e.g. Sports & Teamwork",
+  titlePlaceholder: "e.g., Sports & Teamwork",
   promptLabel: "Prompt",
   promptPlaceholder: "Write the question or task students will respond to.",
   essayLabel: "Essay format",
   essayAside: "(multiple body paragraphs)",
   essayUncheckedHint:
-    "Unchecked: students write a single one-chunk paragraph (e.g. a 3+:0 summary).",
+    "Unchecked: students write a single one-chunk paragraph (e.g., a 3+:0 summary).",
   ratioLabel: "Chunk ratio",
   sourceLegend: "Source text",
 };

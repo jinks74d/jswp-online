@@ -340,7 +340,7 @@ function PendingDecision({
               required
               rows={3}
               maxLength={1000}
-              placeholder="e.g. We could not verify you teach at this school."
+              placeholder="e.g., We could not verify you teach at this school."
               aria-invalid={!!denyState.fieldErrors?.denial_reason}
               aria-describedby={
                 denyState.fieldErrors?.denial_reason

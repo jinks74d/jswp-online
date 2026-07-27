@@ -62,7 +62,7 @@ export function DiscoveryBpPane({
       <Field label="Key word" help="One word that captures the moment.">
         <AutoSaveInput
           initialValue={tc.narrative_key_word ?? ""}
-          placeholder="e.g. courage, betrayal, joy"
+          placeholder="e.g., courage, betrayal, joy"
           disabled={isReadOnly}
           onSave={async (narrative_key_word) => {
             await updateTChart(writingId, tc.id, { narrative_key_word });

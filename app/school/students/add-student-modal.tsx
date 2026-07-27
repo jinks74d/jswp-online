@@ -136,7 +136,7 @@ export function AddStudentModal({ onClose }: { onClose: () => void }) {
                   name="grade_level"
                   type="text"
                   maxLength={20}
-                  placeholder="e.g. 10"
+                  placeholder="e.g., 10"
                   className={inputClass}
                 />
               </Labeled>
@@ -146,7 +146,7 @@ export function AddStudentModal({ onClose }: { onClose: () => void }) {
                   name="student_id_external"
                   type="text"
                   maxLength={50}
-                  placeholder="e.g. S-20481"
+                  placeholder="e.g., S-20481"
                   className={inputClass}
                 />
               </Labeled>

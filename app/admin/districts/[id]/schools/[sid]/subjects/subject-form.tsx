@@ -60,7 +60,7 @@ export function SubjectForm({
           required
           maxLength={255}
           defaultValue={initial?.name ?? ""}
-          placeholder="e.g. English"
+          placeholder="e.g., English"
           aria-invalid={!!state.fieldErrors?.name}
           aria-describedby={state.fieldErrors?.name ? "err-name" : undefined}
           className={inputClass}

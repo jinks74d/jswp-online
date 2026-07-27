@@ -82,7 +82,7 @@ export function SchoolForm({
           required
           maxLength={255}
           defaultValue={initial?.name ?? ""}
-          placeholder="e.g. Keller High School"
+          placeholder="e.g., Keller High School"
           aria-invalid={!!state.fieldErrors?.name}
           aria-describedby={state.fieldErrors?.name ? "err-name" : undefined}
           className={inputClass}
@@ -121,7 +121,7 @@ export function SchoolForm({
             value={custom}
             onChange={(e) => setCustom(e.target.value)}
             maxLength={20}
-            placeholder="e.g. Vocational Academy"
+            placeholder="e.g., Vocational Academy"
             aria-label="Custom school level"
             className={`${inputClass} mt-2`}
           />
@@ -150,7 +150,7 @@ export function SchoolForm({
           type="text"
           maxLength={500}
           defaultValue={initial?.address ?? ""}
-          placeholder="e.g. 800 N. White Chapel Blvd, Southlake, TX"
+          placeholder="e.g., 800 N. White Chapel Blvd, Southlake, TX"
           className={inputClass}
         />
       </div>

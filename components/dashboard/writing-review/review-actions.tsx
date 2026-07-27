@@ -172,7 +172,7 @@ function GradeComposer({
           max="999.99"
           value={scoreText}
           onChange={(e) => setScoreText(e.target.value)}
-          placeholder="e.g. 92"
+          placeholder="e.g., 92"
           disabled={pending}
           aria-label="Score"
           aria-describedby="grade-composer-hint"

@@ -214,7 +214,7 @@ export function SourceTextFields({
                 value={it.title}
                 onChange={(e) => patch(it.uid, { title: e.target.value })}
                 disabled={disabled}
-                placeholder="e.g. The Secret to Raising Smart Kids"
+                placeholder="e.g., The Secret to Raising Smart Kids"
                 className={inputClass}
               />
             </Field>
@@ -225,7 +225,7 @@ export function SourceTextFields({
                 value={it.author}
                 onChange={(e) => patch(it.uid, { author: e.target.value })}
                 disabled={disabled}
-                placeholder="e.g. Carol S. Dweck"
+                placeholder="e.g., Carol S. Dweck"
                 className={inputClass}
               />
             </Field>
@@ -241,7 +241,7 @@ export function SourceTextFields({
               value={it.citation}
               onChange={(e) => patch(it.uid, { citation: e.target.value })}
               disabled={disabled}
-              placeholder="e.g. Dweck, Carol S. Scientific American Mind, Nov. 2007."
+              placeholder="e.g., Dweck, Carol S. Scientific American Mind, Nov. 2007."
               className={inputClass}
             />
             {citationExample && (

@@ -139,7 +139,7 @@ export function CreateClassModal({
                 type="text"
                 required
                 maxLength={255}
-                placeholder="e.g. English"
+                placeholder="e.g., English"
                 className={inputClass}
               />
             </Field>
@@ -155,7 +155,7 @@ export function CreateClassModal({
                 type="text"
                 required
                 maxLength={255}
-                placeholder="e.g. American Literature"
+                placeholder="e.g., American Literature"
                 className={inputClass}
               />
             </Field>
@@ -180,7 +180,7 @@ export function CreateClassModal({
                 type="text"
                 required
                 maxLength={50}
-                placeholder="e.g. Block 3"
+                placeholder="e.g., Block 3"
                 className={inputClass}
               />
             </Field>

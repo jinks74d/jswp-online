@@ -60,7 +60,7 @@ export function PeriodForm({
             required
             maxLength={50}
             defaultValue={initial?.period_label ?? ""}
-            placeholder="e.g. 2 or Block 3"
+            placeholder="e.g., 2 or Block 3"
             aria-invalid={!!state.fieldErrors?.period_label}
             aria-describedby={
               state.fieldErrors?.period_label ? "err-period_label" : undefined

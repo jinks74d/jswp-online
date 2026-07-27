@@ -158,7 +158,7 @@ export function SheetEditor({
           multiline
           rows={2}
           initialValue={sheet.task_portion ?? ""}
-          placeholder="e.g. 'the causes' or 'the effect on the speaker'"
+          placeholder="e.g., 'the causes' or 'the effect on the speaker'"
           disabled={isReadOnly}
           onSave={async (taskPortion) => {
             await updateSheetTaskPortion(writingId, sheet.id, taskPortion);
