@@ -44,6 +44,10 @@ export interface ShapingCdData {
   id: string;
   position: number;
   text: string;
+  /** Embedded-quotation parts, shown as context so the student weaves them in. */
+  is_quotation: boolean;
+  transitional_lead_in: string | null;
+  source_citation: string | null;
 }
 
 export interface ShapingCmData {
@@ -58,6 +62,13 @@ export interface ShapingCmData {
   synonym: string | null;
   is_best_word_for_ts: boolean;
   is_best_word_for_chunk: boolean;
+  /**
+   * The cloud's four ray words/phrases, and the index-aligned record of which
+   * sentence each was spent on. Shaping stitches from these as well as from
+   * the oval — everything in and around the circle feeds the sentences.
+   */
+  web_words: string[] | null;
+  web_word_uses: string[] | null;
   used_in_topic_sentence: boolean;
   used_in_cm_sentence: boolean;
   used_in_concluding_sentence: boolean;
@@ -76,9 +87,16 @@ export interface ShapingBpData {
   id: string;
   position: number;
   shaping_sheet: ShapingSheetData | null;
-  // T-chart context that shaping reads but doesn't write
+  // T-chart context that shaping reads but doesn't write. The Shaping Sheet
+  // is worked beside the T-Chart, so every sentence the student stitched
+  // there (④ revised TS, ⑤ commentary sentence, ⑥ CS) carries forward.
   working_topic_sentence: string | null;
+  revised_topic_sentence: string | null;
+  commentary_sentence: string | null;
   concluding_sentence: string | null;
+  concession: string | null;
+  counterargument: string | null;
+  refutation: string | null;
   // Narrative WOW context (read-only on shaping)
   narrative_kind: NarrativeKind | null;
   narrative_subject: NarrativeSubject | null;
@@ -97,7 +115,12 @@ export interface ShapingBpData {
 interface RawTChart {
   id: string;
   working_topic_sentence: string | null;
+  revised_topic_sentence: string | null;
+  commentary_sentence: string | null;
   concluding_sentence: string | null;
+  concession: string | null;
+  counterargument: string | null;
+  refutation: string | null;
   narrative_kind: NarrativeKind | null;
   narrative_subject: NarrativeSubject | null;
   narrative_key_word: string | null;
@@ -140,7 +163,9 @@ export async function getShapingData(
       `
       id, position,
       t_chart:t_charts (
-        id, working_topic_sentence, concluding_sentence,
+        id, working_topic_sentence, revised_topic_sentence,
+        commentary_sentence, concluding_sentence,
+        concession, counterargument, refutation,
         narrative_kind, narrative_subject,
         narrative_key_word, narrative_concrete_example,
         narrative_when, narrative_where, narrative_who,
@@ -158,10 +183,14 @@ export async function getShapingData(
       ),
       chunks (
         id, position, ratio,
-        concrete_details ( id, position, text ),
+        concrete_details (
+          id, position, text,
+          is_quotation, transitional_lead_in, source_citation
+        ),
         commentary_items (
           id, position, text, kind, parent_cd_id, parent_cm_id, synonym,
           is_best_word_for_ts, is_best_word_for_chunk,
+          web_words, web_word_uses,
           used_in_topic_sentence, used_in_cm_sentence,
           used_in_concluding_sentence
         )
@@ -230,7 +259,12 @@ export async function getShapingData(
           }
         : null,
       working_topic_sentence: tc?.working_topic_sentence ?? null,
+      revised_topic_sentence: tc?.revised_topic_sentence ?? null,
+      commentary_sentence: tc?.commentary_sentence ?? null,
       concluding_sentence: tc?.concluding_sentence ?? null,
+      concession: tc?.concession ?? null,
+      counterargument: tc?.counterargument ?? null,
+      refutation: tc?.refutation ?? null,
       narrative_kind: tc?.narrative_kind ?? null,
       narrative_subject: tc?.narrative_subject ?? null,
       narrative_key_word: tc?.narrative_key_word ?? null,

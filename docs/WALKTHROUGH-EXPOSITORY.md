@@ -407,7 +407,7 @@ T-Chart has 2 chunks. Each chunk needs:
 
 Repeats per body paragraph. The Shaping Sheet is the *revision* artifact:
 students "move and improve" their T-Chart sentences, apply grammar rules,
-and follow the **"once you use it, you lose it"** rule (no word repetition
+and follow the **"when you use it, you lose it"** rule (no word repetition
 across sentences within a chunk).
 
 ### 7.1 — Body Paragraph 1 — Polished sentences
@@ -425,7 +425,7 @@ across sentences within a chunk).
 
 **Grammar rules applied** (multi-select on the Shaping Sheet):
 - ✅ Vary sentence openings.
-- ✅ Once you use it, you lose it (no word repeats across CD/CM in a chunk).
+- ✅ When you use it, you lose it (no word repeats across CD/CM in a chunk).
 - ✅ Use active voice.
 - ✅ Embed transitions ("Together…", "Daily movement also…").
 
@@ -459,7 +459,7 @@ Repeat the same exercise. Acceptable shapes:
   selected rule keys.
 - Each chunk creates a `shaping_chunk_outputs` row with `final_ts`,
   `final_cd1`, `final_cd2`, `final_cm`, `final_cs`.
-- The "Once you use it, you lose it" linter (if implemented) flags
+- The "When you use it, you lose it" linter (if implemented) flags
   duplicate words across slots in the same chunk.
 - After all three BPs' Shaping Sheets are complete, the student advances
   to the essay-level steps.

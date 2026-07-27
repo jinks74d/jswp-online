@@ -132,7 +132,7 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
   {
     key: "expository.decode_prompt",
     slug: "decode-prompt",
-    label: "Decoding the Prompt",
+    label: "Decode the Prompt",
     groupOrigin: "decode_prompt",
     pedagogyHint:
       "Before you write, identify what the prompt is asking. Look for the form (paragraph, short answer, essay), the ratio, and the key verbs.",
@@ -142,7 +142,7 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
   {
     key: "expository.annotate_text",
     slug: "annotate-text",
-    label: "Reading & Annotating the Text",
+    label: "Read & Annotate",
     groupOrigin: "annotate_text",
     pedagogyHint:
       "Read carefully. Underline concrete detail in red. Remember, no more than five words in a row! Notes in the margin help you to find concrete detail later.",
@@ -156,7 +156,7 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
   {
     key: "expository.gather_cds",
     slug: "gather-cds",
-    label: "Gathering & Prioritizing CDs",
+    label: "Gather CDs",
     groupOrigin: "gathering_cds",
     pedagogyHint:
       "List 5 or more concrete details that fit the prompt. Highlight the 2 or more you want to use. Drag them into the order you want them to appear.",
@@ -169,7 +169,7 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
   {
     key: "expository.t_chart",
     slug: "t-chart",
-    label: "Completing the T-Chart",
+    label: "The T-Chart",
     groupOrigin: "t_chart",
     pedagogyHint:
       "Write your topic sentence at the top. Place CDs on the left and brainstorm 'Why is this important?' commentary on the right. Revise your TS and write your concluding sentence.",
@@ -179,10 +179,10 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
   {
     key: "expository.shaping_sheet",
     slug: "shaping-sheet",
-    label: "Editing & Revising on the Shaping Sheet",
+    label: "The Shaping Sheet",
     groupOrigin: "shaping_sheet",
     pedagogyHint:
-      "Move and improve your sentences. Apply Dr. Louis's grammar rules. 'Once you use a word, you lose it' — don't repeat phrases between sentences.",
+      "Move and improve your sentences from the T-Chart. Remember – “When you use it, you lose it,” so avoid repeating words and phrases.",
     required: true,
     repeatPerBP: true,
   },
@@ -220,7 +220,7 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
   {
     key: "expository.paragraph_form",
     slug: "paragraph-form",
-    label: "Paragraph Form",
+    label: "The Final Paragraph",
     groupOrigin: "paragraph_form",
     pedagogyHint:
       "Assemble the paragraph in color: blue for TS and CS, red for CDs, green for CMs. Black if writing the final clean copy.",

@@ -1,5 +1,5 @@
 /**
- * "Once you use it, you lose it" bookkeeping for the Expository T-Chart.
+ * "When you use it, you lose it" bookkeeping for the Expository T-Chart.
  *
  * The pool the student stitches from spans two storage shapes — the cloud's
  * oval (a commentary_items row, tracked by the used_in_* booleans) and its
@@ -11,6 +11,7 @@
 import { describe, it, expect } from "vitest";
 import {
   collectStitchPool,
+  collectCmEntries,
   unusedEntries,
   ovalUse,
   rayUse,
@@ -95,6 +96,36 @@ describe("collectStitchPool", () => {
     ]);
 
     expect(pool.map((e) => e.text)).toEqual(["first", "second"]);
+  });
+});
+
+describe("collectCmEntries", () => {
+  // The Shaping Sheet's pick-n-stitch panel filters CMs by `kind` before it
+  // flattens, so it hands over a flat list rather than chunks. Its pool must
+  // be the whole cloud — the oval AND the rays — because the panel used to
+  // show only the oval, leaving the brainstormed phrases unreachable.
+  it("returns the oval and its rays for a flat CM list", () => {
+    expect(collectCmEntries([cm()]).map((e) => e.text)).toEqual([
+      "devoted mother",
+      "resolute and steadfast",
+      "unconditional love",
+    ]);
+  });
+
+  it("agrees with collectStitchPool over the same commentary", () => {
+    const items = [cm({ id: "a" }), cm({ id: "b", text: "second oval" })];
+
+    expect(collectCmEntries(items)).toEqual(collectStitchPool([chunk(items)]));
+  });
+
+  it("keys each entry by cm and slot so a cloud's five entries stay distinct", () => {
+    const entries = collectCmEntries([cm()]);
+
+    expect(entries.map((e) => `${e.cmId}:${e.slot ?? "oval"}`)).toEqual([
+      "cm1:oval",
+      "cm1:0",
+      "cm1:1",
+    ]);
   });
 });
 

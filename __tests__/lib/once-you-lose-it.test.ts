@@ -1,5 +1,5 @@
 /**
- * Unit coverage for chunk 4.5d-3 — the "once you use it, you lose it"
+ * Unit coverage for chunk 4.5d-3 — the "when you use it, you lose it"
  * Shaping Sheet repetition linter helper.
  */
 

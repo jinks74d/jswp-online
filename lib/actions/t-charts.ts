@@ -360,7 +360,7 @@ export async function updateCommentaryWebWords(
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }
 
-/* ─── Pick-n-Stitch: "once you use it, you lose it" ─────────────────
+/* ─── Pick-n-Stitch: "when you use it, you lose it" ─────────────────
    Marking where a commentary word/phrase was spent so the T-Chart can
    strike it through and the student can see what is left for the other
    sentences. Two storage shapes (see lib/pick-n-stitch.ts): the oval is

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * The "once you use it, you lose it" control for one piece of commentary on
+ * The "when you use it, you lose it" control for one piece of commentary on
  * the Expository T-Chart — three small buttons (TS / CM / CS) naming the
  * sentence the student spent it on.
  *

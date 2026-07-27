@@ -18,7 +18,7 @@
  *   array-rewrites for simplicity; trades a small write payload
  *   for clean semantics).
  *
- * - setCmFlag: toggle one of the three pick-n-stitch flags
+ * Pick-n-stitch spending lives in lib/actions/t-charts.ts (see below).
  *   (used_in_topic_sentence / used_in_cm_sentence /
  *   used_in_concluding_sentence) on a commentary_items row.
  *
@@ -222,28 +222,9 @@ export async function updateChunkOutputCmSentences(
   revalidatePath(`/student/writings/${writingId}`, "layout");
 }
 
-/* ─── Pick-n-stitch flags ──────────────────────────────────────────── */
-
-export type PickNStitchFlag =
-  | "used_in_topic_sentence"
-  | "used_in_cm_sentence"
-  | "used_in_concluding_sentence";
-
-export async function setCmFlag(
-  writingId: string,
-  cmId: string,
-  flag: PickNStitchFlag,
-  value: boolean
-): Promise<void> {
-  await requireRole("student");
-  const supabase = await createServerClient();
-
-  const { error } = await supabase
-    .from("commentary_items")
-    .update({ [flag]: value })
-    .eq("id", cmId);
-  if (error) {
-    throw new Error(`setCmFlag(${flag}): ${error.message}`);
-  }
-  revalidatePath(`/student/writings/${writingId}`, "layout");
-}
+/* ─── Pick-n-stitch ────────────────────────────────────────────────────
+   Spending is written by setCommentaryItemUse / setCommentaryWebWordUse in
+   lib/actions/t-charts.ts — one single-valued model shared by the T-Chart
+   and the Shaping Sheet, so "when you use it, you lose it" means the same
+   thing on both screens. The Shaping Sheet's old independent-boolean
+   toggle (setCmFlag) is gone. */

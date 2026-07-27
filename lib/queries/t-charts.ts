@@ -79,7 +79,7 @@ export interface CommentaryItemData {
   kind: CmKind;
   /** Up to 4 brainstormed supporting words on the commentary cloud's rays. */
   web_words: string[] | null;
-  /* Pick-n-Stitch ("once you use it, you lose it") — see lib/pick-n-stitch.ts.
+  /* Pick-n-Stitch ("when you use it, you lose it") — see lib/pick-n-stitch.ts.
      The booleans track the oval's own sentence; web_word_uses is index-aligned
      with web_words and tracks each ray. */
   used_in_topic_sentence: boolean;

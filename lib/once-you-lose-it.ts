@@ -1,5 +1,5 @@
 /**
- * "Once you use it, you lose it" — the Shaping Sheet pick-n-stitch rule
+ * "When you use it, you lose it" — the Shaping Sheet pick-n-stitch rule
  * (CLAUDE.md §4, §18; chunk 4.5d-3). A content word woven into one
  * sentence shouldn't be reused in another sentence of the same chunk.
  *

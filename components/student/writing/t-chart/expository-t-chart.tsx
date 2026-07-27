@@ -22,7 +22,7 @@
  * the printed sheet stamps them on each region because the student does
  * not work top-to-bottom. The Revised TS, the COMMENTARY sentence and the
  * CS are all Pick-n-Stitched from commentary words the student has not
- * spent yet ("once you use it, you lose it"), so all three come after the
+ * spent yet ("when you use it, you lose it"), so all three come after the
  * CD/CM work — hence 4, 5, 6 against a 1, 2, 3 visual order.
  *
  * Expository-only. argumentation + literary still render through
@@ -89,7 +89,7 @@ export function ExpositoryTChart({
   // Total for the badges' "Work order: n of N" screenreader phrasing —
   // 6 regions at 2+:1 / 1:1, 3 at 3+:0.
   const orderTotal = Object.keys(spec.badges).length;
-  // "Once you use it, you lose it" — what the three Pick-n-Stitch rows still
+  // "When you use it, you lose it" — what the three Pick-n-Stitch rows still
   // have left to draw on. Recomputed from props on every render, so marking a
   // phrase spent in a cloud updates these lists immediately.
   const stitchable = unusedEntries(collectStitchPool(bp.chunks));
@@ -327,7 +327,7 @@ function SentenceRow({
 }
 
 /* ─── Still-unused commentary ─────────────────────────────────────────
-   The other half of "once you use it, you lose it": having struck spent
+   The other half of "when you use it, you lose it": having struck spent
    phrases out in the clouds, each Pick-n-Stitch row shows what is left,
    so the student doesn't scroll back up to find out. Read-only chips —
    the spending happens in the cloud, where the phrase lives. */

@@ -1,6 +1,6 @@
 /**
  * Pick-n-Stitch bookkeeping for the Expository T-Chart —
- * "Once you use it, you lose it" (CLAUDE.md §4, glossary).
+ * "When you use it, you lose it" (CLAUDE.md §4, glossary).
  *
  * Three of the T-Chart's six regions are written by stitching together
  * commentary the student has not spent yet: the Revised Topic Sentence (④),
@@ -22,7 +22,21 @@
  * __tests__/lib/pick-n-stitch.test.ts.
  */
 
-import type { ChunkData, CommentaryItemData } from "@/lib/queries/t-charts";
+/**
+ * The minimum a commentary row must expose to take part in pick-n-stitch.
+ * Declared structurally rather than importing a query type, because two
+ * screens draw from the same pool with two different row shapes:
+ * `CommentaryItemData` (T-Chart) and `ShapingCmData` (Shaping Sheet).
+ */
+export interface StitchableCm {
+  readonly id: string;
+  readonly text: string;
+  readonly web_words: readonly string[] | null;
+  readonly web_word_uses: readonly string[] | null;
+  readonly used_in_topic_sentence: boolean;
+  readonly used_in_cm_sentence: boolean;
+  readonly used_in_concluding_sentence: boolean;
+}
 
 /** The three sentences that consume commentary, in completion order. */
 export type StitchTarget = "ts" | "cm" | "cs";
@@ -60,7 +74,7 @@ export interface StitchEntry {
  * the Shaping Sheet's independent toggles); completion order breaks the tie
  * so the answer is stable rather than dependent on column order.
  */
-export function ovalUse(cm: CommentaryItemData): StitchTarget | null {
+export function ovalUse(cm: StitchableCm): StitchTarget | null {
   if (cm.used_in_topic_sentence) return "ts";
   if (cm.used_in_cm_sentence) return "cm";
   if (cm.used_in_concluding_sentence) return "cs";
@@ -69,7 +83,7 @@ export function ovalUse(cm: CommentaryItemData): StitchTarget | null {
 
 /** The stored use for one ray slot, tolerating a short or absent array. */
 export function rayUse(
-  cm: CommentaryItemData,
+  cm: StitchableCm,
   slot: number
 ): StitchTarget | null {
   const raw = cm.web_word_uses?.[slot];
@@ -82,26 +96,35 @@ export function rayUse(
  * student can spend.
  */
 export function collectStitchPool(
-  chunks: readonly ChunkData[]
+  chunks: readonly { readonly commentary_items: readonly StitchableCm[] }[]
+): StitchEntry[] {
+  return chunks.flatMap((chunk) => collectCmEntries(chunk.commentary_items));
+}
+
+/**
+ * The same flattening for a caller that already holds a flat list of CMs —
+ * the Shaping Sheet's pick-n-stitch panel, which has filtered by `kind`
+ * before it gets here. Oval first, then that cloud's non-empty rays.
+ */
+export function collectCmEntries(
+  cms: readonly StitchableCm[]
 ): StitchEntry[] {
   const pool: StitchEntry[] = [];
-  for (const chunk of chunks) {
-    for (const cm of chunk.commentary_items) {
-      const ovalText = cm.text.trim();
-      if (ovalText) {
-        pool.push({
-          cmId: cm.id,
-          slot: null,
-          text: ovalText,
-          usedIn: ovalUse(cm),
-        });
-      }
-      const words = cm.web_words ?? [];
-      for (let i = 0; i < words.length; i++) {
-        const text = (words[i] ?? "").trim();
-        if (!text) continue;
-        pool.push({ cmId: cm.id, slot: i, text, usedIn: rayUse(cm, i) });
-      }
+  for (const cm of cms) {
+    const ovalText = cm.text.trim();
+    if (ovalText) {
+      pool.push({
+        cmId: cm.id,
+        slot: null,
+        text: ovalText,
+        usedIn: ovalUse(cm),
+      });
+    }
+    const words = cm.web_words ?? [];
+    for (let i = 0; i < words.length; i++) {
+      const text = (words[i] ?? "").trim();
+      if (!text) continue;
+      pool.push({ cmId: cm.id, slot: i, text, usedIn: rayUse(cm, i) });
     }
   }
   return pool;

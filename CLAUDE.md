@@ -151,7 +151,7 @@ The exact step list with metadata is `lib/jswp-modes.ts`. The UI step engine rea
 
 - **Dr. Louis's 15 Grammar Rules** — applied during the Shaping Sheet step. Stored in `lib/jswp-grammar-rules.ts` (when written). Referenced by `shaping_sheets.rules_applied[]`.
 - **Embedding Quotations** — micro-lesson for Argumentation/Expository/Literary. A quotation needs a *transitional lead-in* (TLCD) and a *citation* — represented in the schema by `concrete_details.is_quotation`, `transitional_lead_in`, `source_citation`.
-- **"Once you use it, you lose it"** — the pick-n-stitch rule on the Shaping Sheet. A CM word/phrase used in one sentence cannot be reused. Tracked by `commentary_items.used_in_*` flags.
+- **"When you use it, you lose it"** — the pick-n-stitch rule on the Shaping Sheet. A CM word/phrase used in one sentence cannot be reused. Tracked by `commentary_items.used_in_*` flags and `commentary_items.web_word_uses`. This is the wording on the printed sheet (confirmed with the user, 2026-07-27) — do not "correct" it to "Once you use it…".
 - **Gradual Release: I Do / We Do / You Do / You Do Together** — the program's pedagogical framework. Phase 6 of the dev plan introduces "exemplar models" so teachers can publish the "I Do" example.
 
 ---
@@ -571,7 +571,7 @@ Dr. Louis's 15 Rules for Improved Grammar appear in:
 - 2018 Personal & Fictional Narrative Guide pp. 26–110
 - Response to Literature Quick Start Guide v4
 
-The rules cover sentence variety, transitions, active vs. passive voice, parallel structure, "once you use it you lose it" word repetition, embedding quotations, etc. When building `lib/jswp-grammar-rules.ts`, each rule needs:
+The rules cover sentence variety, transitions, active vs. passive voice, parallel structure, "when you use it, you lose it" word repetition, embedding quotations, etc. When building `lib/jswp-grammar-rules.ts`, each rule needs:
 
 ```typescript
 {
@@ -713,7 +713,7 @@ Before opening a PR: `npm run lint:fix && npm run type-check && npm run test:run
 | **Chunk** | A unit of CD + CM(s) inside a body paragraph. Ratio (e.g. 2+:1) describes a chunk. |
 | **Body paragraph (BP)** | A topic-sentence-bounded paragraph containing 1+ chunks. |
 | **Ratio** | CD-to-CM ratio per chunk. 2+:1 (Expository / Argumentation / Narrative), 1:2+ (Literary), 3+:0 (Summary). |
-| **Pick-n-Stitch** | The Shaping Sheet technique of selecting the strongest CM phrases and weaving them into final sentences. "Once you use it, you lose it." |
+| **Pick-n-Stitch** | The Shaping Sheet technique of selecting the strongest CM phrases and weaving them into final sentences. "When you use it, you lose it." |
 | **WOW** | Web Off the Word — Narrative brainstorming structure. |
 | **WOTS** | Web Off the Topic Sentence. |
 | **Gradual Release** | I Do / We Do / You Do / You Do Together — the program's pedagogical scaffolding. |

@@ -14,7 +14,7 @@
  *     - For has_counterargument: final concession / counter / refutation
  *     - Per chunk: CD role-label + cd_sentences[]  ·  CM role-label +
  *       cm_sentences[] (CM suppressed for the 3+:0 summary ratio), plus a
- *       non-blocking "once you use it, you lose it" repetition nudge
+ *       non-blocking "when you use it, you lose it" repetition nudge
  *     - CS  role-label → working CS context + Final CS (autosave)
  *     - Notes
  *
@@ -23,14 +23,22 @@
  *       instead of it). Filtered by mode:
  *         Expository / Argumentation: kind='sentence' CMs (t-chart drafts)
  *         Literary: kind='phrase' CMs (cloud phrases from elaboration)
+ *       Each of those CMs contributes its oval sentence AND its four ray
+ *       words/phrases to the pool — everything in and around the circle
+ *       develops the sentences (collectCmEntries, lib/pick-n-stitch.ts).
  */
 
 import { useState, useTransition } from "react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
-import { PickNStitchPanel } from "./pick-n-stitch-panel";
+import {
+  PickNStitchPanel,
+  type StitchGroup,
+  type StitchRow,
+} from "./pick-n-stitch-panel";
 import { SentenceList, ROLE_COLOR_VAR } from "./sentence-list";
 import { RoleShapeLabel, type ShapeRole } from "@/components/jswp-color/role-shape";
 import { ratioClass } from "@/lib/jswp-modes";
+import { collectCmEntries, type StitchEntry } from "@/lib/pick-n-stitch";
 import { findRepeatedContentWords } from "@/lib/once-you-lose-it";
 import {
   updateShapingSheet,
@@ -40,11 +48,14 @@ import {
 import { useWritingMode } from "../use-writing-mode";
 import type {
   ShapingBpData,
+  ShapingCdData,
   ShapingChunkData,
+  ShapingCmData,
 } from "@/lib/queries/shaping";
 import type { Database } from "@/lib/database.types";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
+type CmKind = Database["public"]["Enums"]["jswp_cm_kind"];
 
 export function CdCmShapingBpPane({
   writingId,
@@ -74,21 +85,35 @@ export function CdCmShapingBpPane({
     c.cms.filter((cm) => cm.kind === stitchKind)
   );
 
+  // The pool is the whole cloud — the oval sentence AND the four ray
+  // words/phrases brainstormed around it. collectCmEntries flattens both
+  // storage shapes into one list (see lib/pick-n-stitch.ts).
+  const stitchRows: StitchRow[] = collectCmEntries(stitchCms).map((entry) =>
+    decorate(entry, stitchCms)
+  );
+
   // Literary: group phrases under their best-word CM parent so the student
   // stitches CM1 from word-1's clouds and CM2 from word-2's clouds.
-  const literaryGroups =
+  const literaryGroups: StitchGroup[] | undefined =
     mode === "literary"
-      ? (() => {
-          const bestWords = bp.chunks.flatMap((c) =>
+      ? bp.chunks
+          .flatMap((c) =>
             c.cms.filter(
               (cm) => cm.kind === "word" && cm.is_best_word_for_chunk
             )
-          );
-          return bestWords.map((word) => ({
-            word,
-            phrases: stitchCms.filter((p) => p.parent_cm_id === word.id),
-          }));
-        })()
+          )
+          .map((word) => {
+            const phrases = stitchCms.filter(
+              (p) => p.parent_cm_id === word.id
+            );
+            return {
+              key: word.id,
+              heading: word.text,
+              subheading: word.synonym,
+              rows: collectCmEntries(phrases).map((e) => decorate(e, phrases)),
+              emptyMessage: "No elaboration phrases for this word yet.",
+            };
+          })
       : undefined;
 
   return (
@@ -106,8 +131,13 @@ export function CdCmShapingBpPane({
         {/* Topic Sentence */}
         <Section role="ts" title="Topic Sentence">
           {bp.working_topic_sentence && (
-            <ReadOnlyContext label="Working TS (from t-chart)">
+            <ReadOnlyContext label="Working TS (from your T-Chart)">
               {bp.working_topic_sentence}
+            </ReadOnlyContext>
+          )}
+          {bp.revised_topic_sentence && (
+            <ReadOnlyContext label="Revised TS (from your T-Chart)">
+              {bp.revised_topic_sentence}
             </ReadOnlyContext>
           )}
           <Field label="Final TS" help="Move and improve. Apply grammar rules.">
@@ -130,6 +160,21 @@ export function CdCmShapingBpPane({
         {/* Counterargument finals (argumentation only with has_counterargument) */}
         {hasCounterargument && (
           <PlainSection title="Concession / Counterargument / Refutation">
+            {bp.concession && (
+              <ReadOnlyContext label="Concession (from your T-Chart)">
+                {bp.concession}
+              </ReadOnlyContext>
+            )}
+            {bp.counterargument && (
+              <ReadOnlyContext label="Counterargument (from your T-Chart)">
+                {bp.counterargument}
+              </ReadOnlyContext>
+            )}
+            {bp.refutation && (
+              <ReadOnlyContext label="Refutation (from your T-Chart)">
+                {bp.refutation}
+              </ReadOnlyContext>
+            )}
             <Field label="Final concession">
               <AutoSaveInput
                 multiline
@@ -172,15 +217,29 @@ export function CdCmShapingBpPane({
           </PlainSection>
         )}
 
-        {/* Chunks: per-chunk woven CD/CM sentence arrays */}
+        {/* Chunks: the T-Chart's own CDs/CMs as context, then the woven
+            CD/CM sentence arrays the student writes from them. */}
         {bp.chunks.map((chunk) => (
-          <ChunkSection key={chunk.id} writingId={writingId} chunk={chunk} />
+          <ChunkSection
+            key={chunk.id}
+            writingId={writingId}
+            chunk={chunk}
+            stitchKind={stitchKind}
+          />
         ))}
+
+        {/* The T-Chart's own commentary sentence (⑤), between the chunks and
+            the CS exactly as it sits on the T-Chart. */}
+        {bp.commentary_sentence && (
+          <ReadOnlyContext label="Commentary sentence (from your T-Chart)">
+            {bp.commentary_sentence}
+          </ReadOnlyContext>
+        )}
 
         {/* Concluding Sentence */}
         <Section role="cs" title="Concluding Sentence">
           {bp.concluding_sentence && (
-            <ReadOnlyContext label="CS (from t-chart)">
+            <ReadOnlyContext label="CS (from your T-Chart)">
               {bp.concluding_sentence}
             </ReadOnlyContext>
           )}
@@ -220,12 +279,12 @@ export function CdCmShapingBpPane({
       <aside className="lg:sticky lg:top-20 lg:self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
         <PickNStitchPanel
           writingId={writingId}
-          cms={stitchCms}
+          rows={stitchRows}
           groups={literaryGroups}
           emptyMessage={
             mode === "literary"
               ? "No elaboration phrases yet — go back to Elaboration to add some."
-              : "No CMs yet — go back to the t-chart to add CM sentences."
+              : "No commentary yet — go back to the T-Chart and fill in your CM clouds."
           }
         />
       </aside>
@@ -233,15 +292,38 @@ export function CdCmShapingBpPane({
   );
 }
 
+/**
+ * Attach the literary "best word" pills to a pool entry. They describe the
+ * commentary row itself, so only the oval carries them — a ray phrase is not
+ * the picked-best word, it is brainstorming around one.
+ */
+function decorate(
+  entry: StitchEntry,
+  cms: readonly ShapingCmData[]
+): StitchRow {
+  if (entry.slot !== null) return entry;
+  const cm = cms.find((c) => c.id === entry.cmId);
+  return {
+    ...entry,
+    isBestForTs: cm?.is_best_word_for_ts ?? false,
+    isBestForChunk: cm?.is_best_word_for_chunk ?? false,
+  };
+}
+
 /* ─── "Move and improve" callout (the guide's ! reminder) ─────────── */
 
 function MovesAndImprovesCallout() {
   return (
-    <div className="rounded-md border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-      <span className="font-semibold">Move and improve.</span> Don&apos;t just
-      copy your T-Chart — revise each sentence and underline every change.
-      Remember: <em>once you use a word, you lose it</em> — try not to repeat
-      the same word across sentences in a chunk.
+    <div className="rounded-md border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-xs text-amber-900 space-y-1.5">
+      <p>
+        <span className="font-semibold">Move and improve.</span> Don&apos;t just
+        copy the sentences from your T-Chart – revise each sentence, adding new
+        words and phrases, combining ideas, and revising your sentence
+        structure. Work on your grammar rules. Make it better!
+      </p>
+      <p>
+        Below is a &ldquo;Revision Checklist&rdquo; to help you.
+      </p>
     </div>
   );
 }
@@ -297,7 +379,8 @@ function RevisionMovesChecklist({
         Revision checklist
       </h3>
       <p className="text-xs text-gray-500">
-        Check each move as you make it — your self-check, not a gate.
+        Check to make sure you have performed the following revision
+        techniques:
       </p>
       <ul className="space-y-1.5">
         {REVISION_MOVES.map((m) => (
@@ -325,9 +408,12 @@ function RevisionMovesChecklist({
 function ChunkSection({
   writingId,
   chunk,
+  stitchKind,
 }: {
   writingId: string;
   chunk: ShapingChunkData;
+  /** Which CM kind carries this mode's commentary on the T-Chart. */
+  stitchKind: CmKind;
 }) {
   // 3+:0 (summary) has no commentary — suppress the CM box entirely.
   const isSummaryRatio = ratioClass(chunk.ratio) === "three_plus_to_zero";
@@ -349,6 +435,11 @@ function ChunkSection({
 
   return (
     <PlainSection title={`Chunk ${chunk.position}`}>
+      <TChartContext
+        cds={chunk.cds}
+        cms={chunk.cms.filter((cm) => cm.kind === stitchKind)}
+        showCms={!isSummaryRatio}
+      />
       <SentenceList
         role="cd"
         label="CD sentences"
@@ -378,6 +469,133 @@ function ChunkSection({
   );
 }
 
+/* ─── The chunk's T-Chart, read-only ──────────────────────────────────
+   The Shaping Sheet is worked with the T-Chart lying beside it, so every
+   piece of that chunk's plan has to be legible here: the CDs (with their
+   lead-in and citation when the CD is an embedded quotation) on the left,
+   and each CM cloud — the oval sentence plus the words and phrases
+   brainstormed around it — on the right. Laid out as the T so it reads as
+   the same artifact the student just filled in. */
+
+function TChartContext({
+  cds,
+  cms,
+  showCms,
+}: {
+  cds: readonly ShapingCdData[];
+  cms: readonly ShapingCmData[];
+  showCms: boolean;
+}) {
+  if (cds.length === 0 && cms.length === 0) return null;
+
+  return (
+    <div className="rounded-md border border-gray-300 bg-gray-50/70 p-3">
+      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
+        From your T-Chart
+      </h4>
+      <div className={`grid gap-3 ${showCms ? "sm:grid-cols-2" : ""}`}>
+        <div>
+          <ContextHeading role="cd" label="CDs" />
+          {cds.length === 0 ? (
+            <EmptyContext>No CDs on the T-Chart for this chunk.</EmptyContext>
+          ) : (
+            <ol className="space-y-1.5">
+              {cds.map((cd, i) => (
+                <li key={cd.id} className="text-sm">
+                  <span className="mr-1 text-xs font-semibold text-gray-500">
+                    {i + 1}.
+                  </span>
+                  {cd.transitional_lead_in && (
+                    <span className="text-gray-600 italic">
+                      {cd.transitional_lead_in}{" "}
+                    </span>
+                  )}
+                  <span className="text-[color:var(--jswp-color-cd)] whitespace-pre-wrap">
+                    {cd.text.trim() || (
+                      <span className="italic text-gray-500">(empty)</span>
+                    )}
+                  </span>
+                  {cd.source_citation && (
+                    <span className="text-gray-600"> ({cd.source_citation})</span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+
+        {showCms && (
+          <div className="sm:border-l sm:border-gray-300 sm:pl-3">
+            <ContextHeading role="cm" label="CMs" />
+            {cms.length === 0 ? (
+              <EmptyContext>
+                No commentary on the T-Chart for this chunk.
+              </EmptyContext>
+            ) : (
+              <ul className="space-y-2">
+                {cms.map((cm) => (
+                  <li key={cm.id}>
+                    <p className="text-sm text-[color:var(--jswp-color-cm)] whitespace-pre-wrap">
+                      {cm.text.trim() || (
+                        <span className="italic text-gray-500">
+                          (no commentary sentence)
+                        </span>
+                      )}
+                    </p>
+                    <RayChips words={cm.web_words} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** The four brainstormed words/phrases from around a CM's oval. */
+function RayChips({ words }: { words: readonly string[] | null }) {
+  const filled = (words ?? []).map((w) => w.trim()).filter(Boolean);
+  if (filled.length === 0) return null;
+  return (
+    <ul className="mt-1 flex flex-wrap gap-1">
+      {filled.map((w, i) => (
+        <li
+          key={`${i}-${w}`}
+          className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs text-[color:var(--jswp-color-cm)]"
+        >
+          {w}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ContextHeading({
+  role,
+  label,
+}: {
+  role: "cd" | "cm";
+  label: string;
+}) {
+  return (
+    <div className="mb-1 flex items-center gap-1.5">
+      <RoleShapeLabel role={role} />
+      <span
+        className="text-xs font-semibold uppercase tracking-wide"
+        style={{ color: ROLE_COLOR_VAR[role] }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function EmptyContext({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs italic text-gray-500">{children}</p>;
+}
+
 function RepeatNudge({ words }: { words: readonly string[] }) {
   const shown = words.slice(0, 6);
   return (
@@ -385,7 +603,7 @@ function RepeatNudge({ words }: { words: readonly string[] }) {
       className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900"
       role="status"
     >
-      <span className="font-semibold">Once you use it, you lose it:</span>{" "}
+      <span className="font-semibold">When you use it, you lose it:</span>{" "}
       {shown.map((w, i) => (
         <span key={w}>
           <span className="font-mono">{w}</span>
