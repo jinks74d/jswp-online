@@ -127,11 +127,6 @@ export function RubricScoringPanel({
               <legend className="px-1 text-sm font-medium text-gray-900">
                 {criterion.name}
               </legend>
-              {criterion.description && (
-                <p className="text-xs text-gray-600 mb-2">
-                  {criterion.description}
-                </p>
-              )}
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {orderedLevels.map((level) => {
                   const isSelected = selected === level.score;

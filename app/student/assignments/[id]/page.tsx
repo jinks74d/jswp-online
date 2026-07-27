@@ -183,11 +183,6 @@ export default async function StudentAssignmentDetail({
                       out of {maxScore}
                     </span>
                   </div>
-                  {criterion.description && (
-                    <p className="text-xs text-gray-600 mt-1">
-                      {criterion.description}
-                    </p>
-                  )}
                   <ul className="mt-2 grid gap-1 sm:grid-cols-2">
                     {orderedLevels.map((level) => (
                       <li
