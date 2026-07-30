@@ -10,6 +10,21 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
+### `district-logos` bucket allows listing (needs an app change, not just SQL)
+Supabase's database linter flags `district_logos_public_read` (migration `0003`) as a broad `SELECT` policy on `storage.objects` that lets any client **list** every file in the public `district-logos` bucket, not merely fetch a known object URL.
+
+The linter's remediation — drop the policy — **would break every district logo**, and that is worth writing down before someone acts on the warning. `components/ui/DistrictLogo.tsx:42` renders `<img src="/api/districts/{id}/logo">`, and that route (`app/api/districts/[districtId]/logo/route.ts`) uses the RLS-respecting `createServerClient()` plus `.download()` — the *authenticated* storage path, which consults RLS — rather than the public CDN URL. Without the policy, only super/district admins (who hold `SELECT` via the `FOR ALL` write policies) would still see logos. Teachers and students would not.
+
+RLS cannot fix this alone: `list()` and `download()` are both `SELECT` on `storage.objects`, so no policy can permit one and deny the other.
+
+Two real options:
+1. **Redirect instead of proxy.** Change the route to 302 to the public object URL that `lib/district-branding.types.ts:113` already builds, then drop the read policy. The bucket is `public = TRUE`, so those URLs are already fetchable by anyone — no security regression, and it removes a Lambda invocation per logo render. Preferred.
+2. **Proxy with the service role.** Keep the route but use the admin client (bypasses RLS), then drop the read policy. Keeps the indirection; costs a service-role call on a public asset.
+
+Either way the policy drop belongs in the *same* change as the app fix, never before it.
+- **Identified:** 2026-07-30, Supabase security advisor run during the v2 → master cutover
+- **Priority:** low (information disclosure is limited to logo filenames, which are a deterministic `district-{uuid}/logo.{ext}`); do it alongside any other work in that route
+
 ### Feedback-area grading: error feedback + deferred extensions
 Shipped (chunk feedback-grading, 2026-06-09): per-writing `grade_format` (number/letter/check) on `student_writings` (migration `0031`), a grade on each section (`teacher_feedback.grade_value`) and one overall grade (`student_writings.overall_grade`), with read-only badges for the student. Independent of the formal rubric/`total_score`/"Mark graded" flow. Spec/plan: `docs/superpowers/specs/2026-06-09-feedback-grading-design.md`, `docs/superpowers/plans/2026-06-09-feedback-grading.md`.
 Deferred: ~~(1) **error feedback** on the grade controls~~ — **DONE** (2026-06-12): `GradeInput` and `GradeFormatBar` now show an inline `⚠ Not saved` alert (`role="alert"`) on a failed save instead of only `console.error`. (The separate app-wide "Storage upload UI failure surface" gap remains open below.) (2) Reconciling the feedback grade with `total_score` (locked independent during design). (3) Per-section weighting / auto-aggregating section grades into the overall. (4) Check-plus/check/check-minus (3-state) — `✓`/`✗` only today.
