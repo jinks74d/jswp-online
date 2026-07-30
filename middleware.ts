@@ -58,7 +58,21 @@ async function resolveSubdomain(
 export async function middleware(request: NextRequest) {
   // 1. Auth session refresh (standard Supabase + Next.js 15 pattern)
   const { supabase, response } = createMiddlewareClient(request);
-  await supabase.auth.getUser();
+
+  // A stale or revoked refresh token makes getUser() reject rather than return
+  // an error, and an unhandled rejection here fails the whole request — the
+  // user gets an error page instead of the login screen, on every navigation,
+  // until they clear cookies by hand. "Cannot refresh this session" is a
+  // normal state, not an outage: swallow it and continue unauthenticated. The
+  // route's own requireUser()/requireRole() guard then redirects to /login.
+  try {
+    await supabase.auth.getUser();
+  } catch (e) {
+    console.warn(
+      "[middleware] session refresh failed; continuing unauthenticated:",
+      e instanceof Error ? e.message : String(e)
+    );
+  }
 
   // 2. Subdomain → district resolution
   const subdomain = extractSubdomainFromHost(
