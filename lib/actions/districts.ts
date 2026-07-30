@@ -520,10 +520,16 @@ export async function inviteDistrictPoc(
   });
   const sent = await sendEmail({ to: profile.email, ...email });
 
-  await admin
-    .from("user_profiles")
-    .update({ invited_at: new Date().toISOString() })
-    .eq("id", userId);
+  // Only stamp invited_at when the message actually went out. Stamping on a
+  // failed send made the POC row read "Invited <today>" for an invite that was
+  // never delivered — the one piece of UI a super admin uses to decide whether
+  // to chase it.
+  if (sent.ok) {
+    await admin
+      .from("user_profiles")
+      .update({ invited_at: new Date().toISOString() })
+      .eq("id", userId);
+  }
 
   await writeAuditLog({
     actor_id: actor.id,
@@ -537,8 +543,11 @@ export async function inviteDistrictPoc(
   revalidatePath(`/admin/districts/${districtId}`);
 
   if (!sent.ok) {
+    // Surface the provider's reason. This action is super-admin-only, and the
+    // generic "try again" sent the admin in circles — retrying never fixes a
+    // sender/domain misconfiguration, which is what this failure usually is.
     return {
-      error: "Invite recorded, but the email failed to send. Try again.",
+      error: `Could not send the invite to ${profile.email}: ${sent.error}`,
     };
   }
   return { success: `Invite sent to ${profile.email}.` };
