@@ -84,7 +84,10 @@ export class ErrorBoundary extends React.Component<
 
       // Default error UI
       return (
-        <div className="min-h-screen flex items-center justify-center bg-red-50">
+        <div
+          role="alert"
+          className="min-h-screen flex items-center justify-center bg-red-50"
+        >
           <div className="text-center p-8 max-w-md mx-auto">
             <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-white text-2xl">⚠</span>
@@ -95,7 +98,7 @@ export class ErrorBoundary extends React.Component<
             </h1>
 
             <p className="text-gray-600 mb-6">
-              We're sorry, but something unexpected happened. Our team has been
+              We&apos;re sorry, but something unexpected happened. Our team has been
               notified.
             </p>
 
@@ -144,7 +147,7 @@ export class ErrorBoundary extends React.Component<
 export function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary
-      fallback={({ error, retry }) => (
+      fallback={({ retry }) => (
         <div className="min-h-screen flex items-center justify-center bg-yellow-50">
           <div className="text-center p-8 max-w-md mx-auto">
             <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6">

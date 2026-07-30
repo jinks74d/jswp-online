@@ -9,6 +9,12 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./test-setup.ts'],
+    // Schema/RLS suites talk to a live Supabase project and need real fetch
+    // plus the node environment. They run under their own config via
+    // `npm run test:rls`; collecting them here made `test:run` fail always
+    // (jsdom + the mocked fetch in test-setup.ts), which in turn meant the
+    // documented pre-PR gate could never pass.
+    exclude: ['**/node_modules/**', '**/dist/**', '__tests__/schema/**'],
   },
   resolve: {
     alias: {

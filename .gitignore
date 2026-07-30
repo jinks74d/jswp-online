@@ -44,3 +44,19 @@ next-env.d.ts
 # database setup files - allow migrations folder
 *.sql
 !migrations/*.sql
+.claude/settings.local.json
+
+# local DB dumps / fixtures (may contain PII — keep out of git)
+docs/*.csv
+
+# archived design source files (mockups/screenshots — local reference only)
+docs/archive/designs/
+
+# graphify generated artifacts — keep the queryable graph, drop derived data
+graphify-out/cache/
+graphify-out/20*/
+
+# agent skills installed via `npx skills add` — local tooling, not project code
+.agents/
+.claude/skills/
+skills-lock.json

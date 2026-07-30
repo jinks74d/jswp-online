@@ -187,7 +187,17 @@ function ErrorNotifications() {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+    // Live region so dynamically-added toasts are announced to screen
+    // readers (WCAG 4.1.3). These are primarily errors, so assertive; the
+    // container is always live even when empty is fine because it only
+    // mounts when there are notifications.
+    <div
+      className="fixed top-4 right-4 z-50 space-y-2 max-w-md"
+      role="region"
+      aria-label="Notifications"
+      aria-live="assertive"
+      aria-atomic="false"
+    >
       {notifications.map((notification) => (
         <ErrorNotificationCard
           key={notification.id}
@@ -209,7 +219,7 @@ interface ErrorNotificationCardProps {
 function ErrorNotificationCard({
   notification,
   onDismiss,
-  onRetry,
+  onRetry: _onRetry,
 }: ErrorNotificationCardProps) {
   const { error } = notification;
   const [isRetrying, setIsRetrying] = useState(false);
@@ -340,7 +350,7 @@ function ErrorNotificationCard({
 
         <button
           onClick={onDismiss}
-          className={`flex-shrink-0 ${styles.button} hover:opacity-75`}
+          className={`flex h-6 w-6 items-center justify-center flex-shrink-0 ${styles.button} hover:opacity-75`}
         >
           <X className="w-4 h-4" />
         </button>

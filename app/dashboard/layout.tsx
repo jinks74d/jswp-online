@@ -1,18 +1,48 @@
-// app/dashboard/layout.tsx
-import { SessionTrackingProvider } from "@/components/analytics/SessionTrackingProvider";
-import ClientDashboard from "@/components/dashboard/ClientDashboard";
+/**
+ * v2 teacher shell. Server-side requireRole gates access to teacher,
+ * school_admin, district_admin, and super_admin (students are routed
+ * elsewhere by getRedirectPath). Fetches the user profile and district
+ * branding once, passes them down as props — no client-side useAuth.
+ *
+ * Phase 7 backlog: replace legacy /dashboard/** route stubs (assignments/[id],
+ * classes/[id], schools/, users/, etc.) before production cutover.
+ */
 
-export default function DashboardLayout({
+import { requireRole } from "@/lib/auth";
+import { getDistrictBrandingFromHeaders } from "@/lib/branding-headers";
+import { TeacherShell } from "@/components/dashboard/shell/teacher-shell";
+
+export const dynamic = "force-dynamic";
+
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Use client-side authentication to avoid re-authentication on every navigation
-  // The middleware handles the initial authentication check
-  // The ClientDashboard component manages the session-aware layout
+  const profile = await requireRole([
+    "teacher",
+    "school_admin",
+    "district_admin",
+    "super_admin",
+  ]);
+
+  const branding = await getDistrictBrandingFromHeaders();
+
   return (
-    <SessionTrackingProvider>
-      <ClientDashboard>{children}</ClientDashboard>
-    </SessionTrackingProvider>
+    <TeacherShell
+      profile={{
+        id: profile.id,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        email: profile.email,
+        role: profile.role,
+      }}
+      branding={{
+        name: branding.name,
+        primaryColor: branding.primary_color,
+      }}
+    >
+      {children}
+    </TeacherShell>
   );
 }

@@ -1,258 +1,235 @@
-// app/dashboard/assignments/page.tsx
-"use client";
+import type { Metadata } from "next";
+/**
+ * /dashboard/assignments — minimal list. Title + mode + status. Filters
+ * and dashboards land in chunk 3.4.
+ */
 
-import { useAuth } from "@/components/auth/OptimizedAuthProvider";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase";
-import AssignmentsList from "@/components/dashboard/assignments/AssignmentsList";
+import Link from "next/link";
+import { Eye, FileText, Pencil, Plus } from "lucide-react";
+import { requireUser } from "@/lib/auth";
+import {
+  getTeacherAssignments,
+  isPublished,
+} from "@/lib/queries/assignments";
+import { DeleteAssignmentButton } from "./delete-assignment-button";
+import { PublishToggleButton } from "./publish-toggle-button";
 
-export default function AssignmentsPage() {
-  const { user, profile, loading } = useAuth();
-  const router = useRouter();
-  const [assignments, setAssignments] = useState<any[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
-  const supabase = createClient();
+const iconLink =
+  "inline-flex items-center justify-center p-1.5 rounded-md text-stone-600 hover:bg-stone-100 hover:text-stone-700";
 
-  // Redirect if not authorized
-  useEffect(() => {
-    if (!loading && (!user || !profile)) {
-      router.replace("/");
-      return;
-    }
-  }, [user, profile, loading, router]);
+export const dynamic = "force-dynamic";
 
-  // Fetch assignments data
-  useEffect(() => {
-    if (!profile || !user) {
-      return;
-    }
+export const metadata: Metadata = { title: "My Assignments" };
 
-    const fetchAssignments = async () => {
-      try {
-        let assignmentsData = [];
-        let error = null;
-
-        if (profile.role === "student") {
-          // TEMPORARY: Until class_period_id is added to assignments table,
-          // show assignments from the same school for students
-          console.log(
-            "Fetching assignments for student in school:",
-            profile.school_id
-          );
-
-          const { data: studentAssignments, error: studentError } =
-            await supabase
-              .from("assignments")
-              .select(
-                `
-              *,
-              user_profiles!assignments_teacher_id_fkey(
-                first_name,
-                last_name
-              )
-            `
-              )
-              .eq("school_id", profile.school_id)
-              .order("created_at", { ascending: false });
-
-          console.log(
-            "Assignments found for student:",
-            studentAssignments?.length || 0
-          );
-          assignmentsData = studentAssignments || [];
-          error = studentError;
-        } else if (profile.role === "teacher") {
-          // For teachers: fetch assignments they created
-          console.log("Fetching assignments for teacher:", profile.id);
-
-          const { data: teacherAssignments, error: teacherError } =
-            await supabase
-              .from("assignments")
-              .select(
-                `
-              *,
-              user_profiles!assignments_teacher_id_fkey(
-                first_name,
-                last_name
-              )
-            `
-              )
-              .eq("teacher_id", profile.id)
-              .order("created_at", { ascending: false });
-
-          console.log(
-            "Assignments found for teacher:",
-            teacherAssignments?.length || 0
-          );
-          assignmentsData = teacherAssignments || [];
-          error = teacherError;
-        } else if (profile.role === "school_admin") {
-          // For school admins: fetch all assignments from teachers in their school
-          console.log(
-            "Fetching all school assignments for school admin:",
-            profile.school_id
-          );
-
-          const { data: schoolAssignments, error: schoolError } = await supabase
-            .from("assignments")
-            .select(
-              `
-              *,
-              user_profiles!assignments_teacher_id_fkey(
-                first_name,
-                last_name
-              )
-            `
-            )
-            .eq("school_id", profile.school_id)
-            .order("teacher_id", { ascending: true })
-            .order("created_at", { ascending: false });
-
-          console.log(
-            "School assignments found:",
-            schoolAssignments?.length || 0
-          );
-          assignmentsData = schoolAssignments || [];
-          error = schoolError;
-        } else if (profile.role === "district_admin") {
-          // For district admins: fetch all assignments in their district
-          console.log(
-            "Fetching all district assignments for district admin:",
-            profile.district_id
-          );
-
-          const { data: districtAssignments, error: districtError } =
-            await supabase
-              .from("assignments")
-              .select(
-                `
-              *,
-              user_profiles!assignments_teacher_id_fkey(
-                first_name,
-                last_name
-              )
-            `
-              )
-              .eq("district_id", profile.district_id)
-              .order("school_id", { ascending: true })
-              .order("teacher_id", { ascending: true })
-              .order("created_at", { ascending: false });
-
-          console.log(
-            "District assignments found:",
-            districtAssignments?.length || 0
-          );
-          assignmentsData = districtAssignments || [];
-          error = districtError;
-        }
-
-        if (error) {
-          console.error("Error fetching assignments:", error);
-          setAssignments([]);
-          setDataLoading(false);
-          return;
-        }
-
-        // Get submission statistics for each assignment
-        const transformedAssignments = await Promise.all(
-          (assignmentsData || []).map(async (assignment: any) => {
-            try {
-              // Get submission count for this assignment
-              const { data: submissions } = await supabase
-                .from("student_assignment_progress")
-                .select("status")
-                .eq("assignment_id", assignment.id);
-
-              const submissionsCount =
-                submissions?.filter((s: any) => s.status === "submitted")
-                  .length || 0;
-              const totalStudents = submissions?.length || 0;
-
-              return {
-                id: assignment.id,
-                title: assignment.title,
-                description: assignment.description,
-                subject:
-                  assignment.class_periods?.classes?.subjects?.name ||
-                  "Subject",
-                class_name: assignment.class_periods?.classes?.name || "Class",
-                period: assignment.class_periods?.period || "",
-                teacher_name: assignment.user_profiles
-                  ? `${assignment.user_profiles.first_name} ${assignment.user_profiles.last_name}`
-                  : "Teacher",
-                due_date: assignment.due_date,
-                created_at: assignment.created_at,
-                status: "active",
-                submissions_count: submissionsCount,
-                total_students: totalStudents,
-              };
-            } catch (error) {
-              console.error(
-                `Error fetching submission stats for assignment ${assignment.id}:`,
-                error
-              );
-              return {
-                id: assignment.id,
-                title: assignment.title,
-                description: assignment.description,
-                subject: "Subject",
-                class_name: "Class",
-                period: "",
-                teacher_name: "Teacher",
-                due_date: assignment.due_date,
-                created_at: assignment.created_at,
-                status: "active",
-                submissions_count: 0,
-                total_students: 0,
-              };
-            }
-          })
-        );
-
-        setAssignments(transformedAssignments);
-      } catch (error) {
-        console.error("Error in fetchAssignments:", error);
-        setAssignments([]);
-      } finally {
-        setDataLoading(false);
-      }
-    };
-
-    fetchAssignments();
-  }, [profile, user, supabase]);
-
-  // Show loading while auth or data is loading
-  if (loading || dataLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-gray-600">Loading assignments...</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if not authorized (redirect should handle this)
-  if (!user || !profile) {
-    return null;
-  }
+export default async function AssignmentsPage() {
+  const profile = await requireUser();
+  const assignments = await getTeacherAssignments(profile.id);
 
   return (
-    <AssignmentsList
-      assignments={assignments}
-      currentUserRole={profile.role}
-      currentUserSchool={(profile as any).schools}
-      districtName={(profile as any).districts?.name || "District"}
-      logo_url={(profile as any).districts?.logo_url || null}
-      primary_color={(profile as any).districts?.primary_color || null}
-      secondary_color={(profile as any).districts?.secondary_color || null}
-      schoolBranding={profile.role === "school_admin" ? {
-        primary_color: (profile as any).schools?.primary_color || null,
-        secondary_color: (profile as any).schools?.secondary_color || null,
-        logo_url: (profile as any).schools?.logo_url || null,
-      } : undefined}
-    />
+    <div className="space-y-6">
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">My Assignments</h1>
+          <p className="text-stone-600">
+            Drafts and published assignments you&apos;ve authored.
+          </p>
+        </div>
+        <Link
+          href="/dashboard/assignments/new"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+        >
+          <Plus className="w-4 h-4" aria-hidden="true" />
+          New assignment
+        </Link>
+      </header>
+
+      {assignments.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
+            <table className="min-w-full text-sm">
+              <thead className="bg-stone-50 text-stone-700">
+                <tr>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Title
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Mode
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Status
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Class
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Updated
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-200 text-gray-900">
+                {assignments.map((a) => (
+                  <tr key={a.id}>
+                    <td className="px-3 py-2">
+                      <Link
+                        href={`/dashboard/assignments/${a.id}`}
+                        className="text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {a.title || "(untitled)"}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 text-stone-600 capitalize">
+                      {a.mode}
+                    </td>
+                    <td className="px-3 py-2">
+                      <StatusBadge published={isPublished(a)} />
+                    </td>
+                    <td className="px-3 py-2 text-stone-600">
+                      {a.class_name && a.class_period_label
+                        ? `${a.class_name} · ${a.class_period_label}`
+                        : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-stone-600">
+                      {new Date(a.updated_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/dashboard/assignments/${a.id}`}
+                          title="View"
+                          aria-label={`View ${a.title || "assignment"}`}
+                          className={iconLink}
+                        >
+                          <Eye className="w-4 h-4" aria-hidden="true" />
+                        </Link>
+                        <Link
+                          href={`/dashboard/assignments/${a.id}#edit`}
+                          title="Edit"
+                          aria-label={`Edit ${a.title || "assignment"}`}
+                          className={iconLink}
+                        >
+                          <Pencil className="w-4 h-4" aria-hidden="true" />
+                        </Link>
+                        <PublishToggleButton
+                          assignmentId={a.id}
+                          title={a.title || ""}
+                          published={isPublished(a)}
+                          studentWritingCount={a.student_writing_count}
+                        />
+                        <DeleteAssignmentButton
+                          assignmentId={a.id}
+                          title={a.title || ""}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-2">
+            {assignments.map((a) => (
+              <div
+                key={a.id}
+                className="bg-white border border-stone-200 rounded-xl shadow-sm p-4"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <StatusBadge published={isPublished(a)} />
+                  <span className="text-xs uppercase tracking-wide text-stone-600">
+                    {a.mode}
+                  </span>
+                </div>
+                <Link
+                  href={`/dashboard/assignments/${a.id}`}
+                  className="font-medium text-gray-900 hover:text-blue-700"
+                >
+                  {a.title || "(untitled)"}
+                </Link>
+                <div className="text-xs text-stone-600 mt-1">
+                  {a.class_name && a.class_period_label
+                    ? `${a.class_name} · ${a.class_period_label}`
+                    : "Not assigned to a class"}
+                </div>
+                <div className="mt-3 flex items-center gap-3 border-t border-stone-100 pt-2 text-sm">
+                  <Link
+                    href={`/dashboard/assignments/${a.id}`}
+                    className="inline-flex items-center gap-1 text-stone-600 hover:text-gray-900"
+                  >
+                    <Eye className="w-4 h-4" aria-hidden="true" />
+                    View
+                  </Link>
+                  <Link
+                    href={`/dashboard/assignments/${a.id}#edit`}
+                    className="inline-flex items-center gap-1 text-stone-600 hover:text-gray-900"
+                  >
+                    <Pencil className="w-4 h-4" aria-hidden="true" />
+                    Edit
+                  </Link>
+                  <div className="ml-auto flex items-center gap-1">
+                    <PublishToggleButton
+                      assignmentId={a.id}
+                      title={a.title || ""}
+                      published={isPublished(a)}
+                      studentWritingCount={a.student_writing_count}
+                    />
+                    <DeleteAssignmentButton
+                      assignmentId={a.id}
+                      title={a.title || ""}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
+      <FileText
+        className="w-10 h-10 text-gray-400 mx-auto mb-4"
+        aria-hidden="true"
+      />
+      <h2 className="text-lg font-semibold text-gray-900">
+        No assignments yet
+      </h2>
+      <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
+        Create your first assignment to get started. The mode picker walks
+        you through Expository, Argumentation, Literary, or Narrative — each
+        with the right structural defaults from the JSWP guides.
+      </p>
+      <Link
+        href="/dashboard/assignments/new"
+        className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+      >
+        <Plus className="w-4 h-4" aria-hidden="true" />
+        New assignment
+      </Link>
+    </div>
+  );
+}
+
+function StatusBadge({ published }: { published: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+        published
+          ? "bg-green-100 text-green-800"
+          : "bg-stone-100 text-stone-700"
+      }`}
+    >
+      {published ? "Published" : "Draft"}
+    </span>
   );
 }

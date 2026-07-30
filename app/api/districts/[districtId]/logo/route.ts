@@ -1,7 +1,6 @@
 // app/api/districts/[districtId]/logo/route.ts
-import { createServerSupabaseClient } from "@/lib/supabase";
+import { createServerClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 export async function GET(
   request: NextRequest,
@@ -15,8 +14,7 @@ export async function GET(
     }
 
     // Create Supabase client
-    const cookieStore = await cookies();
-    const supabase = await createServerSupabaseClient(cookieStore);
+    const supabase = await createServerClient();
 
     // Get district info to verify it exists
     const { data: district, error: districtError } = await supabase
@@ -65,7 +63,7 @@ export async function GET(
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error serving district logo:", error);
     return NextResponse.json(
       { error: "Internal server error" },

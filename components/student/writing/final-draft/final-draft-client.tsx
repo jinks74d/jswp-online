@@ -1,0 +1,549 @@
+"use client";
+
+/**
+ * Final-draft step UI.
+ *
+ * Layout (single screen):
+ *   - Title input (optional; not gated)
+ *   - Assembly source panel (<details open>) — read-only preview of
+ *     intro + paragraphs + conclusion. Each piece labeled with a
+ *     back-link to its source step. Empty pieces show
+ *     "(introduction not written yet)" / "(BP N not written yet)" /
+ *     "(conclusion not written yet)" with the same back-link.
+ *   - [Assemble from pieces] button — calls assembleFinalDraft.
+ *     If full_text is non-empty, native confirm() warns about
+ *     overwrite before proceeding. Otherwise writes directly.
+ *   - full_text textarea — inline editor with live word count
+ *     (matching chunk 4.6b's pattern; consolidation is a Phase 7
+ *     backlog item).
+ *
+ * Continue gate: full_text non-empty trimmed. Title is optional.
+ */
+
+import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
+import { Loader2, Wand2 } from "lucide-react";
+import { AutoSaveInput } from "../t-chart/auto-save-input";
+import {
+  assembleFinalDraft,
+  updateFullText,
+  updateTitle,
+} from "@/lib/actions/final-draft";
+import {
+  updateFinalDraftSelfChecks,
+} from "@/lib/actions/final-draft";
+import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
+import {
+  LITERARY_FINAL_SELF_CHECKS,
+  findFirstSecondPersonPronouns,
+} from "@/lib/jswp-literary-final-checks";
+import { useWritingMode } from "../use-writing-mode";
+import type {
+  AssemblySource,
+  FinalDraftRowData,
+} from "@/lib/queries/final-draft";
+import type { Database } from "@/lib/database.types";
+
+type Mode = Database["public"]["Enums"]["jswp_mode"];
+
+interface Props {
+  writingId: string;
+  stepKey: string;
+  isTerminal: boolean;
+  finalDraft: FinalDraftRowData | null;
+  assembly: AssemblySource;
+  mode: Mode;
+}
+
+export function FinalDraftClient({
+  writingId,
+  stepKey,
+  isTerminal,
+  finalDraft,
+  assembly,
+  mode,
+}: Props) {
+  if (!finalDraft) {
+    return (
+      <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
+        Final draft row not yet bootstrapped. Reload to retry.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <TitleField
+        writingId={writingId}
+        finalDraftId={finalDraft.id}
+        initialTitle={finalDraft.title ?? ""}
+      />
+
+      <AssemblyPanel writingId={writingId} assembly={assembly} />
+
+      <AssembleButton
+        writingId={writingId}
+        finalDraftId={finalDraft.id}
+        currentFullText={finalDraft.full_text}
+      />
+
+      <FullTextEditor
+        writingId={writingId}
+        finalDraftId={finalDraft.id}
+        initialValue={finalDraft.full_text}
+      />
+
+      {mode === "literary" && (
+        <LiteraryFinalChecks
+          writingId={writingId}
+          finalDraftId={finalDraft.id}
+          initial={finalDraft.self_checks ?? []}
+          fullText={finalDraft.full_text}
+        />
+      )}
+
+      <ContinueBar
+        writingId={writingId}
+        stepKey={stepKey}
+        isTerminal={isTerminal}
+        currentFullText={finalDraft.full_text}
+      />
+    </div>
+  );
+}
+
+/* ─── Title field (autosave, not gated) ───────────────────────────── */
+
+function TitleField({
+  writingId,
+  finalDraftId,
+  initialTitle,
+}: {
+  writingId: string;
+  finalDraftId: string;
+  initialTitle: string;
+}) {
+  const { isReadOnly } = useWritingMode();
+  return (
+    <div>
+      <div className="text-sm font-medium text-gray-900">
+        Title <span className="text-xs text-gray-500">(optional)</span>
+      </div>
+      <p className="text-xs text-gray-500 mt-0.5">
+        A creative title — often a word or phrase pulled from your draft.
+      </p>
+      <div className="mt-1.5">
+        <AutoSaveInput
+          initialValue={initialTitle}
+          placeholder="Untitled"
+          disabled={isReadOnly}
+          onSave={async (next) => {
+            await updateTitle(writingId, finalDraftId, next);
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ─── Assembly source panel (<details open> by default) ───────────── */
+
+function AssemblyPanel({
+  writingId,
+  assembly,
+}: {
+  writingId: string;
+  assembly: AssemblySource;
+}) {
+  return (
+    <details
+      open
+      className="bg-white border border-gray-200 rounded-lg group"
+    >
+      <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-900">
+          Assembly source
+        </span>
+        <span className="text-xs text-gray-500 group-open:hidden">Show</span>
+        <span className="text-xs text-gray-500 hidden group-open:inline">
+          Hide
+        </span>
+      </summary>
+      <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
+        <SourceSection
+          label="Introduction"
+          accentClass="text-blue-700"
+          text={assembly.introduction_text}
+          emptyMessage="(introduction not written yet)"
+          backLink={{ href: `/student/writings/${writingId}/introduction`, label: "Back to Introduction" }}
+        />
+        {assembly.paragraphs.map((p) => {
+          const label = narrativeBpLabel(
+            p.narrative_kind,
+            p.narrative_subject,
+            p.bp_position,
+            assembly.paragraphs.length
+          );
+          return (
+            <SourceSection
+              key={p.bp_id}
+              label={label}
+              accentClass="text-gray-700"
+              text={p.final_text}
+              emptyMessage={`(${label} not written yet)`}
+              backLink={{
+                href: `/student/writings/${writingId}/paragraph-form`,
+                label: "Back to Paragraph Form",
+              }}
+            />
+          );
+        })}
+        <SourceSection
+          label="Conclusion"
+          accentClass="text-blue-700"
+          text={assembly.conclusion_text}
+          emptyMessage="(conclusion not written yet)"
+          backLink={{ href: `/student/writings/${writingId}/conclusion`, label: "Back to Conclusion" }}
+        />
+      </div>
+    </details>
+  );
+}
+
+function SourceSection({
+  label,
+  accentClass,
+  text,
+  emptyMessage,
+  backLink,
+}: {
+  label: string;
+  accentClass: string;
+  text: string;
+  emptyMessage: string;
+  backLink: { href: string; label: string };
+}) {
+  const trimmed = text.trim();
+  const isEmpty = trimmed.length === 0;
+
+  return (
+    <section className="space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <div
+          className={`text-base font-semibold uppercase tracking-wide ${accentClass}`}
+        >
+          {label}
+        </div>
+        <Link
+          href={backLink.href}
+          className="text-base text-gray-500 hover:text-gray-900 underline-offset-2 hover:underline"
+        >
+          ← {backLink.label}
+        </Link>
+      </div>
+      {isEmpty ? (
+        <div className="rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-xs text-amber-900">
+          {emptyMessage}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-900 whitespace-pre-wrap">{trimmed}</p>
+      )}
+    </section>
+  );
+}
+
+/* ─── Assemble button ─────────────────────────────────────────────── */
+
+function AssembleButton({
+  writingId,
+  finalDraftId,
+  currentFullText,
+}: {
+  writingId: string;
+  finalDraftId: string;
+  currentFullText: string;
+}) {
+  const { isReadOnly } = useWritingMode();
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  if (isReadOnly) return null;
+
+  const onClick = () => {
+    setError(null);
+    if (currentFullText.trim().length > 0) {
+      const ok = window.confirm(
+        "Replace your current full draft? Your edits will be lost."
+      );
+      if (!ok) return;
+    }
+    start(async () => {
+      try {
+        await assembleFinalDraft(writingId, finalDraftId);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Assemble failed.");
+      }
+    });
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={pending}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+      >
+        {pending ? (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <Wand2 className="w-4 h-4" aria-hidden="true" />
+        )}
+        Assemble from pieces
+      </button>
+      {error && (
+        <span className="text-sm text-red-700" role="alert">
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ─── full_text editor (inline; live word count) ──────────────────── */
+
+function FullTextEditor({
+  writingId,
+  finalDraftId,
+  initialValue,
+}: {
+  writingId: string;
+  finalDraftId: string;
+  initialValue: string;
+}) {
+  const { isReadOnly } = useWritingMode();
+  const [value, setValue] = useState(initialValue);
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle"
+  );
+  const isFocusedRef = useRef(false);
+  const lastSavedRef = useRef(initialValue);
+
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      setValue(initialValue);
+      lastSavedRef.current = initialValue;
+    }
+  }, [initialValue]);
+
+  const handleBlur = async () => {
+    isFocusedRef.current = false;
+    if (value === lastSavedRef.current) return;
+    setStatus("saving");
+    try {
+      await updateFullText(writingId, finalDraftId, value);
+      lastSavedRef.current = value;
+      setStatus("saved");
+      setTimeout(
+        () => setStatus((s) => (s === "saved" ? "idle" : s)),
+        1500
+      );
+    } catch (e) {
+      console.error("final-draft save:", e);
+      setStatus("error");
+    }
+  };
+
+  const wordCount = countWords(value);
+
+  return (
+    <div className="space-y-2">
+      <div className="text-sm font-medium text-gray-900">Full draft</div>
+      <p className="text-xs text-gray-500">
+        Compose or refine the assembled essay. Re-assemble any time to
+        pull in fresh upstream changes.
+      </p>
+      <div className="relative">
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onFocus={() => {
+            isFocusedRef.current = true;
+          }}
+          onBlur={handleBlur}
+          disabled={isReadOnly}
+          rows={18}
+          placeholder="Your assembled essay will appear here…"
+          className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+        />
+        <span
+          className="absolute right-2 top-2 text-xs text-gray-500 pointer-events-none"
+          aria-live="polite"
+        >
+          {status === "saving" && "Saving…"}
+          {status === "saved" && (
+            <span className="text-green-600">Saved</span>
+          )}
+          {status === "error" && (
+            <span className="text-red-600">Retry?</span>
+          )}
+        </span>
+      </div>
+      <div className="text-xs text-gray-500">Word count: {wordCount}</div>
+    </div>
+  );
+}
+
+function countWords(text: string): number {
+  const t = text.trim();
+  if (t.length === 0) return 0;
+  return t.split(/\s+/).length;
+}
+
+/* ─── Literary self-check: LP + third-person POV (non-blocking) ───────
+   The guide names literary present tense (p.179) and third-person-only POV
+   (p.2784) as scoring criteria. Self-check toggles (persisted, mirroring
+   shaping's revision_moves) + a high-confidence first/second-person pronoun
+   nudge. NOT a grammar linter; the no-no-words list isn't in the guide. */
+
+function LiteraryFinalChecks({
+  writingId,
+  finalDraftId,
+  initial,
+  fullText,
+}: {
+  writingId: string;
+  finalDraftId: string;
+  initial: readonly string[];
+  fullText: string;
+}) {
+  const { isReadOnly } = useWritingMode();
+  const [checks, setChecks] = useState<readonly string[]>(initial);
+  const [pending, start] = useTransition();
+
+  const toggle = (key: string) => {
+    const prev = checks;
+    const next = prev.includes(key)
+      ? prev.filter((c) => c !== key)
+      : [...prev, key];
+    setChecks(next); // optimistic
+    start(async () => {
+      try {
+        await updateFinalDraftSelfChecks(writingId, finalDraftId, [...next]);
+      } catch (e) {
+        console.error("self_checks toggle:", e);
+        setChecks(prev); // revert on failure
+      }
+    });
+  };
+
+  const pronouns = Array.from(new Set(findFirstSecondPersonPronouns(fullText)));
+
+  return (
+    <section className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+        Before you submit
+      </h3>
+      <ul className="space-y-1.5">
+        {LITERARY_FINAL_SELF_CHECKS.map((c) => (
+          <li key={c.key}>
+            <label className="flex items-start gap-2 text-sm text-gray-800">
+              <input
+                type="checkbox"
+                checked={checks.includes(c.key)}
+                onChange={() => toggle(c.key)}
+                disabled={isReadOnly || pending}
+                className="mt-0.5 h-4 w-4 rounded border-gray-400"
+                style={{ accentColor: "var(--district-primary)" }}
+              />
+              <span>{c.label}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      {pronouns.length > 0 && (
+        <div
+          className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900"
+          role="status"
+        >
+          <span className="font-semibold">Heads up</span> — literary analysis is
+          third person. Found: <span className="font-mono">{pronouns.join(", ")}</span>.
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ─── Continue / Submit bar ───────────────────────────────────────── */
+
+function ContinueBar({
+  writingId,
+  stepKey,
+  isTerminal,
+  currentFullText,
+}: {
+  writingId: string;
+  stepKey: string;
+  isTerminal: boolean;
+  currentFullText: string;
+}) {
+  const { isReadOnly } = useWritingMode();
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  if (isReadOnly) return null;
+
+  const canContinue = currentFullText.trim().length > 0;
+
+  const onClick = () => {
+    setError(null);
+    if (isTerminal) {
+      const ok = window.confirm(
+        "Submit your writing for review? You won't be able to edit until it's returned."
+      );
+      if (!ok) return;
+    }
+    start(async () => {
+      try {
+        await completeStepAndAdvance(writingId, stepKey);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "";
+        if (msg === "NEXT_REDIRECT") return;
+        setError(msg || "Could not continue.");
+      }
+    });
+  };
+
+  const buttonLabel = isTerminal ? "Submit" : "Continue";
+  const pendingLabel = isTerminal ? "Submitting…" : "Saving…";
+
+  return (
+    <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
+      <div className="text-xs text-gray-500">
+        {canContinue
+          ? isTerminal
+            ? "Final draft ready to submit."
+            : "Final draft ready."
+          : "Write or assemble your full draft to continue."}
+      </div>
+      <div className="flex items-center gap-3">
+        {error && (
+          <div className="text-sm text-red-700" role="alert">
+            {error}
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={!canContinue || pending}
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ backgroundColor: "var(--district-primary)" }}
+        >
+          {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
+          {pending ? pendingLabel : buttonLabel}
+        </button>
+      </div>
+    </div>
+  );
+}

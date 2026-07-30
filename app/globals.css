@@ -7,15 +7,330 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* No dark-theme variant: every surface/text color across the app is a
+ * hardcoded light-mode Tailwind class, so honoring the OS dark preference
+ * here only recolored the <body> behind those light surfaces — a half-dark
+ * seam and an invisibility risk for any unstyled text. The UI is committed
+ * to a single light theme until a full dark theme is built out. */
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  input,
+  textarea,
+  select {
+    @apply text-gray-900;
+  }
+}
+
+/* ── JSWP color-code variables ───────────────────────────────────────
+ * Canonical palette referenced by lib/jswp-modes.ts (JSWP_COLORS) and
+ * the .jswp-* class definitions below. Closes the long-standing
+ * docs/BACKLOG.md entry for --jswp-* CSS variables.
+ *
+ * Per CLAUDE.md §9, color alone isn't an accessible signal — every
+ * .jswp-* class also carries a leading shape symbol via ::before so
+ * users with color-vision differences or in print can still tell the
+ * roles apart.
+ */
+:root {
+  --jswp-blue: #1E40AF;
+  --jswp-red: #B91C1C;
+  --jswp-green: #15803D;
+  --jswp-yellow: #FDE68A;
+  --jswp-black: #111827;
+  --jswp-purple: #6D28D9;
+  --jswp-orange: #C2410C;
+  --jswp-teal: #0F766E;
+
+  /* Role → color pointers (chunk 6.6a). Themes can override these
+   * without touching the role classes below. */
+  --jswp-color-ts: var(--jswp-blue);
+  --jswp-color-cs: var(--jswp-blue);
+  --jswp-color-cd: var(--jswp-red);
+  --jswp-color-cm: var(--jswp-green);
+  --jswp-color-thesis-bg: var(--jswp-yellow);
+  --jswp-color-thesis-fg: var(--jswp-black);
+  --jswp-color-intro: var(--jswp-black);
+  --jswp-color-conclusion: var(--jswp-black);
+  --jswp-color-concession: var(--jswp-purple);
+  --jswp-color-counterargument: var(--jswp-orange);
+  --jswp-color-refutation: var(--jswp-teal);
+
+  /* Dashboard chrome — subtle brand-tinted header band derived from the
+   * district color (set per-request on <html> by the branding middleware).
+   * color-mix keeps the tint readable regardless of the chosen brand hue;
+   * falls back to a deep blue when no district brand is set. */
+  --dash-brand-tint: color-mix(in srgb, var(--district-primary, #1e3a8a) 6%, #ffffff);
+  --dash-brand-edge: color-mix(in srgb, var(--district-primary, #1e3a8a) 18%, #ffffff);
+}
+
+.jswp-ts,
+.jswp-cs {
+  color: var(--jswp-color-ts);
+  font-weight: 600;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-ts::before { content: "● "; }
+.jswp-cs::before { content: "● "; }
+
+.jswp-cd {
+  color: var(--jswp-color-cd);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-cd::before { content: "▲ "; }
+
+.jswp-cm {
+  color: var(--jswp-color-cm);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-cm::before { content: "■ "; }
+
+.jswp-thesis {
+  color: var(--jswp-color-thesis-fg);
+  background-color: var(--jswp-color-thesis-bg);
+  padding: 0 0.2em;
+  border-radius: 0.125rem;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-thesis::before { content: "◆ "; }
+
+.jswp-intro,
+.jswp-conclusion {
+  color: var(--jswp-color-intro);
+  font-weight: 600;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-intro::before { content: "§ "; }
+.jswp-conclusion::before { content: "¶ "; }
+
+.jswp-concession {
+  color: var(--jswp-color-concession);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-concession::before { content: "◐ "; }
+
+.jswp-counterargument {
+  color: var(--jswp-color-counterargument);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-counterargument::before { content: "◑ "; }
+
+.jswp-refutation {
+  color: var(--jswp-color-refutation);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.jswp-refutation::before { content: "✕ "; }
+
+/* Rich source document wrapper (SourceDocViewer 'rich' mode). The source
+ * HTML carries its own structure — headings, bold, lists — so restore the
+ * spacing Tailwind's preflight strips. */
+.source-doc p {
+  margin-bottom: 0.75em;
+}
+.source-doc p:last-child {
+  margin-bottom: 0;
+}
+.source-doc h1,
+.source-doc h2,
+.source-doc h3 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.5em;
+}
+.source-doc h1 { font-size: 1.25rem; }
+.source-doc h2 { font-size: 1.125rem; }
+.source-doc h3 { font-size: 1rem; }
+.source-doc ul,
+.source-doc ol {
+  margin: 0.5em 0 0.75em 1.25em;
+}
+.source-doc ul { list-style: disc; }
+.source-doc ol { list-style: decimal; }
+.source-doc li { margin-bottom: 0.25em; }
+.source-doc strong { font-weight: 600; }
+.source-doc em { font-style: italic; }
+
+/* Formatted source on the Reading & Annotation step + reference panels
+ * (SourceTextViewer rich mode). Same prose surface as .source-doc, plus tables,
+ * blockquotes, links, and images. Tailwind preflight strips these defaults. */
+.source-rich p {
+  margin-bottom: 0.75em;
+}
+.source-rich p:last-child {
+  margin-bottom: 0;
+}
+.source-rich h1,
+.source-rich h2,
+.source-rich h3,
+.source-rich h4,
+.source-rich h5,
+.source-rich h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1em 0 0.5em;
+}
+.source-rich h1:first-child,
+.source-rich h2:first-child,
+.source-rich h3:first-child {
+  margin-top: 0;
+}
+.source-rich h1 { font-size: 1.375rem; }
+.source-rich h2 { font-size: 1.2rem; }
+.source-rich h3 { font-size: 1.05rem; }
+.source-rich h4,
+.source-rich h5,
+.source-rich h6 { font-size: 1rem; }
+.source-rich ul,
+.source-rich ol {
+  margin: 0.5em 0 0.75em 1.5em;
+}
+.source-rich ul { list-style: disc; }
+.source-rich ol { list-style: decimal; }
+.source-rich li { margin-bottom: 0.25em; }
+.source-rich strong { font-weight: 600; }
+.source-rich em { font-style: italic; }
+.source-rich u { text-decoration: underline; }
+.source-rich a {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+.source-rich blockquote {
+  margin: 0.75em 0;
+  padding-left: 1em;
+  border-left: 3px solid #d1d5db;
+  color: #374151;
+  font-style: italic;
+}
+/* A wide table must scroll within its own box, not force the page to scroll
+ * horizontally (WCAG 1.4.10 Reflow). display:block + max-content + overflow-x
+ * is the proven responsive-table recipe (as used by GitHub markdown). */
+.source-rich table {
+  display: block;
+  border-collapse: collapse;
+  margin: 0.75em 0;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  font-size: 0.95em;
+}
+.source-rich th,
+.source-rich td {
+  border: 1px solid #d1d5db;
+  padding: 0.375em 0.625em;
+  text-align: left;
+  vertical-align: top;
+}
+.source-rich th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+.source-rich caption {
+  caption-side: top;
+  font-size: 0.85em;
+  color: #6b7280;
+  margin-bottom: 0.25em;
+}
+.source-rich img {
+  max-width: 100%;
+  height: auto;
+  margin: 0.5em 0;
+}
+
+/* ── Skip link (WCAG 2.4.1 Bypass Blocks) ────────────────────────────
+ * Visually hidden until it receives keyboard focus, then it pins to the
+ * top-left so a keyboard/screen-reader user can jump straight to
+ * #main-content past the nav chrome. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 0.5rem;
+  top: 0.5rem;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  color: #1e40af;
+  border: 2px solid #1e40af;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  outline: 2px solid #1e40af;
+  outline-offset: 2px;
+}
+
+/* ── Focus not obscured by sticky headers (WCAG 2.4.11) ──────────────
+ * The teacher/student shells pin a ~64px header at top:0. When a control
+ * deep in the page receives focus and the browser scrolls it into view, it
+ * could tuck under that header. A scroll-margin-top on focusable content
+ * inside the main region keeps the focused element clear of the header. */
+#main-content :is(a, button, input, textarea, select, summary, [tabindex]) {
+  scroll-margin-top: 5rem;
+}
+
+/* ── Reduced motion (WCAG 2.3.3) ─────────────────────────────────────
+ * Honor the OS "reduce motion" preference: collapse animations and
+ * transitions app-wide. This neutralizes the ~65 `animate-spin` spinners
+ * and any CSS transitions without us touching each component. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Windows High Contrast / forced-colors (WCAG 1.4.3, 1.4.11) ───────
+ * In forced-colors mode the OS replaces our palette, so the JSWP color
+ * code can no longer carry meaning on its own. We rely on the existing
+ * non-color signals (the ::before shape symbols) which we keep visible
+ * here, and we opt the role color OUT of the forced-color override only
+ * where the color itself IS the information — conservatively, the inline
+ * text-color roles. Backgrounded roles (thesis) are left to the system
+ * so text stays legible. */
+@media (forced-colors: active) {
+  /* Keep the leading shape symbols rendered — they are the accessible
+   * fallback for the color code. */
+  .jswp-ts::before,
+  .jswp-cs::before,
+  .jswp-cd::before,
+  .jswp-cm::before,
+  .jswp-thesis::before,
+  .jswp-intro::before,
+  .jswp-conclusion::before,
+  .jswp-concession::before,
+  .jswp-counterargument::before,
+  .jswp-refutation::before {
+    forced-color-adjust: none;
+  }
+
+  /* Preserve the role colors where the color is the signal (inline text
+   * roles only). The shape symbol remains the primary cue. */
+  .jswp-ts,
+  .jswp-cs,
+  .jswp-cd,
+  .jswp-cm,
+  .jswp-concession,
+  .jswp-counterargument,
+  .jswp-refutation {
+    forced-color-adjust: none;
+  }
 }

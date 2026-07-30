@@ -6,7 +6,6 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { 
   Home, 
-  BookOpen, 
   Users, 
   BarChart3, 
   FileText, 
@@ -18,21 +17,27 @@ import {
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <main
+      id="main-content"
+      className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center px-4 sm:px-6 lg:px-8"
+    >
       <div className="max-w-2xl w-full text-center">
         {/* Header with Logo/Brand */}
         <div className="mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
-            <GraduationCap className="w-10 h-10 text-blue-600" />
+            <GraduationCap className="w-10 h-10 text-blue-600" aria-hidden="true" />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2">
+          <p
+            className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2"
+            aria-hidden="true"
+          >
             404
-          </h1>
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4">
+          </p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4">
             Page Not Found
-          </h2>
+          </h1>
           <p className="text-gray-600 text-lg max-w-md mx-auto">
-            Looks like this page took a study break! Don't worry, we'll help you get back to learning.
+            Looks like this page took a study break! Don&apos;t worry, we&apos;ll help you get back to learning.
           </p>
         </div>
 
@@ -124,12 +129,12 @@ export default function NotFound() {
             <h3 className="text-lg font-semibold text-gray-900">Need Help?</h3>
           </div>
           <p className="text-gray-600 mb-4">
-            If you're having trouble finding what you need, here are some helpful tips:
+            If you&apos;re having trouble finding what you need, here are some helpful tips:
           </p>
           <ul className="text-sm text-gray-600 space-y-2 text-left max-w-md mx-auto">
             <li className="flex items-start">
               <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Check that you're logged in with the correct account
+              Check that you&apos;re logged in with the correct account
             </li>
             <li className="flex items-start">
               <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
@@ -137,7 +142,7 @@ export default function NotFound() {
             </li>
             <li className="flex items-start">
               <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-              Contact your administrator if you can't access expected content
+              Contact your administrator if you can&apos;t access expected content
             </li>
           </ul>
         </div>
@@ -166,11 +171,11 @@ export default function NotFound() {
           <p className="text-sm text-gray-500">
             <strong>JSWP Online</strong> - Educational Platform
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             Empowering students, teachers, and administrators
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

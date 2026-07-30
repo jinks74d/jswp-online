@@ -1,95 +1,137 @@
-// app/dashboard/page.tsx
-import { cookies } from "next/headers";
-import { createServerSupabaseClient } from "@/lib/supabase";
-import DistrictAdminDashboard from "@/components/dashboard/DistrictAdminDashboard";
-import SchoolAdminDashboard from "@/components/dashboard/SchoolAdminDashboard";
-import TeacherDashboard from "@/components/dashboard/TeacherDashboard";
-import StudentDashboard from "@/components/dashboard/StudentDashboard";
-import { ClientDashboardPage } from "@/components/dashboard/ClientDashboardPage";
-import { Suspense } from "react";
+import type { Metadata } from "next";
+/**
+ * Teacher landing. Server-rendered greeting. If the teacher has zero
+ * classes AND zero assignments, show a "getting started" empty state
+ * instead of placeholder stat cards.
+ */
 
-// PERFORMANCE: Use dynamic rendering with caching for static parts
+import Link from "next/link";
+import { BookOpen, FileText, GraduationCap, Sparkles } from "lucide-react";
+import { requireUser } from "@/lib/auth";
+import { getTeacherClassPeriods } from "@/lib/queries/classes";
+import { getTeacherAssignments } from "@/lib/queries/assignments";
+
 export const dynamic = "force-dynamic";
-export const revalidate = 0; // No caching for dashboard to ensure fresh data
 
-export default async function DashboardPage() {
-  let user = null;
-  let profile = null;
+export const metadata: Metadata = { title: "Teacher Dashboard" };
 
-  // PERFORMANCE: Optimized server-side auth with faster timeouts and better error handling
-  try {
-    const cookieStore = await cookies();
-    const supabase = await createServerSupabaseClient(cookieStore);
+export default async function DashboardHome() {
+  const profile = await requireUser();
+  const greeting = profile.first_name
+    ? `Welcome back, ${profile.first_name}`
+    : "Welcome back";
 
-    // PERFORMANCE: Reduced timeout for faster failure detection
-    const authPromise = supabase.auth.getUser();
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Auth timeout")), 1500) // Reduced from 2000ms
-    );
+  const [classes, assignments] = await Promise.all([
+    getTeacherClassPeriods(profile.id),
+    getTeacherAssignments(profile.id),
+  ]);
 
-    const userResult = await Promise.race([authPromise, timeoutPromise]);
-    const { data: userData, error: userError } = userResult as any;
+  const isFresh = classes.length === 0 && assignments.length === 0;
 
-    if (userError || !userData?.user) {
-      // Fail fast and use client-side component
-      return <ClientDashboardPage />;
-    }
+  if (isFresh) {
+    return (
+      <div className="space-y-6">
+        <header>
+          <h1 className="text-2xl font-bold text-gray-900">{greeting}</h1>
+          <p className="text-stone-600">
+            Let&apos;s get you set up. The JSWP method walks students through
+            a structured writing flow — your classes and assignments live
+            here.
+          </p>
+        </header>
 
-    user = userData.user;
-
-    // PERFORMANCE: Optimized profile query with only necessary fields
-    const profilePromise = supabase
-      .from("user_profiles")
-      .select("id, role, district_id, school_id, first_name, last_name, email, districts:district_id(id, name, domain, logo_url, primary_color, secondary_color), schools:school_id(id, name)")
-      .eq("id", user.id)
-      .maybeSingle(); // Use maybeSingle to avoid errors
-
-    const profileTimeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Profile timeout")), 1500) // Reduced from 2000ms
-    );
-
-    const profileResult = await Promise.race([profilePromise, profileTimeoutPromise]);
-    const { data: profileData, error: profileError } = profileResult as any;
-
-    if (profileError || !profileData) {
-      // Fail fast and use client-side component
-      return <ClientDashboardPage />;
-    }
-
-    profile = profileData;
-  } catch (error) {
-    console.warn("Dashboard Page: Server auth failed, using client component");
-    // Always fallback to client-side component on any error
-    return <ClientDashboardPage />;
-  }
-
-  // If server-side auth failed, use client-side component
-  if (!user || !profile) {
-    return <ClientDashboardPage />;
-  }
-
-  // Server-side auth succeeded, render role-specific dashboard
-  switch (profile.role) {
-    case "district_admin":
-      return <DistrictAdminDashboard profile={profile} />;
-
-    case "school_admin":
-      return <SchoolAdminDashboard profile={profile} />;
-
-    case "teacher":
-      return <TeacherDashboard profile={profile} />;
-
-    case "student":
-      return <StudentDashboard profile={profile} />;
-
-    default:
-      return (
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Welcome to JSWP Online
-          </h1>
-          <p className="text-gray-600">Your dashboard is being prepared...</p>
+        <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
+          <Sparkles
+            className="w-10 h-10 text-blue-600 mx-auto mb-4"
+            aria-hidden="true"
+          />
+          <h2 className="text-lg font-semibold text-gray-900">
+            You&apos;re ready to start
+          </h2>
+          <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
+            Create your first assignment to get started. Once your admin
+            assigns you to a class period, your students will appear here
+            too.
+          </p>
+          <Link
+            href="/dashboard/assignments/new"
+            className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+          >
+            <FileText className="w-4 h-4" aria-hidden="true" />
+            Create your first assignment
+          </Link>
         </div>
-      );
+      </div>
+    );
   }
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold text-gray-900">{greeting}</h1>
+        <p className="text-stone-600">
+          Quick overview of your classes, students, and assignments.
+        </p>
+      </header>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard
+          icon={BookOpen}
+          label="Classes"
+          value={classes.length}
+          href="/dashboard/classes"
+        />
+        <StatCard
+          icon={FileText}
+          label="Assignments"
+          value={assignments.length}
+          href="/dashboard/assignments"
+        />
+        <StatCard
+          icon={GraduationCap}
+          label="Students"
+          value={classes.reduce((acc, c) => acc + c.studentCount, 0)}
+          href="/dashboard/students"
+        />
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  href,
+}: {
+  icon: React.ComponentType<{
+    className?: string;
+    "aria-hidden"?: boolean | "true" | "false";
+  }>;
+  label: string;
+  value: number;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="block bg-white border border-stone-200 rounded-xl p-5 shadow-sm transition-shadow hover:shadow-md hover:border-stone-300"
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium uppercase tracking-wide text-stone-600">
+          {label}
+        </span>
+        <span
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg"
+          style={{
+            backgroundColor: "var(--dash-brand-tint)",
+            color: "var(--district-primary)",
+          }}
+        >
+          <Icon className="w-5 h-5" aria-hidden="true" />
+        </span>
+      </div>
+      <div className="mt-3 text-3xl font-semibold text-stone-900">{value}</div>
+    </Link>
+  );
 }

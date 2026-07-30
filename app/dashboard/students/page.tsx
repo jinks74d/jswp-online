@@ -1,151 +1,145 @@
-//  app/dashboard/students/page.tsx
-"use client";
+import type { Metadata } from "next";
+/**
+ * /dashboard/students — every student enrolled in any of the logged-in
+ * teacher's class periods, deduplicated. A student in two periods
+ * appears once with both periods listed.
+ */
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/auth/OptimizedAuthProvider";
-import { createClient } from "@/lib/supabase";
-import StudentsList from "@/components/dashboard/students/StudentsList";
+import Link from "next/link";
+import { GraduationCap } from "lucide-react";
+import { requireUser } from "@/lib/auth";
+import {
+  getStudentsForTeacher,
+  type TeacherStudent,
+} from "@/lib/queries/students";
 
-export default function StudentsPage() {
-  const router = useRouter();
-  const { user, profile, loading } = useAuth();
-  const [students, setStudents] = useState<any[]>([]);
-  const [schools, setSchools] = useState<any[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    async function fetchData() {
-      // Wait for authentication to be resolved
-      if (loading) {
-        return;
-      }
+export const metadata: Metadata = { title: "My Students" };
 
-      // Check authentication and permissions
-      if (!user) {
-        router.replace("/");
-        return;
-      }
-
-      if (!profile || !profile.district_id) {
-        router.replace("/");
-        return;
-      }
-
-      // Only district admins, school admins, and teachers can access this page
-      if (!["district_admin", "school_admin", "teacher"].includes(profile.role)) {
-        router.replace("/dashboard");
-        return;
-      }
-
-      try {
-        const supabase = createClient();
-
-        // Build query based on user role
-        let studentsQuery = supabase
-          .from("user_profiles")
-          .select(`
-            *,
-            schools:school_id(id, name)
-          `)
-          .eq("role", "student")
-          .eq("district_id", profile.district_id);
-
-        // School admins and teachers can only see students from their school
-        if (
-          (profile.role === "school_admin" || profile.role === "teacher") &&
-          profile.school_id
-        ) {
-          studentsQuery = studentsQuery.eq("school_id", profile.school_id);
-        }
-
-        const { data: studentsData, error: studentsError } = await studentsQuery.order(
-          "created_at",
-          { ascending: false }
-        );
-
-        if (studentsError) {
-          console.error("Error fetching students:", studentsError);
-          setError("Failed to fetch students data");
-        } else {
-          setStudents(studentsData || []);
-        }
-
-        // Fetch schools for filtering (district admins only)
-        if (profile.role === "district_admin") {
-          const { data: schoolsData, error: schoolsError } = await supabase
-            .from("schools")
-            .select("id, name")
-            .eq("district_id", profile.district_id)
-            .order("name");
-
-          if (schoolsError) {
-            console.error("Error fetching schools:", schoolsError);
-          } else {
-            setSchools(schoolsData || []);
-          }
-        }
-      } catch (err) {
-        console.error("Error in fetchData:", err);
-        setError("An unexpected error occurred");
-      } finally {
-        setDataLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [user, profile, loading, router]);
-
-  if (loading || dataLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading students...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-red-600 mb-2">Error loading students</p>
-          <p className="text-gray-600">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return null; // Will redirect via useEffect
-  }
+export default async function StudentsPage() {
+  const profile = await requireUser();
+  const students = await getStudentsForTeacher(profile.id);
 
   return (
-    <StudentsList
-      students={students}
-      schools={schools}
-      currentUserRole={profile.role}
-      currentUserSchool={profile.schools}
-      districtName={profile.districts?.name || "District"}
-      districtBranding={{
-        primary_color: profile.districts?.primary_color || null,
-        secondary_color: profile.districts?.secondary_color || null,
-        logo_url: profile.districts?.logo_url || null,
-      }}
-      schoolBranding={profile.role === "school_admin" && profile.schools ? {
-        primary_color: profile.schools.primary_color || null,
-        secondary_color: profile.schools.secondary_color || null,
-        logo_url: profile.schools.logo_url || null,
-      } : undefined}
-    />
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold text-gray-900">My Students</h1>
+        <p className="text-stone-600">
+          Every student enrolled in your class periods.
+        </p>
+      </header>
+
+      {students.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <>
+          <div className="text-sm text-stone-600">
+            <span className="font-medium">{students.length}</span> student
+            {students.length === 1 ? "" : "s"}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
+            <table className="min-w-full text-sm">
+              <thead className="bg-stone-50 text-stone-700">
+                <tr>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Name
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Email
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Grade
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Classes
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-200 text-gray-900">
+                {students.map((s) => (
+                  <tr key={s.id}>
+                    <td className="px-3 py-2">
+                      <Link
+                        href={`/dashboard/students/${s.id}`}
+                        className="text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {displayName(s)}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 text-stone-600">
+                      {s.email ?? "—"}
+                    </td>
+                    <td className="px-3 py-2 text-stone-600">
+                      {s.grade_level ?? "—"}
+                    </td>
+                    <td className="px-3 py-2 text-stone-600">
+                      {s.enrollments
+                        .map((e) => `${e.className} · ${e.period_label}`)
+                        .join(", ")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-2">
+            {students.map((s) => (
+              <Link
+                key={s.id}
+                href={`/dashboard/students/${s.id}`}
+                className="block bg-white border border-stone-200 rounded-xl shadow-sm p-4"
+              >
+                <div className="font-medium text-gray-900">
+                  {displayName(s)}
+                </div>
+                <div className="text-sm text-stone-600 truncate mt-0.5">
+                  {s.email ?? "—"}
+                </div>
+                <div className="text-xs text-stone-600 mt-1">
+                  Grade {s.grade_level ?? "—"} ·{" "}
+                  {s.enrollments
+                    .map((e) => `${e.className} (${e.period_label})`)
+                    .join(", ")}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
+      <GraduationCap
+        className="w-10 h-10 text-gray-400 mx-auto mb-4"
+        aria-hidden="true"
+      />
+      <h2 className="text-lg font-semibold text-gray-900">No students yet</h2>
+      <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
+        Once you&apos;re assigned to a class period and students are enrolled
+        in it, they&apos;ll show up here. Ask your district admin if you
+        believe this is an error.
+      </p>
+      <Link
+        href="/dashboard/classes"
+        className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 hover:text-blue-800"
+      >
+        View My Classes
+      </Link>
+    </div>
+  );
+}
+
+function displayName(s: TeacherStudent): string {
+  return (
+    [s.first_name, s.last_name].filter(Boolean).join(" ") || s.email || "—"
   );
 }

@@ -1,37 +1,34 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { OptimizedAuthProvider as AuthProvider } from "@/components/auth/OptimizedAuthProvider";
-import { AuthFlowMonitor } from "@/components/auth/AuthFlowMonitor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ErrorProvider } from "@/components/error/ErrorProvider";
-import { DevTools } from "@/components/DevTools";
+import {
+  brandingToCssVars,
+  getDistrictBrandingFromHeaders,
+} from "@/lib/branding-headers";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "JSWP Online",
+  title: { default: "JSWP Online", template: "%s · JSWP Online" },
   description: "Assignment management system for educators",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const branding = await getDistrictBrandingFromHeaders();
+  const cssVars = brandingToCssVars(branding);
+
   return (
-    <html lang="en">
+    <html lang="en" style={cssVars}>
       <body className={inter.className} suppressHydrationWarning>
-        <ErrorProvider>
-          <ErrorBoundary>
-            <AuthProvider>
-              {children}
-              {/* <AuthFlowMonitor /> */}
-              <DevTools enabled={process.env.NODE_ENV === "development"} />
-            </AuthProvider>
-          </ErrorBoundary>
-        </ErrorProvider>
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
+        <ErrorBoundary>{children}</ErrorBoundary>
       </body>
     </html>
   );

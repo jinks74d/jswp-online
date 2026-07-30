@@ -44,7 +44,7 @@ export default function DistrictLogo({
   // Debug logging
   console.log('DistrictLogo render:', { districtId, districtName, logoUrl, logoError, isLoading });
 
-  const handleImageError = (e: any) => {
+  const handleImageError = () => {
     // More graceful error logging - don't log empty objects that cause console errors
     if (process.env.NODE_ENV === 'development') {
       console.log('DistrictLogo: Image failed to load, using fallback', {

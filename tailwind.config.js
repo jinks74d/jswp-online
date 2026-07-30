@@ -7,6 +7,16 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        // Accessibility floor: 16px is the app-wide minimum font size.
+        // Tailwind's default xs (12px) and sm (14px) are the only named
+        // sizes below 16px, so both are floored to 1rem. base/lg/xl+ keep
+        // their values, preserving the hierarchy above the floor. Sizes
+        // stay rem-based so the floor scales with the user's browser
+        // font/zoom settings. (Decision: Raymond, 2026-06-08.)
+        xs: ['1rem', '1.5rem'],
+        sm: ['1rem', '1.5rem'],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",

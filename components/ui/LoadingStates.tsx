@@ -1,7 +1,7 @@
 // components/ui/LoadingStates.tsx
 "use client";
 
-import { Shield, User, Database, Wifi, WifiOff } from "lucide-react";
+import { Shield, User, Database, WifiOff } from "lucide-react";
 import { memo } from "react";
 
 interface LoadingStateProps {
@@ -23,9 +23,13 @@ export const LoadingSpinner = memo<{
   };
 
   return (
-    <div
-      className={`${sizeClasses[size]} border-2 border-blue-600 border-t-transparent rounded-full animate-spin ${className}`}
-    />
+    <div role="status" className="inline-flex">
+      <div
+        className={`${sizeClasses[size]} border-2 border-blue-600 border-t-transparent rounded-full animate-spin ${className}`}
+        aria-hidden="true"
+      />
+      <span className="sr-only">Loading</span>
+    </div>
   );
 });
 
@@ -100,11 +104,12 @@ export const LoadingState = memo<LoadingStateProps>(
         className={`min-h-screen bg-gradient-to-br ${config.bgGradient} flex items-center justify-center p-4`}
       >
         <div className="max-w-md w-full text-center">
-          <div className="bg-white rounded-lg shadow-md p-8">
+          <div className="bg-white rounded-lg shadow-md p-8" role="status">
             <div className="flex items-center justify-center mb-4">
               {showProgress ? (
                 <div
                   className={`w-8 h-8 border-2 ${config.spinnerColor} border-t-transparent rounded-full animate-spin mr-3`}
+                  aria-hidden="true"
                 ></div>
               ) : (
                 <IconComponent className={`w-8 h-8 ${config.iconColor} mr-3`} />
@@ -136,7 +141,7 @@ interface RedirectingStateProps {
 export function RedirectingState({
   userType,
   userName,
-  targetPath,
+  targetPath: _targetPath,
 }: RedirectingStateProps) {
   const isAdmin = userType === "super_admin";
 

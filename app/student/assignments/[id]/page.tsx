@@ -1,0 +1,264 @@
+import type { Metadata } from "next";
+/**
+ * Student-facing assignment detail. Shows title / mode / prompt /
+ * due-date prominently; source text and rubric are collapsed by
+ * default to keep the prompt as the visual focus.
+ *
+ * The CTA button is a STUB in chunk 4.1 — chunk 4.2 wires the actual
+ * student-writing creation + step-engine entry. The four CTA strings
+ * (Start / Continue / Continue Revision / Review) all submit to the
+ * same noop server action so the loading state behaves like the real
+ * thing will.
+ */
+
+import { notFound } from "next/navigation";
+import { Calendar, FileText } from "lucide-react";
+import { requireRole } from "@/lib/auth";
+import { getStudentAssignmentDetail } from "@/lib/queries/student-assignments";
+import { loadRubric } from "@/lib/rubric";
+import { createServerClient } from "@/lib/supabase/server";
+import { getAssignmentSourceSignedUrl } from "@/lib/storage/assignment-sources";
+import { SourceDocViewer } from "@/components/student/writing/source-doc-viewer";
+import { StatusBadge } from "@/components/student/status-badge";
+import { StartWritingButton } from "./start-writing-button";
+import { startWriting } from "@/lib/actions/student-writings";
+
+export const dynamic = "force-dynamic";
+
+const MODE_LABELS = {
+  expository: "Expository",
+  argumentation: "Argumentation",
+  literary: "Literary Analysis",
+  narrative: "Narrative",
+} as const;
+
+export const metadata: Metadata = { title: "Assignment" };
+
+export default async function StudentAssignmentDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const profile = await requireRole("student");
+  const { id } = await params;
+  const item = await getStudentAssignmentDetail(id, profile.id);
+
+  if (!item) {
+    notFound();
+  }
+
+  const dueText = formatDue(item.due_at);
+  const ctaLabel = ctaLabelFor(item.status);
+  const rubric = loadRubric(item.rubric);
+
+  // Mint a signed URL server-side for each source that has an uploaded file so
+  // the viewer can embed the PDF / render the .docx faithfully on first paint.
+  // (Typed/pasted rich + plain sources have no file and don't need one.)
+  const sourceFileUrls = new Map<string, string>();
+  const filePaths = item.sources
+    .map((s) => s.source_file_path)
+    .filter((p): p is string => p !== null);
+  if (filePaths.length > 0) {
+    const supabase = await createServerClient();
+    for (const path of filePaths) {
+      const res = await getAssignmentSourceSignedUrl(supabase, path);
+      if (res.ok) sourceFileUrls.set(path, res.url);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <header className="space-y-2">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500">
+          {MODE_LABELS[item.mode]}
+          {item.is_essay && <span className="text-gray-500">· essay</span>}
+        </div>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-bold text-gray-900">{item.title}</h1>
+          <StatusBadge status={item.status} />
+        </div>
+        {dueText && (
+          <div className="flex items-center gap-1.5 text-sm text-gray-600">
+            <Calendar className="w-4 h-4" />
+            {dueText}
+          </div>
+        )}
+        {item.status === "graded" && item.writing?.total_score !== null && item.writing && (
+          <div className="text-sm text-gray-700">
+            <span className="font-medium">Score:</span> {item.writing.total_score}
+          </div>
+        )}
+      </header>
+
+      <section className="bg-white border border-gray-200 rounded-lg p-5">
+        <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
+          Writing Prompt
+        </h2>
+        <p className="text-gray-800 whitespace-pre-wrap">{item.prompt}</p>
+      </section>
+
+      {item.sources.map((s, idx) => {
+        const kindLabel =
+          s.kind === "secondary" ? "Secondary Source" : "Primary Source";
+        const label =
+          item.sources.length > 1
+            ? `Source ${idx + 1} · ${kindLabel}`
+            : kindLabel;
+        return (
+          <details
+            key={s.id}
+            className="bg-white border border-gray-200 rounded-lg group"
+          >
+            <summary className="flex items-center justify-between gap-3 p-5 cursor-pointer list-none">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-gray-500" />
+                <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                  {label}
+                </h2>
+                {s.source_title && (
+                  <span className="text-sm text-gray-600 normal-case font-normal">
+                    · {s.source_title}
+                    {s.source_author ? ` — ${s.source_author}` : ""}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-gray-500 group-open:hidden">
+                Show
+              </span>
+              <span className="text-xs text-gray-500 hidden group-open:inline">
+                Hide
+              </span>
+            </summary>
+            <div className="px-5 pb-5 border-t border-gray-100 pt-4">
+              <SourceDocViewer
+                renderMode={s.source_render_mode}
+                plainText={s.source_text ?? ""}
+                html={s.source_html}
+                fileUrl={
+                  s.source_file_path
+                    ? sourceFileUrls.get(s.source_file_path) ?? null
+                    : null
+                }
+                fileName={s.source_file_name}
+              />
+              {s.source_citation && (
+                <p className="mt-4 text-xs text-gray-500 italic">
+                  {s.source_citation}
+                </p>
+              )}
+            </div>
+          </details>
+        );
+      })}
+
+      {rubric.criteria.length > 0 && (
+        <details className="bg-white border border-gray-200 rounded-lg group">
+          <summary className="flex items-center justify-between gap-3 p-5 cursor-pointer list-none">
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+              Rubric
+            </h2>
+            <span className="text-xs text-gray-500 group-open:hidden">
+              Show
+            </span>
+            <span className="text-xs text-gray-500 hidden group-open:inline">
+              Hide
+            </span>
+          </summary>
+          <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
+            {rubric.criteria.map((criterion) => {
+              const orderedLevels = [...criterion.levels].sort(
+                (a, b) => b.score - a.score
+              );
+              const maxScore = orderedLevels[0]?.score ?? 0;
+              return (
+                <div
+                  key={criterion.id}
+                  className="border border-gray-200 rounded-md p-3"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      {criterion.name}
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      out of {maxScore}
+                    </span>
+                  </div>
+                  <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+                    {orderedLevels.map((level) => (
+                      <li
+                        key={`${criterion.id}-${level.score}`}
+                        className="flex items-baseline gap-2 text-xs"
+                      >
+                        <span className="font-medium text-gray-800">
+                          {level.label}
+                        </span>
+                        <span className="text-gray-500">({level.score})</span>
+                        {level.description && (
+                          <span className="text-gray-600 truncate">
+                            — {level.description}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </details>
+      )}
+
+      <div className="flex justify-start">
+        <form action={startWriting.bind(null, item.id)}>
+          <StartWritingButton label={ctaLabel} />
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ctaLabelFor(
+  status: import("@/lib/queries/student-assignments").DerivedStatus
+): string {
+  switch (status) {
+    case "not_started":
+      return "Start Writing";
+    case "in_progress":
+      return "Continue Writing";
+    case "returned":
+      return "Continue Revision";
+    case "submitted":
+    case "graded":
+      return "Review Submission";
+  }
+}
+
+function formatDue(isoDue: string | null): string | null {
+  if (!isoDue) return null;
+  // due_at is a calendar-only date stored as UTC midnight. Format and compare
+  // in UTC so the day is right and "today"/"overdue" track the calendar day.
+  const due = new Date(isoDue);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const now = new Date();
+  const dueDay = Date.UTC(
+    due.getUTCFullYear(),
+    due.getUTCMonth(),
+    due.getUTCDate()
+  );
+  const today = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  );
+  const days = Math.round((dueDay - today) / dayMs);
+  const dateStr = due.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  if (days < 0) return `Due ${dateStr} (overdue)`;
+  if (days === 0) return `Due ${dateStr} (today)`;
+  return `Due ${dateStr} (in ${days} ${days === 1 ? "day" : "days"})`;
+}
