@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareClient } from "@/lib/supabase/middleware";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { extractSubdomainFromHost } from "@/lib/subdomain";
 
 /* ─── Subdomain → district cache (60s TTL) ────────────────────────────── */
 
@@ -52,31 +53,6 @@ async function resolveSubdomain(
   return branding;
 }
 
-/* ─── Subdomain extraction ────────────────────────────────────────────── */
-
-function extractSubdomain(request: NextRequest): string | null {
-  const baseDomain = process.env.NEXT_PUBLIC_JSWP_BASE_DOMAIN;
-  const host = request.headers.get("host") ?? "";
-
-  // localhost is the dev convenience that auto-resolves to the demo district.
-  // 127.0.0.1 deliberately does NOT — use it locally to exercise the
-  // apex/no-district fallback path (default branding, no x-jswp-* headers).
-  const isDev = host.startsWith("localhost");
-  const isPreview = host.endsWith(".vercel.app");
-
-  if (isDev || isPreview) {
-    return "demo";
-  }
-
-  if (baseDomain && host.endsWith(baseDomain)) {
-    const prefix = host.slice(0, -baseDomain.length).replace(/\.$/, "");
-    return prefix === "" || prefix === "www" ? null : prefix;
-  }
-
-  // Unknown host — treat as apex
-  return null;
-}
-
 /* ─── Middleware ───────────────────────────────────────────────────────── */
 
 export async function middleware(request: NextRequest) {
@@ -85,7 +61,10 @@ export async function middleware(request: NextRequest) {
   await supabase.auth.getUser();
 
   // 2. Subdomain → district resolution
-  const subdomain = extractSubdomain(request);
+  const subdomain = extractSubdomainFromHost(
+    request.headers.get("host") ?? "",
+    process.env.NEXT_PUBLIC_JSWP_BASE_DOMAIN
+  );
 
   if (subdomain === null) {
     // Apex domain — pass through without district headers.
