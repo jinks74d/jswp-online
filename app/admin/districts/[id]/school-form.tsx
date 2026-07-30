@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { useActionState } from "react";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, KeyRound, Loader2, Plus, Trash2 } from "lucide-react";
 import {
   createSchool,
   updateSchool,
@@ -56,6 +56,18 @@ export function SchoolForm({
   // The field actually submitted: canonical slug, the typed custom value, or "".
   const submittedLevel = choice === OTHER_LEVEL ? custom : choice;
 
+  // Administrator rows (create only). Stable keys, not indices, so removing a
+  // row doesn't make React reuse the wrong row's uncontrolled input values.
+  const [adminKeys, setAdminKeys] = useState<number[]>([0]);
+  const [nextAdminKey, setNextAdminKey] = useState(1);
+
+  const addAdmin = () => {
+    setAdminKeys((ks) => [...ks, nextAdminKey]);
+    setNextAdminKey((k) => k + 1);
+  };
+  const removeAdmin = (key: number) =>
+    setAdminKeys((ks) => (ks.length > 1 ? ks.filter((k) => k !== key) : ks));
+
   return (
     <form
       action={action}
@@ -65,6 +77,34 @@ export function SchoolForm({
         <Banner kind="error">{state.error}</Banner>
       )}
       {state.success && <Banner kind="success">{state.success}</Banner>}
+
+      {state.createdAdmins && state.createdAdmins.length > 0 && (
+        <div
+          role="status"
+          className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm"
+        >
+          <p className="flex items-center gap-2 font-semibold text-amber-900">
+            <KeyRound className="h-4 w-4 shrink-0" aria-hidden="true" />
+            Temporary passwords — shown once
+          </p>
+          <p className="mt-1 text-amber-800">
+            Copy these now. They cannot be retrieved later; after this, use a
+            password reset.
+          </p>
+          <ul className="mt-2 space-y-1">
+            {state.createdAdmins.map((a) => (
+              <li
+                key={a.email}
+                className="flex flex-wrap items-baseline gap-x-2 font-mono text-xs text-amber-900"
+              >
+                <span className="break-all">{a.email}</span>
+                <span aria-hidden="true">·</span>
+                <span className="font-semibold">{a.password}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <input type="hidden" name="district_id" value={districtId} />
       {mode === "edit" && initial && (
@@ -196,6 +236,45 @@ export function SchoolForm({
         )}
       </div>
 
+      {mode === "create" && (
+        <fieldset className="rounded-lg border border-gray-200 bg-gray-50/70 p-4">
+          <legend className="px-1 text-sm font-semibold text-gray-900">
+            School administrators
+          </legend>
+          <p className="mb-3 text-xs text-gray-600">
+            At least one is required. Each gets a school-admin account and a
+            one-time password shown after the school is created.
+          </p>
+
+          {state.adminFormError && (
+            <p role="alert" className="mb-3 text-sm text-red-600">
+              {state.adminFormError}
+            </p>
+          )}
+
+          <div className="space-y-3">
+            {adminKeys.map((key, i) => (
+              <AdminRow
+                key={key}
+                index={i}
+                canRemove={adminKeys.length > 1}
+                onRemove={() => removeAdmin(key)}
+                errors={state.adminErrors?.[i]}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addAdmin}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add another administrator
+          </button>
+        </fieldset>
+      )}
+
       {mode === "edit" && (
         <label className="flex w-fit cursor-pointer items-center gap-3 text-sm">
           <input
@@ -229,6 +308,126 @@ export function SchoolForm({
 
 const inputClass =
   "w-full rounded-md border border-gray-400 px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
+
+/**
+ * One administrator's fields. Inputs use repeated (un-indexed) names so the
+ * server can zip them with FormData.getAll() in DOM order — see
+ * lib/school-admins.ts. Ids are index-suffixed only to keep labels unique.
+ */
+function AdminRow({
+  index,
+  canRemove,
+  onRemove,
+  errors,
+}: {
+  index: number;
+  canRemove: boolean;
+  onRemove: () => void;
+  errors?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+  };
+}) {
+  const uid = (field: string) => `admin-${field}-${index}`;
+  return (
+    <div className="rounded-md border border-gray-200 bg-white p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          Administrator {index + 1}
+        </p>
+        {canRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="inline-flex items-center gap-1 rounded p-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+          >
+            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+            Remove
+            <span className="sr-only"> administrator {index + 1}</span>
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <AdminField
+          id={uid("first")}
+          name="admin_first_name"
+          label="First name"
+          autoComplete="off"
+          error={errors?.first_name}
+        />
+        <AdminField
+          id={uid("last")}
+          name="admin_last_name"
+          label="Last name"
+          autoComplete="off"
+          error={errors?.last_name}
+        />
+        <AdminField
+          id={uid("email")}
+          name="admin_email"
+          label="Email"
+          type="email"
+          placeholder="admin@school.org"
+          autoComplete="off"
+          error={errors?.email}
+        />
+        <AdminField
+          id={uid("phone")}
+          name="admin_phone"
+          label="Phone"
+          type="tel"
+          placeholder="(555) 201-8890"
+          autoComplete="off"
+          error={errors?.phone}
+        />
+      </div>
+    </div>
+  );
+}
+
+function AdminField({
+  id,
+  name,
+  label,
+  type = "text",
+  placeholder,
+  autoComplete,
+  error,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  autoComplete?: string;
+  error?: string;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1 block text-xs font-medium text-gray-700">
+        {label}
+      </label>
+      <input
+        id={id}
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        aria-invalid={!!error}
+        aria-describedby={error ? `err-${id}` : undefined}
+        className={`${inputClass} py-1.5 text-sm`}
+      />
+      {error && (
+        <p id={`err-${id}`} className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
 
 function ColorField({
   name,
