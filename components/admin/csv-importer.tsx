@@ -11,20 +11,31 @@ import { useState, useTransition } from "react";
 import {
   AlertCircle,
   CheckCircle2,
+  Download,
   Loader2,
   Upload,
   X,
 } from "lucide-react";
 import { parseImport, runImport } from "@/lib/csv-import/actions";
+import {
+  buildSampleCsv,
+  sampleCsvFilename,
+} from "@/lib/csv-import/sample-csv";
 import type { CommitOutcome, ParseOutcome } from "@/lib/csv-import/types";
 
 export function CsvImporter({
   entity,
   sampleHeaders,
+  sampleRows,
   scope = {},
 }: {
   entity: string;
   sampleHeaders: string[];
+  /**
+   * Example data rows for the downloadable template. Omit for a headers-only
+   * file; supply 2–3 realistic rows where the format isn't self-evident.
+   */
+  sampleRows?: readonly (readonly string[])[];
   /** Parent context (e.g. { districtId }) for scoped imports. */
   scope?: Record<string, string>;
 }) {
@@ -39,6 +50,25 @@ export function CsvImporter({
     setExcluded(new Set());
     setResult(null);
     setError(null);
+  }
+
+  /**
+   * Build the template in the browser and hand it to the download attribute.
+   * Generated rather than served as a static asset so it can never drift from
+   * the headers this importer actually accepts.
+   */
+  function downloadSample() {
+    const csv = buildSampleCsv(sampleHeaders, sampleRows);
+    const url = URL.createObjectURL(
+      new Blob([csv], { type: "text/csv;charset=utf-8" })
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = sampleCsvFilename(entity);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   function onParse(formData: FormData) {
@@ -245,11 +275,22 @@ export function CsvImporter({
       className="space-y-3 bg-white border border-gray-200 rounded-lg p-5"
     >
       {error && <Banner kind="error">{error}</Banner>}
-      <p className="text-xs text-gray-500">
-        Expected columns:{" "}
-        <code className="text-gray-700">{sampleHeaders.join(", ")}</code>.
-        .csv, .xlsx, or .xls. Nothing is saved until you confirm the preview.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <p className="text-xs text-gray-500">
+          Expected columns:{" "}
+          <code className="text-gray-700">{sampleHeaders.join(", ")}</code>.
+          .csv, .xlsx, or .xls. Nothing is saved until you confirm the preview.
+        </p>
+        <button
+          type="button"
+          onClick={downloadSample}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+        >
+          <Download className="h-3.5 w-3.5" aria-hidden="true" />
+          Download example
+          <span className="sr-only"> CSV for {entity}</span>
+        </button>
+      </div>
       <div className="flex items-center gap-3">
         <input
           type="file"

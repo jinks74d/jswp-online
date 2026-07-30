@@ -60,6 +60,11 @@ export function SchoolActions({ districtId }: { districtId: string }) {
           <CsvImporter
             entity="schools"
             sampleHeaders={["name", "level"]}
+            sampleRows={[
+              ["Keller High School", "high"],
+              ["Southlake Middle School", "middle"],
+              ["Chapel Elementary", "elementary"],
+            ]}
             scope={{ districtId }}
           />
         </div>
