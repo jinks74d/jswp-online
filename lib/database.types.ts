@@ -504,7 +504,7 @@ export type AssignmentSources = {
   source_citation: string | null;
   source_url: string | null;
   source_html: string | null;
-  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_render_mode: "pdf" | "rich" | "plain" | "image" | null;
   source_file_path: string | null;
   source_file_name: string | null;
   source_file_mime: string | null;

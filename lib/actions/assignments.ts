@@ -105,7 +105,7 @@ function parseCommonFields(formData: FormData) {
   };
 }
 
-const VALID_RENDER_MODES = new Set(["pdf", "rich", "plain"]);
+const VALID_RENDER_MODES = new Set(["pdf", "rich", "plain", "image"]);
 
 /**
  * One source as posted by the client repeater. `source_text` is carried
@@ -114,6 +114,9 @@ const VALID_RENDER_MODES = new Set(["pdf", "rich", "plain"]);
  * trimming would shift every annotation offset.
  */
 type SourceInput = {
+  /** assignment_sources.id for a row that already exists; "" for a new one.
+   *  The published path appends the new ones and ignores the rest. */
+  source_id: string;
   kind: "primary" | "secondary";
   source_title: string;
   source_author: string;
@@ -135,7 +138,7 @@ type SourceColumns = {
   source_citation: string | null;
   source_url: string | null;
   source_html: string | null;
-  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_render_mode: "pdf" | "rich" | "plain" | "image" | null;
   source_file_path: string | null;
   source_file_name: string | null;
   source_file_mime: string | null;
@@ -162,6 +165,7 @@ function parseSources(formData: FormData): SourceInput[] {
   return parsed.map((s): SourceInput => {
     const o = (s ?? {}) as Record<string, unknown>;
     return {
+      source_id: str(o.source_id),
       kind: o.kind === "secondary" ? "secondary" : "primary",
       source_title: str(o.source_title),
       source_author: str(o.source_author),
@@ -187,7 +191,7 @@ function parseSources(formData: FormData): SourceInput[] {
  */
 function resolveSourceColumns(src: SourceInput): SourceColumns {
   const mode = VALID_RENDER_MODES.has(src.source_render_mode)
-    ? (src.source_render_mode as "pdf" | "rich" | "plain")
+    ? (src.source_render_mode as "pdf" | "rich" | "plain" | "image")
     : null;
 
   const shared = {
@@ -217,6 +221,18 @@ function resolveSourceColumns(src: SourceInput): SourceColumns {
       source_html: null,
       source_text: src.source_text.trim() === "" ? null : src.source_text,
       source_render_mode: "pdf",
+    };
+  }
+
+  // image: the stored file IS the source. No substrate exists, so any posted
+  // text/html is dropped — nothing may index offsets into a picture. A row
+  // that lost its file falls through isEmptySource() unless it has metadata.
+  if (mode === "image") {
+    return {
+      ...shared,
+      source_html: null,
+      source_text: null,
+      source_render_mode: "image",
     };
   }
 
@@ -305,6 +321,58 @@ async function writeAssignmentSources(
   if (orphaned.length > 0) {
     await supabase.storage.from(SOURCE_BUCKET).remove(orphaned);
   }
+
+  return { error: null };
+}
+
+/**
+ * Append newly-added sources to a PUBLISHED assignment.
+ *
+ * Strictly additive: rows that already exist (posted with a source_id) are
+ * never updated, re-keyed, or deleted, because text_annotations.source_id
+ * points at them and their character offsets index the stored substrate. A
+ * delete-and-reinsert here would cascade every student's annotations away.
+ *
+ * Only rows the teacher added in this session (source_id === "") are inserted,
+ * after the highest existing position. Files are never removed either: an
+ * orphan check would have to reason about rows we deliberately did not read.
+ */
+async function appendAssignmentSources(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  assignmentId: string,
+  sources: SourceInput[],
+  isNarrative: boolean
+): Promise<{ error: string | null }> {
+  if (isNarrative) return { error: null };
+
+  const added = sources.filter((s) => s.source_id.trim() === "");
+  if (added.length === 0) return { error: null };
+
+  const resolved = added
+    .map((s) => ({ kind: s.kind, cols: resolveSourceColumns(s) }))
+    .filter((r) => !isEmptySource(r.cols));
+  if (resolved.length === 0) return { error: null };
+
+  const { data: existing, error: posErr } = await supabase
+    .from("assignment_sources")
+    .select("position")
+    .eq("assignment_id", assignmentId)
+    .order("position", { ascending: false })
+    .limit(1);
+  if (posErr) return { error: posErr.message };
+
+  const nextPosition = (existing?.[0]?.position ?? 0) + 1;
+  const rows = resolved.map((r, i) => ({
+    assignment_id: assignmentId,
+    position: nextPosition + i,
+    kind: r.kind,
+    ...r.cols,
+  }));
+
+  const { error: insErr } = await supabase
+    .from("assignment_sources")
+    .insert(rows);
+  if (insErr) return { error: insErr.message };
 
   return { error: null };
 }
@@ -535,10 +603,20 @@ export async function updateDraftAssignment(
   if (isPublished) {
     // Locked after publish: mode, is_essay, num_body_paragraphs,
     // default_chunks_per_bp, default_chunk_ratio, has_counterargument,
-    // source_text, source_title, source_author, source_citation,
-    // source_url, source_html, source_render_mode, source_file_*, rubric.
-    // Only title/prompt/due_at/class_period_id stay editable. Freezing the
-    // source after publish also guarantees annotation offsets never drift.
+    // rubric, and every column of an EXISTING source. Only
+    // title/prompt/due_at/class_period_id stay editable. Freezing saved
+    // sources is what guarantees annotation offsets never drift.
+    //
+    // Adding a source is the exception: it is purely additive, touches no
+    // existing row, and lets a teacher hand out a second reading mid-unit.
+    const { error: srcErr } = await appendAssignmentSources(
+      supabase,
+      assignmentId,
+      parseSources(formData),
+      existing.mode === "narrative"
+    );
+    if (srcErr) return { error: srcErr };
+
     update = {
       title: f.title,
       prompt: f.prompt,

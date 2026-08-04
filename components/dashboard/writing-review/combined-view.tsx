@@ -63,6 +63,7 @@ interface Props {
       source_author: string | null;
       source_file_path: string | null;
       source_file_name: string | null;
+      source_render_mode: "pdf" | "rich" | "plain" | "image" | null;
     }[];
   };
 }
@@ -156,6 +157,10 @@ function renderStep({
     sourceFilePath: sc.source_file_path,
     sourceFileName: sc.source_file_name,
     sourceHtml: null,
+    // Deliberately flattened for pdf/rich (above), but an image source has no
+    // flat substrate at all — pass 'image' through or the panel renders blank.
+    sourceRenderMode:
+      sc.source_render_mode === "image" ? ("image" as const) : null,
   }));
 
   if (step.groupOrigin === "decode_prompt") {
@@ -193,7 +198,10 @@ function renderStep({
       sourceFilePath: s.source_file_path,
       sourceFileName: s.source_file_name,
       sourceHtml: null,
-      sourceRenderMode: null,
+      // See refSources: 'image' must survive the flattening or there is
+      // nothing left to show.
+      sourceRenderMode:
+        s.source_render_mode === "image" ? ("image" as const) : null,
     }));
     return (
       <AnnotateTextStep

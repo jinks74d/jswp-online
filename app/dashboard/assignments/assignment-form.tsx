@@ -91,9 +91,14 @@ const RATIO_OPTIONS: Record<Mode, { value: ChunkRatio; label: string }[]> = {
 type FormCopy = {
   titleLabel: string;
   titlePlaceholder: string;
+  // leadIn sits between the label and the control — the printed guides put a
+  // short instruction there, above the box the teacher fills in. description
+  // stays below the control as the example/criteria line.
+  titleLeadIn?: string;
   titleDescription?: string;
   promptLabel: string;
   promptPlaceholder: string;
+  promptLeadIn?: string;
   promptDescription?: string;
   essayLabel: string;
   essayAside?: string;
@@ -120,15 +125,19 @@ const FORM_COPY: Record<Mode, FormCopy> = {
   expository: {
     titleLabel: "Name of Unit or Assignment",
     titlePlaceholder: "",
+    titleLeadIn:
+      "Name: Be specific as you will probably have multiple assignments.",
     titleDescription:
       "e.g., ecosystems, early colonization, volume/surface area, the Enlightenment",
     promptLabel: "Writing Prompt",
     promptPlaceholder: "",
+    promptLeadIn:
+      "This prompt will be at the top of each step in the process, so the student never loses sight of the task.",
     promptDescription:
       "Written as statements, not questions; quantifies the assignment (length and ratio); uses verbs that fit the subject and assignment; narrows the focus of the topic.",
     essayLabel: "Multi-paragraph Essay",
     essayUncheckedHint:
-      "Unchecked: students write a single paragraph (body, introduction, or conclusion).",
+      "If you do not check “Multi-paragraph Essay,” the system defaults to a paragraph.",
     ratioLabel: "The JSWP® Ratio",
     sourceLegend: "Primary or Secondary Sources",
     citationExample:
@@ -259,6 +268,7 @@ export function AssignmentForm({
           label={copy.titleLabel}
           htmlFor="title"
           error={state.fieldErrors?.title}
+          leadIn={copy.titleLeadIn}
           description={copy.titleDescription}
         >
           <input
@@ -277,6 +287,7 @@ export function AssignmentForm({
           label={copy.promptLabel}
           htmlFor="prompt"
           error={state.fieldErrors?.prompt}
+          leadIn={copy.promptLeadIn}
           description={copy.promptDescription}
         >
           <textarea
@@ -412,7 +423,7 @@ export function AssignmentForm({
         {showSourceText && (
           <SourceTextFields
             initial={initial?.sources}
-            disabled={isPublished}
+            published={isPublished}
             schoolId={schoolId}
             assignmentId={sourceAssignmentId}
             supabase={supabase}
@@ -755,6 +766,7 @@ function Field({
   htmlFor,
   error,
   hint,
+  leadIn,
   description,
   children,
 }: {
@@ -762,14 +774,16 @@ function Field({
   htmlFor: string;
   error?: string;
   hint?: string;
+  leadIn?: React.ReactNode;
   description?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const hintId = hint ? `${htmlFor}-hint` : undefined;
+  const leadInId = leadIn ? `${htmlFor}-lead` : undefined;
   const descId = description ? `${htmlFor}-desc` : undefined;
   const errorId = error ? `${htmlFor}-error` : undefined;
   const describedBy =
-    [hintId, descId, errorId].filter(Boolean).join(" ") || undefined;
+    [hintId, leadInId, descId, errorId].filter(Boolean).join(" ") || undefined;
   return (
     <div>
       <div className="flex items-baseline justify-between mb-2">
@@ -782,6 +796,11 @@ function Field({
           </span>
         )}
       </div>
+      {leadIn && (
+        <p id={leadInId} className="mb-2 text-xs text-stone-600">
+          {leadIn}
+        </p>
+      )}
       {/* Thread error/hint association onto the single field control. The
           control passes `id={htmlFor}`; here we add aria-describedby and
           aria-invalid so SRs announce the hint + error and the invalid state. */}

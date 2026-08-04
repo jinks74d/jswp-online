@@ -11,9 +11,10 @@
  * source viewer to that annotation.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SourceTextViewer } from "./source-text-viewer";
 import { OpenOriginalButton } from "./open-original-button";
+import { getWritingSourceUrlByPath } from "@/lib/actions/source-files";
 import {
   ANNOTATION_KINDS,
   ANNOTATION_KIND_ORDER,
@@ -30,6 +31,8 @@ export type ReferenceSource = {
   sourceFilePath: string | null;
   sourceFileName: string | null;
   sourceHtml: string | null;
+  /** 'image' sources have no substrate — they render as the picture itself. */
+  sourceRenderMode: "pdf" | "rich" | "plain" | "image" | null;
 };
 
 interface Props {
@@ -146,14 +149,24 @@ export function ReferencePanel({ writingId, sources, annotations }: Props) {
               )}
             </header>
 
-            <SourceTextViewer
-              sourceText={source.sourceText}
-              sourceHtml={source.sourceHtml}
-              annotations={anns}
-              visibleKinds={visibleKinds}
-              scrollToAnnotationId={scrollTargetId}
-              readOnly
-            />
+            {source.sourceRenderMode === "image" ? (
+              // No substrate to highlight — show the picture, which is the
+              // whole source. Without this the panel would render blank.
+              <ReferenceImage
+                writingId={writingId}
+                filePath={source.sourceFilePath}
+                fileName={source.sourceFileName}
+              />
+            ) : (
+              <SourceTextViewer
+                sourceText={source.sourceText}
+                sourceHtml={source.sourceHtml}
+                annotations={anns}
+                visibleKinds={visibleKinds}
+                scrollToAnnotationId={scrollTargetId}
+                readOnly
+              />
+            )}
 
             {anns.length > 0 && (
               <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -204,5 +217,60 @@ export function ReferencePanel({ writingId, sources, annotations }: Props) {
         );
       })}
     </div>
+  );
+}
+
+/**
+ * An image source in the reference panel. The bucket is private, so the <img>
+ * src is a signed URL minted on mount through the same membership-checked
+ * server action "Open original" uses. Nothing here is annotatable — the panel
+ * is read-only reference, and an image carries no offsets.
+ */
+function ReferenceImage({
+  writingId,
+  filePath,
+  fileName,
+}: {
+  writingId: string;
+  filePath: string | null;
+  fileName: string | null;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!filePath) {
+      setFailed(true);
+      return;
+    }
+    let active = true;
+    getWritingSourceUrlByPath(writingId, filePath).then((res) => {
+      if (!active) return;
+      if (res.ok) setUrl(res.url);
+      else setFailed(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [writingId, filePath]);
+
+  if (failed) {
+    return (
+      <p className="text-sm text-gray-600">
+        This image couldn&apos;t be loaded. Reload the page to try again.
+      </p>
+    );
+  }
+  if (!url) {
+    return <p className="text-sm text-gray-500">Loading image…</p>;
+  }
+  return (
+    /* eslint-disable-next-line @next/next/no-img-element --
+       next/image can't optimize a private, short-lived signed URL. */
+    <img
+      src={url}
+      alt={fileName ?? "Source image"}
+      className="max-w-full rounded-lg border border-gray-200 bg-white"
+    />
   );
 }

@@ -12,6 +12,9 @@
  *   - 'rich' (typed/pasted, no file) → the sanitized `source_html` via
  *               dangerouslySetInnerHTML. HTML is sanitized at save time
  *               (lib/source-content) — the DB column is the choke point.
+ *   - 'image' → the uploaded .png/.jpg itself via a signed URL. There is no
+ *               text behind it, so the plain-text fallback would be blank;
+ *               when the URL is missing we say so rather than render nothing.
  *   - 'plain' → today's whitespace-pre-wrap projection of `source_text`.
  *
  * This component does NOT render annotation highlights and does NOT detect
@@ -23,7 +26,7 @@
 import { FileText } from "lucide-react";
 import { DocxViewer } from "./docx-viewer";
 
-type RenderMode = "pdf" | "rich" | "plain";
+type RenderMode = "pdf" | "rich" | "plain" | "image";
 
 interface Props {
   /** assignments.source_render_mode; null is treated as 'plain'. */
@@ -66,6 +69,26 @@ export function SourceDocViewer({
       Open original{fileName ? ` (${fileName})` : ""}
     </a>
   ) : null;
+
+  if (mode === "image") {
+    return fileUrl ? (
+      <div className="space-y-2">
+        {/* eslint-disable-next-line @next/next/no-img-element --
+            next/image can't optimize a private, short-lived signed URL. */}
+        <img
+          src={fileUrl}
+          alt={fileName ?? "Source image"}
+          className="max-w-full rounded-lg border border-gray-200 bg-white"
+        />
+        {openOriginalLink}
+      </div>
+    ) : (
+      <p className="text-sm text-gray-600">
+        This source is an image, but it couldn&apos;t be loaded. Reload the
+        page, or ask your teacher to re-upload it.
+      </p>
+    );
+  }
 
   if (mode === "pdf" && fileUrl) {
     return (

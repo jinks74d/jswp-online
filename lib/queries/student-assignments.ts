@@ -55,7 +55,7 @@ export interface StudentSource {
   source_author: string | null;
   source_citation: string | null;
   source_url: string | null;
-  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_render_mode: "pdf" | "rich" | "plain" | "image" | null;
   source_html: string | null;
   source_file_path: string | null;
   source_file_name: string | null;

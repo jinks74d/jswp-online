@@ -18,6 +18,9 @@ type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
 // Structurally identical to SourceTextFields' SourceInitial. Defined here to
 // keep this server-only query decoupled from the "use client" component.
 type SourceInitial = {
+  /** Row id — identifies an ALREADY-PERSISTED source. New rows post null, and
+   *  that is what lets the published path tell "append this" from "edit that". */
+  id: string;
   kind: "primary" | "secondary";
   source_text: string | null;
   source_title: string | null;
@@ -25,7 +28,7 @@ type SourceInitial = {
   source_citation: string | null;
   source_url: string | null;
   source_html: string | null;
-  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_render_mode: "pdf" | "rich" | "plain" | "image" | null;
   source_file_path: string | null;
   source_file_name: string | null;
   source_file_mime: string | null;
@@ -147,7 +150,7 @@ export async function getAssignmentForTeacher(
        default_chunk_ratio, default_chunks_per_bp, has_counterargument,
        rubric, due_at, class_period_id, released_at, created_at, updated_at,
        assignment_sources (
-         position, kind,
+         id, position, kind,
          source_text, source_title, source_author, source_citation, source_url,
          source_html, source_render_mode, source_file_path, source_file_name,
          source_file_mime

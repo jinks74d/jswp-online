@@ -45,7 +45,7 @@ export type AnnotateSource = {
   sourceFilePath: string | null;
   sourceFileName: string | null;
   sourceHtml: string | null;
-  sourceRenderMode: "pdf" | "rich" | "plain" | null;
+  sourceRenderMode: "pdf" | "rich" | "plain" | "image" | null;
 };
 
 interface Props {
@@ -194,11 +194,16 @@ function SourceAnnotatePane({
 
   const isPdf =
     source.sourceRenderMode === "pdf" && Boolean(source.sourceFilePath);
+  // An image source is the picture itself — no text layer, so nothing here is
+  // annotatable and the pane reports that immediately (below) rather than
+  // waiting on a viewer to discover it, the way the PDF pane does.
+  const isImage = source.sourceRenderMode === "image";
+  const needsFileUrl = isPdf || isImage;
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfFailed, setPdfFailed] = useState(false);
 
   useEffect(() => {
-    if (!isPdf || !source.sourceFilePath) return;
+    if (!needsFileUrl || !source.sourceFilePath) return;
     let active = true;
     (async () => {
       const res = await getWritingSourceUrlByPath(
@@ -212,7 +217,12 @@ function SourceAnnotatePane({
     return () => {
       active = false;
     };
-  }, [isPdf, writingId, source.sourceFilePath]);
+  }, [needsFileUrl, writingId, source.sourceFilePath]);
+
+  useEffect(() => {
+    if (isImage) onUnannotatable();
+    // onUnannotatable is idempotent (set-add guarded in the parent).
+  }, [isImage, onUnannotatable]);
 
   const onAnnotateClick = () => {
     if (!selection) return;
@@ -299,14 +309,40 @@ function SourceAnnotatePane({
               />
             )}
           </div>
-          {annotations.length === 0 && (
+          {annotations.length === 0 && !isImage && (
             <div className="text-xs text-gray-500 italic">
               Tip: select any word or phrase — or press “Tab” to move through
               the text and “Enter” on a word or phrase — to add your first
               annotation.
             </div>
           )}
-          {isPdf && !pdfFailed ? (
+          {isImage ? (
+            <div className="space-y-2">
+              {pdfUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element --
+                   next/image can't optimize a private, short-lived signed URL. */
+                <img
+                  src={pdfUrl}
+                  alt={source.sourceFileName ?? "Source image"}
+                  className="max-w-full rounded-lg border border-gray-200 bg-white"
+                />
+              ) : pdfFailed ? (
+                <p className="text-sm text-gray-600">
+                  This image couldn&apos;t be loaded. Reload the page, or ask
+                  your teacher to re-upload it.
+                </p>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />{" "}
+                  Loading image…
+                </div>
+              )}
+              <p className="text-xs text-gray-500 italic">
+                This source is a picture, so there is no text to highlight —
+                study it, then continue.
+              </p>
+            </div>
+          ) : isPdf && !pdfFailed ? (
             pdfUrl ? (
               <PdfSourceViewer
                 fileUrl={pdfUrl}

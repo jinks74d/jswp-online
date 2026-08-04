@@ -6,6 +6,9 @@
  *   - .pdf → PDF-native; pdf.js text (via buildPdfText) becomes the annotation
  *            substrate while the stored file is opened/rendered as the PDF
  *   - .docx → rich; mammoth converts to HTML (sanitized server-side on save)
+ *   - .png / .jpg → image; the picture IS the source. No text can be
+ *            extracted, so there is no annotation substrate — students view it
+ *            and the annotate step releases its gate (same as a scanned PDF).
  * Parsers are dynamically imported to keep them out of the initial bundle.
  *
  * On extraction the parent receives an ExtractedSource payload. Storage
@@ -21,8 +24,9 @@ import type { Database } from "@/lib/database.types";
 import { uploadAssignmentSource } from "@/lib/storage/assignment-sources";
 
 export type ExtractedSource = {
-  renderMode: "pdf" | "rich" | "plain";
-  /** Plain text for pdf/plain modes; "" for rich (server derives it). */
+  renderMode: "pdf" | "rich" | "plain" | "image";
+  /** Plain text for pdf/plain modes; "" for rich (server derives it) and
+   *  for image (nothing to extract). */
   text: string;
   /** Rich HTML for rich mode; null otherwise. */
   html: string | null;
@@ -68,6 +72,17 @@ export function SourceTextUpload({
         );
       }
 
+      // An image has no text layer at all — students can read it on screen but
+      // cannot highlight it, so the Read & Annotate step will let them past
+      // without annotations. Say so up front; do NOT block.
+      if (extracted.renderMode === "image") {
+        setWarning(
+          "Students can view this image but can't highlight it, so the " +
+            "annotate step won't require annotations for it. Add a text or " +
+            "PDF source too if you want them annotating."
+        );
+      }
+
       // Best-effort archival to Storage when we have an assignment id.
       let stored: ExtractedSource["file"] = null;
       if (assignmentId) {
@@ -89,8 +104,15 @@ export function SourceTextUpload({
           // the formatted PDF/.docx, so the teacher must know it didn't land.
           console.warn("source upload failed:", result.error);
           setError(
-            `The text was extracted, but archiving the original file failed (${result.error}). ` +
-              `The formatted document won't display until the upload succeeds — try re-selecting the file.`
+            extracted.renderMode === "image"
+              ? // The picture IS the source here — a failed archive leaves
+                // nothing behind at all, so this is fatal for the source, not
+                // a downgrade to extracted text.
+                `Uploading the image failed (${result.error}). There is no ` +
+                  `extracted text to fall back on, so this source is empty ` +
+                  `until the upload succeeds — try re-selecting the file.`
+              : `The text was extracted, but archiving the original file failed (${result.error}). ` +
+                `The formatted document won't display until the upload succeeds — try re-selecting the file.`
           );
         }
       }
@@ -100,7 +122,9 @@ export function SourceTextUpload({
       const detail =
         extracted.renderMode === "rich"
           ? "Imported formatted document."
-          : `Extracted ${extracted.text.length.toLocaleString()} characters.`;
+          : extracted.renderMode === "image"
+            ? "Imported image."
+            : `Extracted ${extracted.text.length.toLocaleString()} characters.`;
       setStatus(
         assignmentId || stored
           ? detail
@@ -123,13 +147,13 @@ export function SourceTextUpload({
         htmlFor="source_file"
         className="block text-sm font-medium text-gray-700 mb-1.5"
       >
-        Upload a PDF, Word (.docx), or .txt source
+        Upload a PDF, Word (.docx), .txt, or image (.png / .jpg) source
       </label>
       <div className="flex items-center gap-3">
         <input
           id="source_file"
           type="file"
-          accept=".pdf,.txt,.docx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          accept=".pdf,.txt,.docx,.png,.jpg,.jpeg,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg"
           onChange={handleFile}
           disabled={busy}
           className="block text-sm text-gray-900 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:disabled:opacity-50"
@@ -162,6 +186,15 @@ async function extractSource(file: File): Promise<ExtractResult> {
   const looksPdf = ext === "pdf" || file.type === "application/pdf";
   const looksDocx =
     ext === "docx" || file.type.includes("wordprocessingml");
+  // Only png/jpeg: the bucket's allowed_mime_types (migration 0003) accepts
+  // webp too, but the picker offers the two formats teachers actually export
+  // from a phone camera, a scanner, or a slide deck.
+  const looksImage =
+    ext === "png" ||
+    ext === "jpg" ||
+    ext === "jpeg" ||
+    file.type === "image/png" ||
+    file.type === "image/jpeg";
 
   if (looksTxt) {
     const text = (await file.text()).trim();
@@ -189,6 +222,11 @@ async function extractSource(file: File): Promise<ExtractResult> {
     // annotation offsets, created against this string at render, never drift.
     return { renderMode: "pdf", text, html: null };
   }
+  if (looksImage) {
+    // Nothing to extract — the stored file is the whole source. Upload of the
+    // original (below) is what makes this source non-empty.
+    return { renderMode: "image", text: "", html: null };
+  }
   if (looksDocx) {
     const arrayBuffer = await file.arrayBuffer();
     const mammoth = (await import("mammoth/mammoth.browser")).default;
@@ -198,6 +236,6 @@ async function extractSource(file: File): Promise<ExtractResult> {
   }
 
   throw new Error(
-    `Unsupported file type: ${file.type || ext}. Use PDF, .docx, or .txt.`
+    `Unsupported file type: ${file.type || ext}. Use PDF, .docx, .txt, .png, or .jpg.`
   );
 }

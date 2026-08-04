@@ -67,6 +67,7 @@ export default async function StepDispatcher({
     sourceFilePath: sc.source_file_path,
     sourceFileName: sc.source_file_name,
     sourceHtml: sc.source_html,
+    sourceRenderMode: sc.source_render_mode,
   }));
   const visible = getSteps(mode, {
     isEssay: a.is_essay,

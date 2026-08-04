@@ -27,7 +27,7 @@ export type WritingAssignmentSource = {
   source_text: string | null;
   source_title: string | null;
   source_author: string | null;
-  source_render_mode: "pdf" | "rich" | "plain" | null;
+  source_render_mode: "pdf" | "rich" | "plain" | "image" | null;
   source_html: string | null;
   source_file_path: string | null;
   source_file_name: string | null;

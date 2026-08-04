@@ -127,16 +127,42 @@ shifts every offset after the first dropped item.
 
 ## 2. Display modes (driven by file type)
 
-`assignments.source_render_mode ∈ { 'pdf', 'rich', 'plain' }`
+`assignment_sources.source_render_mode ∈ { 'pdf', 'rich', 'plain', 'image' }`
 
 | Mode | Source | Display | Annotation surface |
 |---|---|---|---|
 | `pdf` | uploaded PDF | PDF.js canvas + text layer | text-layer selection → offset |
 | `rich` | `.txt` / `.docx` / paste | sanitized `source_html` in DOM | TreeWalker selection → offset |
 | `plain` | legacy / no formatting | today's `whitespace-pre-wrap` | unchanged |
+| `image` | uploaded `.png` / `.jpg` | `<img>` on a signed URL | **none** — see below |
 
 "Open original" (the stored file) is available in **all** modes — a short-lived
 signed URL opened in a new tab (no dependency).
+
+**Image sources have no substrate.** `source_text` and `source_html` are both
+NULL: there is no character string for offsets to index, so no annotation can
+be created against one. The annotate step reports the source as unannotatable
+on mount, which releases the Continue gate the same way a scanned (text-free)
+PDF does — a student is never trapped on a picture they cannot highlight. The
+constraint gained `'image'` in migration `0048`; the `assignment-sources`
+bucket has allowed `image/png` and `image/jpeg` since `0003`.
+
+### Editing sources after publish
+
+Pre-publish, saving an assignment replaces its whole source list
+(`writeAssignmentSources` — delete-and-reinsert). That is safe only because an
+unpublished assignment has no writings and therefore no annotations pointing at
+those rows.
+
+Once published, saved sources are **frozen**: `text_annotations.source_id`
+references them with `ON DELETE CASCADE`, and their offsets index the stored
+substrate, so rewriting one would either destroy annotations or silently move
+them. Teachers may still **add** a source — `appendAssignmentSources` inserts
+only rows posted without a `source_id`, after the highest existing `position`,
+and never updates or deletes an existing row. The editor mirrors this: saved
+rows render with a "Locked" badge and disabled inputs, while "Add another
+source" stays live. Because `getWriting` joins `assignment_sources` live, an
+appended source appears immediately for writings already in progress.
 
 ---
 

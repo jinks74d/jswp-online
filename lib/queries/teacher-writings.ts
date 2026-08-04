@@ -69,6 +69,7 @@ export interface WritingForTeacherReview {
       source_author: string | null;
       source_file_path: string | null;
       source_file_name: string | null;
+      source_render_mode: "pdf" | "rich" | "plain" | "image" | null;
     }[];
   };
 }
@@ -148,7 +149,7 @@ export async function getWritingForTeacherReview(
         assignment_sources (
           id, position, kind,
           source_text, source_title, source_author, source_file_path,
-          source_file_name
+          source_file_name, source_render_mode
         )
       )
       `

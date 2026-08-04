@@ -12,7 +12,7 @@
  * Literary). Narrative renders nothing here.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ExternalLink, FileText, Plus, Trash2 } from "lucide-react";
 import type { Database } from "@/lib/database.types";
@@ -20,10 +20,11 @@ import { SourceTextUpload, type ExtractedSource } from "./source-text-upload";
 import { RichSourceEditor } from "./rich-source-editor";
 import { getAssignmentSourceSignedUrl } from "@/lib/storage/assignment-sources";
 
-type RenderMode = "pdf" | "rich" | "plain";
+type RenderMode = "pdf" | "rich" | "plain" | "image";
 type SourceKind = "primary" | "secondary";
 
 export type SourceInitial = {
+  id: string;
   kind: SourceKind;
   source_text: string | null;
   source_title: string | null;
@@ -41,6 +42,10 @@ type StoredFile = { path: string; name: string; mime: string };
 
 type SourceItem = {
   uid: string;
+  /** assignment_sources.id when this row is already persisted; null when the
+   *  teacher just added it in this session. After publish, rows with an id are
+   *  frozen (their offsets anchor saved annotations) but new rows may be added. */
+  id: string | null;
   kind: SourceKind;
   renderMode: RenderMode;
   title: string;
@@ -57,6 +62,7 @@ type SourceItem = {
 function fromInitial(s: SourceInitial, i: number): SourceItem {
   return {
     uid: `src-${i}`,
+    id: s.id,
     kind: s.kind,
     renderMode: s.source_render_mode ?? (s.source_html ? "rich" : "plain"),
     title: s.source_title ?? "",
@@ -78,6 +84,7 @@ function fromInitial(s: SourceInitial, i: number): SourceItem {
 function blankItem(uid: string): SourceItem {
   return {
     uid,
+    id: null,
     kind: "primary",
     renderMode: "plain",
     title: "",
@@ -93,7 +100,25 @@ function blankItem(uid: string): SourceItem {
 /** Serialize one item into the wire shape the server action expects. */
 function toWire(it: SourceItem) {
   const isRich = it.renderMode === "rich";
+  // An image source carries no body at all — the stored file is the source.
+  if (it.renderMode === "image") {
+    return {
+      source_id: it.id ?? "",
+      kind: it.kind,
+      source_title: it.title,
+      source_author: it.author,
+      source_citation: it.citation,
+      source_url: it.url,
+      source_render_mode: "image" as const,
+      source_html: "",
+      source_text: "",
+      source_file_path: it.file?.path ?? "",
+      source_file_name: it.file?.name ?? "",
+      source_file_mime: it.file?.mime ?? "",
+    };
+  }
   return {
+    source_id: it.id ?? "",
     kind: it.kind,
     source_title: it.title,
     source_author: it.author,
@@ -110,7 +135,7 @@ function toWire(it: SourceItem) {
 
 export function SourceTextFields({
   initial,
-  disabled,
+  published = false,
   schoolId,
   assignmentId,
   supabase,
@@ -118,7 +143,12 @@ export function SourceTextFields({
   citationExample,
 }: {
   initial?: SourceInitial[];
-  disabled?: boolean;
+  /**
+   * The assignment is published, so students may already have annotations
+   * anchored to its saved sources. Those rows freeze; NEW sources can still be
+   * added (the server appends them). Pre-publish everything stays editable.
+   */
+  published?: boolean;
   schoolId: string;
   assignmentId?: string;
   supabase: SupabaseClient<Database>;
@@ -171,7 +201,20 @@ export function SourceTextFields({
         {legend}
       </legend>
 
-      {items.map((it, idx) => (
+      {published && (
+        <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          This assignment is published. The sources students are already
+          working from are locked — editing one would move every annotation
+          they&apos;ve saved against it. You can still attach an additional
+          source below.
+        </p>
+      )}
+
+      {items.map((it, idx) => {
+        // Locked = already persisted AND published. A source added in this
+        // session (id === null) stays fully editable until it is saved.
+        const locked = published && it.id !== null;
+        return (
         <div
           key={it.uid}
           className="space-y-4 rounded-md border border-gray-200 p-4"
@@ -181,20 +224,25 @@ export function SourceTextFields({
               <span className="text-sm font-semibold text-gray-700">
                 Source {idx + 1}
               </span>
+              {locked && (
+                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                  Locked
+                </span>
+              )}
               <select
                 aria-label={`Source ${idx + 1} type`}
                 value={it.kind}
                 onChange={(e) =>
                   patch(it.uid, { kind: e.target.value as SourceKind })
                 }
-                disabled={disabled}
+                disabled={locked}
                 className="rounded-md border border-gray-400 px-2 py-1 text-xs text-gray-900 disabled:bg-gray-50"
               >
                 <option value="primary">Primary</option>
                 <option value="secondary">Secondary</option>
               </select>
             </div>
-            {!disabled && items.length > 1 && (
+            {!locked && items.length > 1 && (
               <button
                 type="button"
                 onClick={() => removeSource(it.uid)}
@@ -213,7 +261,7 @@ export function SourceTextFields({
                 type="text"
                 value={it.title}
                 onChange={(e) => patch(it.uid, { title: e.target.value })}
-                disabled={disabled}
+                disabled={locked}
                 placeholder="e.g., The Secret to Raising Smart Kids"
                 className={inputClass}
               />
@@ -224,7 +272,7 @@ export function SourceTextFields({
                 type="text"
                 value={it.author}
                 onChange={(e) => patch(it.uid, { author: e.target.value })}
-                disabled={disabled}
+                disabled={locked}
                 placeholder="e.g., Carol S. Dweck"
                 className={inputClass}
               />
@@ -240,7 +288,7 @@ export function SourceTextFields({
               type="text"
               value={it.citation}
               onChange={(e) => patch(it.uid, { citation: e.target.value })}
-              disabled={disabled}
+              disabled={locked}
               placeholder="e.g., Dweck, Carol S. Scientific American Mind, Nov. 2007."
               className={inputClass}
             />
@@ -259,13 +307,13 @@ export function SourceTextFields({
               type="url"
               value={it.url}
               onChange={(e) => patch(it.uid, { url: e.target.value })}
-              disabled={disabled}
+              disabled={locked}
               placeholder="https://…"
               className={inputClass}
             />
           </Field>
 
-          {!disabled && (
+          {!locked && (
             <SourceTextUpload
               assignmentId={assignmentId}
               schoolId={schoolId}
@@ -291,7 +339,24 @@ export function SourceTextFields({
             </div>
           )}
 
-          {it.renderMode === "pdf" ? (
+          {it.renderMode === "image" ? (
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+              <p className="font-medium">Image source</p>
+              <p className="mt-1 text-blue-800">
+                Students see this picture on the source and Read &amp; Annotate
+                screens. An image has no text layer, so they can&apos;t
+                highlight it — the annotate step won&apos;t require annotations
+                for this source.
+              </p>
+              {it.file && (
+                <ImageSourcePreview
+                  supabase={supabase}
+                  path={it.file.path}
+                  name={it.file.name}
+                />
+              )}
+            </div>
+          ) : it.renderMode === "pdf" ? (
             <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
               <p className="font-medium">PDF source</p>
               <p className="mt-1 text-blue-800">
@@ -313,7 +378,7 @@ export function SourceTextFields({
             </div>
           ) : (
             <Field label="Source body" htmlFor={`source_text_${it.uid}`}>
-              {!disabled && (
+              {!locked && (
                 <div className="mb-2 inline-flex overflow-hidden rounded-md border border-gray-300 text-xs">
                   <ModeTab
                     active={it.renderMode === "plain"}
@@ -334,7 +399,7 @@ export function SourceTextFields({
                 <RichSourceEditor
                   value={it.html}
                   onChange={(html) => patch(it.uid, { html })}
-                  disabled={disabled}
+                  disabled={locked}
                 />
               ) : (
                 <>
@@ -348,7 +413,7 @@ export function SourceTextFields({
                     rows={10}
                     value={it.body}
                     onChange={(e) => patch(it.uid, { body: e.target.value })}
-                    disabled={disabled}
+                    disabled={locked}
                     placeholder="Paste the source text here, or upload a PDF / .docx / .txt file above."
                     className={`${inputClass} font-mono text-xs leading-relaxed`}
                   />
@@ -361,20 +426,21 @@ export function SourceTextFields({
             </Field>
           )}
         </div>
-      ))}
+        );
+      })}
 
       {openError && <p className="text-sm text-red-600">{openError}</p>}
 
-      {!disabled && (
-        <button
+      {/* Always available — adding a source is additive, so it stays open even
+          after publish (the server appends; it never rewrites locked rows). */}
+      <button
           type="button"
           onClick={addSource}
           className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Add another source
-        </button>
-      )}
+      </button>
 
       {/* Resolved payload → server action. The action re-sanitizes rich HTML and
           re-derives each source_text substrate; never trust posted HTML. */}
@@ -389,6 +455,46 @@ export function SourceTextFields({
 
 const inputClass =
   "w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-700";
+
+/**
+ * Thumbnail of an uploaded image source, so the teacher can confirm they
+ * attached the right picture without opening a new tab. The bucket is private,
+ * so the <img> src is a short-lived signed URL minted on mount (the same
+ * 5-minute URL "Open original" uses). A failure here is silent — the preview is
+ * a convenience, and "Open original" remains as the fallback.
+ */
+function ImageSourcePreview({
+  supabase,
+  path,
+  name,
+}: {
+  supabase: SupabaseClient<Database>;
+  path: string;
+  name: string;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    getAssignmentSourceSignedUrl(supabase, path).then((res) => {
+      if (alive && res.ok) setUrl(res.url);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [supabase, path]);
+
+  if (!url) return null;
+  return (
+    /* eslint-disable-next-line @next/next/no-img-element --
+       next/image can't optimize a private, short-lived signed URL. */
+    <img
+      src={url}
+      alt={`Preview of ${name}`}
+      className="mt-2 max-h-64 w-auto rounded border border-blue-200 bg-white"
+    />
+  );
+}
 
 function ModeTab({
   active,
