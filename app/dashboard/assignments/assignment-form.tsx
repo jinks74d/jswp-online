@@ -39,6 +39,10 @@ import {
   type SourceInitial,
 } from "@/components/assignments/source-text-fields";
 import { RubricEditor } from "@/components/assignments/rubric-editor";
+import { RubricFileUpload } from "@/components/assignments/rubric-file-upload";
+import { ClassPeriodSelect } from "@/components/assignments/class-period-select";
+import type { RubricFile } from "@/lib/rubric-file";
+import type { AssignmentPeriodSelection } from "@/lib/assignment-due-dates";
 
 type Mode = "expository" | "argumentation" | "literary" | "narrative";
 type ChunkRatio =
@@ -161,8 +165,14 @@ export type AssignmentInitial = {
   has_counterargument: boolean;
   sources: SourceInitial[];
   rubric: unknown;
+  /** The attached rubric document, if any (assignments.rubric_file_*). */
+  rubric_file: RubricFile | null;
+  /** Assignment-level default deadline; a class period may override it. */
   due_at: string | null;
-  class_period_id: string | null;
+  class_periods: readonly {
+    class_period_id: string;
+    due_at: string | null;
+  }[];
   released_at: string | null;
 };
 
@@ -174,6 +184,7 @@ export function AssignmentForm({
   initial,
   classPeriods,
   schoolId,
+  teacherId,
   studentWritingCount = 0,
 }: {
   formMode: "create" | "edit";
@@ -181,6 +192,8 @@ export function AssignmentForm({
   initial?: AssignmentInitial;
   classPeriods: ClassPeriodOption[];
   schoolId: string;
+  /** Owns the rubric-document upload folder — see lib/rubric-file.ts. */
+  teacherId: string;
   studentWritingCount?: number;
 }) {
   const copy = FORM_COPY[mode];
@@ -205,6 +218,25 @@ export function AssignmentForm({
   );
   const [rubric, setRubric] = useState<Rubric>(() =>
     loadRubric(initial?.rubric ?? null)
+  );
+  const [rubricFile, setRubricFile] = useState<RubricFile | null>(
+    initial?.rubric_file ?? null
+  );
+
+  // The classes this assignment goes to. A saved per-class due date comes back
+  // as a timestamp and has to become a `<input type="date">` value; a null one
+  // means "inherits the assignment default" and stays blank.
+  const [periods, setPeriods] = useState<AssignmentPeriodSelection[]>(() =>
+    (initial?.class_periods ?? []).map((p) => ({
+      class_period_id: p.class_period_id,
+      due_at: p.due_at ? formatForDateInput(p.due_at) : "",
+    }))
+  );
+  // Periods that were already saved — publish locks exactly these, and a
+  // period added in this unsaved session is not one of them.
+  const savedPeriodIds = useMemo(
+    () => (initial?.class_periods ?? []).map((p) => p.class_period_id),
+    [initial?.class_periods]
   );
 
   // Browser supabase client for the storage upload — created once.
@@ -432,6 +464,23 @@ export function AssignmentForm({
           />
         )}
 
+        <RubricFileUpload
+          teacherId={teacherId}
+          schoolId={schoolId}
+          supabase={supabase}
+          value={rubricFile}
+          onChange={setRubricFile}
+          // Attach-only once published: a teacher who forgot the document can
+          // still add it, but one students may already have been graded
+          // against cannot be swapped underneath them.
+          locked={isPublished && initial?.rubric_file != null}
+        />
+        <input
+          type="hidden"
+          name="rubric_file"
+          value={rubricFile ? JSON.stringify(rubricFile) : ""}
+        />
+
         <RubricEditor
           value={rubric}
           onChange={setRubric}
@@ -465,27 +514,22 @@ export function AssignmentForm({
           />
         </Field>
 
-        <Field label="Class Period or Block" htmlFor="class_period_id">
-          <select
-            id="class_period_id"
-            name="class_period_id"
-            defaultValue={initial?.class_period_id ?? ""}
-            className="w-full px-3 py-2 border border-stone-400 rounded-md text-gray-900"
-          >
-            <option value="">— Not assigned to a class —</option>
-            {classPeriods.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-          {classPeriods.length === 0 && (
-            <p className="mt-1 text-xs text-amber-700">
-              You&apos;re not assigned to any class periods yet — ask your
-              admin to assign you to a class before publishing.
-            </p>
-          )}
-        </Field>
+        <ClassPeriodSelect
+          options={classPeriods}
+          value={periods}
+          onChange={setPeriods}
+          published={isPublished}
+          lockedPeriodIds={savedPeriodIds}
+          defaultDueAt={
+            initial?.due_at ? formatForDateInput(initial.due_at) : undefined
+          }
+          error={state.fieldErrors?.class_periods}
+        />
+        <input
+          type="hidden"
+          name="class_periods"
+          value={JSON.stringify(periods)}
+        />
 
         <button
           type="submit"

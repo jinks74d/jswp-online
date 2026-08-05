@@ -7,6 +7,10 @@
 import "server-only";
 
 import { createServerClient } from "@/lib/supabase/server";
+import {
+  distinctDueDates,
+  earliestDueAt,
+} from "@/lib/assignment-due-dates";
 
 export type AssignmentStatus = "draft" | "active" | "overdue";
 
@@ -41,26 +45,22 @@ type AssignmentSelectRow = {
   title: string;
   due_at: string | null;
   released_at: string | null;
-  class_period_id: string | null;
   teacher:
     | { first_name: string | null; last_name: string | null }
     | { first_name: string | null; last_name: string | null }[]
     | null;
-  period:
-    | {
-        period_label: string;
-        class:
-          | { name: string; subject: { name: string } | { name: string }[] | null }
-          | { name: string; subject: { name: string } | { name: string }[] | null }[]
-          | null;
-      }
-    | {
-        period_label: string;
-        class:
-          | { name: string; subject: { name: string } | { name: string }[] | null }
-          | { name: string; subject: { name: string } | { name: string }[] | null }[]
-          | null;
-      }[]
+  assignment_class_periods: {
+    class_period_id: string;
+    due_at: string | null;
+    period: PeriodEmbed | PeriodEmbed[] | null;
+  }[];
+};
+
+type PeriodEmbed = {
+  period_label: string;
+  class:
+    | { name: string; subject: { name: string } | { name: string }[] | null }
+    | { name: string; subject: { name: string } | { name: string }[] | null }[]
     | null;
 };
 
@@ -78,9 +78,13 @@ export async function getSchoolAssignments(
   const { data: aData, error: aErr } = await supabase
     .from("assignments")
     .select(
-      `id, title, due_at, released_at, class_period_id,
+      `id, title, due_at, released_at,
        teacher:teacher_id ( first_name, last_name ),
-       period:class_period_id ( period_label, class:class_id ( name, subject:subject_id ( name ) ) )`
+       assignment_class_periods (
+         class_period_id,
+         due_at,
+         period:class_period_id ( period_label, class:class_id ( name, subject:subject_id ( name ) ) )
+       )`
     )
     .eq("school_id", schoolId)
     .order("due_at", { ascending: false });
@@ -109,7 +113,9 @@ export async function getSchoolAssignments(
   // Enrolled counts per class period (for the "X / Y submitted" denominator).
   const periodIds = [
     ...new Set(
-      assignments.map((a) => a.class_period_id).filter((id): id is string => !!id)
+      assignments.flatMap((a) =>
+        (a.assignment_class_periods ?? []).map((p) => p.class_period_id)
+      )
     ),
   ];
   const enrolledByPeriod = new Map<string, number>();
@@ -134,17 +140,28 @@ export async function getSchoolAssignments(
 
   const rows: SchoolAssignmentRow[] = assignments.map((a) => {
     const teacher = one(a.teacher);
-    const period = one(a.period);
-    const klass = period ? one(period.class) : null;
-    const subject = klass ? one(klass.subject) : null;
-    const subjectName = subject?.name ?? null;
-    if (subjectName) subjectSet.add(subjectName);
+    const periods = a.assignment_class_periods ?? [];
+    // An assignment can now span several classes. The row still shows one
+    // class, so show the first and let the count carry the rest; every
+    // subject it touches is collected for the filter.
+    const firstPeriod = periods[0] ? one(periods[0].period) : null;
+    const klass = firstPeriod ? one(firstPeriod.class) : null;
+    const subjectName = klass ? one(klass.subject)?.name ?? null : null;
+    for (const p of periods) {
+      const s = one(one(p.period)?.class ?? null);
+      const n = s ? one(s.subject)?.name : null;
+      if (n) subjectSet.add(n);
+    }
+
+    // Overdue is judged against the LAST deadline any of its classes has —
+    // the assignment is not finished while one class still has time left.
+    const latestDue = distinctDueDates(a.due_at, periods).pop() ?? a.due_at;
 
     // due_at is a calendar-only date (UTC midnight); it's overdue once the
     // whole due day has elapsed, not the instant UTC midnight passes.
     const status: AssignmentStatus = !a.released_at
       ? "draft"
-      : a.due_at && new Date(a.due_at).getTime() + 86_400_000 <= now
+      : latestDue && new Date(latestDue).getTime() + 86_400_000 <= now
         ? "overdue"
         : "active";
     if (status === "active") active += 1;
@@ -160,13 +177,19 @@ export async function getSchoolAssignments(
         "Unknown teacher",
       subjectName,
       className: klass?.name ?? null,
-      periodLabel: period?.period_label ?? null,
-      dueAt: a.due_at,
+      periodLabel:
+        periods.length > 1
+          ? `${firstPeriod?.period_label ?? "—"} +${periods.length - 1}`
+          : firstPeriod?.period_label ?? null,
+      dueAt: earliestDueAt(a.due_at, periods),
       status,
       submitted,
-      enrolled: a.class_period_id
-        ? enrolledByPeriod.get(a.class_period_id) ?? 0
-        : 0,
+      // The "X / Y submitted" denominator has to span every class the
+      // assignment went to, or a two-period assignment reads as over-100%.
+      enrolled: periods.reduce(
+        (sum, p) => sum + (enrolledByPeriod.get(p.class_period_id) ?? 0),
+        0
+      ),
     };
   });
 

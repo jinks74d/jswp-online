@@ -141,6 +141,7 @@ export default async function AssignmentDetailPage({
           initial={assignment}
           classPeriods={classPeriods}
           schoolId={profile.school_id!}
+          teacherId={profile.id}
           studentWritingCount={studentWritingCount}
         />
       </div>

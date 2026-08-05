@@ -18,8 +18,10 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, FileText } from "lucide-react";
 import { requireRole } from "@/lib/auth";
+import { createServerClient } from "@/lib/supabase/server";
+import { getRubricFileSignedUrl } from "@/lib/storage/assignment-rubrics";
 import { getWritingForTeacherReview } from "@/lib/queries/teacher-writings";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { groupSectionFeedback } from "@/lib/section-feedback";
@@ -53,6 +55,18 @@ export default async function TeacherWritingReviewPage({
   const { byStep: feedbackByStep, overall: overallFeedback } =
     groupSectionFeedback(feedback);
 
+  // The attached rubric document, signed for this render so the teacher can
+  // open it in a second tab while scoring.
+  let rubricFileUrl: string | null = null;
+  if (writing.assignment.rubric_file) {
+    const supabase = await createServerClient();
+    const res = await getRubricFileSignedUrl(
+      supabase,
+      writing.assignment.rubric_file.path
+    );
+    if (res.ok) rubricFileUrl = res.url;
+  }
+
   const studentName =
     [writing.student.first_name, writing.student.last_name]
       .filter(Boolean)
@@ -83,6 +97,22 @@ export default async function TeacherWritingReviewPage({
         <div className="text-sm text-stone-600">
           {writing.assignment.title}
         </div>
+        {rubricFileUrl && writing.assignment.rubric_file && (
+          <a
+            href={rubricFileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-900 underline"
+          >
+            <FileText className="w-4 h-4 shrink-0" aria-hidden />
+            <span className="break-all">
+              {writing.assignment.rubric_file.name}
+            </span>
+            <span className="text-xs text-stone-600 no-underline">
+              (rubric — opens in a new tab)
+            </span>
+          </a>
+        )}
         <ReviewActions
           writingId={writing.id}
           status={writing.status}

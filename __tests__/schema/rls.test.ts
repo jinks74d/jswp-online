@@ -61,6 +61,11 @@ const TEST = {
   // fixture. Migration 0009's tightened assignments_teacher_own
   // policy must keep teacherClient from seeing this row.
   crossTenantOwned: "11111111-0000-0000-0000-000000004002",
+  // Migration 0050 probe: released, and carrying the LEGACY class_period_id
+  // pointing at the student's own period, but with no assignment_class_periods
+  // row. Student visibility must flow through the junction only — if the
+  // legacy column still granted access, this would be readable.
+  releasedNoPeriodRow: "11111111-0000-0000-0000-000000004003",
   alexWriting: "22222222-0000-0000-0000-000000000001",
   baileyWriting: "22222222-0000-0000-0000-000000000002",
 } as const;
@@ -170,6 +175,48 @@ beforeAll(async () => {
     })
     .throwOnError();
 
+  // 4b-ii. Since migration 0050, student visibility is decided by
+  // assignment_class_periods, not assignments.class_period_id. Both probes
+  // above must therefore be genuinely REACHABLE by the student's period —
+  // otherwise they'd be hidden because they were assigned to nobody, and the
+  // release-gate assertions below would pass for the wrong reason.
+  await svc
+    .from("assignment_class_periods")
+    .upsert(
+      [TEST.unreleased, TEST.unreleasedNull].map((assignment_id) => ({
+        assignment_id,
+        class_period_id: IDS.classPeriod,
+        due_at: null,
+      }))
+    )
+    .throwOnError();
+
+  // 4b-iii. Migration 0050 probe — see TEST.releasedNoPeriodRow. Released and
+  // pointing at the student's period via the legacy column, but deliberately
+  // given NO junction row.
+  await svc
+    .from("assignments")
+    .upsert({
+      id: TEST.releasedNoPeriodRow,
+      teacher_id: IDS.teacher,
+      class_period_id: IDS.classPeriod,
+      district_id: IDS.district,
+      school_id: IDS.school,
+      title: "RLS Test — Released, No Period Row",
+      prompt: "Legacy class_period_id only; must stay hidden from students.",
+      mode: "expository",
+      is_essay: false,
+      num_body_paragraphs: 1,
+      default_chunk_ratio: "nonlit_expository_two_plus_to_one",
+      default_chunks_per_bp: 1,
+      released_at: "2020-01-01T00:00:00Z",
+    })
+    .throwOnError();
+  await svc
+    .from("assignment_class_periods")
+    .delete()
+    .eq("assignment_id", TEST.releasedNoPeriodRow);
+
   // 4c. Cross-tenant-owned probe for migration 0009: teacher_id matches
   // the demo-district teacher but district_id/school_id point at the
   // cross-tenant fixture. Only insertable via service role; the tightened
@@ -254,7 +301,12 @@ afterAll(async () => {
   await svc
     .from("assignments")
     .delete()
-    .in("id", [TEST.unreleased, TEST.unreleasedNull, TEST.crossTenantOwned]);
+    .in("id", [
+      TEST.unreleased,
+      TEST.unreleasedNull,
+      TEST.crossTenantOwned,
+      TEST.releasedNoPeriodRow,
+    ]);
   await svc.from("user_profiles").delete().eq("id", TEST.teacher2);
   await svc.from("schools").delete().eq("id", TEST.school2);
   await svc.from("districts").delete().eq("id", TEST.district2);
@@ -410,6 +462,105 @@ describe("Student access to assignments", () => {
         .update({ released_at: null })
         .eq("id", TEST.unreleasedNull);
     }
+  });
+});
+
+/* ─── Migration 0050: one assignment, many class periods ─────────────── */
+
+describe("Assignment class periods (migration 0050)", () => {
+  it("a released assignment with NO junction row is hidden, even though the legacy class_period_id points at the student's period", async () => {
+    // The migration's central claim: visibility moved to
+    // assignment_class_periods. If the legacy column still granted access
+    // this row would be readable, and every per-period rule below would be
+    // decorative.
+    const { data, error } = await alexClient
+      .from("assignments")
+      .select("id")
+      .eq("id", TEST.releasedNoPeriodRow);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("adding a junction row for the student's period reveals it", async () => {
+    await svc
+      .from("assignment_class_periods")
+      .upsert({
+        assignment_id: TEST.releasedNoPeriodRow,
+        class_period_id: IDS.classPeriod,
+        due_at: null,
+      })
+      .throwOnError();
+
+    try {
+      const { data, error } = await alexClient
+        .from("assignments")
+        .select("id")
+        .eq("id", TEST.releasedNoPeriodRow);
+
+      expect(error).toBeNull();
+      expect(data!.length).toBe(1);
+    } finally {
+      await svc
+        .from("assignment_class_periods")
+        .delete()
+        .eq("assignment_id", TEST.releasedNoPeriodRow);
+    }
+  });
+
+  it("a student sees the junction row for their own period", async () => {
+    const { data, error } = await alexClient
+      .from("assignment_class_periods")
+      .select("assignment_id, class_period_id")
+      .eq("assignment_id", IDS.assignmentExpository);
+
+    expect(error).toBeNull();
+    expect(data!.length).toBeGreaterThan(0);
+    // Never another class's schedule — the read policy restricts students to
+    // periods they are enrolled in.
+    for (const row of data!) {
+      expect(row.class_period_id).toBe(IDS.classPeriod);
+    }
+  });
+
+  it("a student cannot assign an assignment to a class period", async () => {
+    const { error } = await alexClient
+      .from("assignment_class_periods")
+      .insert({
+        assignment_id: IDS.assignmentExpository,
+        class_period_id: IDS.classPeriod,
+        due_at: null,
+      });
+
+    expect(error).not.toBeNull();
+  });
+
+  it("the owning teacher can read every period on their assignment", async () => {
+    const { data, error } = await teacherClient
+      .from("assignment_class_periods")
+      .select("assignment_id")
+      .eq("assignment_id", IDS.assignmentExpository);
+
+    expect(error).toBeNull();
+    expect(data!.length).toBeGreaterThan(0);
+  });
+
+  it("a teacher from another school cannot read them", async () => {
+    const { data, error } = await teacher2Client
+      .from("assignment_class_periods")
+      .select("assignment_id")
+      .eq("assignment_id", IDS.assignmentExpository);
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("anon cannot read them", async () => {
+    const { data } = await anonClient
+      .from("assignment_class_periods")
+      .select("assignment_id");
+
+    expect(data ?? []).toEqual([]);
   });
 });
 

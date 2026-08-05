@@ -20,6 +20,12 @@ import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "@/lib/audit-log";
 import { validateRubric, emptyRubric } from "@/lib/rubric";
+import {
+  isRubricFilePathForTeacher,
+  parseRubricFileInput,
+  type RubricFile,
+} from "@/lib/rubric-file";
+import { removeRubricFile } from "@/lib/storage/assignment-rubrics";
 import { sanitizeSourceHtml, sourceHtmlToSubstrate } from "@/lib/source-content";
 import type { Database, Json } from "@/lib/database.types";
 
@@ -50,7 +56,9 @@ export type AssignmentFormState = {
     num_body_paragraphs?: string;
     default_chunks_per_bp?: string;
     due_at?: string;
+    class_periods?: string;
     rubric?: string;
+    rubric_file?: string;
   };
   success?: string;
 };
@@ -89,8 +97,11 @@ function parseCommonFields(formData: FormData) {
     formData.get("has_counterargument") === "on" ||
     formData.get("has_counterargument") === "true";
   const dueAt = parseTimestamp(String(formData.get("due_at") ?? ""));
-  const classPeriodIdRaw = String(formData.get("class_period_id") ?? "");
-  const classPeriodId = classPeriodIdRaw === "" ? null : classPeriodIdRaw;
+  const periods = parseClassPeriods(formData);
+  // The legacy single column (migration 0050 keeps it until every reader is
+  // cut over). First selected period wins so existing readers see something
+  // sensible; `assignment_class_periods` is the real answer.
+  const classPeriodId = periods[0]?.class_period_id ?? null;
 
   return {
     title,
@@ -102,7 +113,154 @@ function parseCommonFields(formData: FormData) {
     hasCounterargument,
     dueAt,
     classPeriodId,
+    periods,
   };
+}
+
+/**
+ * Parse the `class_periods` hidden input — a JSON array of
+ * `{ class_period_id, due_at }`, one per period the teacher selected.
+ *
+ * `due_at` is that period's override; null/absent inherits the assignment
+ * default (see lib/assignment-due-dates.ts). Duplicates are collapsed rather
+ * than rejected: the junction's primary key would reject them anyway, and a
+ * repeated period is a UI glitch, not something to fail a teacher's save over.
+ * The caller still has to prove the teacher is on each period — see
+ * `assertTeachesPeriods`.
+ */
+function parseClassPeriods(formData: FormData): AssignmentPeriodInput[] {
+  const raw = formData.get("class_periods");
+  if (raw == null || raw === "") return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(raw));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+
+  const out: AssignmentPeriodInput[] = [];
+  const seen = new Set<string>();
+  for (const entry of parsed) {
+    if (typeof entry !== "object" || entry === null) continue;
+    const o = entry as Record<string, unknown>;
+    const id =
+      typeof o.class_period_id === "string" ? o.class_period_id.trim() : "";
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      class_period_id: id,
+      due_at:
+        typeof o.due_at === "string" ? parseTimestamp(o.due_at) : null,
+    });
+  }
+  return out;
+}
+
+type AssignmentPeriodInput = {
+  class_period_id: string;
+  due_at: string | null;
+};
+
+/**
+ * Refuse period ids the caller does not actually teach.
+ *
+ * The select is populated from the teacher's own periods, so a bad id here is
+ * a forged post, not a mistake. Without this a teacher could assign work into
+ * a colleague's class: `assignments_teacher_own` lets them write any row where
+ * `teacher_id = auth.uid()`, and the junction's write policy defers to
+ * `auth_user_can_write_assignment`, which is satisfied by owning the
+ * assignment — neither one looks at whether the PERIOD is theirs.
+ */
+async function assertTeachesPeriods(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  teacherId: string,
+  periods: readonly AssignmentPeriodInput[]
+): Promise<string | null> {
+  if (periods.length === 0) return null;
+
+  const ids = periods.map((p) => p.class_period_id);
+  const { data, error } = await supabase
+    .from("class_teacher_assignments")
+    .select("class_period_id")
+    .eq("teacher_id", teacherId)
+    .in("class_period_id", ids);
+
+  if (error) return `Could not verify your class periods: ${error.message}`;
+
+  const allowed = new Set((data ?? []).map((r) => r.class_period_id));
+  const rejected = ids.filter((id) => !allowed.has(id));
+  if (rejected.length > 0) {
+    return "One of the selected class periods isn't yours to assign to.";
+  }
+  return null;
+}
+
+/**
+ * Replace an assignment's periods with exactly `periods`.
+ *
+ * Delete-then-insert is safe here in a way it is NOT for sources: a junction
+ * row carries only a due date, and nothing references it (student_writings
+ * hang off the assignment, not the pairing), so removing and re-adding a
+ * period loses no student work. Removing a period a student already started
+ * in is still meaningful — it revokes their access — which is why the
+ * published path below only ever ADDS.
+ */
+async function writeAssignmentPeriods(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  assignmentId: string,
+  periods: readonly AssignmentPeriodInput[]
+): Promise<string | null> {
+  const { error: delErr } = await supabase
+    .from("assignment_class_periods")
+    .delete()
+    .eq("assignment_id", assignmentId);
+  if (delErr) return `Failed to update class periods: ${delErr.message}`;
+
+  if (periods.length === 0) return null;
+
+  const { error: insErr } = await supabase
+    .from("assignment_class_periods")
+    .insert(
+      periods.map((p) => ({
+        assignment_id: assignmentId,
+        class_period_id: p.class_period_id,
+        due_at: p.due_at,
+      }))
+    );
+  if (insErr) return `Failed to update class periods: ${insErr.message}`;
+  return null;
+}
+
+/**
+ * Published path: additive only, mirroring how sources and the rubric document
+ * behave once students can see the assignment.
+ *
+ * A teacher can hand the same assignment to another class mid-unit, and can
+ * still adjust the due date of a class already on it (a deadline extension is
+ * the single most common post-publish edit and withholding it helps nobody).
+ * What they cannot do is REMOVE a period — that would silently revoke access
+ * for students who may already have work in progress.
+ */
+async function appendAssignmentPeriods(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  assignmentId: string,
+  periods: readonly AssignmentPeriodInput[]
+): Promise<string | null> {
+  if (periods.length === 0) return null;
+
+  const { error } = await supabase
+    .from("assignment_class_periods")
+    .upsert(
+      periods.map((p) => ({
+        assignment_id: assignmentId,
+        class_period_id: p.class_period_id,
+        due_at: p.due_at,
+      })),
+      { onConflict: "assignment_id,class_period_id" }
+    );
+  if (error) return `Failed to update class periods: ${error.message}`;
+  return null;
 }
 
 const VALID_RENDER_MODES = new Set(["pdf", "rich", "plain", "image"]);
@@ -406,6 +564,81 @@ function parseAndValidateRubric(formData: FormData): {
   return { ok: true, rubric: result.value };
 }
 
+/**
+ * Resolve the attached rubric document from the `rubric_file` hidden input.
+ *
+ * The client uploads the file itself and posts the resulting storage key back,
+ * so the key is UNTRUSTED input that the server then both persists and — on a
+ * later save — deletes. Requiring it to sit under the caller's own upload
+ * folder is what stops this two-save sequence:
+ *
+ *   Save 1 — a teacher forges `path` to a colleague's rubric object.
+ *   Save 2 — the row now "used to" point there, so the replace-sweep below
+ *            deletes a file that is still referenced by the other row.
+ *
+ * A school-wide check would let that through, since both teachers share a
+ * school. See isRubricFilePathForTeacher.
+ *
+ * A missing/blank/malformed field means "no rubric document", which is also
+ * how a removal arrives.
+ */
+function resolveRubricFile(
+  formData: FormData,
+  schoolId: string,
+  teacherId: string
+):
+  | { ok: true; file: RubricFile | null }
+  | { ok: false; state: AssignmentFormState } {
+  const file = parseRubricFileInput(formData.get("rubric_file"));
+  if (file && !isRubricFilePathForTeacher(file.path, schoolId, teacherId)) {
+    return {
+      ok: false,
+      state: {
+        fieldErrors: {
+          rubric_file:
+            "That rubric file wasn't uploaded from this form. Re-select it and save again.",
+        },
+      },
+    };
+  }
+  return { ok: true, file };
+}
+
+/** The three DB columns for an attached rubric document (or its absence). */
+function rubricFileColumns(file: RubricFile | null) {
+  return {
+    rubric_file_path: file?.path ?? null,
+    rubric_file_name: file?.name ?? null,
+    rubric_file_mime: file?.mime || null,
+  };
+}
+
+/**
+ * Sweep a storage object the just-saved row no longer points at. Best-effort
+ * and deliberately AFTER the successful write: deleting first would destroy
+ * the teacher's file if the update then failed.
+ *
+ * Re-checks ownership of the OUTGOING path even though resolveRubricFile
+ * already gates the incoming one. Belt and braces on the destructive step: a
+ * row could carry a path written before this rule existed, or by some future
+ * code path, and "delete whatever the column says" is exactly the primitive
+ * that turns a bad column value into someone else's lost file.
+ */
+async function sweepReplacedRubricFile(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  previousPath: string | null,
+  nextPath: string | null,
+  schoolId: string,
+  teacherId: string
+): Promise<void> {
+  if (!previousPath || previousPath === nextPath) return;
+  if (!isRubricFilePathForTeacher(previousPath, schoolId, teacherId)) {
+    // Not ours to delete — drop the reference, leave the object alone.
+    return;
+  }
+  await removeRubricFile(supabase, previousPath);
+}
+
 function validateCommon(
   f: ReturnType<typeof parseCommonFields>,
   mode: Mode
@@ -528,7 +761,20 @@ export async function createDraftAssignment(
     return { error: "Your profile isn't attached to a district." };
   }
 
+  const rf = resolveRubricFile(formData, profile.school_id!, profile.id);
+  if (!rf.ok) return rf.state;
+
   const supabase = await createServerClient();
+
+  const periodAuthErr = await assertTeachesPeriods(
+    supabase,
+    profile.id,
+    f.periods
+  );
+  if (periodAuthErr) {
+    return { fieldErrors: { class_periods: periodAuthErr } };
+  }
+
   const { data, error } = await supabase
     .from("assignments")
     .insert({
@@ -544,6 +790,7 @@ export async function createDraftAssignment(
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
       rubric: r.rubric as unknown as Json,
+      ...rubricFileColumns(rf.file),
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,
     })
@@ -562,6 +809,9 @@ export async function createDraftAssignment(
   );
   if (srcErr) return { error: srcErr };
 
+  const periodErr = await writeAssignmentPeriods(supabase, data.id, f.periods);
+  if (periodErr) return { error: periodErr };
+
   redirect(`/dashboard/assignments/${data.id}`);
 }
 
@@ -579,7 +829,7 @@ export async function updateDraftAssignment(
   const supabase = await createServerClient();
   const { data: existing } = await supabase
     .from("assignments")
-    .select("released_at, mode")
+    .select("released_at, mode, school_id, rubric_file_path")
     .eq("id", assignmentId)
     .eq("teacher_id", profile.id)
     .maybeSingle();
@@ -588,6 +838,19 @@ export async function updateDraftAssignment(
 
   const f = parseCommonFields(formData);
   const isPublished = existing.released_at !== null;
+
+  // profile.id is the row's teacher_id — the select above filters on it.
+  const rf = resolveRubricFile(formData, existing.school_id, profile.id);
+  if (!rf.ok) return rf.state;
+
+  const periodAuthErr = await assertTeachesPeriods(
+    supabase,
+    profile.id,
+    f.periods
+  );
+  if (periodAuthErr) {
+    return { fieldErrors: { class_periods: periodAuthErr } };
+  }
 
   if (!f.title) {
     return { fieldErrors: { title: "Title is required." } };
@@ -617,12 +880,30 @@ export async function updateDraftAssignment(
     );
     if (srcErr) return { error: srcErr };
 
+    // Same additive rule for class periods: hand the assignment to another
+    // class mid-unit, and adjust the deadline of a class already on it, but
+    // never drop a period — students there may have work in progress, and
+    // removal would revoke their access to it.
+    const periodErr = await appendAssignmentPeriods(
+      supabase,
+      assignmentId,
+      f.periods
+    );
+    if (periodErr) return { error: periodErr };
+
     update = {
       title: f.title,
       prompt: f.prompt,
       due_at: f.dueAt,
-      class_period_id: f.classPeriodId,
     };
+
+    // The rubric document follows the same additive rule as sources: a
+    // teacher who published without one can still attach it, but a document
+    // students may already have been graded against is not swapped or
+    // removed underneath them. Unpublish to do that.
+    if (!existing.rubric_file_path && rf.file) {
+      Object.assign(update, rubricFileColumns(rf.file));
+    }
   } else {
     const v = validateCommon(f, existing.mode);
     if (!v.ok) return v.state;
@@ -642,6 +923,15 @@ export async function updateDraftAssignment(
     );
     if (srcErr) return { error: srcErr };
 
+    // Replace the periods outright. Safe pre-publish for the same reason as
+    // sources: no student can have started work on an unreleased assignment.
+    const periodErr = await writeAssignmentPeriods(
+      supabase,
+      assignmentId,
+      f.periods
+    );
+    if (periodErr) return { error: periodErr };
+
     update = {
       title: f.title,
       prompt: f.prompt,
@@ -651,6 +941,7 @@ export async function updateDraftAssignment(
       default_chunks_per_bp: f.isEssay ? f.defaultChunksPerBp : 1,
       has_counterargument: v.hasCounterargument,
       rubric: r.rubric as unknown as Json,
+      ...rubricFileColumns(rf.file),
       due_at: f.dueAt,
       class_period_id: f.classPeriodId,
     };
@@ -663,6 +954,19 @@ export async function updateDraftAssignment(
     .eq("teacher_id", profile.id);
 
   if (error) return { error: error.message };
+
+  // Only now that the row is committed: drop the object the row used to point
+  // at. `update` carries rubric_file_path only when this save was allowed to
+  // change it, so a published assignment never sweeps its locked document.
+  if ("rubric_file_path" in update) {
+    await sweepReplacedRubricFile(
+      supabase,
+      existing.rubric_file_path,
+      (update.rubric_file_path as string | null) ?? null,
+      existing.school_id,
+      profile.id
+    );
+  }
 
   revalidatePath(`/dashboard/assignments/${assignmentId}`);
   return { success: "Saved." };
@@ -714,7 +1018,7 @@ export async function deleteAssignment(
   const supabase = await createServerClient();
   const { data: existing } = await supabase
     .from("assignments")
-    .select("released_at")
+    .select("released_at, school_id, rubric_file_path")
     .eq("id", assignmentId)
     .eq("teacher_id", profile.id)
     .maybeSingle();
@@ -742,6 +1046,20 @@ export async function deleteAssignment(
   const filePaths = (srcFiles ?? [])
     .map((r) => r.source_file_path)
     .filter((p): p is string => !!p);
+  // The attached rubric document lives in the same bucket — sweep it too, but
+  // only when the stored path is one this teacher uploaded. A column value
+  // that fails that test is a reference to someone else's object, and
+  // deleting the row is not a licence to delete their file.
+  if (
+    existing.rubric_file_path &&
+    isRubricFilePathForTeacher(
+      existing.rubric_file_path,
+      existing.school_id,
+      profile.id
+    )
+  ) {
+    filePaths.push(existing.rubric_file_path);
+  }
   if (filePaths.length > 0) {
     await supabase.storage.from(SOURCE_BUCKET).remove(filePaths);
   }
@@ -789,7 +1107,7 @@ export async function cancelAssignment(
   const supabase = await createServerClient();
   const { data: assignment, error: readErr } = await supabase
     .from("assignments")
-    .select("id, title, teacher_id, district_id, school_id")
+    .select("id, title, teacher_id, district_id, school_id, rubric_file_path")
     .eq("id", assignmentId)
     .maybeSingle();
 
@@ -836,6 +1154,21 @@ export async function cancelAssignment(
   const filePaths = (srcFiles ?? [])
     .map((r) => r.source_file_path)
     .filter((p): p is string => !!p);
+  // The attached rubric document lives in the same bucket — sweep it too.
+  // Scoped to the OWNING teacher, not the caller: an admin may run this, and
+  // the file belongs to whoever authored the assignment. This runs on the
+  // service-role client, which bypasses storage RLS, so the check is the only
+  // thing standing between a stray column value and another user's object.
+  if (
+    assignment.rubric_file_path &&
+    isRubricFilePathForTeacher(
+      assignment.rubric_file_path,
+      assignment.school_id,
+      assignment.teacher_id
+    )
+  ) {
+    filePaths.push(assignment.rubric_file_path);
+  }
   if (filePaths.length > 0) {
     await admin.storage.from(SOURCE_BUCKET).remove(filePaths);
   }
@@ -919,7 +1252,9 @@ export async function publishAssignment(
   const supabase = await createServerClient();
   const { data: existing } = await supabase
     .from("assignments")
-    .select("released_at, title, prompt, class_period_id, due_at")
+    .select(
+      "released_at, title, prompt, due_at, assignment_class_periods ( class_period_id )"
+    )
     .eq("id", assignmentId)
     .eq("teacher_id", profile.id)
     .maybeSingle();
@@ -932,8 +1267,16 @@ export async function publishAssignment(
   if (!existing.due_at) {
     return { error: "Set a due date before publishing." };
   }
-  if (!existing.class_period_id) {
-    return { error: "Pick a class period before publishing." };
+  // Publishing is what makes students able to see this, and the junction is
+  // the only thing that decides which students those are — an assignment with
+  // no periods would release to nobody.
+  const periodCount = (
+    existing as unknown as {
+      assignment_class_periods?: { class_period_id: string }[];
+    }
+  ).assignment_class_periods?.length;
+  if (!periodCount) {
+    return { error: "Pick at least one class period before publishing." };
   }
 
   const { error } = await supabase

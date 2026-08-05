@@ -10,6 +10,38 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
+### Drop the legacy `assignments.class_period_id` column
+Migration `0050` moved assignment→class-period to a junction table (`assignment_class_periods`) so one assignment can go to several classes with a per-class due date. Following the `0040` precedent, the legacy single column stays in place and is still written (set to the FIRST selected period) so nothing breaks mid-transition. Every RLS policy and every read path now goes through the junction.
+
+Remaining readers of the legacy column, to cut over before dropping it:
+- `lib/queries/assignment-analytics.ts`, `lib/queries/student-progress.ts` — both still scope by the single period, so an assignment spanning two classes reports on one of them.
+- `migrations/0001` index `idx_assignments_class_period` goes with the column.
+
+The drop migration should also remove the `class_period_id` write from `createDraftAssignment` / `updateDraftAssignment` in `lib/actions/assignments.ts`.
+- **Identified:** 2026-08-05, with the multi-class assignment work
+- **Priority:** medium — nothing is broken, but the duplicated pointer is exactly the drift risk CLAUDE.md §14.3 warns about
+
+### `assignment-sources` bucket: any teacher can delete any file in their school
+`assignment_sources_teacher_write` (migration `0003`) is `FOR ALL`, which includes `DELETE`, scoped only to the `school-{uuid}/` path prefix. So any teacher can delete (or overwrite) **any** object under their own school's prefix straight from the browser client — including another teacher's uploaded source PDF or rubric document. Nothing in the app does this, but nothing in the policy stops it either.
+
+Noticed 2026-08-05 while fixing an IDOR in the rubric-document sweep. That bug is fixed at the app layer (paths are bound to `auth.uid()` via `lib/rubric-file.ts`), but the **storage policy underneath is still school-wide**, and the older source-file path has no equivalent guard: `writeAssignmentSources` persists `source_file_path` with no validation at all, so the same forge-then-sweep shape may exist there.
+
+Likely fix: split the `FOR ALL` policy into `INSERT`/`UPDATE`/`SELECT` scoped to the school and a `DELETE` scoped to `owner = auth.uid()` (storage.objects carries `owner`), then audit `writeAssignmentSources` for the same path-trust issue.
+- **Identified:** 2026-08-05, during the rubric-document security review
+- **Priority:** medium — requires an authenticated teacher account and is destructive, not a disclosure; same-school blast radius
+
+### Rubric document: import criteria from the uploaded file
+Shipped (migration `0049`): a teacher can attach the rubric as a real document — PDF / Word / Excel / CSV / OpenDocument — on `assignments.rubric_file_{path,name,mime}`. Teachers see it on the grading screen, students on the assignment page. It is a **reference artifact only**: nothing scores against it, so `rubric_scores`, the grading panel, and criterion analytics still need the structured `rubric` JSONB typed in by hand.
+
+Not built: parsing the uploaded file into structured criteria. Every parser is already a dependency (`xlsx` from roster import, `mammoth` from source upload, `pdfjs-dist`), so the work is the mapping and the review UX, not new packages. Difficulty splits sharply by format:
+- **.xlsx / .csv** — a real grid. Criteria as rows × levels as columns (or transposed); reliably parseable.
+- **.docx** — `mammoth` yields HTML; rubrics are nearly always a `<table>`, so the structure survives.
+- **.pdf** — text extraction drops the table grid. Best-effort at most, and the teacher must review every cell before saving.
+
+Whatever the format, the import should prefill `RubricEditor` for the teacher to correct rather than write straight to the column.
+- **Identified:** 2026-08-05, alongside the rubric-document upload
+- **Priority:** teacher-time saver, not a blocker — the document alone already removes the "where is the rubric" problem
+
 ### `district-logos` bucket allows listing (needs an app change, not just SQL)
 Supabase's database linter flags `district_logos_public_read` (migration `0003`) as a broad `SELECT` policy on `storage.objects` that lets any client **list** every file in the public `district-logos` bucket, not merely fetch a known object URL.
 

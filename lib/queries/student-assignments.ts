@@ -19,6 +19,11 @@
 import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
+import type { RubricFile } from "@/lib/rubric-file";
+import {
+  earliestDueAt,
+  type PeriodDueDate,
+} from "@/lib/assignment-due-dates";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 type WritingStatus = Database["public"]["Enums"]["jswp_writing_status"];
@@ -71,6 +76,8 @@ export interface StudentAssignmentDetail {
   has_counterargument: boolean;
   sources: StudentSource[];
   rubric: Database["public"]["Tables"]["assignments"]["Row"]["rubric"];
+  /** Attached rubric document, folded from the three rubric_file_* columns. */
+  rubric_file: RubricFile | null;
   due_at: string | null;
   released_at: string | null;
   status: DerivedStatus;
@@ -128,8 +135,12 @@ export async function getStudentAssignmentsList(
   const [assignmentsRes, writingsRes] = await Promise.all([
     supabase
       .from("assignments")
+      // assignment_class_periods is embedded for the DUE DATE, and its RLS
+      // does the per-student work: a student may only read the row for a
+      // period they're enrolled in (migration 0050), so whatever comes back
+      // here is already this student's own deadline, not another class's.
       .select(
-        "id, title, mode, due_at, released_at, assignment_sources(count)"
+        "id, title, mode, due_at, released_at, assignment_sources(count), assignment_class_periods(class_period_id, due_at)"
       )
       .order("due_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false }),
@@ -156,16 +167,21 @@ export async function getStudentAssignmentsList(
     (writingsRes.data ?? []) as RawWriting[]
   );
 
-  return (assignmentsRes.data ?? []).map((a) => {
+  const items = (assignmentsRes.data ?? []).map((a) => {
     const w = writingByAssignment.get(a.id) ?? null;
     const sourceCount =
       (a as { assignment_sources?: { count: number }[] }).assignment_sources?.[0]
         ?.count ?? 0;
+    const periods =
+      (a as { assignment_class_periods?: PeriodDueDate[] })
+        .assignment_class_periods ?? [];
     return {
       id: a.id,
       title: a.title,
       mode: a.mode,
-      due_at: a.due_at,
+      // A student enrolled in two periods that both received this assignment
+      // is held to the earlier deadline.
+      due_at: earliestDueAt(a.due_at, periods),
       released_at: a.released_at,
       has_source_text: sourceCount > 0,
       status: deriveStatus(w?.status ?? null),
@@ -180,6 +196,24 @@ export async function getStudentAssignmentsList(
         : null,
     };
   });
+
+  // The DB ordered by the assignment-level default; re-sort on the deadline
+  // the student is actually held to, so a per-class override cannot leave the
+  // list claiming a different order than the dates it displays.
+  return items.sort(compareByDueAtThenNewest);
+}
+
+function compareByDueAtThenNewest(
+  a: { due_at: string | null },
+  b: { due_at: string | null }
+): number {
+  if (a.due_at && b.due_at) {
+    return new Date(a.due_at).getTime() - new Date(b.due_at).getTime();
+  }
+  // Undated work sorts last — it is not what a student needs to act on next.
+  if (a.due_at) return -1;
+  if (b.due_at) return 1;
+  return 0;
 }
 
 export async function getStudentAssignmentDetail(
@@ -192,7 +226,10 @@ export async function getStudentAssignmentDetail(
     .from("assignments")
     .select(
       `id, title, prompt, mode, is_essay, num_body_paragraphs,
-       has_counterargument, rubric, due_at, released_at,
+       has_counterargument, rubric,
+       rubric_file_path, rubric_file_name, rubric_file_mime,
+       due_at, released_at,
+       assignment_class_periods ( class_period_id, due_at ),
        assignment_sources (
          position, id, kind, source_text, source_title, source_author,
          source_citation, source_url, source_render_mode, source_html,
@@ -207,13 +244,38 @@ export async function getStudentAssignmentDetail(
   }
   if (!assignment) return null;
 
-  const { assignment_sources, ...flat } = assignment as unknown as Omit<
+  const {
+    assignment_sources,
+    assignment_class_periods,
+    rubric_file_path,
+    rubric_file_name,
+    rubric_file_mime,
+    ...flat
+  } = assignment as unknown as Omit<
     StudentAssignmentDetail,
-    "sources" | "status" | "writing"
-  > & { assignment_sources?: (StudentSource & { position: number })[] };
+    "sources" | "status" | "writing" | "rubric_file"
+  > & {
+    assignment_sources?: (StudentSource & { position: number })[];
+    assignment_class_periods?: PeriodDueDate[];
+    rubric_file_path: string | null;
+    rubric_file_name: string | null;
+    rubric_file_mime: string | null;
+  };
+
+  // RLS narrowed this to the student's own period(s) — see the list query.
+  const dueAt = earliestDueAt(flat.due_at, assignment_class_periods ?? []);
   const sources = [...(assignment_sources ?? [])]
     .sort((s1, s2) => s1.position - s2.position)
     .map(({ position: _position, ...s }) => s as StudentSource);
+
+  // path + name are set together or both null (CHECK in 0049).
+  const rubricFile: RubricFile | null = rubric_file_path
+    ? {
+        path: rubric_file_path,
+        name: rubric_file_name ?? rubric_file_path,
+        mime: rubric_file_mime ?? "",
+      }
+    : null;
 
   const { data: writings, error: writingsError } = await supabase
     .from("student_writings")
@@ -235,7 +297,9 @@ export async function getStudentAssignmentDetail(
 
   return {
     ...flat,
+    due_at: dueAt,
     sources,
+    rubric_file: rubricFile,
     status: deriveStatus(w?.status ?? null),
     writing: w
       ? {

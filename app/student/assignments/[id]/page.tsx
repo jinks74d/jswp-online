@@ -18,6 +18,8 @@ import { getStudentAssignmentDetail } from "@/lib/queries/student-assignments";
 import { loadRubric } from "@/lib/rubric";
 import { createServerClient } from "@/lib/supabase/server";
 import { getAssignmentSourceSignedUrl } from "@/lib/storage/assignment-sources";
+import { getRubricFileSignedUrl } from "@/lib/storage/assignment-rubrics";
+import { rubricFileLabel } from "@/lib/rubric-file";
 import { SourceDocViewer } from "@/components/student/writing/source-doc-viewer";
 import { StatusBadge } from "@/components/student/status-badge";
 import { StartWritingButton } from "./start-writing-button";
@@ -58,11 +60,21 @@ export default async function StudentAssignmentDetail({
   const filePaths = item.sources
     .map((s) => s.source_file_path)
     .filter((p): p is string => p !== null);
-  if (filePaths.length > 0) {
+
+  // Same for the attached rubric document. Signed server-side rather than via
+  // a client action: it's one extra round trip on a page we're already
+  // rendering, and the link is then live on first paint.
+  let rubricFileUrl: string | null = null;
+
+  if (filePaths.length > 0 || item.rubric_file) {
     const supabase = await createServerClient();
     for (const path of filePaths) {
       const res = await getAssignmentSourceSignedUrl(supabase, path);
       if (res.ok) sourceFileUrls.set(path, res.url);
+    }
+    if (item.rubric_file) {
+      const res = await getRubricFileSignedUrl(supabase, item.rubric_file.path);
+      if (res.ok) rubricFileUrl = res.url;
     }
   }
 
@@ -151,7 +163,7 @@ export default async function StudentAssignmentDetail({
         );
       })}
 
-      {rubric.criteria.length > 0 && (
+      {(rubric.criteria.length > 0 || rubricFileUrl) && (
         <details className="bg-white border border-gray-200 rounded-lg group">
           <summary className="flex items-center justify-between gap-3 p-5 cursor-pointer list-none">
             <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
@@ -165,6 +177,23 @@ export default async function StudentAssignmentDetail({
             </span>
           </summary>
           <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
+            {/* The teacher's own rubric document, when one is attached. It
+                sits above the criteria because it is the authoritative
+                artifact — the criteria are what the app scores against. */}
+            {rubricFileUrl && item.rubric_file && (
+              <a
+                href={rubricFileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm text-blue-700 hover:bg-gray-50 hover:text-blue-900 underline"
+              >
+                <FileText className="w-4 h-4 shrink-0" aria-hidden />
+                <span className="break-all">{item.rubric_file.name}</span>
+                <span className="text-xs text-gray-500 no-underline">
+                  ({rubricFileLabel(item.rubric_file)} — opens in a new tab)
+                </span>
+              </a>
+            )}
             {rubric.criteria.map((criterion) => {
               const orderedLevels = [...criterion.levels].sort(
                 (a, b) => b.score - a.score

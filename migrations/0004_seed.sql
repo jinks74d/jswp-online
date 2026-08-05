@@ -261,4 +261,18 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- ---------------------------------------------------------------------------
+-- Assignment → class period pairings (migration 0050).
+--
+-- The junction is what student RLS actually reads; `class_period_id` above is
+-- the legacy column 0050 keeps until every reader is cut over. 0050's backfill
+-- covers a database seeded BEFORE it ran — this covers the other order, a
+-- fresh database seeded after. due_at NULL inherits assignments.due_at.
+-- ---------------------------------------------------------------------------
+INSERT INTO assignment_class_periods (assignment_id, class_period_id, due_at)
+SELECT a.id, a.class_period_id, a.due_at
+FROM assignments a
+WHERE a.class_period_id IS NOT NULL
+ON CONFLICT (assignment_id, class_period_id) DO NOTHING;
+
 COMMIT;

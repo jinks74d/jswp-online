@@ -118,6 +118,28 @@ export interface Database {
         Update: UpdateOf<Assignments>;
         Relationships: [];
       };
+      assignment_class_periods: {
+        Row: AssignmentClassPeriods;
+        Insert: InsertOf<
+          AssignmentClassPeriods,
+          "assignment_id" | "class_period_id"
+        >;
+        Update: UpdateOf<AssignmentClassPeriods>;
+        Relationships: [
+          {
+            foreignKeyName: "assignment_class_periods_assignment_id_fkey";
+            columns: ["assignment_id"];
+            referencedRelation: "assignments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assignment_class_periods_class_period_id_fkey";
+            columns: ["class_period_id"];
+            referencedRelation: "class_periods";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       assignment_sources: {
         Row: AssignmentSources;
         Insert: InsertOf<AssignmentSources, "assignment_id" | "position">;
@@ -490,6 +512,26 @@ export type Assignments = {
   closed_at: string | null;
 
   rubric: Json | null;
+
+  /** Attached rubric document (migration 0049) — reference only, not scored
+   *  against. path/name are set together or both null (CHECK constraint). */
+  rubric_file_path: string | null;
+  rubric_file_name: string | null;
+  rubric_file_mime: string | null;
+} & Timestamps;
+
+/**
+ * One (assignment, class period) pairing — migration 0050. An assignment is
+ * assigned to as many periods as the teacher selects.
+ *
+ * `due_at` is that period's own deadline; NULL inherits `assignments.due_at`.
+ * Resolve it with `effectiveDueAt` in lib/assignment-due-dates.ts rather than
+ * reading this column directly.
+ */
+export type AssignmentClassPeriods = {
+  assignment_id: string;
+  class_period_id: string;
+  due_at: string | null;
 } & Timestamps;
 
 export type AssignmentSources = {

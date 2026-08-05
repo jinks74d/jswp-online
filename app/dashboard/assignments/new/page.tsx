@@ -87,6 +87,7 @@ export default async function NewAssignmentPage({
         mode={mode}
         classPeriods={classPeriods}
         schoolId={profile.school_id!}
+        teacherId={profile.id}
       />
     </div>
   );

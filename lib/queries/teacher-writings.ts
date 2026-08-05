@@ -9,6 +9,7 @@
 import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database, Json } from "@/lib/database.types";
+import type { RubricFile } from "@/lib/rubric-file";
 
 type WritingStatus = Database["public"]["Enums"]["jswp_writing_status"];
 type Mode = Database["public"]["Enums"]["jswp_mode"];
@@ -60,6 +61,8 @@ export interface WritingForTeacherReview {
     num_body_paragraphs: number;
     default_chunks_per_bp: number;
     rubric: Json | null;
+    /** Attached rubric document — the teacher opens it while scoring. */
+    rubric_file: RubricFile | null;
     sources: {
       id: string;
       position: number;
@@ -146,6 +149,7 @@ export async function getWritingForTeacherReview(
         id, title, prompt, mode, is_essay, has_counterargument,
         default_chunk_ratio,
         num_body_paragraphs, default_chunks_per_bp, rubric,
+        rubric_file_path, rubric_file_name, rubric_file_mime,
         assignment_sources (
           id, position, kind,
           source_text, source_title, source_author, source_file_path,
@@ -165,8 +169,11 @@ export async function getWritingForTeacherReview(
   const row = data as unknown as WritingForTeacherReview & {
     student: WritingForTeacherReview["student"] | null;
     assignment:
-      | (Omit<WritingForTeacherReview["assignment"], "sources"> & {
+      | (Omit<WritingForTeacherReview["assignment"], "sources" | "rubric_file"> & {
           assignment_sources?: WritingForTeacherReview["assignment"]["sources"];
+          rubric_file_path: string | null;
+          rubric_file_name: string | null;
+          rubric_file_mime: string | null;
         })
       | null;
   };
@@ -175,6 +182,16 @@ export async function getWritingForTeacherReview(
   const sources = [...(row.assignment.assignment_sources ?? [])].sort(
     (a, b) => a.position - b.position
   );
+
+  // path + name are set together or both null (CHECK in 0049).
+  const rubricFile: RubricFile | null = row.assignment.rubric_file_path
+    ? {
+        path: row.assignment.rubric_file_path,
+        name:
+          row.assignment.rubric_file_name ?? row.assignment.rubric_file_path,
+        mime: row.assignment.rubric_file_mime ?? "",
+      }
+    : null;
 
   return {
     id: row.id,
@@ -190,7 +207,7 @@ export async function getWritingForTeacherReview(
     current_step: row.current_step,
     chunk_ratio: row.chunk_ratio,
     student: row.student,
-    assignment: { ...row.assignment, sources },
+    assignment: { ...row.assignment, sources, rubric_file: rubricFile },
   };
 }
 

@@ -10,6 +10,7 @@ import { requireUser } from "@/lib/auth";
 import {
   getTeacherAssignments,
   isPublished,
+  formatAssignmentClasses,
 } from "@/lib/queries/assignments";
 import { DeleteAssignmentButton } from "./delete-assignment-button";
 import { PublishToggleButton } from "./publish-toggle-button";
@@ -90,8 +91,8 @@ export default async function AssignmentsPage() {
                       <StatusBadge published={isPublished(a)} />
                     </td>
                     <td className="px-3 py-2 text-stone-600">
-                      {a.class_name && a.class_period_label
-                        ? `${a.class_name} · ${a.class_period_label}`
+                      {a.class_periods.length > 0
+                        ? formatAssignmentClasses(a.class_periods)
                         : "—"}
                     </td>
                     <td className="px-3 py-2 text-stone-600">
@@ -153,9 +154,7 @@ export default async function AssignmentsPage() {
                   {a.title || "(untitled)"}
                 </Link>
                 <div className="text-xs text-stone-600 mt-1">
-                  {a.class_name && a.class_period_label
-                    ? `${a.class_name} · ${a.class_period_label}`
-                    : "Not assigned to a class"}
+                  {formatAssignmentClasses(a.class_periods)}
                 </div>
                 <div className="mt-3 flex items-center gap-3 border-t border-stone-100 pt-2 text-sm">
                   <Link

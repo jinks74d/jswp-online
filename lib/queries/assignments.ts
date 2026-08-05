@@ -11,6 +11,8 @@
 import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database, Json } from "@/lib/database.types";
+import type { RubricFile } from "@/lib/rubric-file";
+import { earliestDueAt, hasVaryingDueDates } from "@/lib/assignment-due-dates";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -36,14 +38,27 @@ type SourceInitial = {
 
 /* ─── Return types ───────────────────────────────────────────────────── */
 
+/** One class period an assignment is assigned to, with that class's deadline. */
+export interface AssignmentPeriodSummary {
+  class_period_id: string;
+  period_label: string | null;
+  class_name: string | null;
+  /** That period's override; null inherits the assignment default. */
+  due_at: string | null;
+}
+
 export interface AssignmentListItem {
   id: string;
   title: string;
   mode: Mode;
   released_at: string | null;
+  /** Earliest deadline across every period — see lib/assignment-due-dates.ts. */
   due_at: string | null;
-  class_period_label: string | null;
-  class_name: string | null;
+  /** True when the periods do not all share one deadline, so the UI can say
+   *  "earliest" rather than presenting one class's date as the date. */
+  has_varying_due_dates: boolean;
+  /** Every class this assignment reaches. Empty for an unassigned draft. */
+  class_periods: AssignmentPeriodSummary[];
   created_at: string;
   updated_at: string;
   /** Number of student_writings rows — drives delete/unpublish warnings. */
@@ -62,8 +77,12 @@ export interface AssignmentForEdit {
   has_counterargument: boolean;
   sources: SourceInitial[];
   rubric: Json | null;
+  /** Attached rubric document, folded from the three rubric_file_* columns. */
+  rubric_file: RubricFile | null;
+  /** The assignment-level default deadline; periods may override it. */
   due_at: string | null;
-  class_period_id: string | null;
+  /** Every class this assignment is assigned to, with per-class deadlines. */
+  class_periods: AssignmentPeriodSummary[];
   released_at: string | null;
   created_at: string;
   updated_at: string;
@@ -84,10 +103,14 @@ type AssignmentListRow = {
   due_at: string | null;
   created_at: string;
   updated_at: string;
-  class_period: {
-    period_label: string;
-    class: { name: string } | null;
-  } | null;
+  assignment_class_periods: {
+    class_period_id: string;
+    due_at: string | null;
+    class_period: {
+      period_label: string;
+      class: { name: string } | null;
+    } | null;
+  }[];
   student_writings: { count: number }[];
 };
 
@@ -95,6 +118,28 @@ type AssignmentListRow = {
 
 export function isPublished(a: { released_at: string | null }): boolean {
   return a.released_at !== null;
+}
+
+/**
+ * Human label for the classes an assignment reaches, e.g.
+ * "US History · Period 1" or "US History · Period 1 +2 more".
+ *
+ * Truncated rather than wrapped: an assignment can go to a whole day's
+ * timetable, and a list cell that grows to six lines makes the table unusable.
+ * The assignment detail page shows the full set.
+ */
+export function formatAssignmentClasses(
+  periods: readonly AssignmentPeriodSummary[],
+  maxShown = 1
+): string {
+  if (periods.length === 0) return "Not assigned to a class";
+
+  const label = (p: AssignmentPeriodSummary) =>
+    [p.class_name, p.period_label].filter(Boolean).join(" · ") || "Untitled class";
+
+  const shown = periods.slice(0, maxShown).map(label).join("; ");
+  const rest = periods.length - maxShown;
+  return rest > 0 ? `${shown} +${rest} more` : shown;
 }
 
 export async function getTeacherAssignments(
@@ -107,9 +152,13 @@ export async function getTeacherAssignments(
     .select(
       `
       id, title, mode, released_at, due_at, created_at, updated_at,
-      class_period:class_period_id (
-        period_label,
-        class:class_id ( name )
+      assignment_class_periods (
+        class_period_id,
+        due_at,
+        class_period:class_period_id (
+          period_label,
+          class:class_id ( name )
+        )
       ),
       student_writings ( count )
       `
@@ -123,18 +172,29 @@ export async function getTeacherAssignments(
 
   const rows = (data ?? []) as unknown as AssignmentListRow[];
 
-  return rows.map((r) => ({
-    id: r.id,
-    title: r.title,
-    mode: r.mode,
-    released_at: r.released_at,
-    due_at: r.due_at,
-    created_at: r.created_at,
-    updated_at: r.updated_at,
-    class_period_label: r.class_period?.period_label ?? null,
-    class_name: r.class_period?.class?.name ?? null,
-    student_writing_count: r.student_writings?.[0]?.count ?? 0,
-  }));
+  return rows.map((r) => {
+    const periods = r.assignment_class_periods ?? [];
+    return {
+      id: r.id,
+      title: r.title,
+      mode: r.mode,
+      released_at: r.released_at,
+      // The list shows one row per assignment however many classes it reaches,
+      // so lead with the first deadline any student is held to and flag when
+      // the classes disagree rather than picking one arbitrarily.
+      due_at: earliestDueAt(r.due_at, periods),
+      has_varying_due_dates: hasVaryingDueDates(r.due_at, periods),
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+      class_periods: periods.map((p) => ({
+        class_period_id: p.class_period_id,
+        period_label: p.class_period?.period_label ?? null,
+        class_name: p.class_period?.class?.name ?? null,
+        due_at: p.due_at,
+      })),
+      student_writing_count: r.student_writings?.[0]?.count ?? 0,
+    };
+  });
 }
 
 export async function getAssignmentForTeacher(
@@ -148,7 +208,16 @@ export async function getAssignmentForTeacher(
     .select(
       `id, title, prompt, mode, is_essay, num_body_paragraphs,
        default_chunk_ratio, default_chunks_per_bp, has_counterargument,
-       rubric, due_at, class_period_id, released_at, created_at, updated_at,
+       rubric, rubric_file_path, rubric_file_name, rubric_file_mime,
+       due_at, released_at, created_at, updated_at,
+       assignment_class_periods (
+         class_period_id,
+         due_at,
+         class_period:class_period_id (
+           period_label,
+           class:class_id ( name )
+         )
+       ),
        assignment_sources (
          id, position, kind,
          source_text, source_title, source_author, source_citation, source_url,
@@ -165,16 +234,60 @@ export async function getAssignmentForTeacher(
   }
   if (!data) return null;
 
-  const { assignment_sources, ...rest } = data as unknown as Omit<
+  const {
+    assignment_sources,
+    assignment_class_periods,
+    rubric_file_path,
+    rubric_file_name,
+    rubric_file_mime,
+    ...rest
+  } = data as unknown as Omit<
     AssignmentForEdit,
-    "sources"
-  > & { assignment_sources: (SourceInitial & { position: number })[] };
+    "sources" | "rubric_file" | "class_periods"
+  > & {
+    assignment_sources: (SourceInitial & { position: number })[];
+    assignment_class_periods: {
+      class_period_id: string;
+      due_at: string | null;
+      class_period: {
+        period_label: string;
+        class: { name: string } | null;
+      } | null;
+    }[];
+    rubric_file_path: string | null;
+    rubric_file_name: string | null;
+    rubric_file_mime: string | null;
+  };
+
+  const class_periods: AssignmentPeriodSummary[] = (
+    assignment_class_periods ?? []
+  ).map((p) => ({
+    class_period_id: p.class_period_id,
+    period_label: p.class_period?.period_label ?? null,
+    class_name: p.class_period?.class?.name ?? null,
+    due_at: p.due_at,
+  }));
 
   const sources = [...(assignment_sources ?? [])]
     .sort((a, b) => a.position - b.position)
     .map(({ position: _position, ...s }) => s as SourceInitial);
 
-  return { ...rest, sources } as AssignmentForEdit;
+  // path + name are set together or both null (CHECK in 0049), so testing
+  // path alone is enough to know whether a document is attached.
+  const rubric_file: RubricFile | null = rubric_file_path
+    ? {
+        path: rubric_file_path,
+        name: rubric_file_name ?? rubric_file_path,
+        mime: rubric_file_mime ?? "",
+      }
+    : null;
+
+  return {
+    ...rest,
+    sources,
+    class_periods,
+    rubric_file,
+  } as AssignmentForEdit;
 }
 
 /**
