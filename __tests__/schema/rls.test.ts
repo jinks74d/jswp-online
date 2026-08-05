@@ -26,7 +26,7 @@
  * Run with: npm run test:rls
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   createServiceRoleClient,
@@ -68,6 +68,15 @@ const TEST = {
   releasedNoPeriodRow: "11111111-0000-0000-0000-000000004003",
   alexWriting: "22222222-0000-0000-0000-000000000001",
   baileyWriting: "22222222-0000-0000-0000-000000000002",
+  // Migration 0051 probes. Both are periods the demo teacher must NOT be able
+  // to pair an assignment with:
+  //   untaughtPeriod — same school, but no class_teacher_assignments row.
+  //   foreignPeriod  — a different school entirely (with the subject + class
+  //                    it hangs off, since school2 has none from the seed).
+  untaughtPeriod: "11111111-0000-0000-0000-000000003000",
+  foreignSubject: "11111111-0000-0000-0000-000000001000",
+  foreignClass: "11111111-0000-0000-0000-000000002000",
+  foreignPeriod: "11111111-0000-0000-0000-000000003001",
 } as const;
 
 /* ─── Clients (initialized in beforeAll) ──────────────────────────────── */
@@ -131,6 +140,51 @@ beforeAll(async () => {
       first_name: "Other",
       last_name: "Teacher",
       email: TEST.teacher2Email,
+    })
+    .throwOnError();
+
+  // 3b. Migration 0051 fixtures — two periods the demo teacher cannot assign
+  // to. `untaughtPeriod` sits in the demo school's own English I class but
+  // deliberately gets NO class_teacher_assignments row; `foreignPeriod` sits
+  // in the cross-tenant school, which needs its own subject + class first.
+  await svc
+    .from("class_periods")
+    .upsert({
+      id: TEST.untaughtPeriod,
+      class_id: "00000000-0000-0000-0000-000000002000",
+      school_id: IDS.school,
+      period_label: "RLS Untaught",
+      academic_year: "2025-2026",
+    })
+    .throwOnError();
+
+  await svc
+    .from("subjects")
+    .upsert({
+      id: TEST.foreignSubject,
+      school_id: TEST.school2,
+      name: "RLS Test Subject",
+    })
+    .throwOnError();
+
+  await svc
+    .from("classes")
+    .upsert({
+      id: TEST.foreignClass,
+      subject_id: TEST.foreignSubject,
+      school_id: TEST.school2,
+      name: "RLS Test Class",
+    })
+    .throwOnError();
+
+  await svc
+    .from("class_periods")
+    .upsert({
+      id: TEST.foreignPeriod,
+      class_id: TEST.foreignClass,
+      school_id: TEST.school2,
+      period_label: "RLS Foreign",
+      academic_year: "2025-2026",
     })
     .throwOnError();
 
@@ -307,6 +361,12 @@ afterAll(async () => {
       TEST.crossTenantOwned,
       TEST.releasedNoPeriodRow,
     ]);
+  await svc
+    .from("class_periods")
+    .delete()
+    .in("id", [TEST.untaughtPeriod, TEST.foreignPeriod]);
+  await svc.from("classes").delete().eq("id", TEST.foreignClass);
+  await svc.from("subjects").delete().eq("id", TEST.foreignSubject);
   await svc.from("user_profiles").delete().eq("id", TEST.teacher2);
   await svc.from("schools").delete().eq("id", TEST.school2);
   await svc.from("districts").delete().eq("id", TEST.district2);
@@ -561,6 +621,112 @@ describe("Assignment class periods (migration 0050)", () => {
       .select("assignment_id");
 
     expect(data ?? []).toEqual([]);
+  });
+});
+
+/* ─── Migration 0051: the period side of the pairing ─────────────────── */
+
+describe("Assignment class period write scope (migration 0051)", () => {
+  // Every case below uses TEST.releasedNoPeriodRow: an assignment the demo
+  // teacher OWNS, so auth_user_can_write_assignment is satisfied (verified
+  // directly via RPC) and the only thing that can reject the write is a
+  // period-side check.
+  //
+  // These pass against the live DB even BEFORE 0051 is applied — live already
+  // enforces a period-side rule that the committed 0050 text does not state.
+  // They are here to pin that behaviour down so the drift cannot come back:
+  // built from migrations alone, 0050's policy would admit every one of the
+  // forged writes below. See the header of 0051.
+
+  afterEach(async () => {
+    await svc
+      .from("assignment_class_periods")
+      .delete()
+      .eq("assignment_id", TEST.releasedNoPeriodRow);
+  });
+
+  it("a teacher cannot pair their own assignment with a period they do not teach", async () => {
+    const { error } = await teacherClient
+      .from("assignment_class_periods")
+      .insert({
+        assignment_id: TEST.releasedNoPeriodRow,
+        class_period_id: TEST.untaughtPeriod,
+        due_at: null,
+      });
+
+    expect(error).not.toBeNull();
+
+    // And nothing landed — a rejected WITH CHECK must not leave a row behind.
+    const { data } = await svc
+      .from("assignment_class_periods")
+      .select("class_period_id")
+      .eq("assignment_id", TEST.releasedNoPeriodRow);
+    expect(data).toEqual([]);
+  });
+
+  it("a teacher cannot pair their own assignment with a period in another school", async () => {
+    // The cross-tenant case: this is what would have handed another
+    // district's students access to the assignment.
+    const { error } = await teacherClient
+      .from("assignment_class_periods")
+      .insert({
+        assignment_id: TEST.releasedNoPeriodRow,
+        class_period_id: TEST.foreignPeriod,
+        due_at: null,
+      });
+
+    expect(error).not.toBeNull();
+
+    const { data } = await svc
+      .from("assignment_class_periods")
+      .select("class_period_id")
+      .eq("assignment_id", TEST.releasedNoPeriodRow);
+    expect(data).toEqual([]);
+  });
+
+  it("a teacher can still pair their assignment with a period they DO teach", async () => {
+    // Guards against over-tightening: the ordinary authoring path must work.
+    const { error } = await teacherClient
+      .from("assignment_class_periods")
+      .insert({
+        assignment_id: TEST.releasedNoPeriodRow,
+        class_period_id: IDS.classPeriod,
+        due_at: null,
+      });
+
+    expect(error).toBeNull();
+
+    const { data } = await svc
+      .from("assignment_class_periods")
+      .select("class_period_id")
+      .eq("assignment_id", TEST.releasedNoPeriodRow);
+    expect(data!.map((r) => r.class_period_id)).toEqual([IDS.classPeriod]);
+  });
+
+  it("a teacher cannot delete a pairing for a period they do not teach", async () => {
+    // FOR ALL means 0050's gap covered DELETE too. The row is planted by the
+    // service role because the teacher can no longer create it themselves.
+    await svc
+      .from("assignment_class_periods")
+      .insert({
+        assignment_id: TEST.releasedNoPeriodRow,
+        class_period_id: TEST.untaughtPeriod,
+        due_at: null,
+      })
+      .throwOnError();
+
+    // RLS filters the row out of the DELETE rather than raising, so the
+    // assertion is on survival, not on `error`.
+    await teacherClient
+      .from("assignment_class_periods")
+      .delete()
+      .eq("assignment_id", TEST.releasedNoPeriodRow);
+
+    const { data } = await svc
+      .from("assignment_class_periods")
+      .select("class_period_id")
+      .eq("assignment_id", TEST.releasedNoPeriodRow);
+    expect(data!.map((r) => r.class_period_id)).toEqual([TEST.untaughtPeriod]);
   });
 });
 

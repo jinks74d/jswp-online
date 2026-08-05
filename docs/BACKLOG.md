@@ -10,6 +10,15 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
+### `db:check` compares policy NAMES only, so a wrong policy reports as present
+`__schema_inventory()` (migration `0028`) builds its `policies` array from `pg_policies.policyname` and nothing else. `npm run db:check` therefore verifies that a policy of the right name EXISTS and never looks at `qual` or `with_check`. A policy whose logic is wrong — or which simply doesn't match the migration text that supposedly created it — passes with a clean ✓.
+
+This is not hypothetical. Found 2026-08-05 while reviewing `0050`: the committed `assignment_class_periods_write` constrains only `assignment_id`, which would let a teacher pair their assignment with any period in any school. The LIVE database refuses that write (42501, confirmed by probe, with `auth_user_can_write_assignment` returning true), so live carries a period-side check the migration text does not describe. `db:check` reported 94/94 policies throughout. `0051` reconciles the file to the observed behaviour, but the general problem is that **nothing in the repo can currently detect policy-definition drift** — and the migrations, not live, are what a fresh project or a DR rebuild is built from.
+
+Fix: extend `__schema_inventory()` to emit `policyname`, `cmd`, `qual`, `with_check` per policy, and have `scripts/db-check.ts` diff the normalized expression text against what the migration declares. Exact-string matching will be noisy (Postgres reformats expressions), so likely normalize whitespace/casing and compare the set of function calls and column references rather than raw text. Worth also emitting `prosrc` for the `auth_user_*` helpers, which have the same blind spot.
+- **Identified:** 2026-08-05, during the 0050 security review
+- **Priority:** high — it is the check we rely on to know whether a migration landed, and it silently under-reports
+
 ### Drop the legacy `assignments.class_period_id` column
 Migration `0050` moved assignment→class-period to a junction table (`assignment_class_periods`) so one assignment can go to several classes with a per-class due date. Following the `0040` precedent, the legacy single column stays in place and is still written (set to the FIRST selected period) so nothing breaks mid-transition. Every RLS policy and every read path now goes through the junction.
 
