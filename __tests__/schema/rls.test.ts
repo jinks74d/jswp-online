@@ -703,6 +703,45 @@ describe("Assignment class period write scope (migration 0051)", () => {
     expect(data!.map((r) => r.class_period_id)).toEqual([IDS.classPeriod]);
   });
 
+  it("an admin CAN pair a period in their school that they do not teach", async () => {
+    // 0051's second branch. Admins do not appear in class_teacher_assignments,
+    // so if this branch were missing the policy would silently break admin
+    // assignment authoring — the failure mode of over-tightening rather than
+    // under-tightening. Verified against live: for this user
+    // auth_user_is_admin_for_school is true while
+    // auth_user_teaches_class_period is false, so ONLY the admin branch can
+    // be carrying the insert.
+    const { error } = await superClient
+      .from("assignment_class_periods")
+      .insert({
+        assignment_id: TEST.releasedNoPeriodRow,
+        class_period_id: TEST.untaughtPeriod,
+        due_at: null,
+      });
+
+    expect(error).toBeNull();
+
+    const { data } = await svc
+      .from("assignment_class_periods")
+      .select("class_period_id")
+      .eq("assignment_id", TEST.releasedNoPeriodRow);
+    expect(data!.map((r) => r.class_period_id)).toEqual([TEST.untaughtPeriod]);
+  });
+
+  it("an admin still cannot pair a period from another school", async () => {
+    // Same-school is checked independently of role, so the admin branch does
+    // not become a cross-tenant bypass.
+    const { error } = await superClient
+      .from("assignment_class_periods")
+      .insert({
+        assignment_id: TEST.releasedNoPeriodRow,
+        class_period_id: TEST.foreignPeriod,
+        due_at: null,
+      });
+
+    expect(error).not.toBeNull();
+  });
+
   it("a teacher cannot delete a pairing for a period they do not teach", async () => {
     // FOR ALL means 0050's gap covered DELETE too. The row is planted by the
     // service role because the teacher can no longer create it themselves.
