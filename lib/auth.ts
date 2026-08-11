@@ -5,6 +5,7 @@
  * return null. Callers can trust the return value is always a valid profile.
  */
 
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import type { UserProfiles, Database } from "@/lib/database.types";
@@ -16,8 +17,17 @@ type JswpRole = Database["public"]["Enums"]["jswp_role"];
 /**
  * Returns the authenticated user and their profile, or null values if
  * not authenticated. Does NOT redirect — use requireUser() for that.
+ *
+ * Wrapped in React cache(): memoized for the lifetime of a single request.
+ * Every route segment's layout guards with requireRole/requireUser and the
+ * page under it guards again, so an uncached read costs 2-3 duplicate
+ * auth.getUser() round trips plus the same number of user_profiles selects
+ * per render. The cache collapses those to one of each. Scope is per-request,
+ * so no state leaks between users, and nothing in the app mutates the
+ * caller's own profile mid-request (the only user_profiles writes are
+ * admin-client inserts for other users).
  */
-export async function getCurrentUser(): Promise<{
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<{
   user: { id: string; email?: string } | null;
   profile: UserProfiles | null;
   error: unknown;
@@ -48,7 +58,7 @@ export async function getCurrentUser(): Promise<{
   } catch (error) {
     return { user: null, profile: null, error };
   }
-}
+});
 
 /* ─── Guards: redirect on failure ─────────────────────────────────────── */
 

@@ -43,10 +43,12 @@ export default async function AssignmentAnalyticsPage({
   ]);
   const { id } = await params;
 
-  const assignment = await getAssignmentForTeacher(id, profile.id);
+  // Independent reads on the same assignment id — fire together, then gate.
+  const [assignment, result] = await Promise.all([
+    getAssignmentForTeacher(id, profile.id),
+    getAssignmentAnalytics(id),
+  ]);
   if (!assignment) notFound();
-
-  const result = await getAssignmentAnalytics(id);
 
   return (
     <div className="space-y-6">

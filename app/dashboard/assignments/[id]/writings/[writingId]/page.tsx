@@ -46,12 +46,16 @@ export default async function TeacherWritingReviewPage({
   const profile = await requireRole(["teacher", "school_admin", "district_admin", "super_admin"]);
   const { id: assignmentId, writingId } = await params;
 
-  const writing = await getWritingForTeacherReview(writingId);
+  // listFeedback only needs writingId, so it does not have to wait on the
+  // writing read; both are RLS-scoped, and the gate below still runs first.
+  const [writing, feedback] = await Promise.all([
+    getWritingForTeacherReview(writingId),
+    listFeedback(writingId),
+  ]);
   if (!writing || writing.assignment_id !== assignmentId) {
     notFound();
   }
 
-  const feedback = await listFeedback(writingId);
   const { byStep: feedbackByStep, overall: overallFeedback } =
     groupSectionFeedback(feedback);
 

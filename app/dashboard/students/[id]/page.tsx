@@ -37,11 +37,14 @@ export default async function StudentDetailPage({
 }) {
   const { id } = await params;
   const teacher = await requireUser();
-  const student = await getStudentDetail(id, teacher.id);
+  // Both reads are keyed on (id, teacher.id) and neither feeds the other, so
+  // they run together; the notFound() gate still fires before anything renders.
+  const [student, progress] = await Promise.all([
+    getStudentDetail(id, teacher.id),
+    getStudentProgress(id, teacher.id),
+  ]);
 
   if (!student) notFound();
-
-  const progress = await getStudentProgress(id, teacher.id);
 
   const displayName =
     [student.first_name, student.last_name].filter(Boolean).join(" ") ||
