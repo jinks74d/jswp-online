@@ -60,23 +60,32 @@ Each step is its own screen, its own database table, and its own teaching moment
 | Placeholder portals | `app/welcome/`, `app/forbidden/` | Teacher/student post-login landing until Phase 3/4. Polite role-mismatch landing. |
 | Plan | `docs/DEV_PLAN.md` | 8-phase plan with definitions of done. |
 
-### What's not done (work remaining in Phase 1)
+The table above describes the state at the start of the rebuild and is kept
+for context. Since then the app has shipped well past Phase 1: migrations run
+to `0053`, all of them applied to the live Supabase project, and the teacher,
+admin, district, school, and student surfaces are all built. Treat the table
+as history, not as an inventory — read the tree and `git log` for current state.
 
-- `lib/jswp-grammar-rules.ts` — Dr. Louis's 15 Grammar Rules with examples.
-- `lib/jswp-rubrics.ts` — TypeScript types for `assignments.rubric` JSONB, default rubric per mode.
-- `__tests__/schema/rls.test.ts` — RLS policy tests using two impersonated Supabase clients.
-- `scripts/seed-auth.ts` — Companion to `0004_seed.sql` that creates auth.users via the Supabase admin API.
-- `docs/PROGRAM.md` — JSWP method synthesis (see Section 4 for inline summary).
-- `docs/ARCHITECTURE.md` — High-level system diagram.
+### What's not done
 
-### What comes next (priority order, locked with the user)
+Still genuinely missing, verified against the tree:
 
-1. **Schema & data model** — finishing Phase 1 (above).
-2. **Auth, districts, multi-tenancy** — Phase 2 in `docs/DEV_PLAN.md`.
-3. **Teacher dashboard & grading** — Phase 3.
-4. **Student writing flow** — Phase 4.
+- `docs/PROGRAM.md` — JSWP method synthesis (Section 4 below is the interim summary).
+- `docs/ARCHITECTURE.md` — high-level system diagram.
+- `docs/RUNBOOK.md` — Phase 7 deliverable.
+- RLS tests for the `0052` / `0053` assignment RPCs. Both are `SECURITY INVOKER`,
+  so their correctness depends on RLS applying to the caller, and nothing
+  currently pins that down. See Section 8.
 
-Build in this order. The student writing flow is the most user-visible feature but it depends on schema + auth + teacher-side assignment authoring, so it lands fourth.
+Items previously listed here that now exist: `lib/jswp-grammar-rules.ts`,
+`__tests__/schema/rls.test.ts`, `scripts/seed-auth.ts`. Rubric types landed as
+`lib/rubric.ts` and `lib/rubric-file.ts`, not the planned `lib/jswp-rubrics.ts`.
+
+### What comes next
+
+The original Phase 1→4 ordering is complete. Consult `docs/DEV_PLAN.md` and
+`docs/BACKLOG.md` for current priorities rather than the list that used to
+live here.
 
 ---
 
@@ -160,85 +169,80 @@ The exact step list with metadata is `lib/jswp-modes.ts`. The UI step engine rea
 
 ### Branching
 
-- `master` — frozen reference of the legacy app. **Do not push to master directly.**
-- `v2` — active rebuild branch. Cut at Phase 0 start.
+- `v2` — the active branch. All work lands here.
 - Feature branches off `v2`, merged via PR.
-- After cutover (Phase 7), `v2` merges to `master`.
+- `master` — began as a frozen reference of the legacy app. `v2` has since been
+  merged into it at least once, so it is no longer purely legacy. **Never push
+  or merge to `master` without asking first** — which branch Vercel treats as
+  production is configured in the Vercel project, not in this repo, so a merge
+  to `master` may be a production deploy.
 
-### Folder layout (target)
+### Folder layout
+
+This is the tree as it actually stands. Keep it accurate — a layout that
+describes intentions rather than reality sends every future session hunting
+for files that do not exist.
 
 ```
 /
 ├── CLAUDE.md                      ← this file
-├── README.md                      ← rewritten in Phase 7
-├── package.json
-├── next.config.js
-├── tailwind.config.js
-├── tsconfig.json
-├── middleware.ts                  ← subdomain → district resolver (Phase 2)
+├── middleware.ts                  ← subdomain → district resolver
 │
 ├── app/                           ← Next.js App Router routes
 │   ├── (auth)/                    ← login / signup / reset-password
-│   ├── (marketing)/               ← public pages
-│   ├── dashboard/                 ← teacher area (Phase 3 rebuild)
-│   │   ├── classes/
-│   │   ├── students/
-│   │   └── assignments/
-│   ├── admin/                     ← admin area: super, district, school admins
-│   │   ├── import/
-│   │   ├── districts/             (Phase 6)
-│   │   └── users/                 (Phase 6)
-│   ├── student/                   ← student writing flow (Phase 4)
-│   │   ├── assignments/[id]/
-│   │   └── writings/[id]/[slug]/
-│   ├── welcome/                   ← placeholder until Phase 3/4 portals exist
-│   ├── forbidden/                 ← role-mismatch landing
 │   ├── auth/callback/             ← Supabase email-confirm code exchange
+│   ├── dashboard/                 ← TEACHER: assignments, classes, students
+│   ├── admin/                     ← SUPER ADMIN: districts → schools → subjects
+│   │                                 → classes → periods, users, signups, import
+│   ├── district/                  ← DISTRICT ADMIN
+│   ├── school/                    ← SCHOOL ADMIN
+│   ├── student/                   ← STUDENT writing flow
+│   │   ├── assignments/[id]/
+│   │   └── writings/[id]/[step]/  ← step dispatcher; _steps/ holds each step
 │   ├── api/                       ← only when an RPC won't do
-│   ├── layout.tsx
-│   ├── page.tsx
-│   └── globals.css
+│   ├── welcome/  forbidden/  pending/  logout/
+│   └── layout.tsx  page.tsx  not-found.tsx  globals.css
 │
 ├── components/
-│   ├── ui/                        ← primitive components (Button, Input, Card)
+│   ├── ui/                        ← primitives
 │   ├── jswp-color/                ← color tokens + accessibility wrappers
-│   ├── steps/                     ← per-step UI (one component per groupOrigin)
-│   ├── step-engine/               ← shared chrome (stepper, save buttons)
-│   ├── assignment-builder/        ← teacher-side assignment authoring
-│   └── feedback/                  ← polymorphic comment UX
+│   ├── auth/  admin/
+│   ├── assignments/               ← teacher-side assignment authoring
+│   ├── dashboard/                 ← teacher dashboard + writing review + analytics
+│   ├── school-structure/          ← school → subject → class → period detail UI,
+│   │                                 SHARED by app/admin/ and app/district/.
+│   │                                 Lives here, not in either route tree, so
+│   │                                 neither role owns it. Import via @/.
+│   ├── student/                   ← student writing flow UI (the bulk of it)
+│   └── ErrorBoundary.tsx          ← the one mounted in app/layout.tsx
 │
 ├── lib/
-│   ├── database.types.ts          ← generated; do not hand-edit (after Phase 1)
-│   ├── jswp-modes.ts              ← step engine config
-│   ├── jswp-grammar-rules.ts      ← Dr. Louis's 15 rules
-│   ├── jswp-rubrics.ts            ← rubric shapes per mode
+│   ├── actions/                   ← server actions, one module per domain
+│   ├── queries/                   ← read paths, one module per domain
 │   ├── supabase/                  ← client/server/middleware factories
-│   ├── auth.ts                    ← requireUser / requireRole helpers
-│   ├── district-branding.utils.ts ← color tokens, contrast helpers
-│   └── utils.ts
+│   ├── storage/  csv-import/  email/
+│   ├── auth.ts                    ← requireUser / requireRole (React cache()d)
+│   ├── database.types.ts          ← hand-maintained; add new RPCs to Functions
+│   ├── jswp-modes.ts              ← step engine config — the ONLY step list
+│   ├── jswp-grammar-rules.ts      ← Dr. Louis's 15 rules
+│   ├── rubric.ts, rubric-file.ts  ← rubric shapes + attached documents
+│   └── …                          ← ~30 more domain modules at the root
 │
-├── hooks/                         ← React hooks
-│
-├── migrations/                    ← Supabase SQL, numbered 0001…
-│
-├── docs/
-│   ├── DEV_PLAN.md
-│   ├── PROGRAM.md                 ← JSWP method synthesis
-│   ├── ARCHITECTURE.md
-│   └── RUNBOOK.md                 ← Phase 7
-│
+├── hooks/  types/  public/  __fixtures__/
+├── migrations/                    ← Supabase SQL, numbered 0001…0053
+├── docs/                          ← DEV_PLAN.md, BACKLOG.md (+ planned above)
 ├── scripts/                       ← one-off scripts; idempotent
-│   └── seed-auth.ts               ← creates auth.users for dev seed
-│
-├── __tests__/                     ← Vitest tests
-│   ├── schema/                    ← RLS tests, migration tests
-│   ├── lib/                       ← unit tests
-│   └── components/                ← component tests
-│
-└── public/                        ← static assets
+└── __tests__/                     ← schema/ (RLS), lib/ (unit), components/
 ```
 
-Admin and teacher dashboard are different mental models with different sidebars, so they live as siblings rather than nested.
+Admin, district, school, and teacher are different mental models with different
+sidebars, so they live as siblings rather than nested. UI that more than one of
+them renders belongs in `components/`, never inside whichever route tree
+happened to build it first — see `components/school-structure/`.
+
+Known drift worth cleaning up when convenient: `lib/`'s root holds ~30 loose
+modules that would read better grouped, and four files under `components/ui/`
+plus `components/ErrorBoundary.tsx` are still PascalCase (see Naming below).
 
 ### Naming
 
