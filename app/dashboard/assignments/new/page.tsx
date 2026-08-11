@@ -63,7 +63,12 @@ export default async function NewAssignmentPage({
   if (!VALID_MODES.has(modeRaw as Mode)) notFound();
   const mode = modeRaw as Mode;
 
-  const classPeriods = await getTeacherClassPeriodsForPicker(profile.id);
+  // A new assignment is stamped with the teacher's own school, so the picker
+  // offers the classes they teach there.
+  const classPeriods = await getTeacherClassPeriodsForPicker(
+    profile.id,
+    profile.school_id!
+  );
 
   return (
     <div className="space-y-6">

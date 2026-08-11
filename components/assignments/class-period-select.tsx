@@ -14,7 +14,7 @@
  * every class that never set its own — see lib/assignment-due-dates.ts.
  */
 
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, TriangleAlert, X } from "lucide-react";
 import type { AssignmentPeriodSelection } from "@/lib/assignment-due-dates";
 
 export type ClassPeriodOption = { id: string; label: string };
@@ -29,6 +29,11 @@ export function ClassPeriodSelect({
   defaultDueAt,
   /** Periods already saved — the ones publish locks. */
   lockedPeriodIds,
+  /**
+   * Labels for saved periods, keyed by id. Used to name a period that has
+   * dropped out of `options`, which by definition has no label there.
+   */
+  savedPeriodLabels,
   error,
 }: {
   options: readonly ClassPeriodOption[];
@@ -37,10 +42,25 @@ export function ClassPeriodSelect({
   published?: boolean;
   defaultDueAt?: string;
   lockedPeriodIds?: readonly string[];
+  savedPeriodLabels?: Readonly<Record<string, string>>;
   error?: string;
 }) {
   const locked = new Set(lockedPeriodIds ?? []);
   const selectedById = new Map(value.map((v) => [v.class_period_id, v]));
+
+  // Periods this assignment still points at that the teacher no longer
+  // teaches — an admin unassigned them from the class after the assignment
+  // was authored. They cannot appear in `options`, but they ARE still posted
+  // in the hidden field, and the server refuses the whole save because of
+  // them. Rendering them is what makes the form recoverable: without a row
+  // there is no control to clear, so the assignment becomes permanently
+  // unsaveable and the teacher cannot see why.
+  const optionIds = new Set(options.map((o) => o.id));
+  const orphans = value.filter((v) => !optionIds.has(v.class_period_id));
+
+  function removeOrphan(id: string) {
+    onChange(value.filter((v) => v.class_period_id !== id));
+  }
 
   function toggle(id: string, checked: boolean) {
     if (checked) {
@@ -141,6 +161,50 @@ export function ClassPeriodSelect({
             })}
           </ul>
         </>
+      )}
+
+      {orphans.length > 0 && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 space-y-2">
+          <p className="flex items-start gap-2 text-xs text-amber-900">
+            <TriangleAlert
+              className="w-3.5 h-3.5 mt-0.5 flex-shrink-0"
+              aria-hidden="true"
+            />
+            <span>
+              {orphans.length === 1 ? "A class" : `${orphans.length} classes`} on
+              this assignment {orphans.length === 1 ? "is" : "are"} no longer
+              assigned to you, so {orphans.length === 1 ? "it" : "they"} can
+              &apos;t be shown above. Remove{" "}
+              {orphans.length === 1 ? "it" : "them"} here to save your changes,
+              or ask an admin to add you back to the class.
+            </span>
+          </p>
+
+          <ul className="space-y-1.5">
+            {orphans.map((o) => (
+              <li
+                key={o.class_period_id}
+                className="flex items-center gap-3 rounded border border-amber-200 bg-white px-3 py-1.5"
+              >
+                <span className="text-sm text-gray-700">
+                  {savedPeriodLabels?.[o.class_period_id] ?? "Unknown class"}
+                </span>
+                <button
+                  type="button"
+                  // Safe even when published: the published save path only
+                  // ever upserts periods, so dropping this row omits it from
+                  // the upsert without deleting the existing row — students
+                  // in that class keep their access and their work.
+                  onClick={() => removeOrphan(o.class_period_id)}
+                  className="ml-auto inline-flex items-center gap-1 rounded border border-amber-400 px-2 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <X className="w-3 h-3" aria-hidden="true" />
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {published && (

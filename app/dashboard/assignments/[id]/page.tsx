@@ -11,7 +11,6 @@ import { ChevronLeft, ChevronRight, Inbox, BarChart3 } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import {
   getAssignmentForTeacher,
-  getStudentWritingCount,
   getTeacherClassPeriodsForPicker,
   isPublished,
 } from "@/lib/queries/assignments";
@@ -35,16 +34,24 @@ export default async function AssignmentDetailPage({
   const assignment = await getAssignmentForTeacher(id, profile.id);
   if (!assignment) notFound();
 
-  const classPeriods = await getTeacherClassPeriodsForPicker(profile.id);
-  const studentWritingCount = await getStudentWritingCount(assignment.id);
-  const writingCounts = await countAssignmentWritingsByStatus(assignment.id);
+  // Independent reads — fire together rather than in series.
+  const [classPeriods, writingCounts] = await Promise.all([
+    // The assignment's school, not the teacher's — a teacher who transferred
+    // is still editing a row owned by the school it was created at.
+    getTeacherClassPeriodsForPicker(profile.id, assignment.school_id),
+    countAssignmentWritingsByStatus(assignment.id),
+  ]);
   const published = isPublished(assignment);
+  // student_writings.status is NOT NULL over a 5-value enum and every value is
+  // counted, so this sum is exactly getStudentWritingCount(assignment.id) —
+  // derive it instead of paying for a second round trip to the same table.
   const totalWritings =
     writingCounts.draft +
     writingCounts.in_progress +
     writingCounts.submitted +
     writingCounts.returned +
     writingCounts.graded;
+  const studentWritingCount = totalWritings;
 
   return (
     <div className="space-y-6">
@@ -140,7 +147,16 @@ export default async function AssignmentDetailPage({
           mode={assignment.mode}
           initial={assignment}
           classPeriods={classPeriods}
-          schoolId={profile.school_id!}
+          // The ASSIGNMENT's school, not the teacher's current one. This drives
+          // the storage prefix for rubric and source uploads (school-{uuid}/...),
+          // which the 0003 bucket policies key off. For a teacher who has since
+          // transferred, profile.school_id would upload rubrics into a folder
+          // updateAssignment then rejects — it validates against the
+          // assignment's school — leaving an error whose "re-select it and save
+          // again" advice can never succeed. Source files have no such server
+          // check, so they would instead land under a prefix the assignment's
+          // own students cannot read.
+          schoolId={assignment.school_id}
           teacherId={profile.id}
           studentWritingCount={studentWritingCount}
         />

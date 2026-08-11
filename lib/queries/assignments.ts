@@ -12,7 +12,7 @@ import "server-only";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database, Json } from "@/lib/database.types";
 import type { RubricFile } from "@/lib/rubric-file";
-import { earliestDueAt, hasVaryingDueDates } from "@/lib/assignment-due-dates";
+import { distinctDueDates, earliestDueAt } from "@/lib/assignment-due-dates";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -54,9 +54,13 @@ export interface AssignmentListItem {
   released_at: string | null;
   /** Earliest deadline across every period — see lib/assignment-due-dates.ts. */
   due_at: string | null;
-  /** True when the periods do not all share one deadline, so the UI can say
-   *  "earliest" rather than presenting one class's date as the date. */
-  has_varying_due_dates: boolean;
+  /**
+   * How many DISTINCT deadlines this assignment's classes have. 1 means they
+   * all agree and `due_at` is the whole story; greater than 1 means `due_at`
+   * is only the earliest, and the list view says so ("Mar 3 +2 more") rather
+   * than presenting one class's date as the date. 0 for an unassigned draft.
+   */
+  due_date_count: number;
   /** Every class this assignment reaches. Empty for an unassigned draft. */
   class_periods: AssignmentPeriodSummary[];
   created_at: string;
@@ -67,6 +71,8 @@ export interface AssignmentListItem {
 
 export interface AssignmentForEdit {
   id: string;
+  /** The school that owns this assignment; bounds which classes it can reach. */
+  school_id: string;
   title: string;
   prompt: string;
   mode: Mode;
@@ -183,7 +189,7 @@ export async function getTeacherAssignments(
       // so lead with the first deadline any student is held to and flag when
       // the classes disagree rather than picking one arbitrarily.
       due_at: earliestDueAt(r.due_at, periods),
-      has_varying_due_dates: hasVaryingDueDates(r.due_at, periods),
+      due_date_count: distinctDueDates(r.due_at, periods).length,
       created_at: r.created_at,
       updated_at: r.updated_at,
       class_periods: periods.map((p) => ({
@@ -206,7 +212,7 @@ export async function getAssignmentForTeacher(
   const { data, error } = await supabase
     .from("assignments")
     .select(
-      `id, title, prompt, mode, is_essay, num_body_paragraphs,
+      `id, school_id, title, prompt, mode, is_essay, num_body_paragraphs,
        default_chunk_ratio, default_chunks_per_bp, has_counterargument,
        rubric, rubric_file_path, rubric_file_name, rubric_file_mime,
        due_at, released_at, created_at, updated_at,
@@ -309,12 +315,17 @@ export async function getStudentWritingCount(
 }
 
 /**
- * Class period options scoped to the teacher's assignments. Used to
- * populate the class_period dropdown on the assignment form. Single
- * round-trip; no embedded subjects or schools (we just need a label).
+ * Class period options for the assignment form's class picker: the periods
+ * this teacher teaches AT `schoolId`. Single round-trip.
+ *
+ * Scoped to one school because schools are independent — an assignment
+ * belongs to a school and may only be handed to classes there. Pass the
+ * ASSIGNMENT's school when editing (a teacher who transferred is still
+ * editing a row owned by the old school) and the teacher's own when creating.
  */
 export async function getTeacherClassPeriodsForPicker(
-  teacherId: string
+  teacherId: string,
+  schoolId: string
 ): Promise<ClassPeriodOption[]> {
   const supabase = await createServerClient();
 
@@ -326,11 +337,11 @@ export async function getTeacherClassPeriodsForPicker(
         id,
         period_label,
         academic_year,
+        school_id,
         class:class_id (
           name,
           subject:subject_id ( name )
-        ),
-        school:school_id ( name )
+        )
       )
       `
     )
@@ -345,11 +356,11 @@ export async function getTeacherClassPeriodsForPicker(
       id: string;
       period_label: string;
       academic_year: string | null;
+      school_id: string;
       class: {
         name: string;
         subject: { name: string } | null;
       } | null;
-      school: { name: string } | null;
     } | null;
   };
 
@@ -357,12 +368,17 @@ export async function getTeacherClassPeriodsForPicker(
 
   return rows
     .filter((r): r is Row & { class_period: NonNullable<Row["class_period"]> } =>
-      r.class_period !== null
+      // Schools are independent, so an assignment may only reach classes at
+      // its own school. A teacher who works at two schools holds periods at
+      // both; offering the other school's periods here would produce a
+      // selection the 0051 write policy then rejects mid-save.
+      r.class_period !== null && r.class_period.school_id === schoolId
     )
     .map((r) => {
       const cp = r.class_period;
+      // No school name in the label — every option is at `schoolId` now, so
+      // the prefix would repeat on every row without distinguishing anything.
       const parts = [
-        cp.school?.name,
         cp.class?.subject?.name,
         cp.class?.name,
         cp.period_label,

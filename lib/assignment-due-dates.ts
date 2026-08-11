@@ -57,8 +57,10 @@ export function effectiveDueAt(
  * Every distinct deadline across an assignment's periods, earliest first.
  *
  * Teacher-facing surfaces list one assignment for all its classes, so "Due
- * Mar 3" is only honest when the classes agree. Use `hasVaryingDueDates` to
- * decide between showing the single date and showing a range.
+ * Mar 3" is only honest when the classes agree. The teacher list takes the
+ * LENGTH of this array (as AssignmentListItem.due_date_count) to render
+ * "Mar 3 +2 more"; `hasVaryingDueDates` below is the same question as a
+ * boolean, for callers that only need to know whether they disagree.
  */
 export function distinctDueDates(
   assignmentDueAt: string | null,

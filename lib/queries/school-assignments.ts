@@ -140,7 +140,16 @@ export async function getSchoolAssignments(
 
   const rows: SchoolAssignmentRow[] = assignments.map((a) => {
     const teacher = one(a.teacher);
-    const periods = a.assignment_class_periods ?? [];
+    // Ordered by label before anything reads [0]. PostgREST gives no ordering
+    // guarantee for an embedded resource, so an unsorted periods[0] means the
+    // class shown — and the one the "+N" hangs off — can differ between
+    // renders of identical data. Every other use below (due dates, subjects,
+    // enrolment totals) is order-independent, so sorting here is free.
+    const periods = [...(a.assignment_class_periods ?? [])].sort((p, q) =>
+      (one(p.period)?.period_label ?? "").localeCompare(
+        one(q.period)?.period_label ?? ""
+      )
+    );
     // An assignment can now span several classes. The row still shows one
     // class, so show the first and let the count carry the rest; every
     // subject it touches is collected for the filter.
@@ -191,6 +200,23 @@ export async function getSchoolAssignments(
         0
       ),
     };
+  });
+
+  // Sort on the value the table actually SHOWS. The query orders by the raw
+  // assignments.due_at column, but each row displays earliestDueAt(...) — the
+  // soonest deadline across its classes. The moment any period sets its own
+  // date the two disagree, and the Due column reads as out of order against
+  // its own sort. Re-sorting here keeps the DB order as the tiebreaker for
+  // rows whose derived dates match.
+  //
+  // Undated rows sink to the bottom: a row with no deadline should not lead a
+  // list ordered by deadline. In practice this is unreachable — the assignment
+  // form requires a due date — so it only guards legacy or imported rows.
+  rows.sort((x, y) => {
+    if (x.dueAt === y.dueAt) return 0;
+    if (!x.dueAt) return 1;
+    if (!y.dueAt) return -1;
+    return new Date(y.dueAt).getTime() - new Date(x.dueAt).getTime();
   });
 
   return {

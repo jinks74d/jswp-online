@@ -172,6 +172,13 @@ export type AssignmentInitial = {
   class_periods: readonly {
     class_period_id: string;
     due_at: string | null;
+    /**
+     * Carried so the picker can name a period the teacher no longer teaches.
+     * Such a period is absent from `classPeriods`, so this is the only place
+     * its label survives.
+     */
+    period_label?: string | null;
+    class_name?: string | null;
   }[];
   released_at: string | null;
 };
@@ -238,6 +245,18 @@ export function AssignmentForm({
     () => (initial?.class_periods ?? []).map((p) => p.class_period_id),
     [initial?.class_periods]
   );
+  // Names for the saved periods. The picker needs these to label a period the
+  // teacher no longer teaches: such a period is absent from `classPeriods`, so
+  // its label has to come from the assignment's own saved rows instead.
+  const savedPeriodLabels = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const p of initial?.class_periods ?? []) {
+      out[p.class_period_id] =
+        [p.class_name, p.period_label].filter(Boolean).join(" · ") ||
+        "Unknown class";
+    }
+    return out;
+  }, [initial?.class_periods]);
 
   // Browser supabase client for the storage upload — created once.
   const supabase = useMemo(() => createBrowserClient(), []);
@@ -520,6 +539,7 @@ export function AssignmentForm({
           onChange={setPeriods}
           published={isPublished}
           lockedPeriodIds={savedPeriodIds}
+          savedPeriodLabels={savedPeriodLabels}
           defaultDueAt={
             initial?.due_at ? formatForDateInput(initial.due_at) : undefined
           }

@@ -175,23 +175,43 @@ type AssignmentPeriodInput = {
 async function assertTeachesPeriods(
   supabase: Awaited<ReturnType<typeof createServerClient>>,
   teacherId: string,
-  periods: readonly AssignmentPeriodInput[]
+  periods: readonly AssignmentPeriodInput[],
+  schoolId: string
 ): Promise<string | null> {
   if (periods.length === 0) return null;
 
   const ids = periods.map((p) => p.class_period_id);
   const { data, error } = await supabase
     .from("class_teacher_assignments")
-    .select("class_period_id")
+    .select("class_period_id, class_period:class_period_id ( school_id )")
     .eq("teacher_id", teacherId)
     .in("class_period_id", ids);
 
   if (error) return `Could not verify your class periods: ${error.message}`;
 
-  const allowed = new Set((data ?? []).map((r) => r.class_period_id));
-  const rejected = ids.filter((id) => !allowed.has(id));
+  const rows = (data ?? []) as unknown as {
+    class_period_id: string;
+    class_period: { school_id: string } | { school_id: string }[] | null;
+  }[];
+
+  const taught = new Set(rows.map((r) => r.class_period_id));
+  const rejected = ids.filter((id) => !taught.has(id));
   if (rejected.length > 0) {
     return "One of the selected class periods isn't yours to assign to.";
+  }
+
+  // Schools are independent: a period may only be assigned within the school
+  // that owns the assignment. The 0051 policy enforces this too, but it does
+  // so mid-write with a raw "violates row-level security policy" — checking
+  // here turns that into a readable validation error BEFORE anything is
+  // written. A teacher who genuinely teaches at two schools can still hold
+  // periods at both; only mixing them into one assignment is refused.
+  const offSchool = rows.filter((r) => {
+    const cp = Array.isArray(r.class_period) ? r.class_period[0] : r.class_period;
+    return cp != null && cp.school_id !== schoolId;
+  });
+  if (offSchool.length > 0) {
+    return "Those classes are at a different school. An assignment can only go to classes at its own school.";
   }
   return null;
 }
@@ -205,63 +225,43 @@ async function assertTeachesPeriods(
  * period loses no student work. Removing a period a student already started
  * in is still meaningful — it revokes their access — which is why the
  * published path below only ever ADDS.
+ *
+ * The delete and the insert go through the 0052 RPC rather than two PostgREST
+ * calls, because two calls are not atomic: a committed DELETE followed by a
+ * failing INSERT left the assignment with ZERO periods while returning an
+ * error the teacher reads as "nothing was saved". That is reachable with
+ * student work in flight — unpublishing is permitted mid-writing, which
+ * returns the assignment to this replace path. The RPC body is one
+ * transaction, so a failing insert rolls the delete back with it. It is
+ * SECURITY INVOKER, so the 0051 write policy still authorizes every row.
  */
 async function writeAssignmentPeriods(
   supabase: Awaited<ReturnType<typeof createServerClient>>,
   assignmentId: string,
   periods: readonly AssignmentPeriodInput[]
 ): Promise<string | null> {
-  const { error: delErr } = await supabase
-    .from("assignment_class_periods")
-    .delete()
-    .eq("assignment_id", assignmentId);
-  if (delErr) return `Failed to update class periods: ${delErr.message}`;
-
-  if (periods.length === 0) return null;
-
-  const { error: insErr } = await supabase
-    .from("assignment_class_periods")
-    .insert(
-      periods.map((p) => ({
-        assignment_id: assignmentId,
-        class_period_id: p.class_period_id,
-        due_at: p.due_at,
-      }))
-    );
-  if (insErr) return `Failed to update class periods: ${insErr.message}`;
+  const { error } = await supabase.rpc("replace_assignment_class_periods", {
+    p_assignment_id: assignmentId,
+    p_periods: periods.map((p) => ({
+      class_period_id: p.class_period_id,
+      due_at: p.due_at,
+    })),
+  });
+  if (error) return `Failed to update class periods: ${error.message}`;
   return null;
 }
 
 /**
- * Published path: additive only, mirroring how sources and the rubric document
- * behave once students can see the assignment.
+ * The published path's additive-only period write now lives in the 0053 RPC,
+ * called with p_replace = false: it merges p_periods in and never deletes.
  *
- * A teacher can hand the same assignment to another class mid-unit, and can
- * still adjust the due date of a class already on it (a deadline extension is
- * the single most common post-publish edit and withholding it helps nobody).
- * What they cannot do is REMOVE a period — that would silently revoke access
- * for students who may already have work in progress.
+ * That rule is unchanged and still load-bearing. A teacher can hand the same
+ * assignment to another class mid-unit, and can still adjust the due date of a
+ * class already on it (a deadline extension is the single most common
+ * post-publish edit and withholding it helps nobody). What they cannot do is
+ * REMOVE a period — that would silently revoke access for students who may
+ * already have work in progress.
  */
-async function appendAssignmentPeriods(
-  supabase: Awaited<ReturnType<typeof createServerClient>>,
-  assignmentId: string,
-  periods: readonly AssignmentPeriodInput[]
-): Promise<string | null> {
-  if (periods.length === 0) return null;
-
-  const { error } = await supabase
-    .from("assignment_class_periods")
-    .upsert(
-      periods.map((p) => ({
-        assignment_id: assignmentId,
-        class_period_id: p.class_period_id,
-        due_at: p.due_at,
-      })),
-      { onConflict: "assignment_id,class_period_id" }
-    );
-  if (error) return `Failed to update class periods: ${error.message}`;
-  return null;
-}
 
 const VALID_RENDER_MODES = new Set(["pdf", "rich", "plain", "image"]);
 
@@ -766,10 +766,13 @@ export async function createDraftAssignment(
 
   const supabase = await createServerClient();
 
+  // The new row is stamped with profile.school_id, so that is the school the
+  // chosen periods must belong to.
   const periodAuthErr = await assertTeachesPeriods(
     supabase,
     profile.id,
-    f.periods
+    f.periods,
+    profile.school_id!
   );
   if (periodAuthErr) {
     return { fieldErrors: { class_periods: periodAuthErr } };
@@ -843,10 +846,14 @@ export async function updateDraftAssignment(
   const rf = resolveRubricFile(formData, existing.school_id, profile.id);
   if (!rf.ok) return rf.state;
 
+  // Match against the ASSIGNMENT's school, not the teacher's current one — a
+  // teacher who has since transferred is still editing a row that belongs to
+  // the old school, and 0051 compares the period to that row.
   const periodAuthErr = await assertTeachesPeriods(
     supabase,
     profile.id,
-    f.periods
+    f.periods,
+    existing.school_id
   );
   if (periodAuthErr) {
     return { fieldErrors: { class_periods: periodAuthErr } };
@@ -880,17 +887,10 @@ export async function updateDraftAssignment(
     );
     if (srcErr) return { error: srcErr };
 
-    // Same additive rule for class periods: hand the assignment to another
-    // class mid-unit, and adjust the deadline of a class already on it, but
-    // never drop a period — students there may have work in progress, and
-    // removal would revoke their access to it.
-    const periodErr = await appendAssignmentPeriods(
-      supabase,
-      assignmentId,
-      f.periods
-    );
-    if (periodErr) return { error: periodErr };
-
+    // Class periods follow the same additive rule — hand the assignment to
+    // another class mid-unit, adjust the deadline of a class already on it,
+    // but never drop a period, since students there may have work in
+    // progress. The write itself happens below, together with the row.
     update = {
       title: f.title,
       prompt: f.prompt,
@@ -923,15 +923,9 @@ export async function updateDraftAssignment(
     );
     if (srcErr) return { error: srcErr };
 
-    // Replace the periods outright. Safe pre-publish for the same reason as
-    // sources: no student can have started work on an unreleased assignment.
-    const periodErr = await writeAssignmentPeriods(
-      supabase,
-      assignmentId,
-      f.periods
-    );
-    if (periodErr) return { error: periodErr };
-
+    // The periods are REPLACED outright rather than merged. Safe pre-publish
+    // for the same reason as sources: no student can have started work on an
+    // unreleased assignment. The write happens below, together with the row.
     update = {
       title: f.title,
       prompt: f.prompt,
@@ -947,11 +941,21 @@ export async function updateDraftAssignment(
     };
   }
 
-  const { error } = await supabase
-    .from("assignments")
-    .update(update)
-    .eq("id", assignmentId)
-    .eq("teacher_id", profile.id);
+  // Row and periods in ONE transaction (0053). Done as two calls, a failing
+  // row update would leave the periods already rewritten against a row that
+  // never changed — the teacher is told the save failed while half of it
+  // landed. p_replace distinguishes the two paths: drafts replace the period
+  // set outright, published assignments only ever merge into it.
+  const { error } = await supabase.rpc("save_assignment_with_periods", {
+    p_assignment_id: assignmentId,
+    p_teacher_id: profile.id,
+    p_periods: f.periods.map((p) => ({
+      class_period_id: p.class_period_id,
+      due_at: p.due_at,
+    })),
+    p_replace: !isPublished,
+    p_update: update as Json,
+  });
 
   if (error) return { error: error.message };
 

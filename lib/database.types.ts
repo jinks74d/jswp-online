@@ -312,6 +312,26 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      /** 0052 — atomic delete+insert of an assignment's class periods. */
+      replace_assignment_class_periods: {
+        Args: {
+          p_assignment_id: string;
+          p_periods: { class_period_id: string; due_at: string | null }[];
+        };
+        Returns: undefined;
+      };
+      /** 0053 — assignment row + its class periods in one transaction. */
+      save_assignment_with_periods: {
+        Args: {
+          p_assignment_id: string;
+          p_teacher_id: string;
+          p_periods: { class_period_id: string; due_at: string | null }[];
+          /** true = replace the period set (draft); false = merge (published). */
+          p_replace: boolean;
+          p_update: Json;
+        };
+        Returns: undefined;
+      };
       auth_user_role: {
         Args: Record<string, never>;
         Returns: Database["public"]["Enums"]["jswp_role"] | null;

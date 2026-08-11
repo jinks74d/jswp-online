@@ -18,6 +18,34 @@ import { PublishToggleButton } from "./publish-toggle-button";
 const iconLink =
   "inline-flex items-center justify-center p-1.5 rounded-md text-stone-600 hover:bg-stone-100 hover:text-stone-700";
 
+/**
+ * Due dates are calendar-only, stored as UTC midnight, so they format in UTC —
+ * otherwise a viewer west of UTC sees the day before the one the teacher
+ * typed. `updated_at` is a real instant and correctly formats in local time;
+ * both use the same month/day style so the two columns read alike.
+ */
+const dueFmt = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+const updatedFmt = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+});
+
+/**
+ * The Due cell. One assignment can reach classes with different deadlines, so
+ * showing a single date would present one class's deadline as the deadline.
+ * Lead with the earliest — the first date any student is held to — and carry
+ * the rest as a count, mirroring how the Class column says "+N more".
+ */
+function dueLabel(dueAt: string | null, distinctCount: number): string {
+  if (!dueAt) return "—";
+  const first = dueFmt.format(new Date(dueAt));
+  return distinctCount > 1 ? `${first} +${distinctCount - 1} more` : first;
+}
+
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "My Assignments" };
@@ -66,6 +94,9 @@ export default async function AssignmentsPage() {
                     Class
                   </th>
                   <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Due
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
                     Updated
                   </th>
                   <th scope="col" className="px-3 py-2 text-right font-medium">
@@ -95,8 +126,11 @@ export default async function AssignmentsPage() {
                         ? formatAssignmentClasses(a.class_periods)
                         : "—"}
                     </td>
-                    <td className="px-3 py-2 text-stone-600">
-                      {new Date(a.updated_at).toLocaleDateString()}
+                    <td className="px-3 py-2 text-stone-600 whitespace-nowrap">
+                      {dueLabel(a.due_at, a.due_date_count)}
+                    </td>
+                    <td className="px-3 py-2 text-stone-600 whitespace-nowrap">
+                      {updatedFmt.format(new Date(a.updated_at))}
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-1">
@@ -155,6 +189,11 @@ export default async function AssignmentsPage() {
                 </Link>
                 <div className="text-xs text-stone-600 mt-1">
                   {formatAssignmentClasses(a.class_periods)}
+                </div>
+                {/* The narrow layout has no Due column, so the deadline rides
+                    with the class line rather than being dropped on mobile. */}
+                <div className="text-xs text-stone-600 mt-0.5">
+                  Due {dueLabel(a.due_at, a.due_date_count)}
                 </div>
                 <div className="mt-3 flex items-center gap-3 border-t border-stone-100 pt-2 text-sm">
                   <Link
