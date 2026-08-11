@@ -11,7 +11,7 @@ import { getSchool } from "@/lib/queries/schools";
 import { getSubject, subjectHasPeriod } from "@/lib/queries/subjects";
 import { listClassesForSubject } from "@/lib/queries/classes-admin";
 import { CsvImporter } from "@/components/admin/csv-importer";
-import { SubjectForm } from "../subject-form";
+import { SubjectForm } from "./subject-form";
 import { ClassForm } from "./class-form";
 
 export async function SubjectDetailBody({

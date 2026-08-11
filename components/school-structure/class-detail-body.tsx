@@ -11,7 +11,7 @@ import { getSubject } from "@/lib/queries/subjects";
 import { getClass } from "@/lib/queries/classes-admin";
 import { listPeriodsForClass } from "@/lib/queries/class-periods-admin";
 import { CsvImporter } from "@/components/admin/csv-importer";
-import { ClassForm } from "../../class-form";
+import { ClassForm } from "./class-form";
 import { PeriodForm } from "./period-form";
 
 export async function ClassDetailBody({

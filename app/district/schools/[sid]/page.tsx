@@ -6,7 +6,7 @@ import type { Metadata } from "next";
  */
 
 import { requireRole } from "@/lib/auth";
-import { SchoolDetailBody } from "../../../admin/districts/[id]/schools/[sid]/school-detail-body";
+import { SchoolDetailBody } from "@/components/school-structure/school-detail-body";
 
 export const dynamic = "force-dynamic";
 

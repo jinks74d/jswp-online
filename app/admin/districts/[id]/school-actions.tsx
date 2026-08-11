@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { Plus, Upload } from "lucide-react";
 import { CsvImporter } from "@/components/admin/csv-importer";
-import { SchoolForm } from "./school-form";
+import { SchoolForm } from "@/components/school-structure/school-form";
 
 type Panel = "none" | "add" | "import";
 

@@ -19,7 +19,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { SchoolForm } from "../../admin/districts/[id]/school-form";
+import { SchoolForm } from "@/components/school-structure/school-form";
 
 export type SchoolCard = {
   id: string;

@@ -15,7 +15,7 @@ import {
 import { listSchoolUsersByRole } from "@/lib/queries/school-users";
 import { listEnrolledStudents } from "@/lib/queries/period-students";
 import { CsvImporter } from "@/components/admin/csv-importer";
-import { PeriodForm } from "../../period-form";
+import { PeriodForm } from "./period-form";
 import { TeacherAssignment } from "./teacher-assignment";
 import { StudentEnrollment } from "./student-enrollment";
 

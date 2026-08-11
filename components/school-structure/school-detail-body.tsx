@@ -21,7 +21,7 @@ import { schoolLevelLabel } from "@/lib/school-levels";
 import { adminKindLabel } from "@/lib/admin-kinds";
 import { isValidHexColor } from "@/lib/district-branding.types";
 import { getContrastColor } from "@/lib/district-branding.utils";
-import { SchoolForm } from "../../school-form";
+import { SchoolForm } from "./school-form";
 import { AddSchoolUserForm } from "./add-school-user-form";
 import { SchoolTabs } from "./school-tabs";
 

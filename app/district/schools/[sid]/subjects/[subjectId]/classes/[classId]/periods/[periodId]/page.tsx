@@ -5,7 +5,7 @@ import type { Metadata } from "next";
  */
 
 import { requireRole } from "@/lib/auth";
-import { PeriodDetailBody } from "../../../../../../../../../admin/districts/[id]/schools/[sid]/subjects/[subjectId]/classes/[classId]/periods/[periodId]/period-detail-body";
+import { PeriodDetailBody } from "@/components/school-structure/period-detail-body";
 
 export const dynamic = "force-dynamic";
 
