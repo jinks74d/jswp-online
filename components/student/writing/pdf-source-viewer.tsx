@@ -41,7 +41,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import type { PDFDocumentLoadingTask } from "pdfjs-dist";
+import type {
+  PDFDocumentLoadingTask,
+  PDFDocumentProxy,
+} from "pdfjs-dist";
 import { loadPdfjs } from "@/lib/pdf-worker";
 import {
   buildPdfText,
@@ -52,6 +55,7 @@ import {
   type PdfJsTextItemLike,
   type PdfTextSegment,
 } from "@/lib/pdf-text";
+import { resolveAnnotationRange } from "@/lib/annotation-range";
 import { ANNOTATION_KINDS, type AnnotationKind } from "./annotation-kind-config";
 import type { SelectionPayload } from "./source-text-viewer";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
@@ -94,6 +98,30 @@ interface Props {
 const MIN_SCALE = 0.6;
 const MAX_SCALE = 3;
 const FALLBACK_WIDTH = 800;
+
+/**
+ * How much the container has to change before the pages are re-rasterized.
+ *
+ * Deliberately wider than a scrollbar (~15px): rendering can itself add or
+ * remove the scrollbar of an overflow container, which changes clientWidth,
+ * which would trigger another render — a scrollbar oscillation loop. Comparing
+ * against the width we actually rendered at, with this much slack, breaks it.
+ */
+const WIDTH_RERENDER_THRESHOLD = 40;
+/** Settle time before re-rasterizing, so dragging a window edge doesn't thrash. */
+const WIDTH_RERENDER_DEBOUNCE_MS = 150;
+
+/**
+ * Usable width inside an element — clientWidth minus its own horizontal
+ * padding. Fitting pages to clientWidth overshoots by the padding and leaves a
+ * horizontal scrollbar on a container that should have needed none.
+ */
+function contentWidthOf(el: HTMLElement): number {
+  const style = window.getComputedStyle(el);
+  const pad =
+    (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+  return Math.max(0, el.clientWidth - pad);
+}
 
 /**
  * Overlay style per kind. Fills are multiply-blended (so dark PDF glyphs stay
@@ -253,8 +281,12 @@ function clearHighlights(state: RenderState) {
 }
 
 /** Short, screen-reader-friendly label for a highlight: kind + a text snippet. */
-function annotationLabel(state: RenderState, a: TextAnnotationRow): string {
-  const snippet = state.text.slice(a.range_start, a.range_end).trim();
+function annotationLabel(
+  state: RenderState,
+  a: TextAnnotationRow,
+  range: { start: number; end: number }
+): string {
+  const snippet = state.text.slice(range.start, range.end).trim();
   const clipped = snippet.length > 60 ? `${snippet.slice(0, 57)}…` : snippet;
   return `${ANNOTATION_KINDS[a.kind].label} annotation: ${clipped}`;
 }
@@ -272,10 +304,25 @@ function drawHighlights(
   clearHighlights(state);
   for (const a of annotations) {
     if (!visibleKinds.has(a.kind)) continue;
-    if (a.range_start >= state.text.length) continue;
+
+    // Self-heal stale offsets. An annotation saved against an older version of
+    // this source_text (see lib/annotation-range.ts) would otherwise mark words
+    // the student never selected. When the snippet can't be found at all we
+    // fall back to the stored range: drawing it in the wrong place is bad, but
+    // silently erasing a student's annotation is worse.
+    const resolved = resolveAnnotationRange(state.text, a) ?? {
+      start: a.range_start,
+      end: a.range_end,
+      relocated: false,
+    };
+    if (resolved.start >= state.text.length) continue;
 
     const overlay = OVERLAY[a.kind];
-    const covered = itemsCoveringRange(state.segments, a.range_start, a.range_end);
+    const covered = itemsCoveringRange(
+      state.segments,
+      resolved.start,
+      resolved.end
+    );
     // Only the first rect of a (possibly multi-line) annotation is a tab stop,
     // so each annotation is one keyboard control, not one-per-wrapped-line.
     let firstRect = true;
@@ -317,7 +364,7 @@ function drawHighlights(
           firstRect = false;
           div.tabIndex = 0;
           div.setAttribute("role", "button");
-          div.setAttribute("aria-label", annotationLabel(state, a));
+          div.setAttribute("aria-label", annotationLabel(state, a, resolved));
           // Kept under the layer's pointer-events-none (so the mouse can still
           // select text through a highlight); Tab focus + keydown are unaffected
           // by pointer-events, so this is the keyboard-only edit path. A visible
@@ -356,6 +403,35 @@ export function PdfSourceViewer({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const renderStateRef = useRef<RenderState | null>(null);
+  /**
+   * The parsed document, cached across re-rasterizations.
+   *
+   * Re-rasterizing at a new width must not go back through fetch +
+   * getDocument:
+   *
+   *   1. `fileUrl` is a 5-minute signed Storage URL. A student who widens the
+   *      viewer after it expires would get a 403 and be silently downgraded to
+   *      the flat viewer.
+   *   2. Re-fetching and re-parsing the whole document to change a scale factor
+   *      is pure waste, and it makes every resize as slow as a cold load.
+   *
+   * So the document is loaded exactly once per fileUrl and only the page
+   * rasterization repeats. Disposal correspondingly moves out of the render
+   * effect's cleanup (which now also runs for a width change) into an
+   * unmount/fileUrl-change effect.
+   */
+  const docRef = useRef<{ url: string; doc: PDFDocumentProxy } | null>(null);
+  const loadingTaskRef = useRef<PDFDocumentLoadingTask | null>(null);
+  /** Container width the current canvases were rasterized for. */
+  const renderedWidthRef = useRef(0);
+  /**
+   * Fit-to-width target. Bumped by the ResizeObserver below, and a render
+   * dependency — so the pages follow the container instead of being frozen at
+   * whatever width happened to exist on first paint (which left the source
+   * unreadably small once the pane was popped out to full screen, and meant an
+   * ordinary browser-window resize never reflowed either).
+   */
+  const [renderWidth, setRenderWidth] = useState(0);
   // "scanned": image-only PDF with no text layer — canvas is readable but
   // there's nothing to select, so annotation is impossible (surfaced, not
   // silently broken). "error": pdf.js failed; the parent falls back to flat.
@@ -363,31 +439,78 @@ export function PdfSourceViewer({
     "loading" | "ready" | "scanned" | "error"
   >("loading");
 
-  // Heavy render: runs once per fileUrl. Annotation edits do NOT repaint here.
+  // Watch the container and ask for a re-render when it changes size enough to
+  // matter. Thresholded + debounced; see WIDTH_RERENDER_THRESHOLD.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const observer = new ResizeObserver(() => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        // Same measure the renderer fits to, so the threshold below compares
+        // like with like.
+        const width = contentWidthOf(container);
+        if (width <= 0) return;
+        if (
+          Math.abs(width - renderedWidthRef.current) < WIDTH_RERENDER_THRESHOLD
+        ) {
+          return;
+        }
+        setRenderWidth(width);
+      }, WIDTH_RERENDER_DEBOUNCE_MS);
+    });
+
+    observer.observe(container);
+    return () => {
+      observer.disconnect();
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
+  // Heavy render: re-runs per fileUrl AND per fit-to-width target. Annotation
+  // edits do NOT repaint here.
   useEffect(() => {
     let cancelled = false;
-    let loadingTask: PDFDocumentLoadingTask | null = null;
     renderStateRef.current = null;
     const container = containerRef.current;
     if (!container) return;
+
+    // Measured and recorded SYNCHRONOUSLY, before any await. The observer above
+    // compares against this, so recording it up front means (a) the observer's
+    // first callback after mount is a no-op instead of forcing a redundant
+    // second render, and (b) a resize that lands while this render is still in
+    // flight is compared against the width being rendered rather than the last
+    // one that finished — otherwise a pop-out during the initial render could be
+    // swallowed by the render it raced.
+    const targetWidth = contentWidthOf(container) || FALLBACK_WIDTH;
+    renderedWidthRef.current = targetWidth;
 
     (async () => {
       try {
         setStatus("loading");
         const pdfjs = await loadPdfjs();
 
-        const res = await fetch(fileUrl);
-        if (!res.ok) throw new Error(`fetch ${res.status}`);
-        const data = await res.arrayBuffer();
-        if (cancelled) return;
-
-        loadingTask = pdfjs.getDocument({ data });
-        const doc = await loadingTask.promise;
-        if (cancelled) return;
+        // Load once per fileUrl; a width change reuses the parsed document.
+        let doc: PDFDocumentProxy;
+        const cachedDoc = docRef.current;
+        if (cachedDoc && cachedDoc.url === fileUrl) {
+          doc = cachedDoc.doc;
+        } else {
+          const res = await fetch(fileUrl);
+          if (!res.ok) throw new Error(`fetch ${res.status}`);
+          const data = await res.arrayBuffer();
+          if (cancelled) return;
+          const task = pdfjs.getDocument({ data });
+          loadingTaskRef.current = task;
+          doc = await task.promise;
+          if (cancelled) return;
+          docRef.current = { url: fileUrl, doc };
+        }
 
         container.innerHTML = ""; // clear any prior render
 
-        const targetWidth = container.clientWidth || FALLBACK_WIDTH;
         const dpr = window.devicePixelRatio || 1;
 
         const rendered: {
@@ -603,10 +726,26 @@ export function PdfSourceViewer({
     return () => {
       cancelled = true;
       renderStateRef.current = null;
-      loadingTask?.destroy().catch(() => {});
+      // Deliberately does NOT destroy the loading task — this cleanup also runs
+      // for a width change, which reuses the document. Disposal is the
+      // unmount/fileUrl effect's job (see docRef).
     };
-    // Render depends only on the PDF; annotation props are read at draw time.
+    // Render depends on the PDF and the fit-to-width target; annotation props
+    // are read at draw time. Re-running is safe by construction: the effect
+    // clears the container, rebuilds renderStateRef, redraws highlights at the
+    // end, and setStatus("loading") trips the roving-cursor reset below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileUrl, renderWidth]);
+
+  // Dispose the document only when this viewer goes away for good, or when it's
+  // pointed at a different file — never for a mere re-rasterization.
+  useEffect(() => {
+    return () => {
+      const task = loadingTaskRef.current;
+      loadingTaskRef.current = null;
+      docRef.current = null;
+      task?.destroy().catch(() => {});
+    };
   }, [fileUrl]);
 
   // Light redraw on annotation / visibility changes (no canvas repaint).

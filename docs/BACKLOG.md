@@ -10,6 +10,31 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
+### Apply the annotation self-heal to the flat/rich viewer too
+Fixed 2026-08-12: annotations saved before `d165dd2` (2026-07-23, "strip PDF margin furniture from the annotation substrate") kept offsets into the longer pre-strip `source_text`, so highlights landed ~150 characters downstream of the words the student selected. 5 of 36 rows were affected, all `source_render_mode = 'pdf'` on one file. Repaired in place, and `lib/annotation-range.ts` now re-anchors any stale annotation at render time.
+
+**The gap that let it happen is worth understanding**, because the same shape can recur: `pdf-source-viewer.tsx` already had a strict guard (live extraction must equal stored `source_text`, else fall back to the flat viewer). That guard covers *live-vs-stored* drift but is structurally blind to *annotation-vs-stored* drift — offsets computed against an earlier version of the same `source_text`. Both conditions held at once, which is why it failed silently rather than tripping the fallback. Any future change to `lib/pdf-text.ts` extraction has the same effect on existing rows.
+
+Still to do:
+1. **`source-text-viewer.tsx` (flat + rich paths) does not use the resolver.** It walks `source_text` with the raw stored offsets using its own first-wins segmentation. The audit found 0 mismatches for `rich`/legacy-`null` sources — the margin mask only runs in the PDF path — so nothing is broken today, and it was left alone rather than risk a regression on a clean path. Wire `resolveAnnotationRange` in when that file is next touched.
+2. **Persist the heal.** The viewer re-locates on every render but never writes back, so a stale row stays stale in the database and anything else reading the offsets (T-Chart prefill, teacher review, analytics) still sees bad values. Consider a `relocated` write-back, or a startup repair.
+3. **Make extraction changes offset-aware.** Any future `pdf-text.ts` change should ship with a repair pass over existing `text_annotations` in the same commit. `selected_text` is what makes recovery possible — treat it as the durable anchor and the offsets as a cache.
+- **Identified:** 2026-08-12, from Raymond reporting misaligned marks
+- **Priority:** (1) whenever that file is touched; (2)+(3) before production cutover (Phase 7)
+
+### Print the *annotated* source copy (and extend print past Read & Annotate)
+Shipped: `[Print source]` on Read & Annotate, beside `[Open original]`. It prints a **clean** copy — no highlights, no notes — because the printed guides have the student underline CDs and write margin notes by hand; the sheet is double-spaced with a 1.75in right gutter for exactly that. Decided with Raymond 2026-08-12 (clean-only, from a 3-way choice).
+
+Deferred, all carved from that same decision:
+1. **Annotated copy.** The student's highlights preserved in JSWP color with `print-color-adjust: exact`, a kind legend, and their margin notes listed as endnotes. Needs the §9 non-color cues (the five underline line-styles in `annotation-kind-config.ts`) to survive onto paper, since a mono printer flattens the color entirely. Useful as a study artifact or something to hand in — a different artifact from the blank sheet, not a replacement.
+2. **A clean/annotated toggle** on the button, if both end up wanted.
+3. **Print on the downstream reference panel.** `components/student/writing/reference-panel.tsx` shows the same sources read-only on later steps and already hosts `OpenOriginalButton`; `PrintSourceButton` is structurally compatible (`PrintableSource`) and would drop in, gated on `printMeta` the same way. Left out only because the ask was scoped to Read & Annotate.
+4. **The rest of §10.** This is the app's *first* print surface — `react-to-print` had been an unused dependency and there was no `@media print` CSS anywhere. `SOURCE_PRINT_PAGE_STYLE` in `print/source-print-sheet.tsx` is now the reference pattern for the T-Chart / Shaping Sheet / Paragraph Form / Final Draft print views §10 still calls for (note those two may want `@page { size: landscape }`).
+
+Also unverified: the actual paper output. The print dialog is native and can't be driven from an automated browser without blocking it, so the header/body composition is covered by `__tests__/components/source-print-sheet.test.tsx` but nobody has yet held the page. Worth one manual pass per render mode (`plain`, `rich`, `pdf`, `image`) before cutover.
+- **Identified:** 2026-08-12, with the print-source chunk
+- **Priority:** (1)+(2) product-driven; (3) trivial whenever wanted; (4) Phase 7
+
 ### `db:check` compares policy NAMES only, so a wrong policy reports as present
 `__schema_inventory()` (migration `0028`) builds its `policies` array from `pg_policies.policyname` and nothing else. `npm run db:check` therefore verifies that a policy of the right name EXISTS and never looks at `qual` or `with_check`. A policy whose logic is wrong — or which simply doesn't match the migration text that supposedly created it — passes with a clean ✓.
 
