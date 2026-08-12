@@ -176,15 +176,20 @@ export function SheetEditor({
             {sheet.candidates.length} brainstormed · {selectedCount} selected
           </span>
         </div>
+        {/* Mirrors the step hint in lib/jswp-modes.ts (expository.gather_cds):
+            paste in what you highlighted, apply the Best Test, order them.
+            The two are read centimetres apart, so they must not disagree. */}
         <p className="text-xs text-gray-500 mb-3">
-          List 5 or more. Check the box on the ones you want to use.
-          Put the selected ones in the order you want them to appear in
-          your paragraph — drag them, or use the up/down arrows.
+          Paste in the concrete details you highlighted while reading. Check
+          the box on the ones that pass the Best Test: the most specific,
+          relevant, and appropriate for the job. Put the selected ones in the
+          order you want them to appear — drag them, or use the up/down arrows.
         </p>
 
         {sheet.candidates.length === 0 ? (
           <div className="rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-600">
-            No candidates yet. Click [Add candidate] to start brainstorming.
+            No concrete details yet. Click [Add candidate] to paste in your
+            first one.
           </div>
         ) : (
           <div className="space-y-4">
