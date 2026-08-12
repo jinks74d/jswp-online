@@ -587,6 +587,10 @@ export type StudentWritings = {
   // Feedback-area grading (migration 0031) — independent of total_score.
   grade_format: Database["public"]["Enums"]["jswp_grade_format"];
   overall_grade: string | null;
+  // When the OWNING STUDENT last changed any artifact of this writing
+  // (migration 0054). Distinct from updated_at, which also moves on teacher
+  // writes; compared against returned_at to flag a revision after feedback.
+  last_student_edit_at: string | null;
 } & Timestamps;
 
 export type PromptDecodings = {

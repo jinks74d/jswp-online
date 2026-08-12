@@ -10,11 +10,15 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, PencilLine } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getAssignmentForTeacher } from "@/lib/queries/assignments";
 import { listAssignmentWritings } from "@/lib/queries/teacher-writings";
 import { TeacherStatusBadge } from "@/components/dashboard/writing-review/teacher-status-badge";
+import {
+  hasRevisedSinceReturned,
+  byRevisedThenRecent,
+} from "@/lib/revision-signal";
 import type { Database } from "@/lib/database.types";
 
 type Status = Database["public"]["Enums"]["jswp_writing_status"];
@@ -61,6 +65,10 @@ export default async function AssignmentWritingsPage({
     graded: [],
   };
   for (const w of writings) grouped[w.status].push(w);
+  // Writings the student has reworked since feedback lead their section — they
+  // are the ones with something new to read.
+  grouped.returned.sort(byRevisedThenRecent);
+  const revisedCount = grouped.returned.filter(hasRevisedSinceReturned).length;
 
   return (
     <div className="space-y-6">
@@ -98,6 +106,12 @@ export default async function AssignmentWritingsPage({
                   <span className="ml-2 text-xs text-stone-600 font-normal">
                     ({items.length})
                   </span>
+                  {status === "returned" && revisedCount > 0 && (
+                    <span className="ml-2 text-xs font-normal text-amber-800">
+                      · {revisedCount} revised since you sent{" "}
+                      {revisedCount === 1 ? "it" : "them"} back
+                    </span>
+                  )}
                 </h2>
                 <div className="grid gap-2">
                   {items.map((w) => (
@@ -132,11 +146,14 @@ function WritingCard({
     "—";
 
   const activity = activityLine(writing);
+  const revised = hasRevisedSinceReturned(writing);
 
   return (
     <Link
       href={`/dashboard/assignments/${assignmentId}/writings/${writing.id}`}
-      className="flex items-center justify-between gap-3 bg-white border border-stone-200 rounded-xl shadow-sm px-4 py-3 hover:border-gray-400 transition-colors"
+      className={`flex items-center justify-between gap-3 bg-white border rounded-xl shadow-sm px-4 py-3 transition-colors hover:border-gray-400 ${
+        revised ? "border-amber-300" : "border-stone-200"
+      }`}
     >
       <div className="min-w-0">
         <div className="font-medium text-gray-900 truncate">{name}</div>
@@ -145,6 +162,14 @@ function WritingCard({
         )}
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
+        {revised && (
+          // Not colour alone (CLAUDE.md §9): the word "Revised" carries the
+          // meaning, the dot and border only reinforce it.
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">
+            <PencilLine className="h-3 w-3" aria-hidden="true" />
+            Revised
+          </span>
+        )}
         <TeacherStatusBadge status={writing.status} />
         <ChevronRight className="w-4 h-4 text-gray-400" aria-hidden="true" />
       </div>
@@ -159,7 +184,11 @@ function activityLine(
     return `Submitted ${formatRelative(writing.submitted_at)}`;
   }
   if (writing.status === "returned" && writing.returned_at) {
-    return `Returned ${formatRelative(writing.returned_at)}`;
+    // Naming the edit time is the point of the indicator: "revised" is only
+    // actionable if she can see whether it was ten minutes or ten days ago.
+    return hasRevisedSinceReturned(writing) && writing.last_student_edit_at
+      ? `Returned ${formatRelative(writing.returned_at)} · edited ${formatRelative(writing.last_student_edit_at)}`
+      : `Returned ${formatRelative(writing.returned_at)}`;
   }
   if (writing.status === "graded") {
     const score =

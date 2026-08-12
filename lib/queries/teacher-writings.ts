@@ -23,6 +23,8 @@ export interface AssignmentWritingListItem {
   graded_at: string | null;
   total_score: number | null;
   updated_at: string;
+  /** Migration 0054 — student-only edit clock; NULL on pre-0054 writings. */
+  last_student_edit_at: string | null;
   student: {
     id: string;
     first_name: string | null;
@@ -93,7 +95,7 @@ export async function listAssignmentWritings(
     .select(
       `
       id, status, draft_number, submitted_at, returned_at, graded_at,
-      total_score, updated_at,
+      total_score, updated_at, last_student_edit_at,
       student:student_id ( id, first_name, last_name, email )
       `
     )
@@ -125,6 +127,7 @@ export async function listAssignmentWritings(
       graded_at: r.graded_at,
       total_score: r.total_score,
       updated_at: r.updated_at,
+      last_student_edit_at: r.last_student_edit_at,
       student: r.student,
     }));
 }
