@@ -145,7 +145,7 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
     label: "Read & Annotate",
     groupOrigin: "annotate_text",
     pedagogyHint:
-      "Read carefully. Underline concrete detail in red. Remember, no more than five words in a row! Notes in the margin help you to find concrete detail later.",
+      "Read carefully. Highlight the concrete detail in the text that best answers the writing prompt. Remember, no more than five words in a row! The Notes in the margin will help you to make a final decision later.",
     // Optional in Expository: annotating helps but isn't forced — a
     // student may read and continue to the T-Chart without highlighting.
     // The Continue gate reads this flag (see annotate-text-client.tsx).
