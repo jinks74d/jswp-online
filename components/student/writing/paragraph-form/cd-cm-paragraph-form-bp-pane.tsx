@@ -34,6 +34,7 @@ import {
   type SegmentRole,
 } from "@/lib/compose-paragraph";
 import { useWritingMode } from "../use-writing-mode";
+import { NotWrittenYet } from "../not-written-yet";
 import type { ParagraphFormBpData } from "@/lib/queries/paragraph-form";
 
 // Static literal classes so Tailwind's scanner generates them.
@@ -64,11 +65,7 @@ export function CdCmParagraphFormBpPane({
 }) {
   const pf = bp.paragraph_form;
   if (!pf) {
-    return (
-      <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-        Paragraph-form row not yet bootstrapped. Reload to retry.
-      </div>
-    );
+    return <NotWrittenYet artifact="final paragraph" />;
   }
 
   // Compose from the final (falling back to working) topic/concluding

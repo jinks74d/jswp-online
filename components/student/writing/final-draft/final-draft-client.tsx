@@ -39,6 +39,7 @@ import {
   findFirstSecondPersonPronouns,
 } from "@/lib/jswp-literary-final-checks";
 import { useWritingMode } from "../use-writing-mode";
+import { NotWrittenYet } from "../not-written-yet";
 import type {
   AssemblySource,
   FinalDraftRowData,
@@ -65,11 +66,7 @@ export function FinalDraftClient({
   mode,
 }: Props) {
   if (!finalDraft) {
-    return (
-      <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-        Final draft row not yet bootstrapped. Reload to retry.
-      </div>
-    );
+    return <NotWrittenYet artifact="final draft" />;
   }
 
   return (
