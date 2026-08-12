@@ -159,7 +159,7 @@ const EXPOSITORY_STEPS: readonly StepConfig[] = [
     label: "Gather CDs",
     groupOrigin: "gathering_cds",
     pedagogyHint:
-      "List 5 or more concrete details that fit the prompt. Highlight the 2 or more you want to use. Drag them into the order you want them to appear.",
+      "Copy and paste your selections. Perform the “Best Test” to determine the most specific, relevant, and appropriate CDs for the job. Drag them into a logical order.",
     required: true,
     repeatPerBP: true,
     // 3+:0 (summary) folds CD-collection into the T-Chart — no discrete

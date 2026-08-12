@@ -48,7 +48,14 @@ export async function GatherCdsStep({
         </div>
         <h2 className="text-xl font-semibold text-gray-900">{stepLabel}</h2>
         {pedagogyHint && (
-          <p className="mt-1 text-sm text-gray-600">{pedagogyHint}</p>
+          // whitespace-pre-line so line breaks in the hint survive. A plain <p>
+          // collapses them, silently turning deliberately separated
+          // instructions into one run-on sentence. The other step headers still
+          // use a plain <p>; they'd need the same class before their copy could
+          // carry breaks.
+          <p className="mt-1 whitespace-pre-line text-sm text-gray-600">
+            {pedagogyHint}
+          </p>
         )}
       </header>
 
