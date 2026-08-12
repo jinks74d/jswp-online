@@ -3,6 +3,11 @@
  * every visible step's existing student-side component stacked
  * top-to-bottom, wrapped in <WritingModeProvider isReadOnly={true}>.
  *
+ * Reading order is the teacher's, not the student's: the finished writing
+ * comes first, then the process that produced it (see lib/review-order.ts).
+ * She reads the final paragraph, and only when something is wrong with it
+ * goes back through the scaffolding to find where.
+ *
  * Composition strategy: Option A (chunk 4.7b audit). The 4.7a
  * WritingModeProvider was designed for exactly this — leaf
  * components disable inputs and hide affordances when isReadOnly,
@@ -19,6 +24,7 @@
  */
 
 import { MODES, getSteps, type JswpMode } from "@/lib/jswp-modes";
+import { orderStepsForReview } from "@/lib/review-order";
 import { getPromptDecoding } from "@/lib/queries/prompt-decoding";
 import { WritingModeProvider } from "@/components/student/writing/writing-mode-provider";
 import { DecodePromptStep } from "@/app/student/writings/[id]/_steps/decode-prompt-step";
@@ -83,39 +89,58 @@ export async function CombinedView({
     chunkRatio,
   });
 
+  const { outcome, process } = orderStepsForReview(visible);
+
   // Pre-fetch decode-prompt data (same pattern as the dispatcher;
   // decode-prompt's component takes pre-fetched props).
   const decoding = await getPromptDecoding(writingId);
 
+  const section = (step: (typeof visible)[number]) => (
+    <section
+      key={step.key}
+      // White surface (not the stone-100 page bg) so the read-only step
+      // content — whose muted gray-500 labels are tuned for a white
+      // background — keeps ≥4.5:1 contrast here too (WCAG 1.4.3).
+      className="rounded-lg border border-gray-200 bg-white p-5"
+      aria-label={step.label}
+    >
+      {renderStep({
+        step,
+        writingId,
+        mode,
+        chunkRatio,
+        assignment,
+        decoding,
+      })}
+      <SectionFeedbackNote
+        writingId={writingId}
+        stepKey={step.key}
+        initialBody={feedbackByStep.get(step.key)?.body ?? ""}
+        gradeFormat={gradeFormat}
+        gradeValue={feedbackByStep.get(step.key)?.grade_value ?? ""}
+      />
+    </section>
+  );
+
   return (
     <WritingModeProvider isReadOnly={true}>
       <div className="space-y-12">
-        {visible.map((step) => (
-          <section
-            key={step.key}
-            // White surface (not the stone-100 page bg) so the read-only step
-            // content — whose muted gray-500 labels are tuned for a white
-            // background — keeps ≥4.5:1 contrast here too (WCAG 1.4.3).
-            className="rounded-lg border border-gray-200 bg-white p-5"
-            aria-label={step.label}
-          >
-            {renderStep({
-              step,
-              writingId,
-              mode,
-              chunkRatio,
-              assignment,
-              decoding,
-            })}
-            <SectionFeedbackNote
-              writingId={writingId}
-              stepKey={step.key}
-              initialBody={feedbackByStep.get(step.key)?.body ?? ""}
-              gradeFormat={gradeFormat}
-              gradeValue={feedbackByStep.get(step.key)?.grade_value ?? ""}
-            />
-          </section>
-        ))}
+        {outcome.map(section)}
+
+        {/* Names the break so leading with the finished writing reads as
+            intentional rather than as a mis-ordered list. Only earns its space
+            when there is something on both sides of it. */}
+        {outcome.length > 0 && process.length > 0 && (
+          <div className="flex items-center gap-3" aria-hidden="true">
+            <span className="h-px flex-1 bg-stone-300" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-stone-600">
+              How they got there
+            </span>
+            <span className="h-px flex-1 bg-stone-300" />
+          </div>
+        )}
+
+        {process.map(section)}
       </div>
     </WritingModeProvider>
   );
