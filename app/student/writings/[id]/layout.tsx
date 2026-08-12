@@ -12,7 +12,11 @@
 
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
-import { getWriting, getCompletedStepKeys } from "@/lib/queries/student-writings";
+import {
+  getWriting,
+  getCompletedStepKeys,
+  getSubmittedStepMap,
+} from "@/lib/queries/student-writings";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { getRubricScoresForWriting } from "@/lib/queries/rubric-scores";
 import { getSteps, MODES, type JswpMode } from "@/lib/jswp-modes";
@@ -50,8 +54,9 @@ export default async function WritingLayout({
   // Fetch feedback for any returned writing so we can render the panel
   // and a banner count. Rubric scores load on graded writings to drive
   // the per-criterion breakdown.
-  const [completedKeys, feedback, rubricScores] = await Promise.all([
+  const [completedKeys, submittedSteps, feedback, rubricScores] = await Promise.all([
     getCompletedStepKeys(id),
+    getSubmittedStepMap(id),
     writing.status === "returned"
       ? listFeedback(id)
       : Promise.resolve([] as Awaited<ReturnType<typeof listFeedback>>),
@@ -76,7 +81,11 @@ export default async function WritingLayout({
   };
 
   return (
-    <WritingModeProvider isReadOnly={isReadOnly} printMeta={printMeta}>
+    <WritingModeProvider
+      isReadOnly={isReadOnly}
+      printMeta={printMeta}
+      submittedSteps={submittedSteps}
+    >
       <WritingShell
         writingId={id}
         currentUserId={profile.id}

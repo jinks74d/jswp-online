@@ -37,6 +37,7 @@ import {
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useWritingMode } from "./use-writing-mode";
+import { SubmitStepButton } from "./submit-step-button";
 
 export type AnnotateSource = {
   sourceId: string;
@@ -150,6 +151,7 @@ export function AnnotateTextClient({
                 {continueError}
               </div>
             )}
+            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
             <button
               type="button"
               onClick={onContinue}

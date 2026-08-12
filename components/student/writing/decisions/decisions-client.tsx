@@ -18,6 +18,7 @@ import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useWritingMode } from "../use-writing-mode";
 import type { CommentaryBpData } from "@/lib/queries/commentary";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
+import { SubmitStepButton } from "../submit-step-button";
 
 interface Props {
   writingId: string;
@@ -181,6 +182,7 @@ export function DecisionsClient({
                 {error}
               </div>
             )}
+            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
             <button
               type="button"
               onClick={onContinue}

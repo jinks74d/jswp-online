@@ -45,6 +45,7 @@ import type {
   FinalDraftRowData,
 } from "@/lib/queries/final-draft";
 import type { Database } from "@/lib/database.types";
+import { SubmitStepButton } from "../submit-step-button";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 
@@ -530,6 +531,7 @@ function ContinueBar({
             {error}
           </div>
         )}
+        <SubmitStepButton writingId={writingId} stepKey={stepKey} isTerminal={isTerminal} />
         <button
           type="button"
           onClick={onClick}

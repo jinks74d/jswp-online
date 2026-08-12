@@ -32,6 +32,7 @@ import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 import type { Database } from "@/lib/database.types";
+import { SubmitStepButton } from "../submit-step-button";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
@@ -209,6 +210,7 @@ export function TChartClient({
                 {error}
               </div>
             )}
+            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
             <button
               type="button"
               onClick={onContinue}

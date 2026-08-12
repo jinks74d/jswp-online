@@ -16,6 +16,7 @@ import {
 } from "./counterargument-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useWritingMode } from "../use-writing-mode";
+import { SubmitStepButton } from "../submit-step-button";
 
 interface Props {
   writingId: string;
@@ -126,6 +127,7 @@ export function CounterargumentClient({
                 {error}
               </div>
             )}
+            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
             <button
               type="button"
               onClick={onContinue}

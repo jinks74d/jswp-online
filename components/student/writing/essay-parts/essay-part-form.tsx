@@ -21,6 +21,7 @@ import { Loader2 } from "lucide-react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useWritingMode } from "../use-writing-mode";
+import { SubmitStepButton } from "../submit-step-button";
 
 export interface SelectOption {
   value: string;
@@ -134,6 +135,7 @@ export function EssayPartForm<T extends string = string>({
                 {error}
               </div>
             )}
+            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
             <button
               type="button"
               onClick={onContinue}

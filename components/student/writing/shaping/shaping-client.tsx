@@ -25,6 +25,7 @@ import { computeGate } from "@/lib/shaping-gate";
 import { useWritingMode } from "../use-writing-mode";
 import type { ShapingBpData } from "@/lib/queries/shaping";
 import type { Database } from "@/lib/database.types";
+import { SubmitStepButton } from "../submit-step-button";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 
@@ -135,6 +136,7 @@ export function ShapingClient({
                 {error}
               </div>
             )}
+            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
             <button
               type="button"
               onClick={onContinue}

@@ -199,6 +199,44 @@ export async function submitWriting(writingId: string): Promise<void> {
 }
 
 /**
+ * Submit ONE step for grading (migration 0055). Lets a teacher take several
+ * grades across a writing instead of only grading the finished piece — the
+ * per-step grade itself already existed (teacher_feedback.step_key +
+ * grade_value); this is the student's signal that a step is ready to look at.
+ *
+ * Deliberately does NOT lock the step or touch student_writings.status. The
+ * student keeps working; a later edit re-flags the writing via the 0054
+ * last_student_edit_at trigger, so a grade taken against an older version
+ * shows up as revised rather than going quietly stale.
+ *
+ * Re-submitting overwrites the timestamp, so it always means "ready as of".
+ */
+export async function submitStep(
+  writingId: string,
+  stepKey: string
+): Promise<void> {
+  await requireRole("student");
+  const supabase = await createServerClient();
+
+  const nowIso = new Date().toISOString();
+  const { error } = await supabase.from("step_progress").upsert(
+    {
+      student_writing_id: writingId,
+      step_key: stepKey,
+      started_at: nowIso, // ON CONFLICT keeps the existing row's started_at
+      submitted_at: nowIso,
+    },
+    { onConflict: "student_writing_id,step_key" }
+  );
+
+  if (error) {
+    throw new Error(`Could not submit step: ${error.message}`);
+  }
+
+  revalidatePath(`/student/writings/${writingId}`, "layout");
+}
+
+/**
  * Set current_step to a specific step. Used when the student clicks a
  * previously-completed step in the sidebar to revisit it. Doesn't write
  * step_progress — completion stays sticky.

@@ -18,6 +18,7 @@ import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
+import { SubmitStepButton } from "../submit-step-button";
 
 interface Props {
   writingId: string;
@@ -127,6 +128,7 @@ export function DiscoveryClient({ writingId, stepKey, bps }: Props) {
                 {error}
               </div>
             )}
+            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
             <button
               type="button"
               onClick={onContinue}

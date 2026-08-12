@@ -19,6 +19,7 @@ import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useWritingMode } from "../use-writing-mode";
 import type { GatheringSheetData } from "@/lib/queries/candidate-cds";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
+import { SubmitStepButton } from "../submit-step-button";
 
 interface Props {
   writingId: string;
@@ -160,6 +161,7 @@ export function GatherCdsClient({
                 {error}
               </div>
             )}
+            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
             <button
               type="button"
               onClick={onContinue}

@@ -781,6 +781,9 @@ export type StepProgress = {
   step_key: string;
   started_at: string | null;
   completed_at: string | null;
+  // When the student last submitted THIS STEP for grading (migration 0055).
+  // Distinct from completed_at, which only means they clicked Continue past it.
+  submitted_at: string | null;
   time_spent_seconds: number;
 } & Timestamps;
 

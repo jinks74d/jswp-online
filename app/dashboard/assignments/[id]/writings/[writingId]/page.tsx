@@ -25,6 +25,7 @@ import { getRubricFileSignedUrl } from "@/lib/storage/assignment-rubrics";
 import { getWritingForTeacherReview } from "@/lib/queries/teacher-writings";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { groupSectionFeedback } from "@/lib/section-feedback";
+import { getSubmittedStepMap } from "@/lib/queries/student-writings";
 import { CombinedView } from "@/components/dashboard/writing-review/combined-view";
 import { FeedbackPanel } from "@/components/dashboard/writing-review/feedback-panel";
 import { ReviewActions } from "@/components/dashboard/writing-review/review-actions";
@@ -58,6 +59,8 @@ export default async function TeacherWritingReviewPage({
 
   const { byStep: feedbackByStep, overall: overallFeedback } =
     groupSectionFeedback(feedback);
+  // Which steps the student has flagged ready to grade (migration 0055).
+  const submittedSteps = await getSubmittedStepMap(writing.id);
 
   // The attached rubric document, signed for this render so the teacher can
   // open it in a second tab while scoring.
@@ -132,6 +135,7 @@ export default async function TeacherWritingReviewPage({
           mode={writing.assignment.mode}
           chunkRatio={writing.chunk_ratio}
           feedbackByStep={feedbackByStep}
+          submittedSteps={submittedSteps}
           gradeFormat={writing.grade_format}
           assignment={{
             prompt: writing.assignment.prompt,

@@ -23,6 +23,7 @@
  * accepts server-component children via React's standard pattern.
  */
 
+import { Check } from "lucide-react";
 import { MODES, getSteps, type JswpMode } from "@/lib/jswp-modes";
 import { orderStepsForReview } from "@/lib/review-order";
 import { getPromptDecoding } from "@/lib/queries/prompt-decoding";
@@ -56,6 +57,8 @@ interface Props {
   mode: JswpMode;
   chunkRatio: ChunkRatio;
   feedbackByStep: ReadonlyMap<string, FeedbackItemRow>;
+  /** step_key -> when the student submitted it for grading (migration 0055). */
+  submittedSteps: ReadonlyMap<string, string>;
   gradeFormat: GradeFormat;
   assignment: {
     prompt: string;
@@ -79,6 +82,7 @@ export async function CombinedView({
   mode,
   chunkRatio,
   feedbackByStep,
+  submittedSteps,
   gradeFormat,
   assignment,
 }: Props) {
@@ -104,6 +108,13 @@ export async function CombinedView({
       className="rounded-lg border border-gray-200 bg-white p-5"
       aria-label={step.label}
     >
+      {submittedSteps.has(step.key) && (
+        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-green-300 bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-900">
+          <Check className="h-3 w-3" aria-hidden="true" />
+          Submitted for grading{" "}
+          {formatRelative(submittedSteps.get(step.key) as string)}
+        </div>
+      )}
       {renderStep({
         step,
         writingId,
@@ -343,4 +354,20 @@ function renderStep({
   }
 
   return null;
+}
+
+/** Relative time for the per-step submitted badge. */
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = 60_000;
+  const hr = 60 * min;
+  const day = 24 * hr;
+  if (diff < min) return "just now";
+  if (diff < hr) return `${Math.floor(diff / min)}m ago`;
+  if (diff < day) return `${Math.floor(diff / hr)}h ago`;
+  if (diff < 7 * day) return `${Math.floor(diff / day)}d ago`;
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
 }

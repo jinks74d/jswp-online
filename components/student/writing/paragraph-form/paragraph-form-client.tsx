@@ -18,6 +18,7 @@ import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { ParagraphFormBpData } from "@/lib/queries/paragraph-form";
 import type { Database } from "@/lib/database.types";
+import { SubmitStepButton } from "../submit-step-button";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 
@@ -155,6 +156,7 @@ export function ParagraphFormClient({
                 {error}
               </div>
             )}
+            <SubmitStepButton writingId={writingId} stepKey={stepKey} isTerminal={isTerminal} />
             <button
               type="button"
               onClick={onClick}

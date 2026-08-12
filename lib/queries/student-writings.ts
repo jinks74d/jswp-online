@@ -121,6 +121,37 @@ export async function getCompletedStepKeys(
   return new Set((data ?? []).map((r) => r.step_key));
 }
 
+/**
+ * step_key → when the student last submitted that step for grading
+ * (migration 0055). Distinct from completion: a step is "completed" merely by
+ * clicking Continue past it, whereas submitting is a deliberate, repeatable
+ * "this is ready to look at".
+ *
+ * Fetched once per writing in the layout and handed to the flow context, so
+ * the per-step Submit buttons don't each issue their own query.
+ */
+export async function getSubmittedStepMap(
+  writingId: string
+): Promise<Map<string, string>> {
+  const supabase = await createServerClient();
+
+  const { data, error } = await supabase
+    .from("step_progress")
+    .select("step_key, submitted_at")
+    .eq("student_writing_id", writingId)
+    .not("submitted_at", "is", null);
+
+  if (error) {
+    throw new Error(`getSubmittedStepMap: ${error.message}`);
+  }
+
+  const map = new Map<string, string>();
+  for (const r of data ?? []) {
+    if (r.submitted_at) map.set(r.step_key, r.submitted_at);
+  }
+  return map;
+}
+
 /* ─── Get-or-create handshake ────────────────────────────────────────── */
 
 interface GetOrCreateResult {
