@@ -16,11 +16,13 @@
  * optimistic UI, per chunk 4.3).
  */
 
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { SourceTextViewer, type SelectionPayload } from "./source-text-viewer";
 import { PdfSourceViewer } from "./pdf-source-viewer";
 import { OpenOriginalButton } from "./open-original-button";
+import { PrintSourceButton } from "./print/print-source-button";
+import type { PrintSourceMeta } from "./print/print-source-plan";
 import { getWritingSourceUrlByPath } from "@/lib/actions/source-files";
 import { AnnotationPopover } from "./annotation-popover";
 import {
@@ -63,7 +65,7 @@ export function AnnotateTextClient({
   sources,
   initialAnnotations,
 }: Props) {
-  const { isReadOnly } = useWritingMode();
+  const { isReadOnly, printMeta } = useWritingMode();
   const [continuing, startContinue] = useTransition();
   const [continueError, setContinueError] = useState<string | null>(null);
   // Sources whose file is a scanned/image-only PDF with no selectable text —
@@ -126,6 +128,7 @@ export function AnnotateTextClient({
           source={source}
           annotations={bySource.get(source.sourceId) ?? []}
           readOnly={isReadOnly}
+          printMeta={printMeta}
           onUnannotatable={() => onUnannotatable(source.sourceId)}
         />
       ))}
@@ -175,6 +178,7 @@ function SourceAnnotatePane({
   source,
   annotations,
   readOnly,
+  printMeta,
   onUnannotatable,
 }: {
   writingId: string;
@@ -183,6 +187,8 @@ function SourceAnnotatePane({
   source: AnnotateSource;
   annotations: readonly TextAnnotationRow[];
   readOnly: boolean;
+  /** Null on the teacher review surface — see writing-mode-provider.tsx. */
+  printMeta: PrintSourceMeta | null;
   onUnannotatable: () => void;
 }) {
   const [selection, setSelection] = useState<SelectionPayload | null>(null);
@@ -191,6 +197,90 @@ function SourceAnnotatePane({
     () => new Set(ANNOTATION_KIND_ORDER)
   );
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
+
+  /**
+   * Full-screen "pop out" reading mode.
+   *
+   * This EXPANDS the pane in place — it does not mount a second copy of the
+   * annotation surface inside a modal, which is the obvious implementation and
+   * a broken one: PdfSourceViewer registers a `selectionchange` listener on
+   * `document` (pdf-source-viewer.tsx), so two live instances of the same
+   * source would both interpret every selection and race to open a popover.
+   * Toggling classes on the existing <section> keeps exactly one instance, so
+   * nothing remounts: no re-fetched signed URL, no pdf.js re-render, no lost
+   * kind filters, no lost scroll position.
+   */
+  const [expanded, setExpanded] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const collapseButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  // Move focus into the expanded view, and hand it back to whatever opened it
+  // on the way out (WCAG 2.4.3 Focus Order).
+  useEffect(() => {
+    if (!expanded) return;
+    previouslyFocusedRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    collapseButtonRef.current?.focus();
+    return () => previouslyFocusedRef.current?.focus();
+  }, [expanded]);
+
+  // The page behind must not scroll while the overlay is up.
+  useEffect(() => {
+    if (!expanded) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [expanded]);
+
+  // Escape closes; Tab is trapped inside the overlay.
+  useEffect(() => {
+    if (!expanded) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        // Let the inner layers own Escape first: the annotation form and the
+        // selection popover are dismissed before the reading view is, and the
+        // PDF viewer consumes it to leave keyboard-selection mode (it calls
+        // preventDefault, which is what defaultPrevented detects here).
+        if (event.defaultPrevented) return;
+        if (openForm || selection) return;
+        event.preventDefault();
+        setExpanded(false);
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+      const panel = sectionRef.current;
+      if (!panel) return;
+
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey) {
+        if (active === first || !panel.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (active === last || !panel.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [expanded, openForm, selection]);
 
   const isPdf =
     source.sourceRenderMode === "pdf" && Boolean(source.sourceFilePath);
@@ -280,8 +370,27 @@ function SourceAnnotatePane({
     ? `Source ${index + 1}${source.kind === "secondary" ? " · Secondary" : " · Primary"}`
     : null;
 
+  // Names the dialog for screen readers, preferring the source's own title.
+  const dialogLabel = source.sourceTitle?.trim() || heading || "Source";
+
   return (
-    <section className="space-y-2">
+    <section
+      ref={sectionRef}
+      // A full-bleed opaque panel IS the modal here, so there's no separate
+      // backdrop element to stack against the popover and form (both of which
+      // are `fixed z-50` and render inside this section).
+      className={
+        expanded
+          ? // overflow-auto, not overflow-y-auto: a wide table in a rich source
+            // still needs to be reachable sideways, and negative-left overflow
+            // (the off-screen print sheet) never creates a scrollbar in LTR.
+            "fixed inset-0 z-40 space-y-2 overflow-auto bg-white p-4 sm:p-6"
+          : "space-y-2"
+      }
+      {...(expanded
+        ? { role: "dialog", "aria-modal": true, "aria-label": dialogLabel }
+        : {})}
+    >
       {heading && (
         <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
           {heading}
@@ -289,7 +398,13 @@ function SourceAnnotatePane({
       )}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-2 min-w-0">
-          <div className="flex items-start justify-between gap-3">
+          <div
+            className={
+              expanded
+                ? "sticky top-0 z-10 -mx-4 flex items-start justify-between gap-3 border-b border-gray-200 bg-white px-4 pb-3 sm:-mx-6 sm:px-6"
+                : "flex items-start justify-between gap-3"
+            }
+          >
             {(source.sourceTitle || source.sourceAuthor) && (
               <div className="text-sm text-gray-600">
                 {source.sourceTitle && (
@@ -301,13 +416,37 @@ function SourceAnnotatePane({
                 {source.sourceAuthor && <span>{source.sourceAuthor}</span>}
               </div>
             )}
-            {source.sourceFilePath && (
-              <OpenOriginalButton
-                writingId={writingId}
-                fileName={source.sourceFileName}
-                filePath={source.sourceFilePath}
-              />
-            )}
+            <div className="ml-auto flex flex-wrap items-start justify-end gap-2">
+              {source.sourceFilePath && (
+                <OpenOriginalButton
+                  writingId={writingId}
+                  fileName={source.sourceFileName}
+                  filePath={source.sourceFilePath}
+                />
+              )}
+              {printMeta && (
+                <PrintSourceButton
+                  writingId={writingId}
+                  source={source}
+                  meta={printMeta}
+                />
+              )}
+              <button
+                ref={collapseButtonRef}
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                aria-haspopup="dialog"
+                aria-expanded={expanded}
+                className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              >
+                {expanded ? (
+                  <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : (
+                  <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {expanded ? "Exit full screen" : "Pop out"}
+              </button>
+            </div>
           </div>
           {annotations.length === 0 && !isImage && (
             <div className="text-xs text-gray-500 italic">
@@ -378,7 +517,15 @@ function SourceAnnotatePane({
           )}
         </div>
 
-        <aside className="lg:sticky lg:top-20 lg:self-start">
+        {/* Popped out, the page header is gone and the pane's own sticky bar is
+            the only thing above — so the sidebar tucks up under it. */}
+        <aside
+          className={
+            expanded
+              ? "lg:sticky lg:top-14 lg:self-start"
+              : "lg:sticky lg:top-20 lg:self-start"
+          }
+        >
           <AnnotationSidebar
             annotations={annotations}
             visibleKinds={visibleKinds}

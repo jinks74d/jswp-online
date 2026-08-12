@@ -15,7 +15,7 @@ import { requireRole } from "@/lib/auth";
 import { getWriting, getCompletedStepKeys } from "@/lib/queries/student-writings";
 import { listFeedback } from "@/lib/queries/teacher-feedback";
 import { getRubricScoresForWriting } from "@/lib/queries/rubric-scores";
-import { getSteps, type JswpMode } from "@/lib/jswp-modes";
+import { getSteps, MODES, type JswpMode } from "@/lib/jswp-modes";
 import { WritingShell } from "@/components/student/writing/writing-shell";
 import { WritingModeProvider } from "@/components/student/writing/writing-mode-provider";
 
@@ -62,8 +62,21 @@ export default async function WritingLayout({
         ),
   ]);
 
+  // Header line for anything the student prints from inside the flow
+  // (CLAUDE.md §10). Assembled here because this is the one place that already
+  // holds all four pieces — see the note in writing-mode-provider.tsx.
+  const printMeta = {
+    studentName:
+      [profile.first_name, profile.last_name].filter(Boolean).join(" ") ||
+      profile.email ||
+      "",
+    assignmentTitle: a.title,
+    modeLabel: MODES[a.mode as JswpMode].displayName,
+    draftNumber: writing.draft_number,
+  };
+
   return (
-    <WritingModeProvider isReadOnly={isReadOnly}>
+    <WritingModeProvider isReadOnly={isReadOnly} printMeta={printMeta}>
       <WritingShell
         writingId={id}
         currentUserId={profile.id}
