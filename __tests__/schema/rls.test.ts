@@ -1833,3 +1833,117 @@ describe("Super admin sees all", () => {
     expect(data!.length).toBe(2);
   });
 });
+
+/* ─── teacher_feedback: student resolve ──────────────────────────────────
+ *
+ * This table had NO RLS coverage until 0056, which is how
+ * teacher_feedback_student_resolve reached production with a WITH CHECK that
+ * always raised "more than one row returned by a subquery used as an
+ * expression". Its pin subquery self-referenced the inner table, so it matched
+ * every row instead of the one being updated — invisible while the table held
+ * a single row.
+ */
+
+describe("teacher_feedback — student resolve", () => {
+  const FEEDBACK_ID = "11111111-0000-0000-0000-00000000f001";
+  const OTHER_FEEDBACK_ID = "11111111-0000-0000-0000-00000000f002";
+
+  beforeAll(async () => {
+    const svc = createServiceRoleClient();
+    await svc.from("teacher_feedback").upsert([
+      {
+        id: FEEDBACK_ID,
+        student_writing_id: TEST.alexWriting,
+        teacher_id: IDS.teacher,
+        target_kind: "student_writing",
+        target_id: TEST.alexWriting,
+        body: "Tighten your commentary.",
+        grade_value: "B",
+        is_resolved: false,
+      },
+      {
+        id: OTHER_FEEDBACK_ID,
+        student_writing_id: TEST.baileyWriting,
+        teacher_id: IDS.teacher,
+        target_kind: "student_writing",
+        target_id: TEST.baileyWriting,
+        body: "Nice work.",
+        is_resolved: false,
+      },
+    ]);
+  });
+
+  afterAll(async () => {
+    const svc = createServiceRoleClient();
+    await svc
+      .from("teacher_feedback")
+      .delete()
+      .in("id", [FEEDBACK_ID, OTHER_FEEDBACK_ID]);
+  });
+
+  it("lets a student mark their own feedback resolved", async () => {
+    // The reported failure: this raised 21000 (more than one row returned by
+    // a subquery used as an expression) for every student.
+    const { error } = await alexClient
+      .from("teacher_feedback")
+      .update({ is_resolved: true })
+      .eq("id", FEEDBACK_ID);
+
+    expect(error).toBeNull();
+
+    const svc = createServiceRoleClient();
+    const { data } = await svc
+      .from("teacher_feedback")
+      .select("is_resolved")
+      .eq("id", FEEDBACK_ID)
+      .single();
+    expect(data!.is_resolved).toBe(true);
+  });
+
+  it("does not let a student rewrite the teacher's words", async () => {
+    await alexClient
+      .from("teacher_feedback")
+      .update({ body: "Actually this was great." })
+      .eq("id", FEEDBACK_ID);
+
+    const svc = createServiceRoleClient();
+    const { data } = await svc
+      .from("teacher_feedback")
+      .select("body")
+      .eq("id", FEEDBACK_ID)
+      .single();
+    expect(data!.body).toBe("Tighten your commentary.");
+  });
+
+  it("does not let a student change their own grade", async () => {
+    // grade_value (0031) and step_key (0030) postdate the original policy and
+    // were never pinned. The broken subquery hid that by failing closed.
+    await alexClient
+      .from("teacher_feedback")
+      .update({ grade_value: "A" })
+      .eq("id", FEEDBACK_ID);
+
+    const svc = createServiceRoleClient();
+    const { data } = await svc
+      .from("teacher_feedback")
+      .select("grade_value")
+      .eq("id", FEEDBACK_ID)
+      .single();
+    expect(data!.grade_value).toBe("B");
+  });
+
+  it("does not let a student resolve someone else's feedback", async () => {
+    await alexClient
+      .from("teacher_feedback")
+      .update({ is_resolved: true })
+      .eq("id", OTHER_FEEDBACK_ID);
+
+    const svc = createServiceRoleClient();
+    const { data } = await svc
+      .from("teacher_feedback")
+      .select("is_resolved")
+      .eq("id", OTHER_FEEDBACK_ID)
+      .single();
+    expect(data!.is_resolved).toBe(false);
+  });
+});
