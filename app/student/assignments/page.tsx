@@ -14,15 +14,20 @@ import {
   type DerivedStatus,
 } from "@/lib/queries/student-assignments";
 import { getFeedbackSummaryByWriting } from "@/lib/queries/teacher-feedback";
+import { hasNewFeedback, byFeedbackFirst } from "@/lib/student-feedback";
 import { AssignmentCard } from "@/components/student/assignment-card";
 
 export const dynamic = "force-dynamic";
 
-const FILTERS: { value: DerivedStatus | "all"; label: string }[] = [
+type FilterValue = DerivedStatus | "all" | "feedback";
+
+const FILTERS: { value: FilterValue; label: string }[] = [
   { value: "all", label: "All" },
   { value: "not_started", label: "To do" },
   { value: "in_progress", label: "In progress" },
-  { value: "returned", label: "Feedback" },
+  // Means "has feedback waiting", NOT "status is returned" — per-step grading
+  // puts notes on writings that were never returned. See lib/student-feedback.
+  { value: "feedback", label: "Feedback" },
   { value: "submitted", label: "Submitted" },
   { value: "graded", label: "Graded" },
 ];
@@ -60,22 +65,43 @@ export default async function StudentAssignmentsList({
     .map((it) => it.writing!.id);
   const feedbackByWriting = await getFeedbackSummaryByWriting(feedbackWritingIds);
 
+  // Pair each assignment with its feedback tally once — the tab counts, the
+  // filter and the ordering all need it, and they must agree.
+  const withFeedback = items.map((it) => ({
+    item: it,
+    status: it.status,
+    feedback: it.writing
+      ? feedbackByWriting.get(it.writing.id) ?? null
+      : null,
+  }));
+
   const groups = groupByStatus(items);
-  const counts: Record<DerivedStatus | "all", number> = {
+  const counts: Record<FilterValue, number> = {
     all: items.length,
     not_started: groups.not_started.length,
     in_progress: groups.in_progress.length,
     submitted: groups.submitted.length,
     returned: groups.returned.length,
     graded: groups.graded.length,
+    feedback: withFeedback.filter(hasNewFeedback).length,
   };
 
-  const activeFilter: DerivedStatus | "all" = isDerivedStatus(statusParam)
-    ? statusParam
-    : "all";
+  const activeFilter: FilterValue =
+    statusParam === "feedback"
+      ? "feedback"
+      : isDerivedStatus(statusParam)
+        ? statusParam
+        : "all";
 
-  const filtered =
-    activeFilter === "all" ? items : items.filter((it) => it.status === activeFilter);
+  const filtered = (
+    activeFilter === "all"
+      ? withFeedback
+      : activeFilter === "feedback"
+        ? withFeedback.filter(hasNewFeedback)
+        : withFeedback.filter((w) => w.status === activeFilter)
+    // Feedback leads every view: it is the only thing on this page that is
+    // waiting on the student rather than the other way round.
+  ).sort(byFeedbackFirst);
 
   return (
     <div className="space-y-6">
@@ -121,15 +147,11 @@ export default async function StudentAssignmentsList({
         <EmptyFilter />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
-          {filtered.map((item) => (
+          {filtered.map((w) => (
             <AssignmentCard
-              key={item.id}
-              item={item}
-              feedback={
-                item.writing
-                  ? feedbackByWriting.get(item.writing.id) ?? null
-                  : null
-              }
+              key={w.item.id}
+              item={w.item}
+              feedback={w.feedback}
             />
           ))}
         </div>

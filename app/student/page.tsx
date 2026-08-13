@@ -9,6 +9,7 @@ import Link from "next/link";
 import { FileText, Sparkles } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getFeedbackSummaryByWriting } from "@/lib/queries/teacher-feedback";
+import { hasNewFeedback, byFeedbackFirst } from "@/lib/student-feedback";
 import {
   getStudentAssignmentsList,
   groupByStatus,
@@ -52,12 +53,29 @@ export default async function StudentHome() {
 
   const todoCount = groups.not_started.length;
   const inProgressCount = groups.in_progress.length;
-  const needsRevisionCount = groups.returned.length;
+  // Counts feedback WAITING, not writings returned — per-step grading means a
+  // note can arrive long before a writing is ever sent back. Matches the
+  // Feedback tab on /student/assignments (lib/student-feedback.ts).
+  const needsRevisionCount = items.filter((it) =>
+    hasNewFeedback({
+      status: it.status,
+      feedback: it.writing ? feedbackByWriting.get(it.writing.id) ?? null : null,
+    })
+  ).length;
   const submittedCount = groups.submitted.length;
   const gradedCount = groups.graded.length;
 
   // Highlight the items the student should act on first.
-  const priority = pickPriority(items);
+  const priority = pickPriority(items)
+    .map((it) => ({
+      item: it,
+      status: it.status,
+      feedback: it.writing
+        ? feedbackByWriting.get(it.writing.id) ?? null
+        : null,
+    }))
+    // Anything waiting on the student leads.
+    .sort(byFeedbackFirst);
 
   return (
     <div className="space-y-6">
@@ -90,15 +108,11 @@ export default async function StudentHome() {
             </Link>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            {priority.map((item) => (
+            {priority.map((w) => (
               <AssignmentCard
-                key={item.id}
-                item={item}
-                feedback={
-                  item.writing
-                    ? feedbackByWriting.get(item.writing.id) ?? null
-                    : null
-                }
+                key={w.item.id}
+                item={w.item}
+                feedback={w.feedback}
               />
             ))}
           </div>
