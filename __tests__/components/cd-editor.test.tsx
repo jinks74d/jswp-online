@@ -3,12 +3,15 @@
  * used by expository AND argumentation/literary T-Charts (the "mirror TLCD UI"
  * chunk extracted it out of expository-chunk-grid.tsx).
  *
- * Verifies: the toggle reveals lead-in/citation fields and composes the
- * embedded preview; the preview adds NO quotation marks of its own (the
- * student places them — see lib/quotation-marks.ts) and prompts when a
- * complete pair is missing; toggling off is non-destructive (calls the
- * action with isQuotation:false, doesn't wipe stored fields); and the
- * read-only path (teacher review) hides the controls but keeps the preview.
+ * Verifies: the toggle reveals lead-in/citation fields; a missing quotation
+ * pair is prompted for (the student places the marks — see
+ * lib/quotation-marks.ts); toggling off is non-destructive (calls the action
+ * with isQuotation:false, doesn't wipe stored fields); and the read-only path
+ * (teacher review) disables the controls.
+ *
+ * The assembled-quotation preview was removed 2026-08-13 — the student weaves
+ * lead-in, quote and citation together on the Shaping Sheet, so a
+ * machine-composed version here pre-empted the exercise.
  *
  * The server actions are mocked so the client component renders under jsdom
  * without pulling server-only modules.
@@ -26,7 +29,6 @@ vi.mock("@/lib/actions/t-charts", () => ({
 }));
 
 import { CdEditor } from "@/components/student/writing/t-chart/cd-editor";
-import { countQuotationMarks } from "@/lib/quotation-marks";
 import type { ConcreteDetailData } from "@/lib/queries/t-charts";
 
 function makeCd(overrides: Partial<ConcreteDetailData> = {}): ConcreteDetailData {
@@ -70,7 +72,9 @@ describe("CdEditor — Embedding Quotations (TLCD)", () => {
     );
   });
 
-  it("composes the embedded preview as lead-in quote (citation)", () => {
+  it("shows no assembled-quotation preview", () => {
+    // Removed deliberately; this guards against it creeping back into the
+    // T-Chart's left column.
     render(
       <CdEditor
         writingId="w1"
@@ -84,46 +88,8 @@ describe("CdEditor — Embedding Quotations (TLCD)", () => {
       />
     );
 
-    const preview = screen.getByLabelText("Embedded quotation preview");
-    expect(preview.textContent).toContain("As the traveler pauses,");
-    expect(preview.textContent).toContain("the woods are lovely");
-    expect(preview.textContent).toContain("(Frost 13)");
-  });
-
-  it("adds no quotation marks of its own — the student's text is verbatim", () => {
-    render(
-      <CdEditor
-        writingId="w1"
-        cd={makeCd({
-          is_quotation: true,
-          text: '"the woods are lovely"',
-          source_citation: "(Frost 13)",
-        })}
-        disabled={false}
-      />
-    );
-
-    const preview = screen.getByLabelText("Embedded quotation preview");
-    // Exactly the two marks the student typed — no wrapping pair on top.
-    expect(countQuotationMarks(preview.textContent ?? "")).toBe(2);
-    expect(preview.textContent).not.toContain('""');
-  });
-
-  it("keeps a blended quotation intact instead of wrapping the whole CD", () => {
-    // The guide's own p.79 example. The old preview turned this into
-    // ""This "woman"…"" by wrapping text that was already quoted.
-    const blended = 'This "fifty-five-year-old woman" with her "crutch"';
-    render(
-      <CdEditor
-        writingId="w1"
-        cd={makeCd({ is_quotation: true, text: blended })}
-        disabled={false}
-      />
-    );
-
-    const preview = screen.getByLabelText("Embedded quotation preview");
-    expect(preview.textContent).toContain(blended);
-    expect(countQuotationMarks(preview.textContent ?? "")).toBe(4);
+    expect(screen.queryByLabelText("Embedded quotation preview")).toBeNull();
+    expect(screen.queryByText(/^Embedded$/)).toBeNull();
   });
 
   it("prompts for quotation marks when the student hasn't added a pair", () => {
@@ -188,7 +154,7 @@ describe("CdEditor — Embedding Quotations (TLCD)", () => {
     expect(payload).not.toHaveProperty("sourceCitation");
   });
 
-  it("read-only hides the controls but keeps the preview", () => {
+  it("read-only disables the controls", () => {
     render(
       <CdEditor
         writingId="w1"
@@ -201,11 +167,9 @@ describe("CdEditor — Embedding Quotations (TLCD)", () => {
       />
     );
 
-    // Toggle + fields are disabled in the teacher-review render...
+    // Toggle + fields are disabled in the teacher-review render.
     expect(
       (screen.getByLabelText(/Mark as quotation/i) as HTMLInputElement).disabled
     ).toBe(true);
-    // ...but the assembled quote still shows read-only.
-    expect(screen.getByLabelText("Embedded quotation preview")).toBeTruthy();
   });
 });

@@ -3,7 +3,7 @@
 /**
  * CD editor: concrete-detail text + the "Embedding Quotations" (TLCD)
  * affordance — a "Mark as quotation" toggle that reveals Lead-in and
- * Citation fields plus a read-only embedded-quotation preview.
+ * Citation fields.
  *
  * Shared by the Expository CD | CM grid (expository-chunk-grid.tsx) and
  * the argumentation / literary T-Chart (chunk-editor.tsx). Extracted from
@@ -19,12 +19,14 @@
  * The delete button is intentionally left to the caller so each layout
  * places it where it wants.
  *
- * Quotation marks are the STUDENT's job (decision: Raymond, 2026-07-26).
- * The preview used to wrap the CD text in “…” itself, which doubled up on
- * anyone who typed their own marks and mangled the blended quotations the
- * guide teaches (This "woman" with her "crutch" → ""This "woman"…""). We
- * render the text verbatim and flag a missing pair instead — placing the
+ * Quotation marks are the STUDENT's job (decision: Raymond, 2026-07-26), and
+ * a missing pair is flagged inline because it blocks Continue — placing the
  * marks correctly is the skill being taught.
+ *
+ * There is no assembled-quotation preview here (removed 2026-08-13). The
+ * lead-in, quote and citation are woven together by the student on the
+ * Shaping Sheet, which is where that work belongs; showing a machine-composed
+ * version on the T-Chart pre-empted the exercise and crowded the left column.
  */
 
 import { useState, useTransition } from "react";
@@ -66,14 +68,12 @@ export function CdEditor({
     });
   };
 
-  const leadIn = cd.transitional_lead_in?.trim() ?? "";
   const quote = cd.text.trim();
-  const citation = cd.source_citation?.trim() ?? "";
-  const showPreview = isQuotation && quote.length > 0;
   // Blocks Continue on the T-Chart (see computeGate in t-chart-client.tsx),
   // so this reads as a required fix rather than a suggestion. Only fires
   // once there is text to judge — an empty CD isn't yet a mistake.
-  const needsQuotationMarks = showPreview && !hasQuotationPair(quote);
+  const needsQuotationMarks =
+    isQuotation && quote.length > 0 && !hasQuotationPair(quote);
 
   return (
     <div className="space-y-2">
@@ -138,24 +138,6 @@ export function CdEditor({
               });
             }}
           />
-        </div>
-      )}
-
-      {showPreview && (
-        <div
-          className="rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs"
-          aria-label="Embedded quotation preview"
-        >
-          <span className="mr-1 text-base uppercase tracking-wide text-gray-500">
-            Embedded
-          </span>
-          <span className="text-gray-700">
-            {leadIn && <span>{leadIn} </span>}
-            {/* Verbatim — the student's own quotation marks, wherever they
-                put them. The app adds none. */}
-            <span className="text-[color:var(--jswp-color-cd)]">{quote}</span>
-            {citation && <span> {citation}</span>}
-          </span>
         </div>
       )}
 
