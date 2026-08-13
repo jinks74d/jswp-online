@@ -71,8 +71,7 @@ export function WritingShell({
   // Show feedback panel only when there's any feedback at all on a
   // returned writing. Resolved-only state still surfaces (collapsed
   // section); pure-empty doesn't render the column.
-  const showFeedbackColumn =
-    status === "returned" && feedback.length > 0;
+  const showFeedbackColumn = feedback.length > 0;
 
   const overallGradeLabel =
     (status === "returned" || status === "graded") && gradeFormat !== "none"

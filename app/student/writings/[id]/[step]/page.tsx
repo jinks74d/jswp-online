@@ -97,8 +97,13 @@ export default async function StepDispatcher({
   // Surface the teacher's section note for this step (read-only) once the
   // writing is returned or graded. RLS lets the owning student read
   // feedback on their own writing.
+  // No status gate: per-step grading means a teacher marks individual steps
+  // without returning or grading the whole writing, so her note routinely
+  // lands on an in_progress or submitted one. Gating here made exactly that
+  // feedback unreachable. Safe to show — section notes save on blur, so a
+  // stored note is a finished thought, not a half-typed draft.
   let sectionFeedbackItem: { body: string; grade_value: string | null } | null = null;
-  if (writing.status === "returned" || writing.status === "graded") {
+  {
     const { byStep } = groupSectionFeedback(await listFeedback(id));
     const item = byStep.get(target.key);
     if (item) {

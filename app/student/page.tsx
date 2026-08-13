@@ -29,7 +29,7 @@ export default async function StudentHome() {
     items
       .filter(
         (it) =>
-          (it.status === "returned" || it.status === "graded") && it.writing
+          it.writing !== null
       )
       .map((it) => it.writing!.id)
   );

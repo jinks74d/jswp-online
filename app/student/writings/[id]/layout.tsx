@@ -57,9 +57,9 @@ export default async function WritingLayout({
   const [completedKeys, submittedSteps, feedback, rubricScores] = await Promise.all([
     getCompletedStepKeys(id),
     getSubmittedStepMap(id),
-    writing.status === "returned"
-      ? listFeedback(id)
-      : Promise.resolve([] as Awaited<ReturnType<typeof listFeedback>>),
+    // Always: a teacher's per-step notes can arrive long before the writing
+    // is ever returned.
+    listFeedback(id),
     writing.status === "graded"
       ? getRubricScoresForWriting(id)
       : Promise.resolve(

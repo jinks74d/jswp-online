@@ -36,7 +36,7 @@ describe("AssignmentCard feedback line", () => {
     render(
       <AssignmentCard item={item()} feedback={{ total: 5, unresolved: 3 }} />
     );
-    expect(screen.getByText("3 feedback items waiting")).toBeInTheDocument();
+    expect(screen.getByText("New Feedback · 3 items")).toBeInTheDocument();
   });
 
   it("tells a returned student when they've addressed everything", () => {
@@ -53,9 +53,7 @@ describe("AssignmentCard feedback line", () => {
     expect(screen.getByText("Feedback waiting")).toBeInTheDocument();
   });
 
-  it("surfaces feedback on a GRADED assignment — the bug this fixes", () => {
-    // Previously rendered nothing at all, so a graded student never learned
-    // their teacher had written anything.
+  it("surfaces feedback on a GRADED assignment", () => {
     render(
       <AssignmentCard
         item={item({ status: "graded" })}
@@ -63,6 +61,28 @@ describe("AssignmentCard feedback line", () => {
       />
     );
     expect(screen.getByText("Teacher feedback · 2 notes")).toBeInTheDocument();
+  });
+
+  it("announces New Feedback on an IN-PROGRESS writing", () => {
+    // Per-step grading puts real notes on writings that were never returned.
+    // This is the case Raymond hit: feedback existed and the card said nothing.
+    render(
+      <AssignmentCard
+        item={item({ status: "in_progress" })}
+        feedback={{ total: 1, unresolved: 1 }}
+      />
+    );
+    expect(screen.getByText("New Feedback · 1 item")).toBeInTheDocument();
+  });
+
+  it("announces New Feedback on a SUBMITTED writing", () => {
+    render(
+      <AssignmentCard
+        item={item({ status: "submitted" })}
+        feedback={{ total: 2, unresolved: 2 }}
+      />
+    );
+    expect(screen.getByText("New Feedback · 2 items")).toBeInTheDocument();
   });
 
   it("uses the TOTAL on graded work, not the unresolved count", () => {
@@ -87,13 +107,11 @@ describe("AssignmentCard feedback line", () => {
     expect(screen.queryByText(/feedback/i)).toBeNull();
   });
 
-  it("stays silent while the writing is still submitted", () => {
-    // RLS would let the student read these rows; this gate is what stops them
-    // seeing a teacher's half-written notes mid-review.
+  it("says nothing on a submitted writing with no feedback yet", () => {
     render(
       <AssignmentCard
         item={item({ status: "submitted" })}
-        feedback={{ total: 3, unresolved: 3 }}
+        feedback={{ total: 0, unresolved: 0 }}
       />
     );
     expect(screen.queryByText(/feedback/i)).toBeNull();

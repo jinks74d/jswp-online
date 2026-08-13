@@ -83,40 +83,41 @@ function formatShortDate(iso: string): string {
 /**
  * The feedback line, or null when there is nothing to say.
  *
- * Only `returned` and `graded` qualify. RLS would happily let a student read
- * feedback on a `submitted` writing, so this gate is what stops them seeing a
- * teacher's half-written notes while she is still working through the class.
+ * Deliberately NOT gated on status. Per-step grading means a teacher marks
+ * individual steps without returning or grading the whole writing, so real
+ * feedback routinely sits on an `in_progress` or `submitted` writing — and
+ * gating on returned/graded made exactly that feedback invisible, which is the
+ * bug this fixes.
  *
- * Returned and graded need different wording, and getting this wrong is why
- * graded feedback used to be invisible. On a returned writing the unresolved
- * count is the actionable number — that is work still waiting on the student.
- * On a graded one it is meaningless: the student ticks items off and the count
- * falls to zero, which previously made the card look as though the teacher had
- * written nothing at all.
+ * Showing it is safe: section notes save on blur, not per keystroke, so a
+ * stored note is a finished thought rather than a half-typed draft.
+ *
+ * "New Feedback" is keyed on the UNRESOLVED count — the closest honest proxy
+ * for unread, since nothing tracks reads. Once the student has worked through
+ * everything the line stays, but stops claiming to be new: on graded work the
+ * notes are the point, and using the unresolved count there would make them
+ * vanish from the card the moment they were ticked off.
  */
 function feedbackLine(
   item: StudentAssignmentListItem,
   feedback: FeedbackSummary | null
 ): string | null {
   if (!feedback || feedback.total === 0) {
-    // A returned writing always carries a teacher's intent even if she left no
-    // written note, so it still says so.
+    // A returned writing carries a teacher's intent even with no written note.
     return item.status === "returned" ? "Feedback waiting" : null;
   }
 
-  if (item.status === "returned") {
+  if (feedback.unresolved > 0) {
     const n = feedback.unresolved;
-    return n > 0
-      ? `${n} feedback ${n === 1 ? "item" : "items"} waiting`
-      : "All feedback addressed — re-submit when ready";
+    return `New Feedback · ${n} ${n === 1 ? "item" : "items"}`;
   }
 
-  if (item.status === "graded") {
-    const n = feedback.total;
-    return `Teacher feedback · ${n} ${n === 1 ? "note" : "notes"}`;
+  if (item.status === "returned") {
+    return "All feedback addressed — re-submit when ready";
   }
 
-  return null;
+  const n = feedback.total;
+  return `Teacher feedback · ${n} ${n === 1 ? "note" : "notes"}`;
 }
 
 export function AssignmentCard({
@@ -137,9 +138,10 @@ export function AssignmentCard({
         : "text-gray-600";
 
   const feedbackText = feedbackLine(item, feedback);
-  // Returned means "act on this"; graded means "here's what I thought".
+  // Unread feedback is a call to action wherever it sits; once worked through
+  // it settles back to a quieter "here's what your teacher said".
   const feedbackTone =
-    item.status === "returned" ? "text-blue-700" : "text-green-800";
+    feedback && feedback.unresolved > 0 ? "text-blue-700" : "text-green-800";
 
   return (
     <Link
