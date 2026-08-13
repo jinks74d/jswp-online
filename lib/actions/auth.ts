@@ -17,6 +17,7 @@ import { getDistrictBrandingFromHeaders } from "@/lib/branding-headers";
 import { sendEmail } from "@/lib/email/client";
 import { renderPasswordReset } from "@/lib/email/templates/password-reset";
 import { buildConfirmUrl } from "@/lib/auth-links";
+import { canSendResetEmail } from "@/lib/reset-throttle";
 import { getRedirectPath } from "@/lib/auth";
 
 export type AuthFormState = {
@@ -43,6 +44,42 @@ async function getSiteUrl(): Promise<string> {
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+/**
+ * The ONLY reply the reset form ever gives. Every path returns this — sent,
+ * throttled, and unknown address alike — because any difference between them
+ * tells an anonymous caller whether an address is registered. On a product
+ * whose subdomains are school districts, that discloses which children attend
+ * which district.
+ */
+const GENERIC_RESET_REPLY =
+  "If an account exists for that email, a reset link is on its way. Check your inbox.";
+
+/**
+ * Look up an auth user by email. There is no admin getUserByEmail, so this
+ * pages through listUsers; the throttle only needs recovery_sent_at.
+ */
+async function findAuthUserByEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  email: string
+): Promise<{ recovery_sent_at: string | null } | null> {
+  const target = email.toLowerCase();
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    });
+    if (error || !data?.users?.length) return null;
+    const hit = data.users.find((u) => u.email?.toLowerCase() === target);
+    if (hit) {
+      const stamp = (hit as unknown as Record<string, unknown>)
+        .recovery_sent_at;
+      return { recovery_sent_at: typeof stamp === "string" ? stamp : null };
+    }
+    if (data.users.length < 200) return null;
+  }
+  return null;
 }
 
 /* ─── Sign in ─────────────────────────────────────────────────────────── */
@@ -239,6 +276,16 @@ export async function requestResetAction(
   // message every teacher and student eventually receives, and it was the only
   // one that didn't look like the product.
   const admin = createAdminClient();
+
+  // Throttle BEFORE minting: generateLink is what stamps recovery_sent_at, so
+  // checking afterwards would always see our own write. Supabase rate-limited
+  // its reset endpoint; taking over delivery means owning that ourselves, or
+  // the form becomes an unmetered way to mail any registered address.
+  const existing = await findAuthUserByEmail(admin, email);
+  if (existing && !canSendResetEmail(existing.recovery_sent_at)) {
+    return { success: GENERIC_RESET_REPLY };
+  }
+
   const { data: linkData } = await admin.auth.admin.generateLink({
     type: "recovery",
     email,
@@ -283,10 +330,7 @@ export async function requestResetAction(
   // would turn this form into an oracle for which emails are registered —
   // notably which children attend a given district's subdomain. The error is
   // deliberately swallowed rather than surfaced.
-  return {
-    success:
-      "If an account exists for that email, a reset link is on its way. Check your inbox.",
-  };
+  return { success: GENERIC_RESET_REPLY };
 }
 
 /* ─── Update password (after reset link click) ────────────────────────── */

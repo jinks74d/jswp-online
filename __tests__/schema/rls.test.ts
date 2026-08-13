@@ -1947,3 +1947,201 @@ describe("teacher_feedback — student resolve", () => {
     expect(data!.is_resolved).toBe(false);
   });
 });
+
+/* ─── Student-work artifact chain ────────────────────────────────────────
+ *
+ * A coverage audit (2026-08-13) found 18 of 33 RLS-protected tables had no
+ * test at all. Fourteen of them are these artifact tables, and they all lean
+ * on the same two helpers — auth_user_can_read_writing / _can_write_writing —
+ * reached from a different FK depth each time:
+ *
+ *   depth 0  prompt_decodings, text_annotations, gathering_cds_sheets,
+ *            body_paragraphs, essay_parts, step_progress   (student_writing_id)
+ *   depth 1  t_charts, chunks, shaping_sheets, paragraph_forms (body_paragraph)
+ *   depth 2  concrete_details, commentary_items, shaping_chunk_outputs (chunk)
+ *   depth 1  candidate_cds                                  (gathering sheet)
+ *
+ * The risk is a join that walks up to the WRONG writing, which would hand one
+ * student another's work. These probe each depth from Bailey's session against
+ * Alex's rows — read and write — since a depth-2 mistake is invisible at
+ * depth 0.
+ */
+
+describe("student-work artifacts — cross-student isolation", () => {
+  const BP = "11111111-0000-0000-0000-00000000a001";
+  const CHUNK = "11111111-0000-0000-0000-00000000a002";
+  const CD = "11111111-0000-0000-0000-00000000a003";
+  const SHEET = "11111111-0000-0000-0000-00000000a004";
+  const CANDIDATE = "11111111-0000-0000-0000-00000000a005";
+  const DECODING = "11111111-0000-0000-0000-00000000a006";
+
+  beforeAll(async () => {
+    const svc = createServiceRoleClient();
+
+    /**
+     * Seed failures MUST be loud. The first version of this block ignored the
+     * upsert results; chunks.ratio is NOT NULL and was missing, so that row and
+     * everything under it silently never existed — and "another student reads
+     * nothing" passed for the wrong reason entirely. A negative RLS test over
+     * absent rows proves nothing.
+     */
+    const seed = async (
+      table: string,
+      row: Record<string, unknown>
+    ): Promise<void> => {
+      const { error } = await svc.from(table).upsert(row);
+      if (error) {
+        throw new Error(`seed ${table} failed: ${error.message}`);
+      }
+    };
+
+    // One full chain hanging off ALEX's writing.
+    await seed("body_paragraphs", {
+      id: BP,
+      student_writing_id: TEST.alexWriting,
+      position: 1,
+    });
+    await seed("chunks", {
+      id: CHUNK,
+      body_paragraph_id: BP,
+      position: 1,
+      ratio: "nonlit_expository_two_plus_to_one",
+    });
+    await seed("concrete_details", {
+      id: CD,
+      chunk_id: CHUNK,
+      position: 1,
+      text: "Alex's concrete detail",
+    });
+    await seed("gathering_cds_sheets", {
+      id: SHEET,
+      student_writing_id: TEST.alexWriting,
+      body_paragraph_position: 1,
+    });
+    await seed("candidate_cds", {
+      id: CANDIDATE,
+      gathering_sheet_id: SHEET,
+      position: 1,
+      text: "Alex's candidate",
+    });
+    await seed("prompt_decodings", {
+      id: DECODING,
+      student_writing_id: TEST.alexWriting,
+      task: "Alex's decode",
+    });
+  });
+
+  afterAll(async () => {
+    const svc = createServiceRoleClient();
+    // Children first — FKs cascade from body_paragraphs but be explicit.
+    await svc.from("candidate_cds").delete().eq("id", CANDIDATE);
+    await svc.from("gathering_cds_sheets").delete().eq("id", SHEET);
+    await svc.from("prompt_decodings").delete().eq("id", DECODING);
+    await svc.from("concrete_details").delete().eq("id", CD);
+    await svc.from("chunks").delete().eq("id", CHUNK);
+    await svc.from("body_paragraphs").delete().eq("id", BP);
+  });
+
+  it("the owner can read their own chain at every depth", async () => {
+    for (const [table, id] of [
+      ["prompt_decodings", DECODING],
+      ["body_paragraphs", BP],
+      ["chunks", CHUNK],
+      ["concrete_details", CD],
+      ["gathering_cds_sheets", SHEET],
+      ["candidate_cds", CANDIDATE],
+    ] as const) {
+      const { data } = await alexClient.from(table).select("id").eq("id", id);
+      expect(data, `alex should read ${table}`).toHaveLength(1);
+    }
+  });
+
+  it("another student reads nothing from it, at any depth", async () => {
+    // A join that resolves to the wrong writing shows up here and nowhere else.
+    for (const [table, id] of [
+      ["prompt_decodings", DECODING],
+      ["body_paragraphs", BP],
+      ["chunks", CHUNK],
+      ["concrete_details", CD],
+      ["gathering_cds_sheets", SHEET],
+      ["candidate_cds", CANDIDATE],
+    ] as const) {
+      const { data } = await baileyClient.from(table).select("id").eq("id", id);
+      expect(data ?? [], `bailey must not read ${table}`).toHaveLength(0);
+    }
+  });
+
+  it("another student cannot edit a depth-2 concrete detail", async () => {
+    await baileyClient
+      .from("concrete_details")
+      .update({ text: "tampered" })
+      .eq("id", CD);
+
+    const svc = createServiceRoleClient();
+    const { data } = await svc
+      .from("concrete_details")
+      .select("text")
+      .eq("id", CD)
+      .single();
+    expect(data!.text).toBe("Alex's concrete detail");
+  });
+
+  it("another student cannot delete from someone else's chain", async () => {
+    await baileyClient.from("candidate_cds").delete().eq("id", CANDIDATE);
+
+    const svc = createServiceRoleClient();
+    const { data } = await svc
+      .from("candidate_cds")
+      .select("id")
+      .eq("id", CANDIDATE);
+    expect(data).toHaveLength(1);
+  });
+
+  it("another student cannot graft a row onto someone else's paragraph", async () => {
+    // WITH CHECK is the half a read test never reaches.
+    const { error } = await baileyClient.from("chunks").insert({
+      body_paragraph_id: BP,
+      position: 99,
+    });
+    expect(error).not.toBeNull();
+  });
+
+  it("the owning teacher can read the chain", async () => {
+    const { data } = await teacherClient
+      .from("concrete_details")
+      .select("id")
+      .eq("id", CD);
+    expect(data).toHaveLength(1);
+  });
+
+  it("anon reads nothing", async () => {
+    const anon = createAnonClient();
+    const { data } = await anon.from("concrete_details").select("id").eq("id", CD);
+    expect(data ?? []).toHaveLength(0);
+  });
+});
+
+/* ─── audit_log ──────────────────────────────────────────────────────────
+ * Append-only privileged-action record; the service role is its only writer.
+ */
+describe("audit_log", () => {
+  it("cannot be written by an authenticated user", async () => {
+    const { error } = await teacherClient.from("audit_log").insert({
+      actor_id: IDS.teacher,
+      action: "forged.entry",
+      target_table: "districts",
+      target_id: IDS.district,
+    });
+    expect(error).not.toBeNull();
+  });
+
+  it("cannot be written by a student", async () => {
+    const { error } = await alexClient.from("audit_log").insert({
+      actor_id: IDS.alex,
+      action: "forged.entry",
+      target_table: "districts",
+      target_id: IDS.district,
+    });
+    expect(error).not.toBeNull();
+  });
+});

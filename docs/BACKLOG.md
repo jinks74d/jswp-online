@@ -10,6 +10,23 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
+### Finish the RLS coverage sweep (18 of 33 tables had none)
+Prompted by `0056`: `teacher_feedback_student_resolve` reached production both **broken** (a self-referencing scalar subquery that raised `21000` for every student) and **insecure** (`step_key`, `grade_value` and `rubric_score` were never pinned, so a student could have rewritten their own grade) because nothing tested that table. An audit on 2026-08-13 asked how widespread that was.
+
+**33 tables carry RLS policies; 18 had no test at all.** Fourteen of the eighteen were the student-work artifact chain, which all lean on the same two helpers (`auth_user_can_read_writing` / `auth_user_can_write_writing`) reached from four different FK depths — so a join walking to the wrong writing would hand one student another's work, and a depth-2 mistake is invisible from depth 0. That cluster plus `audit_log` is now covered (10 tests, cross-student read/write/delete/insert at every depth).
+
+Still uncovered, in rough risk order:
+1. **`assignment_sources`** (4 policies, incl. a school-wide read) — pairs with the open storage-bucket item below, where any teacher can delete any file under their school prefix.
+2. **`class_student_enrollments`** (3) — student roster privacy across classes and teachers.
+3. **`class_teacher_assignments`** (2) — drives `auth_user_can_read_writing`'s teacher branch, so a bug here widens access to student work everywhere.
+4. Remaining artifact tables not directly probed: `t_charts`, `shaping_sheets`, `shaping_chunk_outputs`, `paragraph_forms`, `essay_parts`, `commentary_items`, `text_annotations`, `step_progress`. Lower risk — same two helpers as the covered chain, at depths already exercised — but "same mechanism" is an assumption, and this whole item exists because an untested assumption was wrong.
+
+**Method note for whoever picks this up:** `__schema_inventory()` emits policy NAMES only, so the audit derived each table by matching the `<table>_<suffix>` convention against the table list. It cannot tell you a policy's *logic* is right, only that one with that name exists — see the `db:check` item below.
+
+**Test-writing note:** seed rows through a helper that throws on error. The first draft of the artifact tests ignored the upsert result, `chunks.ratio` (NOT NULL) was missing, and the whole chain silently never existed — at which point "another student reads nothing" passed for entirely the wrong reason. A negative RLS test over absent rows proves nothing. Assert the owner CAN read before asserting anyone else cannot.
+- **Identified:** 2026-08-13, from the 0056 post-mortem
+- **Priority:** high — this is the class of bug that is invisible until a student hits it
+
 ### Apply the annotation self-heal to the flat/rich viewer too
 Fixed 2026-08-12: annotations saved before `d165dd2` (2026-07-23, "strip PDF margin furniture from the annotation substrate") kept offsets into the longer pre-strip `source_text`, so highlights landed ~150 characters downstream of the words the student selected. 5 of 36 rows were affected, all `source_render_mode = 'pdf'` on one file. Repaired in place, and `lib/annotation-range.ts` now re-anchors any stale annotation at render time.
 
