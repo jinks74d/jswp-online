@@ -13,7 +13,7 @@ import {
   groupByStatus,
   type DerivedStatus,
 } from "@/lib/queries/student-assignments";
-import { countTeacherFeedbackByWriting } from "@/lib/queries/teacher-feedback";
+import { getFeedbackSummaryByWriting } from "@/lib/queries/teacher-feedback";
 import { AssignmentCard } from "@/components/student/assignment-card";
 
 export const dynamic = "force-dynamic";
@@ -49,12 +49,16 @@ export default async function StudentAssignmentsList({
 
   const items = await getStudentAssignmentsList(profile.id);
 
-  // Batch-load feedback counts for the returned cards' "Feedback waiting"
-  // annotation. RLS scopes; an empty list is the safe answer.
-  const returnedWritingIds = items
-    .filter((it) => it.status === "returned" && it.writing)
+  // Batch-load feedback tallies for the cards. Graded writings are included,
+  // not just returned ones: a teacher who grades leaves notes the student had
+  // no way of knowing existed. The card decides what to say per status.
+  const feedbackWritingIds = items
+    .filter(
+      (it) =>
+        (it.status === "returned" || it.status === "graded") && it.writing
+    )
     .map((it) => it.writing!.id);
-  const feedbackCounts = await countTeacherFeedbackByWriting(returnedWritingIds);
+  const feedbackByWriting = await getFeedbackSummaryByWriting(feedbackWritingIds);
 
   const groups = groupByStatus(items);
   const counts: Record<DerivedStatus | "all", number> = {
@@ -121,8 +125,10 @@ export default async function StudentAssignmentsList({
             <AssignmentCard
               key={item.id}
               item={item}
-              feedbackCount={
-                item.writing ? feedbackCounts.get(item.writing.id) ?? 0 : 0
+              feedback={
+                item.writing
+                  ? feedbackByWriting.get(item.writing.id) ?? null
+                  : null
               }
             />
           ))}

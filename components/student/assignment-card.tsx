@@ -8,6 +8,7 @@ import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { StatusBadge } from "./status-badge";
 import type { StudentAssignmentListItem } from "@/lib/queries/student-assignments";
+import type { FeedbackSummary } from "@/lib/queries/teacher-feedback";
 
 const MODE_LABELS: Record<StudentAssignmentListItem["mode"], string> = {
   expository: "Expository",
@@ -79,12 +80,52 @@ function formatShortDate(iso: string): string {
   });
 }
 
+/**
+ * The feedback line, or null when there is nothing to say.
+ *
+ * Only `returned` and `graded` qualify. RLS would happily let a student read
+ * feedback on a `submitted` writing, so this gate is what stops them seeing a
+ * teacher's half-written notes while she is still working through the class.
+ *
+ * Returned and graded need different wording, and getting this wrong is why
+ * graded feedback used to be invisible. On a returned writing the unresolved
+ * count is the actionable number — that is work still waiting on the student.
+ * On a graded one it is meaningless: the student ticks items off and the count
+ * falls to zero, which previously made the card look as though the teacher had
+ * written nothing at all.
+ */
+function feedbackLine(
+  item: StudentAssignmentListItem,
+  feedback: FeedbackSummary | null
+): string | null {
+  if (!feedback || feedback.total === 0) {
+    // A returned writing always carries a teacher's intent even if she left no
+    // written note, so it still says so.
+    return item.status === "returned" ? "Feedback waiting" : null;
+  }
+
+  if (item.status === "returned") {
+    const n = feedback.unresolved;
+    return n > 0
+      ? `${n} feedback ${n === 1 ? "item" : "items"} waiting`
+      : "All feedback addressed — re-submit when ready";
+  }
+
+  if (item.status === "graded") {
+    const n = feedback.total;
+    return `Teacher feedback · ${n} ${n === 1 ? "note" : "notes"}`;
+  }
+
+  return null;
+}
+
 export function AssignmentCard({
   item,
-  feedbackCount = 0,
+  feedback = null,
 }: {
   item: StudentAssignmentListItem;
-  feedbackCount?: number;
+  /** Feedback tallies for this assignment's writing, when it has any. */
+  feedback?: FeedbackSummary | null;
 }) {
   const due = dueCopy(item);
 
@@ -95,7 +136,10 @@ export function AssignmentCard({
         ? "text-amber-800 font-medium"
         : "text-gray-600";
 
-  const showFeedbackHint = item.status === "returned";
+  const feedbackText = feedbackLine(item, feedback);
+  // Returned means "act on this"; graded means "here's what I thought".
+  const feedbackTone =
+    item.status === "returned" ? "text-blue-700" : "text-green-800";
 
   return (
     <Link
@@ -113,14 +157,12 @@ export function AssignmentCard({
           {due && (
             <div className={`mt-1 text-sm ${dueClass}`}>{due.text}</div>
           )}
-          {showFeedbackHint && (
-            <div className="mt-1.5 inline-flex items-center gap-1 text-xs text-blue-700">
+          {feedbackText && (
+            <div
+              className={`mt-1.5 inline-flex items-center gap-1 text-xs ${feedbackTone}`}
+            >
               <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-              {feedbackCount > 0
-                ? `${feedbackCount} feedback ${
-                    feedbackCount === 1 ? "item" : "items"
-                  } waiting`
-                : "Feedback waiting"}
+              {feedbackText}
             </div>
           )}
         </div>

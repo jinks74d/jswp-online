@@ -80,28 +80,48 @@ export async function listFeedback(
   return (data ?? []) as unknown as FeedbackItemRow[];
 }
 
+export interface FeedbackSummary {
+  /** Every note the teacher left — section notes and overall comments alike. */
+  readonly total: number;
+  /** Of those, the ones the student hasn't marked resolved. */
+  readonly unresolved: number;
+}
+
 /**
- * Counts unresolved teacher_feedback for a batch of writings. Returns
- * a Map keyed by writing id. Used by /student/assignments to annotate
- * returned ("Feedback") cards with their pending feedback count without
- * an N+1.
+ * Feedback tallies per writing, for the student's assignment cards.
+ *
+ * Supersedes counting only unresolved rows: "unresolved" is the right measure
+ * for a returned writing the student still has to act on, but on a GRADED one
+ * it reads as zero the moment they tick things off, which made the card claim
+ * there was no feedback at all. A student needs to know their teacher wrote
+ * something whether or not there is anything left to do about it.
+ *
+ * Callers must still decide WHEN to show it. RLS lets the owning student read
+ * feedback on their writing at any status, so the app layer is what keeps
+ * half-written notes hidden while a teacher is mid-review — see the status gate
+ * in components/student/assignment-card.tsx.
  */
-export async function countTeacherFeedbackByWriting(
+export async function getFeedbackSummaryByWriting(
   writingIds: readonly string[]
-): Promise<Map<string, number>> {
+): Promise<Map<string, FeedbackSummary>> {
   if (writingIds.length === 0) return new Map();
   const supabase = await createServerClient();
+
   const { data, error } = await supabase
     .from("teacher_feedback")
-    .select("student_writing_id")
-    .in("student_writing_id", writingIds)
-    .eq("is_resolved", false);
+    .select("student_writing_id, is_resolved")
+    .in("student_writing_id", writingIds);
   if (error) {
-    throw new Error(`countTeacherFeedbackByWriting: ${error.message}`);
+    throw new Error(`getFeedbackSummaryByWriting: ${error.message}`);
   }
-  const counts = new Map<string, number>();
+
+  const map = new Map<string, FeedbackSummary>();
   for (const row of data ?? []) {
-    counts.set(row.student_writing_id, (counts.get(row.student_writing_id) ?? 0) + 1);
+    const prev = map.get(row.student_writing_id) ?? { total: 0, unresolved: 0 };
+    map.set(row.student_writing_id, {
+      total: prev.total + 1,
+      unresolved: prev.unresolved + (row.is_resolved ? 0 : 1),
+    });
   }
-  return counts;
+  return map;
 }

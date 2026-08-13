@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FileText, Sparkles } from "lucide-react";
 import { requireRole } from "@/lib/auth";
+import { getFeedbackSummaryByWriting } from "@/lib/queries/teacher-feedback";
 import {
   getStudentAssignmentsList,
   groupByStatus,
@@ -22,6 +23,16 @@ export const metadata: Metadata = { title: "Student Home" };
 export default async function StudentHome() {
   const profile = await requireRole("student");
   const items = await getStudentAssignmentsList(profile.id);
+  // Same feedback tallies the assignments list shows — the dashboard is where
+  // a student lands first, so it must not be the one surface that stays quiet.
+  const feedbackByWriting = await getFeedbackSummaryByWriting(
+    items
+      .filter(
+        (it) =>
+          (it.status === "returned" || it.status === "graded") && it.writing
+      )
+      .map((it) => it.writing!.id)
+  );
   const groups = groupByStatus(items);
 
   const greeting = profile.first_name
@@ -80,7 +91,15 @@ export default async function StudentHome() {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {priority.map((item) => (
-              <AssignmentCard key={item.id} item={item} />
+              <AssignmentCard
+                key={item.id}
+                item={item}
+                feedback={
+                  item.writing
+                    ? feedbackByWriting.get(item.writing.id) ?? null
+                    : null
+                }
+              />
             ))}
           </div>
         </section>
