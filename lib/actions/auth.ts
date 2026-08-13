@@ -13,6 +13,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getDistrictBrandingFromHeaders } from "@/lib/branding-headers";
+import { sendEmail } from "@/lib/email/client";
+import { renderPasswordReset } from "@/lib/email/templates/password-reset";
 import { getRedirectPath } from "@/lib/auth";
 
 export type AuthFormState = {
@@ -220,7 +223,6 @@ export async function requestResetAction(
   if (!isValidEmail(email))
     return { fieldErrors: { email: "Enter a valid email." } };
 
-  const supabase = await createServerClient();
   const siteUrl = await getSiteUrl();
 
   // Route the recovery link through the callback ROUTE HANDLER, not straight
@@ -229,14 +231,49 @@ export async function requestResetAction(
   // Component's writes are silently dropped, which consumed the one-time code
   // and still left the user with no session to change their password with.
   const next = encodeURIComponent("/reset-password?recovery=1");
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/auth/callback?next=${next}`,
+  const redirectTo = `${siteUrl}/auth/callback?next=${next}`;
+
+  // Mint the link ourselves and deliver it through Resend, rather than letting
+  // Supabase's built-in mailer send its default template. Same mechanism as
+  // the district POC invite (lib/actions/districts.ts) — this is the one
+  // message every teacher and student eventually receives, and it was the only
+  // one that didn't look like the product.
+  const admin = createAdminClient();
+  const { data: linkData } = await admin.auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: { redirectTo },
   });
 
-  if (error) {
-    return { error: error.message };
+  const actionLink = linkData?.properties?.action_link;
+
+  if (actionLink) {
+    // Personalise where we can; a missing profile is not a reason to fail.
+    const { data: profile } = await admin
+      .from("user_profiles")
+      .select("first_name")
+      .eq("email", email)
+      .maybeSingle();
+
+    const branding = await getDistrictBrandingFromHeaders();
+    const message = renderPasswordReset({
+      firstName: profile?.first_name ?? null,
+      districtName: branding.name,
+      // A districtless apex sign-in has no brand colour; fall back to the
+      // same blue the other templates hardcode rather than emailing a button
+      // with no background.
+      primaryColor: branding.primary_color ?? "#2563eb",
+      resetUrl: actionLink,
+    });
+    // Best-effort, exactly like the invite: sendEmail never throws.
+    await sendEmail({ to: email, ...message });
   }
 
+  // ALWAYS the same answer, whether or not that address has an account.
+  // generateLink errors for an unknown user, so branching on its result here
+  // would turn this form into an oracle for which emails are registered —
+  // notably which children attend a given district's subdomain. The error is
+  // deliberately swallowed rather than surfaced.
   return {
     success:
       "If an account exists for that email, a reset link is on its way. Check your inbox.",
