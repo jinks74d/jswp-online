@@ -73,7 +73,30 @@ export async function createUserClient(uid: string): Promise<SupabaseClient> {
   }
 
   const email = userData.user.email;
+  const token = await mintSession(svc, email);
 
+  return createClient(SUPABASE_URL, ANON_KEY, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+/**
+ * Mint one magic link and redeem it, returning the access token.
+ *
+ * Retries once. Issuing a link for an email invalidates that user's previous
+ * unredeemed one, so anything else minting for the same user between our
+ * generate and our verify makes the redeem fail with "Email link is invalid or
+ * has expired". vitest's fileParallelism is off for this suite (see
+ * vitest.config.ts), which removes the known source of that; the retry covers
+ * a stray concurrent run — a dev with the watcher open, say — because the
+ * failure surfaces in beforeAll and takes a whole suite down with it.
+ */
+async function mintSession(
+  svc: SupabaseClient,
+  email: string,
+  attempt = 1
+): Promise<string> {
   const { data: linkData, error: linkErr } = await svc.auth.admin.generateLink({
     type: "magiclink",
     email,
@@ -91,18 +114,31 @@ export async function createUserClient(uid: string): Promise<SupabaseClient> {
     type: "magiclink",
     token_hash: linkData.properties.hashed_token,
   });
-  if (verifyErr || !session?.session?.access_token) {
-    throw new Error(
-      `Failed to redeem magic link for ${email}: ${verifyErr?.message ?? "no session"}`
-    );
+
+  const token = session?.session?.access_token;
+  if (token) return token;
+
+  const reason = verifyErr?.message ?? "no session";
+
+  // Never retry a rate limit: a second request is exactly what it is asking us
+  // not to make, and it spends budget the next test needs. Supabase throttles
+  // auth endpoints per hour, and this suite mints a link per user per file.
+  const rateLimited = /rate limit/i.test(reason);
+
+  if (attempt === 1 && !rateLimited) {
+    // Brief pause so a genuinely racing mint has landed before we try again.
+    await new Promise((r) => setTimeout(r, 250));
+    return mintSession(svc, email, 2);
   }
 
-  return createClient(SUPABASE_URL, ANON_KEY, {
-    global: {
-      headers: { Authorization: `Bearer ${session.session.access_token}` },
-    },
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  throw new Error(
+    rateLimited
+      ? `Supabase auth rate limit hit while impersonating ${email}. This suite ` +
+        `mints a magic link per user per file, so back-to-back runs can exhaust ` +
+        `the hourly budget — wait a few minutes rather than re-running.`
+      : `Failed to redeem magic link for ${email} after 2 attempts: ${reason}. ` +
+        `Check nothing else is impersonating the same seed users concurrently.`
+  );
 }
 
 /** Unauthenticated client — uses only the anon key, no user session. */
