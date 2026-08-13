@@ -36,6 +36,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "@/lib/audit-log";
 import { createScopedUser } from "@/lib/scoped-users";
 import { sendEmail } from "@/lib/email/client";
+import { buildConfirmUrl } from "@/lib/auth-links";
 import { renderDistrictPocInvite } from "@/lib/email/templates/district-poc-invite";
 
 type PocFieldErrors = {
@@ -497,10 +498,20 @@ export async function inviteDistrictPoc(
     await admin.auth.admin.generateLink({
       type: "recovery",
       email: profile.email,
-      options: { redirectTo: `${siteUrl}/reset-password` },
     });
 
-  const actionLink = linkData?.properties?.action_link;
+  // See lib/auth-links.ts: action_link returns its tokens in a hash fragment
+  // the server never receives, so the invite landed the recipient on a page
+  // with no session and an "expired link" message. Verify server-side instead.
+  const hashedToken = linkData?.properties?.hashed_token;
+  const actionLink = hashedToken
+    ? buildConfirmUrl({
+        siteUrl,
+        hashedToken,
+        type: "recovery",
+        next: "/reset-password?recovery=1",
+      })
+    : null;
   if (linkError || !actionLink) {
     return {
       error: linkError?.message ?? "Could not generate the invite link.",

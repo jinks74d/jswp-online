@@ -11,16 +11,7 @@
 
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
-
-/**
- * Only same-origin paths may be redirected to. `//evil.com` would otherwise
- * be read by the browser as protocol-relative and leave the site.
- */
-function safeNext(raw: string | null): string {
-  if (!raw) return "/login?confirmed=1";
-  if (!raw.startsWith("/") || raw.startsWith("//")) return "/login?confirmed=1";
-  return raw;
-}
+import { safeNext } from "@/lib/auth-links";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);

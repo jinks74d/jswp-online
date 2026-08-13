@@ -16,6 +16,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getDistrictBrandingFromHeaders } from "@/lib/branding-headers";
 import { sendEmail } from "@/lib/email/client";
 import { renderPasswordReset } from "@/lib/email/templates/password-reset";
+import { buildConfirmUrl } from "@/lib/auth-links";
 import { getRedirectPath } from "@/lib/auth";
 
 export type AuthFormState = {
@@ -230,8 +231,7 @@ export async function requestResetAction(
   // only a route handler (or server action) may write cookies — a Server
   // Component's writes are silently dropped, which consumed the one-time code
   // and still left the user with no session to change their password with.
-  const next = encodeURIComponent("/reset-password?recovery=1");
-  const redirectTo = `${siteUrl}/auth/callback?next=${next}`;
+  const next = "/reset-password?recovery=1";
 
   // Mint the link ourselves and deliver it through Resend, rather than letting
   // Supabase's built-in mailer send its default template. Same mechanism as
@@ -242,12 +242,21 @@ export async function requestResetAction(
   const { data: linkData } = await admin.auth.admin.generateLink({
     type: "recovery",
     email,
-    options: { redirectTo },
   });
 
-  const actionLink = linkData?.properties?.action_link;
+  // NOT properties.action_link — that completes the implicit flow and hands
+  // the tokens back in a hash fragment the server can never read. The
+  // hashed_token goes to our own /auth/confirm, which verifies it server-side
+  // where the session cookies stick. See lib/auth-links.ts.
+  const hashedToken = linkData?.properties?.hashed_token;
 
-  if (actionLink) {
+  if (hashedToken) {
+    const resetUrl = buildConfirmUrl({
+      siteUrl,
+      hashedToken,
+      type: "recovery",
+      next,
+    });
     // Personalise where we can; a missing profile is not a reason to fail.
     const { data: profile } = await admin
       .from("user_profiles")
@@ -263,7 +272,7 @@ export async function requestResetAction(
       // same blue the other templates hardcode rather than emailing a button
       // with no background.
       primaryColor: branding.primary_color ?? "#2563eb",
-      resetUrl: actionLink,
+      resetUrl,
     });
     // Best-effort, exactly like the invite: sendEmail never throws.
     await sendEmail({ to: email, ...message });
