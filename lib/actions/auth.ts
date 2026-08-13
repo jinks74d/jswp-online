@@ -223,8 +223,14 @@ export async function requestResetAction(
   const supabase = await createServerClient();
   const siteUrl = await getSiteUrl();
 
+  // Route the recovery link through the callback ROUTE HANDLER, not straight
+  // at the page. Exchanging the code is what creates the recovery session, and
+  // only a route handler (or server action) may write cookies — a Server
+  // Component's writes are silently dropped, which consumed the one-time code
+  // and still left the user with no session to change their password with.
+  const next = encodeURIComponent("/reset-password?recovery=1");
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/reset-password`,
+    redirectTo: `${siteUrl}/auth/callback?next=${next}`,
   });
 
   if (error) {

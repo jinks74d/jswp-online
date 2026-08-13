@@ -3,23 +3,31 @@ import type { Metadata } from "next";
  * Reset-password page — server component.
  *
  * Two states in one route:
- *  1. No `?code` param → render the request-an-email form.
- *  2. `?code` present → exchange the PKCE code for a recovery session,
- *     then render the new-password form.
+ *  1. Default → render the request-an-email form.
+ *  2. `?recovery=1` WITH a session → render the new-password form.
  *
- * If the exchange fails (expired link, etc.) we fall back to the
- * request form with an inline error.
+ * This page deliberately does NOT exchange the recovery code. It used to,
+ * and that was the bug: `exchangeCodeForSession` succeeds against Supabase
+ * (burning the one-time code) but its session cookies are dropped, because a
+ * Server Component cannot write cookies — lib/supabase/server.ts swallows the
+ * failure by design so ordinary reads don't crash. The page then rendered a
+ * password form backed by no session, and saving failed with "Auth session
+ * missing". Retrying could not help: the code was already spent.
+ *
+ * The exchange now happens in app/auth/callback/route.ts, which can write
+ * cookies, and redirects back here with ?recovery=1.
  */
 
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { NewPasswordForm } from "./new-password-form";
 import { RequestForm } from "./request-form";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ code?: string }>;
+type SearchParams = Promise<{ code?: string; recovery?: string }>;
 
 export const metadata: Metadata = { title: "Reset password" };
 
@@ -28,19 +36,29 @@ export default async function ResetPasswordPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { code } = await searchParams;
+  const { code, recovery } = await searchParams;
+
+  // Recovery emails sent before this route moved still point straight here
+  // with a ?code. Hand those to the callback so they keep working.
+  if (code) {
+    const next = encodeURIComponent("/reset-password?recovery=1");
+    redirect(`/auth/callback?code=${encodeURIComponent(code)}&next=${next}`);
+  }
 
   let mode: "request" | "new-password" = "request";
   let exchangeError: string | undefined;
 
-  if (code) {
+  if (recovery === "1") {
+    // The callback has already exchanged the code; a session here means the
+    // link was good. Without one it expired, was already used, or was opened
+    // in a different browser from the one that requested it.
     const supabase = await createServerClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) {
+    const { data } = await supabase.auth.getUser();
+    if (data.user) {
+      mode = "new-password";
+    } else {
       exchangeError =
         "That reset link is invalid or has expired. Request a new one below.";
-    } else {
-      mode = "new-password";
     }
   }
 
