@@ -10,10 +10,20 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, ChevronRight, FileText, PencilLine } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  PencilLine,
+} from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getAssignmentForTeacher } from "@/lib/queries/assignments";
-import { listAssignmentWritings } from "@/lib/queries/teacher-writings";
+import {
+  listAssignmentWritings,
+  countSubmittedStepsForAssignment,
+  type SubmittedStepSummary,
+} from "@/lib/queries/teacher-writings";
 import { TeacherStatusBadge } from "@/components/dashboard/writing-review/teacher-status-badge";
 import {
   hasRevisedSinceReturned,
@@ -56,7 +66,12 @@ export default async function AssignmentWritingsPage({
   const assignment = await getAssignmentForTeacher(id, profile.id);
   if (!assignment) notFound();
 
-  const writings = await listAssignmentWritings(id);
+  const [writings, submittedSteps] = await Promise.all([
+    listAssignmentWritings(id),
+    // Steps flagged ready to grade. Independent of writing status: a
+    // student can submit steps while the writing stays in progress.
+    countSubmittedStepsForAssignment(id),
+  ]);
   const grouped: Record<Status, typeof writings> = {
     draft: [],
     in_progress: [],
@@ -119,6 +134,7 @@ export default async function AssignmentWritingsPage({
                       key={w.id}
                       assignmentId={id}
                       writing={w}
+                      submitted={submittedSteps.get(w.id) ?? null}
                     />
                   ))}
                 </div>
@@ -134,9 +150,12 @@ export default async function AssignmentWritingsPage({
 function WritingCard({
   assignmentId,
   writing,
+  submitted,
 }: {
   assignmentId: string;
   writing: Awaited<ReturnType<typeof listAssignmentWritings>>[number];
+  /** Steps this student flagged ready to grade, or null if none. */
+  submitted: SubmittedStepSummary | null;
 }) {
   const name =
     [writing.student.first_name, writing.student.last_name]
@@ -147,6 +166,11 @@ function WritingCard({
 
   const activity = activityLine(writing);
   const revised = hasRevisedSinceReturned(writing);
+  // A student can flag steps ready while the writing itself stays in progress,
+  // so this must show regardless of which status section the card sits in.
+  const stepLine = submitted
+    ? `${submitted.count} step${submitted.count === 1 ? "" : "s"} submitted ${formatRelative(submitted.latest)}`
+    : null;
 
   return (
     <Link
@@ -160,6 +184,9 @@ function WritingCard({
         {activity && (
           <div className="text-xs text-stone-600 mt-0.5">{activity}</div>
         )}
+        {stepLine && (
+          <div className="text-xs text-green-800 mt-0.5">{stepLine}</div>
+        )}
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
         {revised && (
@@ -168,6 +195,13 @@ function WritingCard({
           <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">
             <PencilLine className="h-3 w-3" aria-hidden="true" />
             Revised
+          </span>
+        )}
+        {submitted && (
+          // The count carries the meaning, not the colour (CLAUDE.md §9).
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-green-300 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-900">
+            <Check className="h-3 w-3" aria-hidden="true" />
+            {submitted.count} to grade
           </span>
         )}
         <TeacherStatusBadge status={writing.status} />

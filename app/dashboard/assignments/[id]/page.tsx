@@ -14,7 +14,10 @@ import {
   getTeacherClassPeriodsForPicker,
   isPublished,
 } from "@/lib/queries/assignments";
-import { countAssignmentWritingsByStatus } from "@/lib/queries/teacher-writings";
+import {
+  countAssignmentWritingsByStatus,
+  countSubmittedStepsForAssignment,
+} from "@/lib/queries/teacher-writings";
 import { AssignmentForm } from "../assignment-form";
 
 export const dynamic = "force-dynamic";
@@ -35,12 +38,19 @@ export default async function AssignmentDetailPage({
   if (!assignment) notFound();
 
   // Independent reads — fire together rather than in series.
-  const [classPeriods, writingCounts] = await Promise.all([
+  const [classPeriods, writingCounts, submittedSteps] = await Promise.all([
     // The assignment's school, not the teacher's — a teacher who transferred
     // is still editing a row owned by the school it was created at.
     getTeacherClassPeriodsForPicker(profile.id, assignment.school_id),
     countAssignmentWritingsByStatus(assignment.id),
+    // Steps flagged ready to grade. Invisible to the status counts above,
+    // because submitting a step leaves the writing in progress.
+    countSubmittedStepsForAssignment(assignment.id),
   ]);
+  const stepsToGrade = [...submittedSteps.values()].reduce(
+    (n, s) => n + s.count,
+    0
+  );
   const published = isPublished(assignment);
   // student_writings.status is NOT NULL over a 5-value enum and every value is
   // counted, so this sum is exactly getStudentWritingCount(assignment.id) —
@@ -104,7 +114,7 @@ export default async function AssignmentDetailPage({
                   Submissions
                 </div>
                 <div className="text-xs text-stone-600 mt-0.5">
-                  {submissionsBlurb(writingCounts, totalWritings)}
+                  {submissionsBlurb(writingCounts, totalWritings, stepsToGrade)}
                 </div>
               </div>
             </div>
@@ -167,10 +177,16 @@ export default async function AssignmentDetailPage({
 
 function submissionsBlurb(
   counts: Awaited<ReturnType<typeof countAssignmentWritingsByStatus>>,
-  total: number
+  total: number,
+  stepsToGrade: number
 ): string {
   if (total === 0) return "No student writings yet.";
   const parts: string[] = [];
+  // Leads: individually submitted steps are the ones actively waiting on her,
+  // and no status count reflects them.
+  if (stepsToGrade > 0) {
+    parts.push(`${stepsToGrade} step${stepsToGrade === 1 ? "" : "s"} to grade`);
+  }
   if (counts.submitted > 0) parts.push(`${counts.submitted} submitted`);
   if (counts.returned > 0) parts.push(`${counts.returned} returned`);
   if (counts.graded > 0) parts.push(`${counts.graded} graded`);

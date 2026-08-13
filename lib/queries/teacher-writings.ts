@@ -81,6 +81,58 @@ export interface WritingForTeacherReview {
 
 /* ─── Queries ────────────────────────────────────────────────────────── */
 
+export interface SubmittedStepSummary {
+  readonly count: number;
+  /** Most recent per-step submission, so the teacher can see how fresh it is. */
+  readonly latest: string;
+}
+
+/**
+ * Per-writing tally of steps the student has submitted for grading
+ * (migration 0055), keyed by writing id.
+ *
+ * Whole-writing status can't carry this: submitting a step deliberately leaves
+ * the writing in_progress, so a student who has flagged three steps ready still
+ * appears under "In Progress" with nothing to distinguish them from a student
+ * who has flagged none. Both Submissions surfaces need this to say so.
+ *
+ * One query for the whole assignment via an inner-join filter, rather than one
+ * per writing — a class of 30 would otherwise mean 30 round trips. RLS on
+ * step_progress (auth_user_can_read_writing) still scopes it to writings this
+ * teacher may read.
+ */
+export async function countSubmittedStepsForAssignment(
+  assignmentId: string
+): Promise<Map<string, SubmittedStepSummary>> {
+  const supabase = await createServerClient();
+
+  const { data, error } = await supabase
+    .from("step_progress")
+    .select("student_writing_id, submitted_at, student_writings!inner(assignment_id)")
+    .eq("student_writings.assignment_id", assignmentId)
+    .not("submitted_at", "is", null);
+
+  if (error) {
+    throw new Error(`countSubmittedStepsForAssignment: ${error.message}`);
+  }
+
+  const rows = (data ?? []) as unknown as Array<{
+    student_writing_id: string;
+    submitted_at: string;
+  }>;
+
+  const map = new Map<string, SubmittedStepSummary>();
+  for (const r of rows) {
+    const prev = map.get(r.student_writing_id);
+    map.set(r.student_writing_id, {
+      count: (prev?.count ?? 0) + 1,
+      latest:
+        prev && prev.latest > r.submitted_at ? prev.latest : r.submitted_at,
+    });
+  }
+  return map;
+}
+
 /**
  * Lists all student writings on an assignment. RLS-scoped — a teacher
  * sees only writings they're entitled to. Sorted by status priority
