@@ -137,7 +137,7 @@ function StepList({
               }`}
               style={
                 isCurrent
-                  ? { borderLeftColor: "var(--district-primary)" }
+                  ? { borderLeftColor: "var(--brand)" }
                   : undefined
               }
             >
@@ -152,8 +152,8 @@ function StepList({
                   style={
                     isCurrent
                       ? {
-                          borderColor: "var(--district-primary)",
-                          backgroundColor: "var(--district-primary)",
+                          borderColor: "var(--brand)",
+                          backgroundColor: "var(--brand)",
                         }
                       : { borderColor: "#9ca3af" }
                   }

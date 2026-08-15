@@ -65,7 +65,7 @@ export function PlaceholderStep({
             onClick={onContinue}
             disabled={pending}
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-60 disabled:cursor-wait"
-            style={{ backgroundColor: "var(--district-primary)" }}
+            style={{ backgroundColor: "var(--brand)" }}
           >
             {pending && <Loader2 className="w-4 h-4 animate-spin" />}
             {pending ? "Loading…" : "Continue"}

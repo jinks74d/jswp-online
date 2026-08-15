@@ -18,7 +18,7 @@ export function StartWritingButton({ label }: { label: string }) {
       type="submit"
       disabled={pending}
       className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md text-base font-semibold text-white shadow-sm transition-colors disabled:opacity-70 disabled:cursor-wait"
-      style={{ backgroundColor: "var(--district-primary)" }}
+      style={{ backgroundColor: "var(--brand)" }}
     >
       {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
       {pending ? "Loading…" : label}

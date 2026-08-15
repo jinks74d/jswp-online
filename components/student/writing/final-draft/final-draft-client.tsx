@@ -454,7 +454,7 @@ function LiteraryFinalChecks({
                 onChange={() => toggle(c.key)}
                 disabled={isReadOnly || pending}
                 className="mt-0.5 h-4 w-4 rounded border-gray-400"
-                style={{ accentColor: "var(--district-primary)" }}
+                style={{ accentColor: "var(--brand)" }}
               />
               <span>{c.label}</span>
             </label>
@@ -531,7 +531,7 @@ function ContinueBar({
           onClick={onClick}
           disabled={!canContinue || pending}
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ backgroundColor: "var(--district-primary)" }}
+          style={{ backgroundColor: "var(--brand)" }}
         >
           {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
           {pending ? pendingLabel : buttonLabel}

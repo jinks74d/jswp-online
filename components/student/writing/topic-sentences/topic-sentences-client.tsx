@@ -111,7 +111,7 @@ export function TopicSentencesClient({ writingId, stepKey, bps }: Props) {
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: gate.canContinue
-                  ? "var(--district-primary)"
+                  ? "var(--brand)"
                   : "rgb(75 85 99)", // gray-600 — muted "not ready" cue, still ≥4.5:1 with white text (WCAG 1.4.3)
               }}
               title={

@@ -261,7 +261,7 @@ export function AnnotationForm({ payload, onClose }: Props) {
                 onClick={onSave}
                 disabled={busy || commentaryMissing}
                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-                style={{ backgroundColor: "var(--district-primary)" }}
+                style={{ backgroundColor: "var(--brand)" }}
               >
                 {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
                 {pending ? "Saving…" : "Save"}

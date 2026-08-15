@@ -80,7 +80,7 @@ export function GatherCdsClient({
           >
             <header
               className="px-4 py-2.5 border-b border-gray-200 bg-gray-50"
-              style={{ borderLeft: "4px solid var(--district-primary)" }}
+              style={{ borderLeft: "4px solid var(--brand)" }}
             >
               <h3 className="text-sm font-semibold text-gray-900">
                 Body Paragraph {sheet.body_paragraph_position}
@@ -157,7 +157,7 @@ export function GatherCdsClient({
               onClick={onContinue}
               disabled={!gate.canContinue || pending}
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "var(--district-primary)" }}
+              style={{ backgroundColor: "var(--brand)" }}
             >
               {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
               {pending ? "Saving…" : "Continue"}

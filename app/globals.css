@@ -61,12 +61,29 @@ body {
   --jswp-color-counterargument: var(--jswp-orange);
   --jswp-color-refutation: var(--jswp-teal);
 
-  /* Dashboard chrome — subtle brand-tinted header band derived from the
-   * district color (set per-request on <html> by the branding middleware).
-   * color-mix keeps the tint readable regardless of the chosen brand hue;
-   * falls back to a deep blue when no district brand is set. */
-  --dash-brand-tint: color-mix(in srgb, var(--district-primary, #1e3a8a) 6%, #ffffff);
-  --dash-brand-edge: color-mix(in srgb, var(--district-primary, #1e3a8a) 18%, #ffffff);
+  /* ── Brand accent ───────────────────────────────────────────────────
+   * ONE accent token for the whole app. Defaults to the district colour
+   * that the branding middleware sets per-request on <html>
+   * (--district-primary, see lib/branding-headers.ts), falling back to a
+   * deep blue when no district brand is set.
+   *
+   * Any subtree may override --brand to re-accent everything beneath it
+   * without touching a single component: app/school/layout.tsx does exactly
+   * that, resolving school colour → district colour → its own default.
+   * That is why components reference --brand and never --district-primary —
+   * the district value is the SOURCE of the default, not the thing the UI
+   * reads. Reading --district-primary directly opts a component out of every
+   * override, which is what the /school area used to have to work around. */
+  --brand: var(--district-primary, #1e3a8a);
+  --brand-contrast: var(--district-primary-contrast, #ffffff);
+  --brand-rgb: var(--district-primary-rgb, 30, 58, 138);
+  --brand-soft: rgba(var(--brand-rgb), 0.1);
+  --brand-soft-strong: rgba(var(--brand-rgb), 0.18);
+
+  /* Dashboard chrome — subtle brand-tinted header band. color-mix keeps the
+   * tint readable regardless of the chosen brand hue. */
+  --dash-brand-tint: color-mix(in srgb, var(--brand) 6%, #ffffff);
+  --dash-brand-edge: color-mix(in srgb, var(--brand) 18%, #ffffff);
 }
 
 .jswp-ts,

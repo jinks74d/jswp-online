@@ -56,7 +56,7 @@ export function StudentSidebar({
                 }`}
                 style={
                   active
-                    ? { borderLeftColor: "var(--district-primary)" }
+                    ? { borderLeftColor: "var(--brand)" }
                     : undefined
                 }
               >
@@ -64,7 +64,7 @@ export function StudentSidebar({
                   className="w-5 h-5"
                   style={
                     active
-                      ? { color: "var(--district-primary)" }
+                      ? { color: "var(--brand)" }
                       : { color: "currentColor" }
                   }
                 />

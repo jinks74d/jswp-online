@@ -125,7 +125,7 @@ function StatCard({
           className="inline-flex h-9 w-9 items-center justify-center rounded-lg"
           style={{
             backgroundColor: "var(--dash-brand-tint)",
-            color: "var(--district-primary)",
+            color: "var(--brand)",
           }}
         >
           <Icon className="w-5 h-5" aria-hidden="true" />

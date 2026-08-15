@@ -45,7 +45,7 @@ export function TeacherHeader({
           <Link
             href="/dashboard"
             className="md:hidden text-lg font-semibold tracking-tight"
-            style={{ color: "var(--district-primary)" }}
+            style={{ color: "var(--brand)" }}
           >
             {branding.name}
           </Link>
