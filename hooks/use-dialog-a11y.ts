@@ -10,8 +10,9 @@
  *   - closes on Escape (unless `locked`, e.g. mid-submit),
  *   - restores focus to the original trigger on close.
  *
- * Extracted from DeleteConfirmationModal so every dialog shares one correct
- * implementation instead of re-deriving a partial one. The caller still owns
+ * Originally extracted from a since-removed shared delete-confirmation modal,
+ * so every dialog shares one correct implementation instead of re-deriving a
+ * partial one. This hook is now the source of truth. The caller still owns
  * markup: put `role="dialog" aria-modal="true" aria-labelledby=…` on the
  * panel and pass its ref here.
  */

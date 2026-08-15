@@ -9,7 +9,7 @@
 //     free-form URL column set from the district form, and it is what
 //     middleware.ts and districts-browser.tsx already read. The bucket held
 //     zero objects, so this route returned 404 for every district that had a
-//     perfectly good logo_url — <DistrictLogo> fell back to initials.
+//     perfectly good logo_url — the logo component fell back to initials.
 //  2. It used the RLS-respecting server client, so `.download()` depended on
 //     the broad `district_logos_public_read` SELECT policy on storage.objects
 //     — the policy Supabase's linter flags for allowing clients to list the

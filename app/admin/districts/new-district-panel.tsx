@@ -6,7 +6,7 @@
  * <DistrictForm> and <CsvImporter> verbatim — this component only owns the
  * open/close + tab chrome.
  *
- * The dialog mirrors the a11y contract proven in DeleteConfirmationModal:
+ * The dialog mirrors the a11y contract in hooks/use-dialog-a11y.ts:
  * role="dialog" + aria-modal, focus moves in on open and returns to the trigger
  * on close, Escape and backdrop-click close, Tab is trapped, and a visible
  * close button is provided. Motion is limited to transform/opacity so the
