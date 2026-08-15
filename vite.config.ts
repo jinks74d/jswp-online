@@ -14,7 +14,16 @@ export default defineConfig({
     // `npm run test:rls`; collecting them here made `test:run` fail always
     // (jsdom + the mocked fetch in test-setup.ts), which in turn meant the
     // documented pre-PR gate could never pass.
-    exclude: ['**/node_modules/**', '**/dist/**', '__tests__/schema/**'],
+    // e2e/** is Playwright's. Vitest's default include matches *.spec.ts, so
+    // without this it collects the Playwright specs, fails to resolve
+    // @playwright/test, and reports 2 failed FILES alongside 0 failed tests —
+    // a red suite that names no failing assertion.
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '__tests__/schema/**',
+      'e2e/**',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'json-summary', 'html'],
