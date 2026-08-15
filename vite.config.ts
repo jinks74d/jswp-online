@@ -36,6 +36,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
+      // `server-only` throws unless the importer resolves the "react-server"
+      // export condition, which vitest does not — so every module guarded by
+      // it was unimportable from a test. Stub it globally instead of repeating
+      // vi.mock("server-only") in each file. See test-stubs/server-only.ts.
+      'server-only': path.resolve(__dirname, './test-stubs/server-only.ts'),
     },
   },
   define: {
