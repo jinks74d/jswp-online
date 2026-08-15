@@ -19,148 +19,33 @@ import { requireUser, requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "@/lib/audit-log";
-import { validateRubric, emptyRubric } from "@/lib/rubric";
-import {
-  isRubricFilePathForTeacher,
-  parseRubricFileInput,
-  type RubricFile,
-} from "@/lib/rubric-file";
+import { isRubricFilePathForTeacher } from "@/lib/rubric-file";
 import { removeRubricFile } from "@/lib/storage/assignment-rubrics";
-import { sanitizeSourceHtml, sourceHtmlToSubstrate } from "@/lib/source-content";
-import type { Database, Json } from "@/lib/database.types";
+import type { Json } from "@/lib/database.types";
+import {
+  VALID_MODES,
+  parseCommonFields,
+  validateCommon,
+  type Mode,
+  type AssignmentPeriodInput,
+} from "@/lib/assignments/parse-form";
+import {
+  parseSources,
+  resolveSourceColumns,
+  isEmptySource,
+  type SourceInput,
+} from "@/lib/assignments/sources";
+import {
+  parseAndValidateRubric,
+  resolveRubricFile,
+  rubricFileColumns,
+} from "@/lib/assignments/rubric-input";
+import type { AssignmentFormState } from "@/lib/assignments/form-state";
 
-type Mode = Database["public"]["Enums"]["jswp_mode"];
-type ChunkRatio = Database["public"]["Enums"]["jswp_chunk_ratio"];
-
-const VALID_MODES = new Set<Mode>([
-  "expository",
-  "argumentation",
-  "literary",
-  "narrative",
-]);
-const VALID_RATIOS = new Set<ChunkRatio>([
-  "lit_one_to_two_plus",
-  "lit_three_plus_to_zero",
-  "nar_two_plus_to_one",
-  "nonlit_summary_three_plus_to_zero",
-  "nonlit_expository_two_plus_to_one",
-  "nonlit_argumentation_two_plus_to_one",
-  "nonlit_expository_one_to_one",
-]);
-
-export type AssignmentFormState = {
-  error?: string;
-  fieldErrors?: {
-    title?: string;
-    prompt?: string;
-    num_body_paragraphs?: string;
-    default_chunks_per_bp?: string;
-    due_at?: string;
-    class_periods?: string;
-    rubric?: string;
-    rubric_file?: string;
-  };
-  success?: string;
-};
+// Re-exported so the three form components keep importing it from here.
+export type { AssignmentFormState };
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
-
-function parseTimestamp(raw: string): string | null {
-  if (!raw) return null;
-  const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toISOString();
-}
-
-function emptyToNull(s: string): string | null {
-  const v = s.trim();
-  return v === "" ? null : v;
-}
-
-function parseCommonFields(formData: FormData) {
-  const title = String(formData.get("title") ?? "").trim();
-  const prompt = String(formData.get("prompt") ?? "").trim();
-  const isEssay =
-    formData.get("is_essay") === "on" || formData.get("is_essay") === "true";
-  const numBodyParagraphsRaw = formData.get("num_body_paragraphs");
-  const numBodyParagraphs = numBodyParagraphsRaw
-    ? Number(numBodyParagraphsRaw)
-    : 1;
-  const defaultChunksPerBpRaw = formData.get("default_chunks_per_bp");
-  const defaultChunksPerBp = defaultChunksPerBpRaw
-    ? Number(defaultChunksPerBpRaw)
-    : 1;
-  const chunkRatioRaw = String(
-    formData.get("default_chunk_ratio") ?? "nonlit_expository_two_plus_to_one"
-  );
-  const hasCounterargument =
-    formData.get("has_counterargument") === "on" ||
-    formData.get("has_counterargument") === "true";
-  const dueAt = parseTimestamp(String(formData.get("due_at") ?? ""));
-  const periods = parseClassPeriods(formData);
-  // The legacy single column (migration 0050 keeps it until every reader is
-  // cut over). First selected period wins so existing readers see something
-  // sensible; `assignment_class_periods` is the real answer.
-  const classPeriodId = periods[0]?.class_period_id ?? null;
-
-  return {
-    title,
-    prompt,
-    isEssay,
-    numBodyParagraphs,
-    defaultChunksPerBp,
-    chunkRatioRaw,
-    hasCounterargument,
-    dueAt,
-    classPeriodId,
-    periods,
-  };
-}
-
-/**
- * Parse the `class_periods` hidden input — a JSON array of
- * `{ class_period_id, due_at }`, one per period the teacher selected.
- *
- * `due_at` is that period's override; null/absent inherits the assignment
- * default (see lib/assignment-due-dates.ts). Duplicates are collapsed rather
- * than rejected: the junction's primary key would reject them anyway, and a
- * repeated period is a UI glitch, not something to fail a teacher's save over.
- * The caller still has to prove the teacher is on each period — see
- * `assertTeachesPeriods`.
- */
-function parseClassPeriods(formData: FormData): AssignmentPeriodInput[] {
-  const raw = formData.get("class_periods");
-  if (raw == null || raw === "") return [];
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(String(raw));
-  } catch {
-    return [];
-  }
-  if (!Array.isArray(parsed)) return [];
-
-  const out: AssignmentPeriodInput[] = [];
-  const seen = new Set<string>();
-  for (const entry of parsed) {
-    if (typeof entry !== "object" || entry === null) continue;
-    const o = entry as Record<string, unknown>;
-    const id =
-      typeof o.class_period_id === "string" ? o.class_period_id.trim() : "";
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    out.push({
-      class_period_id: id,
-      due_at:
-        typeof o.due_at === "string" ? parseTimestamp(o.due_at) : null,
-    });
-  }
-  return out;
-}
-
-type AssignmentPeriodInput = {
-  class_period_id: string;
-  due_at: string | null;
-};
 
 /**
  * Refuse period ids the caller does not actually teach.
@@ -263,161 +148,7 @@ async function writeAssignmentPeriods(
  * already have work in progress.
  */
 
-const VALID_RENDER_MODES = new Set(["pdf", "rich", "plain", "image"]);
-
-/**
- * One source as posted by the client repeater. `source_text` is carried
- * verbatim (untrimmed) so the PDF substrate stays byte-for-byte equal to the
- * pdf.js buildPdfText() output the annotate text layer reproduces at render —
- * trimming would shift every annotation offset.
- */
-type SourceInput = {
-  /** assignment_sources.id for a row that already exists; "" for a new one.
-   *  The published path appends the new ones and ignores the rest. */
-  source_id: string;
-  kind: "primary" | "secondary";
-  source_title: string;
-  source_author: string;
-  source_citation: string;
-  source_url: string;
-  source_html: string;
-  source_render_mode: string;
-  source_text: string;
-  source_file_path: string;
-  source_file_name: string;
-  source_file_mime: string;
-};
-
-/** The resolved DB columns for a single assignment_sources row. */
-type SourceColumns = {
-  source_text: string | null;
-  source_title: string | null;
-  source_author: string | null;
-  source_citation: string | null;
-  source_url: string | null;
-  source_html: string | null;
-  source_render_mode: "pdf" | "rich" | "plain" | "image" | null;
-  source_file_path: string | null;
-  source_file_name: string | null;
-  source_file_mime: string | null;
-};
-
 const SOURCE_BUCKET = "assignment-sources";
-
-/**
- * Parse the `sources` hidden input (a JSON array, like `rubric`). Narrative
- * mode omits it → []. Malformed JSON or non-array → []. Each element is
- * coerced to a SourceInput with string fields (missing keys become "").
- */
-function parseSources(formData: FormData): SourceInput[] {
-  const raw = formData.get("sources");
-  if (raw == null || raw === "") return [];
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(String(raw));
-  } catch {
-    return [];
-  }
-  if (!Array.isArray(parsed)) return [];
-  const str = (v: unknown) => (typeof v === "string" ? v : "");
-  return parsed.map((s): SourceInput => {
-    const o = (s ?? {}) as Record<string, unknown>;
-    return {
-      source_id: str(o.source_id),
-      kind: o.kind === "secondary" ? "secondary" : "primary",
-      source_title: str(o.source_title),
-      source_author: str(o.source_author),
-      source_citation: str(o.source_citation),
-      source_url: str(o.source_url),
-      source_html: str(o.source_html),
-      source_render_mode: str(o.source_render_mode),
-      source_text: str(o.source_text),
-      source_file_path: str(o.source_file_path),
-      source_file_name: str(o.source_file_name),
-      source_file_mime: str(o.source_file_mime),
-    };
-  });
-}
-
-/**
- * Resolve one posted source into its DB columns, mirroring the render-mode
- * rules the single-source writer used:
- *   - rich:  sanitize posted HTML, then DERIVE source_text from it (the
- *            canonical annotation substrate — see lib/source-content.ts).
- *   - pdf:   store source_text verbatim (offset-stable).
- *   - plain: store the typed text (empty→null).
- */
-function resolveSourceColumns(src: SourceInput): SourceColumns {
-  const mode = VALID_RENDER_MODES.has(src.source_render_mode)
-    ? (src.source_render_mode as "pdf" | "rich" | "plain" | "image")
-    : null;
-
-  const shared = {
-    source_title: emptyToNull(src.source_title),
-    source_author: emptyToNull(src.source_author),
-    source_citation: emptyToNull(src.source_citation),
-    source_url: emptyToNull(src.source_url),
-    source_file_path: emptyToNull(src.source_file_path),
-    source_file_name: emptyToNull(src.source_file_name),
-    source_file_mime: emptyToNull(src.source_file_mime),
-  };
-
-  if (mode === "rich" && src.source_html) {
-    const sanitized = sanitizeSourceHtml(src.source_html);
-    const substrate = sourceHtmlToSubstrate(sanitized);
-    return {
-      ...shared,
-      source_html: emptyToNull(sanitized),
-      source_text: substrate.trim() === "" ? null : substrate,
-      source_render_mode: "rich",
-    };
-  }
-
-  if (mode === "pdf") {
-    return {
-      ...shared,
-      source_html: null,
-      source_text: src.source_text.trim() === "" ? null : src.source_text,
-      source_render_mode: "pdf",
-    };
-  }
-
-  // image: the stored file IS the source. No substrate exists, so any posted
-  // text/html is dropped — nothing may index offsets into a picture. A row
-  // that lost its file falls through isEmptySource() unless it has metadata.
-  if (mode === "image") {
-    return {
-      ...shared,
-      source_html: null,
-      source_text: null,
-      source_render_mode: "image",
-    };
-  }
-
-  const plainText = emptyToNull(src.source_text);
-  return {
-    ...shared,
-    source_html: null,
-    source_text: plainText,
-    source_render_mode: mode ?? (plainText ? "plain" : null),
-  };
-}
-
-/**
- * A source row is "empty" if it carries no body, no file, and no metadata —
- * an accidental blank repeater row. These are dropped before persisting.
- */
-function isEmptySource(c: SourceColumns): boolean {
-  return (
-    !c.source_text &&
-    !c.source_html &&
-    !c.source_file_path &&
-    !c.source_title &&
-    !c.source_author &&
-    !c.source_citation &&
-    !c.source_url
-  );
-}
 
 /**
  * Replace an unpublished assignment's sources with the posted set. Any
@@ -536,84 +267,6 @@ async function appendAssignmentSources(
 }
 
 /**
- * Parse the rubric hidden input. Always returns a Rubric — never null —
- * matching the "treat null and { criteria: [] } identically" rule. On
- * shape failure returns a validation error in form-state shape.
- */
-function parseAndValidateRubric(formData: FormData): {
-  ok: true;
-  rubric: ReturnType<typeof emptyRubric>;
-} | {
-  ok: false;
-  state: AssignmentFormState;
-} {
-  const raw = formData.get("rubric");
-  if (raw == null || raw === "") {
-    return { ok: true, rubric: emptyRubric() };
-  }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(String(raw));
-  } catch {
-    return { ok: false, state: { fieldErrors: { rubric: "Rubric is malformed JSON." } } };
-  }
-  const result = validateRubric(parsed);
-  if (!result.ok) {
-    return { ok: false, state: { fieldErrors: { rubric: result.error } } };
-  }
-  return { ok: true, rubric: result.value };
-}
-
-/**
- * Resolve the attached rubric document from the `rubric_file` hidden input.
- *
- * The client uploads the file itself and posts the resulting storage key back,
- * so the key is UNTRUSTED input that the server then both persists and — on a
- * later save — deletes. Requiring it to sit under the caller's own upload
- * folder is what stops this two-save sequence:
- *
- *   Save 1 — a teacher forges `path` to a colleague's rubric object.
- *   Save 2 — the row now "used to" point there, so the replace-sweep below
- *            deletes a file that is still referenced by the other row.
- *
- * A school-wide check would let that through, since both teachers share a
- * school. See isRubricFilePathForTeacher.
- *
- * A missing/blank/malformed field means "no rubric document", which is also
- * how a removal arrives.
- */
-function resolveRubricFile(
-  formData: FormData,
-  schoolId: string,
-  teacherId: string
-):
-  | { ok: true; file: RubricFile | null }
-  | { ok: false; state: AssignmentFormState } {
-  const file = parseRubricFileInput(formData.get("rubric_file"));
-  if (file && !isRubricFilePathForTeacher(file.path, schoolId, teacherId)) {
-    return {
-      ok: false,
-      state: {
-        fieldErrors: {
-          rubric_file:
-            "That rubric file wasn't uploaded from this form. Re-select it and save again.",
-        },
-      },
-    };
-  }
-  return { ok: true, file };
-}
-
-/** The three DB columns for an attached rubric document (or its absence). */
-function rubricFileColumns(file: RubricFile | null) {
-  return {
-    rubric_file_path: file?.path ?? null,
-    rubric_file_name: file?.name ?? null,
-    rubric_file_mime: file?.mime || null,
-  };
-}
-
-/**
  * Sweep a storage object the just-saved row no longer points at. Best-effort
  * and deliberately AFTER the successful write: deleting first would destroy
  * the teacher's file if the update then failed.
@@ -637,97 +290,6 @@ async function sweepReplacedRubricFile(
     return;
   }
   await removeRubricFile(supabase, previousPath);
-}
-
-function validateCommon(
-  f: ReturnType<typeof parseCommonFields>,
-  mode: Mode
-):
-  | { ok: true; chunkRatio: ChunkRatio; hasCounterargument: boolean }
-  | { ok: false; state: AssignmentFormState } {
-  if (!f.title) {
-    return { ok: false, state: { fieldErrors: { title: "Title is required." } } };
-  }
-  if (f.title.length > 255) {
-    return {
-      ok: false,
-      state: { fieldErrors: { title: "Title must be 255 characters or fewer." } },
-    };
-  }
-  if (!f.prompt) {
-    return {
-      ok: false,
-      state: { fieldErrors: { prompt: "Prompt is required." } },
-    };
-  }
-  if (f.prompt.length > 5000) {
-    return {
-      ok: false,
-      state: {
-        fieldErrors: { prompt: "Prompt must be 5000 characters or fewer." },
-      },
-    };
-  }
-
-  if (!f.dueAt) {
-    return {
-      ok: false,
-      state: { fieldErrors: { due_at: "Due date is required." } },
-    };
-  }
-
-  // Mode-specific chunk ratio enforcement. Literary assignments lock to the
-  // 1:2+ literary ratio; the CHECK constraint (migration 0038) rejects a
-  // literary assignment carrying a non-literary ratio.
-  let chunkRatio: ChunkRatio;
-  if (mode === "literary") {
-    chunkRatio = "lit_one_to_two_plus";
-  } else {
-    if (!VALID_RATIOS.has(f.chunkRatioRaw as ChunkRatio)) {
-      return { ok: false, state: { error: "Invalid chunk ratio." } };
-    }
-    chunkRatio = f.chunkRatioRaw as ChunkRatio;
-  }
-
-  // Argumentation-only flag — silently coerce to false for other modes.
-  const hasCounterargument =
-    mode === "argumentation" ? f.hasCounterargument : false;
-
-  // is_essay implies multi-body-paragraph; schema CHECK is 1-10.
-  if (f.isEssay && f.numBodyParagraphs < 2) {
-    return {
-      ok: false,
-      state: {
-        fieldErrors: {
-          num_body_paragraphs:
-            "Essays need at least 2 body paragraphs.",
-        },
-      },
-    };
-  }
-  if (f.numBodyParagraphs < 1 || f.numBodyParagraphs > 10) {
-    return {
-      ok: false,
-      state: {
-        fieldErrors: {
-          num_body_paragraphs:
-            "Body paragraphs must be between 1 and 10.",
-        },
-      },
-    };
-  }
-  if (f.defaultChunksPerBp < 1 || f.defaultChunksPerBp > 5) {
-    return {
-      ok: false,
-      state: {
-        fieldErrors: {
-          default_chunks_per_bp: "Chunks per body paragraph must be 1-5.",
-        },
-      },
-    };
-  }
-
-  return { ok: true, chunkRatio, hasCounterargument };
 }
 
 /* ─── Create draft ───────────────────────────────────────────────────── */
