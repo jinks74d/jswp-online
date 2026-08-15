@@ -15,6 +15,23 @@ export default defineConfig({
     // (jsdom + the mocked fetch in test-setup.ts), which in turn meant the
     // documented pre-PR gate could never pass.
     exclude: ['**/node_modules/**', '**/dist/**', '__tests__/schema/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'json-summary', 'html'],
+      reportsDirectory: './coverage',
+      // Report on the source the refactor actually moves. Route files and
+      // step components are covered by Playwright, not here, so counting
+      // them would make this number meaningless as a refactor gate.
+      include: ['lib/**/*.ts', 'components/**/*.tsx', 'hooks/**/*.ts'],
+      exclude: [
+        'lib/database.types.ts', // generated; CLAUDE.md section 8 says do not test
+        'lib/supabase/**', // thin SDK factories, tested upstream
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        '**/__tests__/**',
+      ],
+      all: true, // count untested files as 0% instead of omitting them
+    },
   },
   resolve: {
     alias: {
