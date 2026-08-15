@@ -10,11 +10,12 @@
  * gate any downstream step's data flow. Tooltip names the offending BP.
  */
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { DecisionsBpPane } from "./decisions-bp-pane";
 import { ReferencePanel, type ReferenceSource } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { useWritingMode } from "../use-writing-mode";
 import type { CommentaryBpData } from "@/lib/queries/commentary";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
@@ -61,24 +62,14 @@ export function DecisionsClient({
 }: Props) {
   const { isReadOnly } = useWritingMode();
   const [activeIdx, setActiveIdx] = useState(0);
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, run } = useServerAction();
 
   const gate = computeGate(bps);
   const activeBp = bps[activeIdx] ?? bps[0];
   const showReference = sources.length > 0;
 
   const onContinue = () => {
-    setError(null);
-    start(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   const formColumn = (

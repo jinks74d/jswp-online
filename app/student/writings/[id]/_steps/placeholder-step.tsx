@@ -8,10 +8,10 @@
  * properly.
  */
 
-import { useTransition } from "react";
 import { Loader2, Construction } from "lucide-react";
 import { advanceCurrentStep } from "@/lib/actions/student-writings";
 import { useWritingMode } from "@/components/student/writing/use-writing-mode";
+import { useServerAction } from "@/hooks/use-server-action";
 
 export function PlaceholderStep({
   writingId,
@@ -25,17 +25,12 @@ export function PlaceholderStep({
   pedagogyHint: string | null;
 }) {
   const { isReadOnly } = useWritingMode();
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useServerAction();
 
   const onContinue = () => {
-    startTransition(async () => {
-      try {
-        await advanceCurrentStep(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        console.error("advanceCurrentStep:", e);
-      }
+    // Log-only: a placeholder step has no error surface to render into.
+    run(() => advanceCurrentStep(writingId, stepKey), {
+      onError: (e) => console.error("advanceCurrentStep:", e),
     });
   };
 

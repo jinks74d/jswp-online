@@ -16,10 +16,11 @@
  * trimmed.
  */
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { useWritingMode } from "../use-writing-mode";
 import { SubmitStepButton } from "../submit-step-button";
 
@@ -64,22 +65,12 @@ export function EssayPartForm<T extends string = string>({
 }: Props<T>) {
   const { isReadOnly } = useWritingMode();
   const [text, setText] = useState(initialText);
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, run } = useServerAction();
 
   const canContinue = text.trim().length > 0;
 
   const onContinue = () => {
-    setError(null);
-    start(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   return (

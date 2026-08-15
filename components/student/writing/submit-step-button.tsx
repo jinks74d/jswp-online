@@ -21,10 +21,10 @@
  * different things is how a student submits the wrong one.
  */
 
-import { useState, useTransition } from "react";
 import { Check, Loader2, Send } from "lucide-react";
 import { submitStep } from "@/lib/actions/student-writings";
 import { useWritingMode } from "./use-writing-mode";
+import { useServerAction } from "@/hooks/use-server-action";
 
 export function SubmitStepButton({
   writingId,
@@ -37,23 +37,15 @@ export function SubmitStepButton({
   isTerminal?: boolean;
 }) {
   const { isReadOnly, submittedSteps } = useWritingMode();
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, run } = useServerAction();
 
   if (isReadOnly || isTerminal) return null;
 
   const submittedAt = submittedSteps.get(stepKey) ?? null;
 
   const onClick = () => {
-    setError(null);
-    start(async () => {
-      try {
-        await submitStep(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not submit this step.");
-      }
+    run(() => submitStep(writingId, stepKey), {
+      fallback: "Could not submit this step.",
     });
   };
 

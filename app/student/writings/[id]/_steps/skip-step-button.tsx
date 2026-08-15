@@ -7,10 +7,10 @@
  * shows the step as uncompleted once the teacher restores the source.
  */
 
-import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { advanceCurrentStep } from "@/lib/actions/student-writings";
 import { useWritingMode } from "@/components/student/writing/use-writing-mode";
+import { useServerAction } from "@/hooks/use-server-action";
 
 export function SkipStepButton({
   writingId,
@@ -20,17 +20,13 @@ export function SkipStepButton({
   stepKey: string;
 }) {
   const { isReadOnly } = useWritingMode();
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useServerAction();
 
   const onClick = () => {
-    startTransition(async () => {
-      try {
-        await advanceCurrentStep(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        console.error("SkipStepButton:", e);
-      }
+    // Log-only: this button is already the fallback for a data bug, so there
+    // is no error surface here to render into.
+    run(() => advanceCurrentStep(writingId, stepKey), {
+      onError: (e) => console.error("SkipStepButton:", e),
     });
   };
 

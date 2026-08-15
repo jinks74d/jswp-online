@@ -33,6 +33,7 @@ import {
   updateFinalDraftSelfChecks,
 } from "@/lib/actions/final-draft";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import {
   LITERARY_FINAL_SELF_CHECKS,
@@ -487,14 +488,15 @@ function ContinueBar({
   currentFullText: string;
 }) {
   const { isReadOnly } = useWritingMode();
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, setError, run } = useServerAction();
 
   if (isReadOnly) return null;
 
   const canContinue = currentFullText.trim().length > 0;
 
   const onClick = () => {
+    // Cleared before the confirm so declining the dialog also dismisses a
+    // stale message; run() would never be reached on that path.
     setError(null);
     if (isTerminal) {
       const ok = window.confirm(
@@ -502,15 +504,7 @@ function ContinueBar({
       );
       if (!ok) return;
     }
-    start(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   const buttonLabel = isTerminal ? "Submit" : "Continue";

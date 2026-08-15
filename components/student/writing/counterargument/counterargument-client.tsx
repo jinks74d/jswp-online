@@ -8,13 +8,14 @@
  * refutation} non-empty (trimmed). Soft per-BP gate, named-BP tooltip.
  */
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import {
   CounterargumentBpPane,
   type CounterargumentBpData,
 } from "./counterargument-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { useWritingMode } from "../use-writing-mode";
 import { SubmitStepButton } from "../submit-step-button";
 
@@ -52,23 +53,13 @@ export function CounterargumentClient({
 }: Props) {
   const { isReadOnly } = useWritingMode();
   const [activeIdx, setActiveIdx] = useState(0);
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, run } = useServerAction();
 
   const gate = computeGate(bps);
   const activeBp = bps[activeIdx] ?? bps[0];
 
   const onContinue = () => {
-    setError(null);
-    start(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   return (

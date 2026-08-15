@@ -21,11 +21,12 @@
  */
 
 import Link from "next/link";
-import { forwardRef, useRef, useState, useTransition } from "react";
+import { forwardRef, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { AutoSaveInput } from "../t-chart/auto-save-input";
 import { updateTChart } from "@/lib/actions/t-charts";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
@@ -54,28 +55,21 @@ function computeGate(bps: readonly BodyParagraphData[]): GateResult {
 
 export function TopicSentencesClient({ writingId, stepKey, bps }: Props) {
   const { isReadOnly } = useWritingMode();
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, setError, run } = useServerAction();
   const sectionRefs = useRef<Map<number, HTMLElement>>(new Map());
 
   const gate = computeGate(bps);
 
   const onContinue = () => {
+    // Cleared here as well as inside run(), because the gate path below
+    // returns without ever reaching it.
     setError(null);
     if (!gate.canContinue && gate.blockerPosition !== null) {
       const target = sectionRefs.current.get(gate.blockerPosition);
       target?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    start(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   return (

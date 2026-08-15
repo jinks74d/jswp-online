@@ -15,11 +15,12 @@
  * Tooltip names the offending BP.
  */
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { CdCmShapingBpPane } from "./cd-cm-shaping-bp-pane";
 import { NarrativeShapingBpPane } from "./narrative-shaping-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { computeGate } from "@/lib/shaping-gate";
 import { useWritingMode } from "../use-writing-mode";
@@ -46,24 +47,14 @@ export function ShapingClient({
 }: Props) {
   const { isReadOnly } = useWritingMode();
   const [activeIdx, setActiveIdx] = useState(0);
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, run } = useServerAction();
 
   const gate = computeGate(mode, bps);
   const activeBp = bps[activeIdx] ?? bps[0];
   const isNarrative = mode === "narrative";
 
   const onContinue = () => {
-    setError(null);
-    start(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   return (

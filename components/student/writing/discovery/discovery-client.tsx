@@ -11,10 +11,11 @@
  * gate. Tooltip names the offending BP.
  */
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { DiscoveryBpPane } from "./discovery-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
@@ -48,23 +49,13 @@ function computeGate(bps: readonly BodyParagraphData[]): GateResult {
 export function DiscoveryClient({ writingId, stepKey, bps }: Props) {
   const { isReadOnly } = useWritingMode();
   const [activeIdx, setActiveIdx] = useState(0);
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, run } = useServerAction();
 
   const gate = computeGate(bps);
   const activeBp = bps[activeIdx] ?? bps[0];
 
   const onContinue = () => {
-    setError(null);
-    start(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   return (

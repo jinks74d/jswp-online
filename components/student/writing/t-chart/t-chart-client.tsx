@@ -18,7 +18,7 @@
  * tested without this component's `server-only` import chain.
  */
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { CdCmTChart } from "./cd-cm-t-chart";
 import { ExpositoryTChart } from "./expository-t-chart";
@@ -26,6 +26,7 @@ import { NarrativeTChart } from "./narrative-t-chart";
 import { FictionalAbcPlan } from "./fictional-abc-plan";
 import { ReferencePanel, type ReferenceSource } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { computeGate, gateMessage } from "./compute-gate";
 import { useWritingMode } from "../use-writing-mode";
@@ -59,8 +60,7 @@ export function TChartClient({
 }: Props) {
   const { isReadOnly } = useWritingMode();
   const [activeIdx, setActiveIdx] = useState(0);
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, run } = useServerAction();
 
   const gate = computeGate(mode, bodyParagraphs);
   const activeBp = bodyParagraphs[activeIdx] ?? bodyParagraphs[0];
@@ -73,16 +73,7 @@ export function TChartClient({
   const showReference = sources.length > 0 && mode !== "expository";
 
   const onContinue = () => {
-    setError(null);
-    start(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   const formColumn = (

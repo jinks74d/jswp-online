@@ -9,11 +9,12 @@
  * Tooltip names the offending BP.
  */
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { CdCmParagraphFormBpPane } from "./cd-cm-paragraph-form-bp-pane";
 import { NarrativeParagraphFormBpPane } from "./narrative-paragraph-form-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { useWritingMode } from "../use-writing-mode";
 import type { ParagraphFormBpData } from "@/lib/queries/paragraph-form";
@@ -56,14 +57,15 @@ export function ParagraphFormClient({
 }: Props) {
   const { isReadOnly } = useWritingMode();
   const [activeIdx, setActiveIdx] = useState(0);
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, setError, run } = useServerAction();
 
   const gate = computeGate(bps);
   const activeBp = bps[activeIdx] ?? bps[0];
   const isNarrative = mode === "narrative";
 
   const onClick = () => {
+    // Cleared before the confirm so declining the dialog also dismisses a
+    // stale message; run() would never be reached on that path.
     setError(null);
     if (isTerminal) {
       const ok = window.confirm(
@@ -71,15 +73,7 @@ export function ParagraphFormClient({
       );
       if (!ok) return;
     }
-    start(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   const buttonLabel = isTerminal ? "Submit" : "Continue";

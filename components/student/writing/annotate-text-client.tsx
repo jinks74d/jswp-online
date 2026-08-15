@@ -16,7 +16,7 @@
  * optimistic UI, per chunk 4.3).
  */
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { SourceTextViewer, type SelectionPayload } from "./source-text-viewer";
 import { PdfSourceViewer } from "./pdf-source-viewer";
@@ -36,6 +36,7 @@ import {
 } from "./annotation-kind-config";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
+import { useServerAction } from "@/hooks/use-server-action";
 import { useWritingMode } from "./use-writing-mode";
 import { SubmitStepButton } from "./submit-step-button";
 
@@ -67,8 +68,8 @@ export function AnnotateTextClient({
   initialAnnotations,
 }: Props) {
   const { isReadOnly, printMeta } = useWritingMode();
-  const [continuing, startContinue] = useTransition();
-  const [continueError, setContinueError] = useState<string | null>(null);
+  // Aliased to the existing names so the render below is untouched.
+  const { pending: continuing, error: continueError, run } = useServerAction();
   // Sources whose file is a scanned/image-only PDF with no selectable text —
   // reported up by each pane so the Continue gate never traps a student on a
   // file they can't highlight.
@@ -106,16 +107,7 @@ export function AnnotateTextClient({
   const canContinue = !required || hasAnnotations || allUnannotatable;
 
   const onContinue = () => {
-    setContinueError(null);
-    startContinue(async () => {
-      try {
-        await completeStepAndAdvance(writingId, stepKey);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg === "NEXT_REDIRECT") return;
-        setContinueError(msg || "Could not continue.");
-      }
-    });
+    run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
   return (

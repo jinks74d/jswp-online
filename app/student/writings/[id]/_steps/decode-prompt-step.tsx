@@ -18,13 +18,14 @@
  *     re-validates as a defense in depth.
  */
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import {
   savePromptDecoding,
   completePromptDecoding,
   type PromptDecodingFields,
 } from "@/lib/actions/prompt-decoding";
+import { useServerAction } from "@/hooks/use-server-action";
 import { useWritingMode } from "@/components/student/writing/use-writing-mode";
 import type { Database } from "@/lib/database.types";
 
@@ -123,8 +124,8 @@ export function DecodePromptStep({
   const [savedFlash, setSavedFlash] = useState<"idle" | "saving" | "saved">(
     "idle",
   );
-  const [isContinuing, startContinue] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  // Aliased to the existing name so the render below is untouched.
+  const { pending: isContinuing, error, run } = useServerAction();
 
   const update =
     <K extends keyof FormState>(key: K) =>
@@ -151,19 +152,9 @@ export function DecodePromptStep({
   const canContinue = form.task.trim().length > 0;
 
   const handleContinue = () => {
-    setError(null);
-    startContinue(async () => {
-      try {
-        await completePromptDecoding(writingId, stateToFields(form));
-        // completePromptDecoding redirects on success; if it returns,
-        // something went wrong silently.
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Could not continue.";
-        // Next.js redirects throw — let those propagate.
-        if (msg === "NEXT_REDIRECT") return;
-        setError(msg);
-      }
-    });
+    // completePromptDecoding redirects on success; if it returns,
+    // something went wrong silently.
+    run(() => completePromptDecoding(writingId, stateToFields(form)));
   };
 
   return (
