@@ -685,7 +685,24 @@ Otherwise, work with confidence. Read the file you're about to change. Run the t
 
 See `package.json` `scripts` for the full list (`dev`, `lint`, `type-check`, `test`/`test:run`/`test:coverage`, `build`, etc.).
 
-Before opening a PR: `npm run lint:fix && npm run type-check && npm run test:run && npm run build`. All must pass.
+Before opening a PR: **`npm run verify`**. All stages must pass.
+
+`verify` = `lint` → `type-check` → `test:all` → `build`.
+
+`test:all` chains the two suites, which cannot share one config:
+
+| Script | Config | Env | Covers |
+|---|---|---|---|
+| `test:run` | `vite.config.ts` | jsdom, mocked fetch | `lib/` logic + components (415 tests) |
+| `test:rls` | `__tests__/schema/vitest.config.ts` | node, **real** fetch, live Supabase | RLS policies + signup RPC authorization (108 tests) |
+
+**`test:run` alone does not cover RLS.** Until 2026-08-15 the documented gate
+ran only `test:run`, so the 108 schema tests — including the
+privilege-escalation regressions in `signup-rpcs.test.ts` — were never executed
+by the gate. Run `verify`, not the individual scripts, or that hole reopens.
+
+`test:rls` needs `.env.local` populated and `scripts/seed-auth.ts` already run;
+it mutates a live project, so don't point it at production.
 
 ---
 
