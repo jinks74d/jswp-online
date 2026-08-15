@@ -7,36 +7,12 @@
 import { requireRole } from "@/lib/auth";
 import { getSchool } from "@/lib/queries/schools";
 import { getDistrict } from "@/lib/queries/districts";
-import { isValidHexColor } from "@/lib/district-branding.types";
-import { hexToRgb, getContrastColor } from "@/lib/district-branding.utils";
+import { brandStyle, SCHOOL_DEFAULT_BRAND } from "@/lib/brand-style";
 import { SchoolSidebar } from "./school-sidebar";
 
-// Default accent when neither the school nor its district sets a colour —
-// keeps the previous rose look for unbranded schools.
-const DEFAULT_BRAND = "#e11d48"; // rose-600
-
-/**
- * Resolve the accent the /school area should use — school colour first, then
- * the district's, then the rose default — and expose it as brand CSS vars the
- * components reference (so the whole shell follows the school's branding).
- */
-function brandStyle(
-  schoolPrimary: string | null | undefined,
-  districtPrimary: string | null | undefined
-): React.CSSProperties {
-  const valid = (c: string | null | undefined) =>
-    c && isValidHexColor(c) ? c : null;
-  const brand = valid(schoolPrimary) ?? valid(districtPrimary) ?? DEFAULT_BRAND;
-  const rgb = hexToRgb(brand) ?? { r: 225, g: 29, b: 72 };
-  const tuple = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
-  return {
-    "--brand": brand,
-    "--brand-contrast": getContrastColor(brand),
-    "--brand-rgb": tuple,
-    "--brand-soft": `rgba(${tuple}, 0.1)`,
-    "--brand-soft-strong": `rgba(${tuple}, 0.18)`,
-  } as React.CSSProperties;
-}
+// The shared resolver now lives in lib/brand-style.ts, applied here and by the
+// teacher and student shells. SCHOOL_DEFAULT_BRAND keeps the rose look this
+// area has always had when neither the school nor its district sets a colour.
 
 export default async function SchoolLayout({
   children,
@@ -57,7 +33,11 @@ export default async function SchoolLayout({
   return (
     <div
       className="flex min-h-screen bg-gray-50"
-      style={brandStyle(school?.primary_color, district?.primary_color)}
+      style={brandStyle(
+        school?.primary_color,
+        district?.primary_color,
+        SCHOOL_DEFAULT_BRAND
+      )}
     >
       <SchoolSidebar
         districtName={district?.name ?? "Your district"}

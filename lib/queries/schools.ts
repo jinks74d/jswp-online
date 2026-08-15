@@ -5,8 +5,35 @@
 
 import "server-only";
 
+import { cache } from "react";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Schools } from "@/lib/database.types";
+
+/**
+ * Just the school's accent colour, for the --brand style every authenticated
+ * layout applies (see lib/brand-style.ts).
+ *
+ * Narrow and React cache()d because this runs on EVERY navigation inside the
+ * teacher and student shells, which is the hottest path in the app. getSchool
+ * would pull the whole row to read one column, and an uncached read would
+ * repeat per render.
+ *
+ * Returns null rather than throwing: a missing or unreadable school must
+ * degrade to the district colour, never blank the page a student is writing in.
+ */
+export const getSchoolPrimaryColor = cache(async function getSchoolPrimaryColor(
+  schoolId: string
+): Promise<string | null> {
+  const supabase = await createServerClient();
+  const { data, error } = await supabase
+    .from("schools")
+    .select("primary_color")
+    .eq("id", schoolId)
+    .maybeSingle();
+
+  if (error) return null;
+  return (data as { primary_color: string | null } | null)?.primary_color ?? null;
+});
 
 export type SchoolListRow = Pick<
   Schools,

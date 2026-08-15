@@ -29,16 +29,23 @@ export type ShellBranding = {
 export function TeacherShell({
   profile,
   branding,
+  brandStyle,
   children,
 }: {
   profile: ShellProfile;
   branding: ShellBranding;
+  /**
+   * --brand CSS vars scoping the accent to this teacher's school. Applied on
+   * the outermost element so header, sidebar and page content all inherit.
+   * Empty when nothing resolves, which leaves the :root district default.
+   */
+  brandStyle?: React.CSSProperties;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-stone-100">
+    <div className="min-h-screen bg-stone-100" style={brandStyle}>
       <TeacherHeader
         profile={profile}
         branding={branding}

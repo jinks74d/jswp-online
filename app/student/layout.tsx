@@ -7,6 +7,8 @@
 
 import { requireRole } from "@/lib/auth";
 import { getDistrictBrandingFromHeaders } from "@/lib/branding-headers";
+import { getSchoolPrimaryColor } from "@/lib/queries/schools";
+import { brandStyle } from "@/lib/brand-style";
 import { StudentShell } from "@/components/student/shell/student-shell";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +21,14 @@ export default async function StudentLayout({
   const profile = await requireRole("student");
   const branding = await getDistrictBrandingFromHeaders();
 
+  // School accent beats district accent for anyone attached to a school.
+  const schoolPrimary = profile.school_id
+    ? await getSchoolPrimaryColor(profile.school_id)
+    : null;
+
   return (
     <StudentShell
+      brandStyle={brandStyle(schoolPrimary, branding.primary_color)}
       profile={{
         id: profile.id,
         first_name: profile.first_name,

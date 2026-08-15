@@ -30,16 +30,23 @@ export type StudentShellBranding = {
 export function StudentShell({
   profile,
   branding,
+  brandStyle,
   children,
 }: {
   profile: StudentShellProfile;
   branding: StudentShellBranding;
+  /**
+   * --brand CSS vars scoping the accent to this student's school. Applied on
+   * the outermost element so header, sidebar and the writing flow all inherit.
+   * Empty when nothing resolves, which leaves the :root district default.
+   */
+  brandStyle?: React.CSSProperties;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" style={brandStyle}>
       <StudentHeader
         profile={profile}
         branding={branding}
