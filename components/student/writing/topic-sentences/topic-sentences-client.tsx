@@ -18,6 +18,21 @@
  *
  * On Continue with a violation: scroll the offending BP textarea
  * into view as a usability nicety.
+ *
+ * Deliberately does NOT use StepShell or StepFooter. Two reasons, both
+ * load-bearing:
+ *
+ *   - Layout. All the paragraphs stack on one page instead of tabbing, so a
+ *     student can see their topic sentences together and hear whether they
+ *     vary. That is the pedagogy, not an inconsistency.
+ *   - The Continue button. Everywhere else it is disabled while the gate
+ *     blocks; here it stays ENABLED and clicking it scrolls to the paragraph
+ *     that is missing a sentence — which is the only way to find it on a long
+ *     page. It is muted to gray-600 rather than disabled to signal "not ready"
+ *     while staying operable, and carries a tooltip naming the paragraph.
+ *
+ * StepFooter hard-codes `disabled={!gate.canContinue || pending}`, so adopting
+ * it here would delete that affordance silently. Left as-is on purpose.
  */
 
 import Link from "next/link";

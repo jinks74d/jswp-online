@@ -11,15 +11,13 @@
  * data flows down through the bodyParagraphSheets prop.
  */
 
-import { Loader2 } from "lucide-react";
 import { SheetEditor } from "./sheet-editor";
 import { ReferencePanel, type ReferenceSource } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useServerAction } from "@/hooks/use-server-action";
-import { useWritingMode } from "../use-writing-mode";
 import type { GatheringSheetData } from "@/lib/queries/candidate-cds";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
-import { SubmitStepButton } from "../submit-step-button";
+import { StepFooter, type StepGate } from "../step-shell";
 
 interface Props {
   writingId: string;
@@ -30,22 +28,20 @@ interface Props {
   annotations: readonly TextAnnotationRow[];
 }
 
-interface GateResult {
-  canContinue: boolean;
-  blockerPosition: number | null;
-}
-
-function computeGate(sheets: readonly GatheringSheetData[]): GateResult {
+function computeGate(sheets: readonly GatheringSheetData[]): StepGate {
   for (const sheet of sheets) {
     const hasSelected = sheet.candidates.some((c) => c.is_selected);
     if (!hasSelected) {
       return {
         canContinue: false,
-        blockerPosition: sheet.body_paragraph_position,
+        message: `Body paragraph ${sheet.body_paragraph_position} needs at least one selected concrete detail.`,
       };
     }
   }
-  return { canContinue: true, blockerPosition: null };
+  return {
+    canContinue: true,
+    message: "Each body paragraph has at least one selected candidate.",
+  };
 }
 
 export function GatherCdsClient({
@@ -55,7 +51,8 @@ export function GatherCdsClient({
   sources,
   annotations,
 }: Props) {
-  const { isReadOnly } = useWritingMode();
+  // Read-only is StepFooter's concern — the sheets stay visible so a teacher
+  // can review the student's selections.
   const { pending, error, run } = useServerAction();
 
   const gate = computeGate(sheets);
@@ -138,33 +135,14 @@ export function GatherCdsClient({
         )}
       </div>
 
-      {!isReadOnly && (
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-          <div className="text-xs text-gray-500">
-            {gate.canContinue
-              ? "Each body paragraph has at least one selected candidate."
-              : `Body paragraph ${gate.blockerPosition} needs at least one selected concrete detail.`}
-          </div>
-          <div className="flex items-center gap-3">
-            {error && (
-              <div className="text-sm text-red-700" role="alert">
-                {error}
-              </div>
-            )}
-            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
-            <button
-              type="button"
-              onClick={onContinue}
-              disabled={!gate.canContinue || pending}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "var(--brand)" }}
-            >
-              {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
-              {pending ? "Saving…" : "Continue"}
-            </button>
-          </div>
-        </div>
-      )}
+      <StepFooter
+        writingId={writingId}
+        stepKey={stepKey}
+        gate={gate}
+        onContinue={onContinue}
+        pending={pending}
+        error={error}
+      />
     </div>
   );
 }
