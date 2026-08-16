@@ -436,9 +436,14 @@ All defined in `0001` and `0002`. Use these in policies; do not repeat the query
 ```bash
 npm run seed:writings   # once — ensures one writing per mode exists
 npm run e2e:build       # after any code change
-npm run e2e:serve       # leave running in another terminal
+npm run e2e:serve       # RESTART this after every rebuild — see below
 npm run test:e2e
 ```
+
+> **Restart the server after every rebuild.** `next start` loads the build once
+> at boot, so a rebuild without a restart leaves it serving the previous
+> artifact — the suite then passes against code you already changed. A green
+> run that never saw your edit is worse than a red one.
 
 The server is **deliberately not managed by Playwright**. Its `webServer`
 option works, but on Windows it cannot kill the Next.js process tree it

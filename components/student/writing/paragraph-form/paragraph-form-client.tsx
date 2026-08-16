@@ -5,21 +5,25 @@
  * cd-cm-paragraph-form-bp-pane or narrative-paragraph-form-bp-pane
  * based on mode.
  *
- * Continue gate: each BP must have non-empty (trimmed) final_text.
- * Tooltip names the offending BP.
+ * Continue gate: each BP must have non-empty (trimmed) final_text. Names the
+ * offending BP.
+ *
+ * On the terminal step this is where a student SUBMITS the whole writing, so
+ * Continue confirms first. That confirm stays here rather than in StepShell:
+ * it is specific to handing work in, and a shell that could interrupt every
+ * step's Continue would be a footgun for the other eight.
+ *
+ * Tabs, layout and footer come from StepShell.
  */
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { CdCmParagraphFormBpPane } from "./cd-cm-paragraph-form-bp-pane";
 import { NarrativeParagraphFormBpPane } from "./narrative-paragraph-form-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useServerAction } from "@/hooks/use-server-action";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
-import { useWritingMode } from "../use-writing-mode";
 import type { ParagraphFormBpData } from "@/lib/queries/paragraph-form";
 import type { Database } from "@/lib/database.types";
-import { SubmitStepButton } from "../submit-step-button";
+import { StepShell, type StepGate } from "../step-shell";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 
@@ -32,19 +36,25 @@ interface Props {
   bps: readonly ParagraphFormBpData[];
 }
 
-interface GateResult {
-  canContinue: boolean;
-  blockerPosition: number | null;
-}
-
-function computeGate(bps: readonly ParagraphFormBpData[]): GateResult {
+function computeGate(
+  bps: readonly ParagraphFormBpData[],
+  isTerminal: boolean
+): StepGate {
   for (const bp of bps) {
     const text = bp.paragraph_form?.final_text ?? "";
     if (text.trim().length === 0) {
-      return { canContinue: false, blockerPosition: bp.position };
+      return {
+        canContinue: false,
+        message: `Body paragraph ${bp.position} needs at least one character of polished paragraph text.`,
+      };
     }
   }
-  return { canContinue: true, blockerPosition: null };
+  return {
+    canContinue: true,
+    message: isTerminal
+      ? "All body paragraphs ready to submit."
+      : "Each body paragraph has a polished paragraph.",
+  };
 }
 
 export function ParagraphFormClient({
@@ -55,15 +65,10 @@ export function ParagraphFormClient({
   hasCounterargument,
   bps,
 }: Props) {
-  const { isReadOnly } = useWritingMode();
-  const [activeIdx, setActiveIdx] = useState(0);
   const { pending, error, setError, run } = useServerAction();
-
-  const gate = computeGate(bps);
-  const activeBp = bps[activeIdx] ?? bps[0];
   const isNarrative = mode === "narrative";
 
-  const onClick = () => {
+  const onContinue = () => {
     // Cleared before the confirm so declining the dialog also dismisses a
     // stale message; run() would never be reached on that path.
     setError(null);
@@ -76,94 +81,37 @@ export function ParagraphFormClient({
     run(() => completeStepAndAdvance(writingId, stepKey));
   };
 
-  const buttonLabel = isTerminal ? "Submit" : "Continue";
-  const pendingLabel = isTerminal ? "Submitting…" : "Saving…";
-
   return (
-    <div className="space-y-4">
-      {bps.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Body paragraphs"
-          className="flex gap-1 border-b border-gray-200 overflow-x-auto"
-        >
-          {bps.map((bp, i) => {
-            const active = i === activeIdx;
-            return (
-              <button
-                key={bp.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setActiveIdx(i)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${
-                  active
-                    ? "text-gray-900"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-                style={
-                  active
-                    ? { borderBottomColor: "var(--brand)" }
-                    : undefined
-                }
-              >
-                {narrativeBpLabel(
-                  bp.narrative_kind,
-                  bp.narrative_subject,
-                  bp.position,
-                  bps.length
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {activeBp ? (
+    <StepShell
+      writingId={writingId}
+      stepKey={stepKey}
+      items={bps}
+      itemKey={(bp) => bp.id}
+      tabLabel={(bp) =>
+        narrativeBpLabel(
+          bp.narrative_kind,
+          bp.narrative_subject,
+          bp.position,
+          bps.length
+        )
+      }
+      renderPane={(bp) =>
         isNarrative ? (
-          <NarrativeParagraphFormBpPane writingId={writingId} bp={activeBp} />
+          <NarrativeParagraphFormBpPane writingId={writingId} bp={bp} />
         ) : (
           <CdCmParagraphFormBpPane
             writingId={writingId}
-            bp={activeBp}
+            bp={bp}
             hasCounterargument={hasCounterargument}
           />
         )
-      ) : (
-        <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-          No body paragraphs yet.
-        </div>
-      )}
-
-      {!isReadOnly && (
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-          <div className="text-xs text-gray-500">
-            {gate.canContinue
-              ? isTerminal
-                ? "All body paragraphs ready to submit."
-                : "Each body paragraph has a polished paragraph."
-              : `Body paragraph ${gate.blockerPosition} needs at least one character of polished paragraph text.`}
-          </div>
-          <div className="flex items-center gap-3">
-            {error && (
-              <div className="text-sm text-red-700" role="alert">
-                {error}
-              </div>
-            )}
-            <SubmitStepButton writingId={writingId} stepKey={stepKey} isTerminal={isTerminal} />
-            <button
-              type="button"
-              onClick={onClick}
-              disabled={!gate.canContinue || pending}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "var(--brand)" }}
-            >
-              {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
-              {pending ? pendingLabel : buttonLabel}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      }
+      emptyMessage="No body paragraphs yet."
+      gate={computeGate(bps, isTerminal)}
+      onContinue={onContinue}
+      pending={pending}
+      error={error}
+      isTerminal={isTerminal}
+    />
   );
 }
