@@ -10,15 +10,6 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
-### `0047` was never applied — `district_logos_public_read` is still live
-Found 2026-08-16 by the new orphan check in `db:check`, immediately after the same class of miss put `0046` in production unapplied (see Closed). `0047`'s entire body is one `DROP POLICY district_logos_public_read ON storage.objects` — it creates nothing — so there was no declaration for the checker to miss and it reported clean for months.
-
-Currently harmless in practice: the `district-logos` bucket is **empty** (verified with the service role, 0 objects), so there is nothing to enumerate. It stops being harmless the moment a district uploads a logo, at which point any client with the anon key can `list()` the whole bucket rather than fetching one object by URL — which is exactly what `0047` was written to prevent.
-
-**Do not apply `0047` blind.** Its own header carries a warning: it must land with or after the route change that accompanies it, or logos break for every non-admin user. That route change (`app/api/districts/[districtId]/logo/route.ts` redirecting to `districts.logo_url` instead of `.download()`-ing through the RLS-respecting client) appears to be in the tree already — confirm before applying, then re-run `db:check` and watch the orphan line clear.
-- **Identified:** 2026-08-16, by the orphan check added the same day
-- **Priority:** medium — latent until the first logo upload, then it is a public bucket listing
-
 ### `db:check` cannot see privileges at all
 There is no `grants` category and no inventory key to build one from, so any migration whose body is only `GRANT`/`REVOKE` passes unnoticed whether or not it was ever applied. `0046` was precisely that migration, and on 2026-08-16 it had never been applied while `db:check` reported no drift — `anon` could call `__schema_inventory()` and read every policy's `USING` clause (see Closed). `db:check` now prints a standing `! privileges (GRANT/REVOKE) are NOT checked` note so the gap is at least visible in the output.
 
@@ -264,6 +255,14 @@ _(none currently)_
 ---
 
 ## Closed
+
+### `0047` had never been applied — `district-logos` was listable
+Closed 2026-08-16 by finally applying `0047`. Found the same day by the orphan check added to `db:check`, minutes after the same class of miss turned up `0046` unapplied in production. The two are worth reading together: both are migrations that only *remove* something, and each was invisible to the checker for a different structural reason — `0046` because there is no privileges category, `0047` because the existence check only ever ran in one direction. `0047`'s whole body is a single `DROP POLICY`, so there was no declaration to miss and it reported clean for months.
+
+Applied only after confirming the route change its header demands: `app/api/districts/[districtId]/logo/route.ts` now resolves `districts.logo_url` and redirects (307), never touching storage. The old `.download()` path — five extension probes through the RLS-respecting client — is gone, and it was the only thing depending on the dropped policy. A sweep for other RLS-respecting reads of the bucket found none; `DISTRICT_LOGO_NAMING.urlPattern` builds a `/storage/v1/object/public/…` URL, which bypasses RLS on a public bucket.
+
+**Verified end-to-end rather than by inventory.** The bucket was empty, and `list()` on an empty bucket returns `[]` for everyone regardless of policy — so the obvious probe could not tell "policy dropped" from "policy present". Seeding one object made it conclusive: anon and student both list 0 entries while the object exists, super admin lists 1 (the `FOR ALL` write policies include SELECT, so admins keep manage rights), and the public URL still serves 200. Object removed; bucket back to 0.
+- **Closed:** applied `0047` (2026-08-16)
 
 ### `__schema_inventory()` was callable by `anon` in production
 Closed 2026-08-16 by migration `0059`. Found by a code review of `f94895f` that flagged the missing role-named REVOKE as a fresh-rebuild risk; probing the live database showed it was not a risk but a current state.
