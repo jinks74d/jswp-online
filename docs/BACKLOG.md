@@ -29,7 +29,7 @@ Severity is metadata disclosure, not privilege escalation — the scope is *whic
 
 **The seed had no `assignment_sources` rows at all.** The first draft of that block passed every negative test over an empty table — "a teacher in another district cannot read them" is trivially true when there is nothing to read. The baseline-first rule below is what caught it; the tests now seed their own rows on both a released and an unreleased assignment.
 
-**Method note for whoever picks this up:** `__schema_inventory()` emits policy NAMES only, so the audit derived each table by matching the `<table>_<suffix>` convention against the table list. It cannot tell you a policy's *logic* is right, only that one with that name exists — see the `db:check` item below.
+**Method note for whoever picks this up:** `__schema_inventory()` emits policy NAMES only, so the audit derived each table by matching the `<table>_<suffix>` convention against the table list. It cannot tell you a policy's *logic* is right, only that one with that name exists. Partly addressed 2026-08-16 by `0057` — `__schema_inventory()` now emits `policy_details` with `cmd` / `qual` / `with_check` — but the comparison still covers only the 83 policies that call an `auth_user_*` helper; see the Open item on that.
 
 **Test-writing note:** seed rows through a helper that throws on error. The first draft of the artifact tests ignored the upsert result, `chunks.ratio` (NOT NULL) was missing, and the whole chain silently never existed — at which point "another student reads nothing" passed for entirely the wrong reason. A negative RLS test over absent rows proves nothing. Assert the owner CAN read before asserting anyone else cannot.
 - **Identified:** 2026-08-13, from the 0056 post-mortem
@@ -61,17 +61,16 @@ Also unverified: the actual paper output. The print dialog is native and can't b
 - **Identified:** 2026-08-12, with the print-source chunk
 - **Priority:** (1)+(2) product-driven; (3) trivial whenever wanted; (4) Phase 7
 
-### `db:check` compares policy NAMES only, so a wrong policy reports as present
-`__schema_inventory()` (migration `0028`) builds its `policies` array from `pg_policies.policyname` and nothing else. `npm run db:check` therefore verifies that a policy of the right name EXISTS and never looks at `qual` or `with_check`. A policy whose logic is wrong — or which simply doesn't match the migration text that supposedly created it — passes with a clean ✓.
+### `db:check` policy-logic comparison covers 83 of 94 policies
+Follow-on from the `db:check` item closed 2026-08-16. `scripts/db-check.ts` now diffs the set of `auth_user_*` helpers a policy invokes live against the set its migration text declares. That covers 83 of the 94 live policies. The other **11 call no helper at all** — they compare `auth.uid()` to a column directly — so for them the comparison has nothing to diff and silently agrees:
 
-This is not hypothetical. Found 2026-08-05 while reviewing `0050`: the committed `assignment_class_periods_write` constrains only `assignment_id`, which would let a teacher pair their assignment with any period in any school. The LIVE database refuses that write (42501, confirmed by probe, with `auth_user_can_write_assignment` returning true), so live carries a period-side check the migration text does not describe. `db:check` reported 94/94 policies throughout. `0051` reconciles the file to the observed behaviour, but the general problem is that **nothing in the repo can currently detect policy-definition drift** — and the migrations, not live, are what a fresh project or a DR rebuild is built from.
+`audit_log_read_self`, `class_student_enrollments_student_read_self`, `district_logos_public_read`, `signup_requests_read_own`, `student_writings_student_select`, `student_writings_student_update`, `teacher_feedback_student_resolve`, `teacher_feedback_teacher_delete`, `teacher_feedback_teacher_update`, `user_profiles_read_self`, `user_profiles_update_self`
 
-**The same blind spot covers triggers, and it is worse there — they are not emitted at all.** Confirmed 2026-08-12 while verifying `0054`: `__schema_inventory()` returns `enums, tables, buckets, columns, indexes, policies, functions, constraints` and no `triggers` key. So after `0054` the four `trg_touch_writing_*` **functions** were verifiable but the 14 `touch_writing` **triggers** that attach them were not, from any tooling in the repo. Trigger attachment is exactly the kind of thing that silently no-ops — a function nobody calls looks identical to a working one. Emit `tgname`, `tgrelid::regclass`, `tgtype` and the function name per trigger alongside the policy work below. Until then the only check is a SQL-editor query:
-`SELECT event_object_table, trigger_name FROM information_schema.triggers WHERE trigger_name = 'touch_writing' ORDER BY 1;`
+**`teacher_feedback_student_resolve` is on that list**, which is the sharp end of it: that is the exact policy that reached production both broken and insecure (see the RLS coverage sweep item above). The helper-set comparison as built would **not** have caught `0056`. The 11 are not a random tail — "compares `auth.uid()` to a column" describes most of the student-facing self-access policies, which are the ones where a wrong column is both easiest to write and worst to ship.
 
-Fix: extend `__schema_inventory()` to emit `policyname`, `cmd`, `qual`, `with_check` per policy, and have `scripts/db-check.ts` diff the normalized expression text against what the migration declares. Exact-string matching will be noisy (Postgres reformats expressions), so likely normalize whitespace/casing and compare the set of function calls and column references rather than raw text. Worth also emitting `prosrc` for the `auth_user_*` helpers, which have the same blind spot.
-- **Identified:** 2026-08-05, during the 0050 security review
-- **Priority:** high — it is the check we rely on to know whether a migration landed, and it silently under-reports
+Fix: extend the comparison to the set of column references and the presence of `auth.uid()`, not just function calls. Noisier than helpers — Postgres fully qualifies and re-quotes column references on the way in — so it likely needs a normalization pass before it can be trusted, which is why it was not bundled into the first cut. Worth also emitting `prosrc` for the `auth_user_*` helpers themselves, which have the same blind spot one level down: a policy can invoke exactly the right helper while the helper's own body has drifted.
+- **Identified:** 2026-08-16, on verifying the first cut of the comparison
+- **Priority:** medium — 83/94 is a real check where there was none, but the uncovered 11 are the higher-risk shape
 
 ### Drop the legacy `assignments.class_period_id` column
 Migration `0050` moved assignment→class-period to a junction table (`assignment_class_periods`) so one assignment can go to several classes with a per-class due date. Following the `0040` precedent, the legacy single column stays in place and is still written (set to the FIRST selected period) so nothing breaks mid-transition. Every RLS policy and every read path now goes through the junction.
@@ -227,6 +226,21 @@ _(none currently)_
 ---
 
 ## Closed
+
+### `db:check` compares policy NAMES only, and emits no triggers at all
+Both blind spots closed 2026-08-16 by migration `0057` + a rewrite of `scripts/db-check.ts`.
+
+`__schema_inventory()` (migration `0028`) built its `policies` array from `pg_policies.policyname` and nothing else, and returned no `triggers` key whatsoever. So a policy whose logic was wrong passed with a clean ✓ — found 2026-08-05 reviewing `0050`, where the committed `assignment_class_periods_write` constrains only `assignment_id` while live also enforced a period-side check, with `db:check` reporting 94/94 throughout (`0051` reconciled the file). And after `0054` the four `trg_touch_writing_*` **functions** were verifiable while the 14 `touch_writing` **triggers** that attach them were not, from any tooling in the repo — a trigger that was never attached looks identical to a working one.
+
+`0057` extends `__schema_inventory()` with `triggers`, `trigger_details` and `policy_details` (`cmd` / `qual` / `with_check`). Purely additive and still `SECURITY DEFINER` with EXECUTE locked to `service_role`, so an older checker keeps working against a database carrying it. `db-check.ts` now replays migrations **in statement order**, applying drops as it goes, and reports `triggers: 20/20` plus a policy-logic warning block.
+
+Three things that turned up in the build and are worth remembering:
+- **Ordered replay was load-bearing, not tidiness.** Collecting all creates and all drops separately and applying drops last deletes exactly the policies that `DROP POLICY IF EXISTS x; CREATE POLICY x …` redefines — this repo's standard idiom. That silently dropped the checked count 94 → 80 while still reporting ✓.
+- **Nine long-standing "missing" objects were deliberate retractions**, not drift: three `jswp_chunk_ratio` values replaced by `0038`, five `assignments.source_*` columns removed by `0041`, and a `pg_temp` helper scoped to one session. `db:check` had been exiting 1 on every run, which is how a checker stops being read.
+- **The dynamic triggers are enumerable after all.** `0054` attaches `touch_writing` by looping `TEXT[] := ARRAY[…]` literals, so the parser resolves all 14 table names exactly rather than falling back to a `*.touch_writing` wildcard — a wildcard passes when 1 of 14 attachments exists, which is the same silent no-op the item was about. `0001`'s `set_updated_at` loop iterates an `information_schema` query and genuinely cannot be recovered from the file; it stays a wildcard.
+
+Residual gap tracked separately as an Open item: the helper-set comparison covers 83 of 94 policies.
+- **Closed:** migration `0057` + `db-check.ts` rewrite (2026-08-16)
 
 ### Cross-district user listing for super-admin
 Shipped 2026-07-02 at `/admin/users` (super-admin only). Read-only cross-tenant listing — name/email search + role and district filters over every user in every district, with User / Role / District / School / Created columns and Total / Districts / Admins / Teachers stat cards. No provisioning here (that stays in `/admin/districts` + `/admin/signups`). New `lib/queries/all-users.ts` (`listAllUsers`, mirrors `district-users.ts` with a district embed); page re-gates to `super_admin`; RLS `user_profiles_super_admin_all` already permitted the cross-tenant read (no migration). Nav link added to `admin-nav.tsx` (super-admin only). Live-DB join verified (18 demo users resolve district/school names); `__tests__/components/all-users-view.test.tsx` (5 tests: default rows + admin/district counts, search, role filter, district filter, districtless "No district"). type-check + build + tests green.
