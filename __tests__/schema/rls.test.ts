@@ -2394,97 +2394,121 @@ describe("student-work artifacts, part 2 — the remaining eight tables", () => 
    * a single parent — which makes it the part of item 4 that is genuinely new
    * rather than a rerun of the same helper at a new depth.
    */
-  it("DOCUMENTS: a student CAN point a shaping output at another student's chunk", async () => {
-    const { data, error } = await baileyClient
-      .from("shaping_chunk_outputs")
-      .insert({
-        shaping_sheet_id: SHAPING_B, // Bailey's own — passes the gated check
-        chunk_id: CHUNK2, // Alex's — ungated by the policy
-        cd_sentences: ["grafted"],
-      })
-      .select("id");
+  /*
+   * Both of these were DOCUMENTS tests until migration 0058 added the second
+   * parent to each WITH CHECK. Asserted through the service role rather than
+   * on `error` alone: the teardown cascades from both parents, so a version of
+   * this test that trusted a null error would clean up the very row it was
+   * meant to be reasoning about, and pass either way.
+   */
+  it("a student cannot point a shaping output at another student's chunk", async () => {
+    const { error } = await baileyClient.from("shaping_chunk_outputs").insert({
+      shaping_sheet_id: SHAPING_B, // Bailey's own — passes the gated check
+      chunk_id: CHUNK2, // Alex's — gated as of 0058
+      cd_sentences: ["grafted"],
+    });
+    expect(error).not.toBeNull();
 
-    // Asserted through the service role, not through `error`. A null error is
-    // weaker evidence than the row itself: the teardown below cascades from
-    // both parents, so an earlier version of this test cleaned up the very
-    // row it was meant to be proving existed.
     const svc = createServiceRoleClient();
     const { data: landed } = await svc
       .from("shaping_chunk_outputs")
-      .select("id, shaping_sheet_id")
+      .select("id")
       .eq("chunk_id", CHUNK2)
       .eq("shaping_sheet_id", SHAPING_B);
-
-    try {
-      expect(error).toBeNull();
-      expect(landed, "the forged row is accepted — see BACKLOG").toHaveLength(1);
-    } finally {
-      if (data?.[0]?.id) {
-        await svc.from("shaping_chunk_outputs").delete().eq("id", data[0].id);
-      }
-    }
+    expect(landed ?? [], "no forged row may survive").toHaveLength(0);
   });
 
-  it("DOCUMENTS: a student CAN point a commentary item at another student's CD", async () => {
+  it("a student cannot point a commentary item at another student's CD", async () => {
+    const { error } = await baileyClient.from("commentary_items").insert({
+      chunk_id: CHUNK_B, // Bailey's own — passes the gated check
+      parent_cd_id: CD2, // Alex's — gated as of 0058
+      position: 1,
+      text: "grafted",
+      kind: "sentence",
+    });
+    expect(error).not.toBeNull();
+
+    const svc = createServiceRoleClient();
+    const { data: landed } = await svc
+      .from("commentary_items")
+      .select("id")
+      .eq("parent_cd_id", CD2)
+      .eq("chunk_id", CHUNK_B);
+    expect(landed ?? [], "no forged row may survive").toHaveLength(0);
+  });
+
+  it("a student can still attach commentary to a CD in their OWN chunk", async () => {
+    // The other half of 0058: the new predicate must not break the ordinary
+    // case. parent_cd_id is nullable and legitimately used, so a WITH CHECK
+    // that over-reached here would break every commentary write in the app.
+    const svc = createServiceRoleClient();
+    const CD_B = "11111111-0000-0000-0000-00000000b104";
+    await svc.from("concrete_details").upsert({
+      id: CD_B,
+      chunk_id: CHUNK_B,
+      position: 1,
+      text: "Bailey's CD",
+    });
+
     const { data, error } = await baileyClient
       .from("commentary_items")
       .insert({
-        chunk_id: CHUNK_B, // Bailey's own — passes the gated check
-        parent_cd_id: CD2, // Alex's — ungated by the policy
-        position: 1,
-        text: "grafted",
+        chunk_id: CHUNK_B,
+        parent_cd_id: CD_B,
+        position: 2,
+        text: "Bailey's own commentary",
         kind: "sentence",
       })
       .select("id");
 
-    const svc = createServiceRoleClient();
-    const { data: landed } = await svc
-      .from("commentary_items")
-      .select("id, chunk_id")
-      .eq("parent_cd_id", CD2)
-      .eq("chunk_id", CHUNK_B);
-
     try {
       expect(error).toBeNull();
-      expect(landed, "the forged row is accepted — see BACKLOG").toHaveLength(1);
+      expect(data).toHaveLength(1);
     } finally {
       if (data?.[0]?.id) {
         await svc.from("commentary_items").delete().eq("id", data[0].id);
       }
+      await svc.from("concrete_details").delete().eq("id", CD_B);
     }
   });
 
-  it("but the forged reference discloses nothing — the embed is still gated", async () => {
-    // The severity question. If PostgREST would resolve an embed across the
-    // forged FK, this would be a cross-student READ of Alex's work, not just
-    // referential pollution. It does not: RLS applies to the embedded table
-    // independently of the joining row.
-    const { data: inserted } = await baileyClient
-      .from("commentary_items")
-      .insert({
-        chunk_id: CHUNK_B,
-        parent_cd_id: CD2,
-        position: 2,
-        text: "graft probe",
-        kind: "sentence",
-      })
-      .select("id");
-
+  it("a pre-0058 forged reference still discloses nothing", async () => {
+    /*
+     * 0058 is WITH CHECK only, so it governs new and updated rows and
+     * deliberately leaves any row that already carries a cross-writing
+     * reference in place — making USING stricter would have left such a row
+     * undeletable by its owner. This pins the residual risk of that choice.
+     *
+     * Seeded through the SERVICE ROLE, which bypasses RLS, so it stands in for
+     * both a row written before 0058 and one written by a privileged path.
+     * If PostgREST resolved an embed across the forged FK, that would be a
+     * cross-student READ of Alex's work rather than mere referential
+     * pollution. It does not: RLS applies to the embedded table independently
+     * of the joining row.
+     */
     const svc = createServiceRoleClient();
+    const FORGED = "11111111-0000-0000-0000-00000000b105";
+    await svc.from("commentary_items").upsert({
+      id: FORGED,
+      chunk_id: CHUNK_B, // Bailey's — so Bailey may read the row itself
+      parent_cd_id: CD2, // Alex's — the forged pointer
+      position: 3,
+      text: "legacy graft",
+      kind: "sentence",
+    });
+
     try {
       const { data } = await baileyClient
         .from("commentary_items")
         .select("id, parent_cd_id, concrete_details(id, text)")
-        .eq("id", inserted![0]!.id)
+        .eq("id", FORGED)
         .single();
 
       // Bailey holds the pointer but cannot dereference it.
       expect(data!.parent_cd_id).toBe(CD2);
       expect(data!.concrete_details).toBeNull();
     } finally {
-      if (inserted?.[0]?.id) {
-        await svc.from("commentary_items").delete().eq("id", inserted[0].id);
-      }
+      await svc.from("commentary_items").delete().eq("id", FORGED);
     }
   });
 });
@@ -2623,28 +2647,19 @@ describe("class_teacher_assignments — who teaches what", () => {
     expect(data ?? []).toHaveLength(0);
   });
 
-  it("DOCUMENTS: a district_admin reads pairings outside their own district", async () => {
-    // Not an assertion that this is desirable — it pins current behaviour so
-    // the decision is explicit rather than accidental.
-    //
-    // The admin branch of class_teacher_assignments_read has no scope
-    // predicate, so any district_admin or school_admin reads every row in the
-    // table regardless of tenant. Scope is: which teacher teaches which class
-    // period, across all districts. It is metadata disclosure, NOT access to
-    // student work — auth_user_can_read_writing's teacher branch goes through
-    // auth_user_teaches_class_period, which tests teacher_id = auth.uid() and
-    // is unaffected by who can SELECT this table.
-    //
-    // Compare class_student_enrollments_admin_manage, which does gate on
-    // auth_user_is_admin_for_school. Tightening this one is a policy change
-    // and needs sign-off (CLAUDE.md section 15.4) — logged in docs/BACKLOG.md.
+  it("a district_admin cannot read pairings outside their own district", async () => {
+    // Was a DOCUMENTS test until migration 0058. The admin branch of
+    // class_teacher_assignments_read carried no scope predicate at all, so any
+    // district_admin or school_admin read every row in the table regardless of
+    // tenant. 0058 gates it on auth_user_is_admin_for_school, matching this
+    // table's own admin_manage policy and class_student_enrollments.
     const { data, error } = await admin2Client
       .from("class_teacher_assignments")
       .select("teacher_id")
       .eq("teacher_id", IDS.teacher);
 
     expect(error).toBeNull();
-    expect(data?.length ?? 0).toBeGreaterThan(0);
+    expect(data ?? []).toHaveLength(0);
   });
 
   it("a cross-district admin still cannot WRITE a pairing here", async () => {
