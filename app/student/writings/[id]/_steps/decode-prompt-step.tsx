@@ -194,13 +194,23 @@ export function DecodePromptStep({
         {/* background */}
         <Field
           label="Background"
-          help="The beginning sentence or sentences are designed to introduce the topic of the writing assignment and to START MY THINKING."
-        ></Field>
+          help="Copy and paste the Background from the prompt."
+        >
+          <textarea
+            rows={2}
+            value={form.background_text}
+            onChange={update("background_text")}
+            onBlur={handleBlur}
+            disabled={isReadOnly}
+            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            placeholder="Copy and paste the background sentence(s) here."
+          />
+        </Field>
 
         {/* trigger */}
         <Field
           label="Trigger Sentence"
-          help="Typically, the “Trigger Sentence” focuses the writer’s attention on a source  – Look for an imperative sentence (command, request, advice), such as “Read the passage carefully”; “Think about what you learned in class about . . .”; View the documentary . . .”)"
+          help="Copy and paste the Trigger from the prompt."
         >
           <textarea
             rows={2}
@@ -212,13 +222,11 @@ export function DecodePromptStep({
             placeholder="Copy and paste the trigger sentence here."
           />
         </Field>
-      </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-5">
-        {/* task */}
+        {/* task — the third of the three parts this card names */}
         <Field
-          label="What is the prompt asking you to DO?"
-          help="What must I DO? Look for verb (e.g., write, explain, identify, discuss, investigate, describe, explore)"
+          label="Task"
+          help="Copy and paste the Task from the prompt."
           required
         >
           <textarea
@@ -231,7 +239,9 @@ export function DecodePromptStep({
             placeholder="Re-state the task verbatim."
           />
         </Field>
+      </div>
 
+      <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-5">
         {/* form */}
         <Field label="What FORMAT does the prompt expect?">
           <select
@@ -251,7 +261,7 @@ export function DecodePromptStep({
         </Field>
 
         {/* ratio */}
-        <Field label="What CD-to-CM ratio fits this prompt?">
+        <Field label="What JSWP® RATIO is best for this assignment?">
           <select
             value={form.ratio_identified}
             onChange={update("ratio_identified")}
@@ -270,7 +280,7 @@ export function DecodePromptStep({
 
         {/* focus terms */}
         <Field
-          label="WHO or WHAT am I writing about?"
+          label="TOPIC SENTENCE (paragraph) or THESIS STATEMENT (essay): Who or What am I writing about?"
           help="What is the topic of this paragraph or topic for this essay? Look for nouns or key concepts."
         >
           <input
@@ -288,7 +298,7 @@ export function DecodePromptStep({
         <Field
           label="Which VERB or VERBS in the prompt guide my thinking and imply what CD I am to find and/or CM I am to reveal to my reader?"
           help={
-            "Verbs that suggest CD only: identify, list, define, categorize.\nVerbs that suggest CM but also require evidence (CDs)"
+            "Verbs that suggest CD only: identify, list, define, categorize.\nVerbs that suggest both CD and CM: explain, discuss, interpret, investigate, analyze"
           }
         >
           <input
