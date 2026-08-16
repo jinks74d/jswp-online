@@ -15,6 +15,12 @@ const eslintConfig = [
     // excluded. Build output and vendored artifacts must not be linted.
     ignores: [
       ".next/**",
+      // The E2E suite builds here (distDir in next.config.js) to stay clear of
+      // .next. Same generated output, so it needs the same exclusion —
+      // without it `npm run lint` reports ~65 errors from webpack chunks.
+      ".next-e2e/**",
+      "test-results/**",
+      "playwright-report/**",
       "node_modules/**",
       "coverage/**",
       "graphify-out/**",

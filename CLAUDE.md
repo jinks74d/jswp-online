@@ -416,7 +416,43 @@ All defined in `0001` and `0002`. Use these in policies; do not repeat the query
 
 1. **Unit (Vitest)** — pure logic in `lib/`. The step engine helpers (`getSteps`, `getNextStep`, `computeProgress`) are easy targets. Aim for 90%+ coverage on `lib/`.
 2. **Component (Vitest + Testing Library)** — step components in isolation with mocked Supabase clients. Aim for the happy path of every step component.
-3. **Integration (Playwright)** — happy path E2E per mode plus role-based access smoke tests.
+3. **Integration (Playwright)** — `e2e/`. A smoke suite, not a pedagogy suite:
+   one test per visible step per mode (renders, no error overlay, no uncaught
+   page error) plus role-gate redirects. 48 tests, ~45s.
+
+   It exists because the other two layers structurally cannot see this class of
+   failure. `components/student/` is ~4% covered and the step router resolves
+   components dynamically from `lib/jswp-modes.ts`, so deleting a step
+   component or throwing in a Server Component type-checks cleanly, passes
+   every unit test, and shows a student a blank screen.
+
+   Step lists are **derived** from `lib/jswp-modes.ts`, never hardcoded — add
+   or reorder a step and the suite walks the new list. Assertions stay shallow
+   on purpose; anything deeper duplicates the unit tests and turns every
+   pedagogy tweak into a broken E2E.
+
+#### Running the E2E suite
+
+```bash
+npm run seed:writings   # once — ensures one writing per mode exists
+npm run e2e:build       # after any code change
+npm run e2e:serve       # leave running in another terminal
+npm run test:e2e
+```
+
+The server is **deliberately not managed by Playwright**. Its `webServer`
+option works, but on Windows it cannot kill the Next.js process tree it
+spawned: every test passes, no summary prints, and the runner hangs forever
+(`gracefulShutdown` does not help). Started separately, Playwright has no child
+to reap and exits cleanly. `e2e/global-setup.ts` fails fast with these commands
+if nothing is listening.
+
+It runs a **production build on port 3100, into `.next-e2e`** (see `distDir` in
+`next.config.js`). Two reasons: `next dev` compiles each route on first request,
+which made a cold run take 20+ minutes rather than 45 seconds; and building
+into a separate directory means running E2E can never corrupt the `.next` of a
+dev server you have open — that corruption presents as a runtime failure that
+reads exactly like a code bug.
 
 ### RLS tests are non-negotiable
 

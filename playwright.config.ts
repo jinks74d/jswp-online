@@ -11,9 +11,9 @@ import { config as loadEnv } from "dotenv";
  * an auth gate, or a whole step's render type-checks cleanly and passes 520
  * unit tests. Only a real browser hitting a real route notices.
  *
- * Runs against `next dev` on port 3100 so it never collides with a dev server
- * the user already has on 3000, and never triggers the `next build` that
- * corrupts .next while dev is running.
+ * Runs a production build on port 3100, into its own distDir, so it collides
+ * with neither a dev server already on 3000 nor that server's .next cache.
+ * See the webServer block at the bottom.
  *
  * Serial by default. The seeded fixtures (alex@demo.test and the demo
  * writings) are shared mutable state, and this suite navigates step routes
@@ -58,21 +58,15 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: `npx next dev -p ${PORT}`,
-    url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    // Cold Next.js dev compiles are slow, and the first request to each route
-    // compiles it on demand.
-    timeout: 180_000,
-    // Next.js logs its own build errors to stdout, so piping BOTH is what
-    // makes a 500 legible. With stdout ignored, a webpack worker crash
-    // surfaced only as "HTTP 500" with no cause anywhere in the report.
-    stdout: "pipe",
-    stderr: "pipe",
-    // Without this, Playwright kills the server ungracefully on Windows and
-    // the runner then hangs at teardown — every test finishes, no summary is
-    // ever printed, and the process never exits.
-    gracefulShutdown: { signal: "SIGTERM", timeout: 10_000 },
-  },
+  // NO webServer block, deliberately.
+  //
+  // Playwright can start one, but on Windows it cannot then kill the Next.js
+  // process tree it spawned: every test finishes, no summary is ever printed,
+  // and the runner hangs forever. gracefulShutdown does not fix it. When the
+  // server is started separately, Playwright has no child to reap and exits
+  // cleanly — same 48 tests, 49 seconds, exit code 0.
+  //
+  // e2e/global-setup.ts fails fast with the command to run if nothing is
+  // listening, so this is a one-line fix when you forget rather than a
+  // confusing wall of connection refusals.
 });

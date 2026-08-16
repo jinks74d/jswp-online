@@ -49,6 +49,15 @@ function buildResourceCsp() {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Build output directory, overridable so a build can be run WITHOUT
+  // clobbering a running dev server's cache.
+  //
+  // `next build` and `next dev` share .next, and building while dev is running
+  // corrupts it — the app then fails at runtime in ways that read as a code
+  // bug and send you debugging source that is fine. The E2E suite has to build
+  // (see playwright.config.ts), so it sets NEXT_DIST_DIR=.next-e2e and stays
+  // out of the way of whatever you have open on :3000.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Get Supabase domain from environment variable
   env: {
     NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN: process.env.NEXT_PUBLIC_SUPABASE_STORAGE_DOMAIN || '',
