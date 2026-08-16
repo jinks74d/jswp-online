@@ -2121,6 +2121,374 @@ describe("student-work artifacts — cross-student isolation", () => {
   });
 });
 
+/* ─── student-work artifacts, part 2 ─────────────────────────────────────
+ * The eight tables the RLS coverage sweep left uncovered (BACKLOG item 4).
+ *
+ * All eight reach auth_user_can_{read,write}_writing, the same two helpers
+ * the block above exercises — which is exactly why they were deferred, and
+ * exactly why they still need probing. "Same mechanism" is an assumption,
+ * and the sweep exists because an untested assumption was wrong. The failure
+ * this catches is a join that walks to the WRONG writing, which is invisible
+ * from any depth other than its own.
+ *
+ * Three depth classes, since that is the axis the join can get wrong:
+ *   direct            essay_parts, text_annotations, step_progress
+ *   via body_paragraph t_charts, shaping_sheets, paragraph_forms
+ *   via chunk          commentary_items
+ *   via shaping_sheet  shaping_chunk_outputs   ← its own path, see below
+ */
+describe("student-work artifacts, part 2 — the remaining eight tables", () => {
+  // Alex's chain. A second body paragraph, because t_charts, shaping_sheets
+  // and paragraph_forms are all UNIQUE on body_paragraph_id and the block
+  // above already owns paragraph 1.
+  const BP2 = "11111111-0000-0000-0000-00000000b001";
+  const CHUNK2 = "11111111-0000-0000-0000-00000000b002";
+  const CD2 = "11111111-0000-0000-0000-00000000b003";
+  const TCHART = "11111111-0000-0000-0000-00000000b004";
+  const SHAPING = "11111111-0000-0000-0000-00000000b005";
+  const SCO = "11111111-0000-0000-0000-00000000b006";
+  const PFORM = "11111111-0000-0000-0000-00000000b007";
+  const ESSAY = "11111111-0000-0000-0000-00000000b008";
+  const CM = "11111111-0000-0000-0000-00000000b009";
+  const ANNOT = "11111111-0000-0000-0000-00000000b00a";
+  const STEP = "11111111-0000-0000-0000-00000000b00b";
+
+  // Bailey's own chain, so the graft probes below have a legitimate row to
+  // hang the forged reference off. Without it those tests would fail on the
+  // parent check and tell us nothing about the child.
+  const BP_B = "11111111-0000-0000-0000-00000000b101";
+  const CHUNK_B = "11111111-0000-0000-0000-00000000b102";
+  const SHAPING_B = "11111111-0000-0000-0000-00000000b103";
+
+  beforeAll(async () => {
+    const svc = createServiceRoleClient();
+
+    // Loud on failure, for the reason recorded in the block above: a negative
+    // RLS test over rows that silently never existed proves nothing.
+    const seed = async (
+      table: string,
+      row: Record<string, unknown>
+    ): Promise<void> => {
+      const { error } = await svc.from(table).upsert(row);
+      if (error) {
+        throw new Error(`seed ${table} failed: ${error.message}`);
+      }
+    };
+
+    await seed("body_paragraphs", {
+      id: BP2,
+      student_writing_id: TEST.alexWriting,
+      position: 2,
+    });
+    await seed("chunks", {
+      id: CHUNK2,
+      body_paragraph_id: BP2,
+      position: 1,
+      ratio: "nonlit_expository_two_plus_to_one",
+    });
+    await seed("concrete_details", {
+      id: CD2,
+      chunk_id: CHUNK2,
+      position: 1,
+      text: "Alex's second CD",
+    });
+    await seed("t_charts", {
+      id: TCHART,
+      body_paragraph_id: BP2,
+      working_topic_sentence: "Alex's working TS",
+    });
+    await seed("shaping_sheets", {
+      id: SHAPING,
+      body_paragraph_id: BP2,
+      final_topic_sentence: "Alex's final TS",
+    });
+    await seed("shaping_chunk_outputs", {
+      id: SCO,
+      shaping_sheet_id: SHAPING,
+      chunk_id: CHUNK2,
+      cd_sentences: ["Alex's CD sentence"],
+    });
+    await seed("paragraph_forms", {
+      id: PFORM,
+      body_paragraph_id: BP2,
+      final_text: "Alex's assembled paragraph.",
+    });
+    await seed("essay_parts", {
+      id: ESSAY,
+      student_writing_id: TEST.alexWriting,
+      thesis_text: "Alex's thesis",
+    });
+    await seed("commentary_items", {
+      id: CM,
+      chunk_id: CHUNK2,
+      position: 1,
+      text: "Alex's commentary",
+      kind: "sentence",
+    });
+    await seed("text_annotations", {
+      id: ANNOT,
+      student_writing_id: TEST.alexWriting,
+      range_start: 0,
+      range_end: 10,
+      selected_text: "Alex's mark",
+      kind: "cd",
+    });
+    await seed("step_progress", {
+      id: STEP,
+      student_writing_id: TEST.alexWriting,
+      step_key: "expository.gather_cds",
+    });
+
+    // Bailey's side.
+    await seed("body_paragraphs", {
+      id: BP_B,
+      student_writing_id: TEST.baileyWriting,
+      position: 1,
+    });
+    await seed("chunks", {
+      id: CHUNK_B,
+      body_paragraph_id: BP_B,
+      position: 1,
+      ratio: "nonlit_expository_two_plus_to_one",
+    });
+    await seed("shaping_sheets", {
+      id: SHAPING_B,
+      body_paragraph_id: BP_B,
+      final_topic_sentence: "Bailey's final TS",
+    });
+  });
+
+  afterAll(async () => {
+    const svc = createServiceRoleClient();
+    // Children first. FKs cascade, but an explicit order keeps a partial
+    // failure from leaving orphans that break the next run's seed.
+    await svc.from("step_progress").delete().eq("id", STEP);
+    await svc.from("text_annotations").delete().eq("id", ANNOT);
+    await svc.from("commentary_items").delete().eq("id", CM);
+    await svc.from("essay_parts").delete().eq("id", ESSAY);
+    await svc.from("paragraph_forms").delete().eq("id", PFORM);
+    await svc.from("shaping_chunk_outputs").delete().eq("id", SCO);
+    await svc.from("shaping_sheets").delete().in("id", [SHAPING, SHAPING_B]);
+    await svc.from("t_charts").delete().eq("id", TCHART);
+    await svc.from("concrete_details").delete().eq("id", CD2);
+    await svc.from("chunks").delete().in("id", [CHUNK2, CHUNK_B]);
+    await svc.from("body_paragraphs").delete().in("id", [BP2, BP_B]);
+  });
+
+  /** Every new table, with the row that should be visible to its owner. */
+  const ALL = [
+    ["t_charts", TCHART],
+    ["shaping_sheets", SHAPING],
+    ["shaping_chunk_outputs", SCO],
+    ["paragraph_forms", PFORM],
+    ["essay_parts", ESSAY],
+    ["commentary_items", CM],
+    ["text_annotations", ANNOT],
+    ["step_progress", STEP],
+  ] as const;
+
+  it("the owner can read all eight (baseline: the rows exist)", async () => {
+    for (const [table, id] of ALL) {
+      const { data } = await alexClient.from(table).select("id").eq("id", id);
+      expect(data, `alex should read ${table}`).toHaveLength(1);
+    }
+  });
+
+  it("another student reads none of them, at any depth", async () => {
+    for (const [table, id] of ALL) {
+      const { data } = await baileyClient.from(table).select("id").eq("id", id);
+      expect(data ?? [], `bailey must not read ${table}`).toHaveLength(0);
+    }
+  });
+
+  it("the supervising teacher can read all eight", async () => {
+    for (const [table, id] of ALL) {
+      const { data } = await teacherClient.from(table).select("id").eq("id", id);
+      expect(data, `teacher should read ${table}`).toHaveLength(1);
+    }
+  });
+
+  it("a teacher in another district reads none of them", async () => {
+    for (const [table, id] of ALL) {
+      const { data } = await teacher2Client.from(table).select("id").eq("id", id);
+      expect(data ?? [], `teacher2 must not read ${table}`).toHaveLength(0);
+    }
+  });
+
+  it("anon reads none of them", async () => {
+    const anon = createAnonClient();
+    for (const [table, id] of ALL) {
+      const { data } = await anon.from(table).select("id").eq("id", id);
+      expect(data ?? [], `anon must not read ${table}`).toHaveLength(0);
+    }
+  });
+
+  it("another student cannot edit a via-body-paragraph artifact", async () => {
+    await baileyClient
+      .from("t_charts")
+      .update({ working_topic_sentence: "tampered" })
+      .eq("id", TCHART);
+
+    const svc = createServiceRoleClient();
+    const { data } = await svc
+      .from("t_charts")
+      .select("working_topic_sentence")
+      .eq("id", TCHART)
+      .single();
+    expect(data!.working_topic_sentence).toBe("Alex's working TS");
+  });
+
+  it("another student cannot edit a via-chunk artifact", async () => {
+    await baileyClient
+      .from("commentary_items")
+      .update({ text: "tampered" })
+      .eq("id", CM);
+
+    const svc = createServiceRoleClient();
+    const { data } = await svc
+      .from("commentary_items")
+      .select("text")
+      .eq("id", CM)
+      .single();
+    expect(data!.text).toBe("Alex's commentary");
+  });
+
+  it("another student cannot delete a direct artifact", async () => {
+    await baileyClient.from("step_progress").delete().eq("id", STEP);
+
+    const svc = createServiceRoleClient();
+    const { data } = await svc.from("step_progress").select("id").eq("id", STEP);
+    expect(data).toHaveLength(1);
+  });
+
+  it("another student cannot annotate someone else's writing", async () => {
+    // WITH CHECK on a direct table — the half a read test never reaches.
+    const { error } = await baileyClient.from("text_annotations").insert({
+      student_writing_id: TEST.alexWriting,
+      range_start: 0,
+      range_end: 4,
+      selected_text: "graft",
+      kind: "cd",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  it("another student cannot attach a shaping sheet to someone else's paragraph", async () => {
+    const { error } = await baileyClient.from("shaping_sheets").insert({
+      body_paragraph_id: BP2,
+      final_topic_sentence: "graft",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  /*
+   * The two tables below carry a SECOND foreign key that their policy does
+   * not check. Both policies gate on one parent only:
+   *
+   *   shaping_chunk_outputs → shaping_sheet_id  (chunk_id ungated)
+   *   commentary_items      → chunk_id          (parent_cd_id ungated)
+   *
+   * So the question is whether a student can hang a row off their OWN gated
+   * parent while pointing the ungated column at another student's row. That
+   * is not reachable from the tables already covered — every one of those has
+   * a single parent — which makes it the part of item 4 that is genuinely new
+   * rather than a rerun of the same helper at a new depth.
+   */
+  it("DOCUMENTS: a student CAN point a shaping output at another student's chunk", async () => {
+    const { data, error } = await baileyClient
+      .from("shaping_chunk_outputs")
+      .insert({
+        shaping_sheet_id: SHAPING_B, // Bailey's own — passes the gated check
+        chunk_id: CHUNK2, // Alex's — ungated by the policy
+        cd_sentences: ["grafted"],
+      })
+      .select("id");
+
+    // Asserted through the service role, not through `error`. A null error is
+    // weaker evidence than the row itself: the teardown below cascades from
+    // both parents, so an earlier version of this test cleaned up the very
+    // row it was meant to be proving existed.
+    const svc = createServiceRoleClient();
+    const { data: landed } = await svc
+      .from("shaping_chunk_outputs")
+      .select("id, shaping_sheet_id")
+      .eq("chunk_id", CHUNK2)
+      .eq("shaping_sheet_id", SHAPING_B);
+
+    try {
+      expect(error).toBeNull();
+      expect(landed, "the forged row is accepted — see BACKLOG").toHaveLength(1);
+    } finally {
+      if (data?.[0]?.id) {
+        await svc.from("shaping_chunk_outputs").delete().eq("id", data[0].id);
+      }
+    }
+  });
+
+  it("DOCUMENTS: a student CAN point a commentary item at another student's CD", async () => {
+    const { data, error } = await baileyClient
+      .from("commentary_items")
+      .insert({
+        chunk_id: CHUNK_B, // Bailey's own — passes the gated check
+        parent_cd_id: CD2, // Alex's — ungated by the policy
+        position: 1,
+        text: "grafted",
+        kind: "sentence",
+      })
+      .select("id");
+
+    const svc = createServiceRoleClient();
+    const { data: landed } = await svc
+      .from("commentary_items")
+      .select("id, chunk_id")
+      .eq("parent_cd_id", CD2)
+      .eq("chunk_id", CHUNK_B);
+
+    try {
+      expect(error).toBeNull();
+      expect(landed, "the forged row is accepted — see BACKLOG").toHaveLength(1);
+    } finally {
+      if (data?.[0]?.id) {
+        await svc.from("commentary_items").delete().eq("id", data[0].id);
+      }
+    }
+  });
+
+  it("but the forged reference discloses nothing — the embed is still gated", async () => {
+    // The severity question. If PostgREST would resolve an embed across the
+    // forged FK, this would be a cross-student READ of Alex's work, not just
+    // referential pollution. It does not: RLS applies to the embedded table
+    // independently of the joining row.
+    const { data: inserted } = await baileyClient
+      .from("commentary_items")
+      .insert({
+        chunk_id: CHUNK_B,
+        parent_cd_id: CD2,
+        position: 2,
+        text: "graft probe",
+        kind: "sentence",
+      })
+      .select("id");
+
+    const svc = createServiceRoleClient();
+    try {
+      const { data } = await baileyClient
+        .from("commentary_items")
+        .select("id, parent_cd_id, concrete_details(id, text)")
+        .eq("id", inserted![0]!.id)
+        .single();
+
+      // Bailey holds the pointer but cannot dereference it.
+      expect(data!.parent_cd_id).toBe(CD2);
+      expect(data!.concrete_details).toBeNull();
+    } finally {
+      if (inserted?.[0]?.id) {
+        await svc.from("commentary_items").delete().eq("id", inserted[0].id);
+      }
+    }
+  });
+});
+
 /* ─── audit_log ──────────────────────────────────────────────────────────
  * Append-only privileged-action record; the service role is its only writer.
  */

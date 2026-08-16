@@ -15,13 +15,13 @@ Prompted by `0056`: `teacher_feedback_student_resolve` reached production both *
 
 **33 tables carry RLS policies; 18 had no test at all.** Fourteen of the eighteen were the student-work artifact chain, which all lean on the same two helpers (`auth_user_can_read_writing` / `auth_user_can_write_writing`) reached from four different FK depths — so a join walking to the wrong writing would hand one student another's work, and a depth-2 mistake is invisible from depth 0. That cluster plus `audit_log` is now covered (10 tests, cross-student read/write/delete/insert at every depth).
 
-**Covered 2026-08-16** (26 tests, RLS suite 108 → 134):
+**Covered 2026-08-16** (39 tests, RLS suite 108 → 147). All four items closed:
 1. ~~**`assignment_sources`**~~ — owner/enrolled-student read, cross-district read refused, unreleased hidden from students, student insert/update refused, cross-district delete refused.
 2. ~~**`class_student_enrollments`**~~ — student sees only their own row (probed with a *classmate in the same period*), teacher sees their period's roster, cross-district teacher sees none, self-enrol and self-unenrol both refused.
 3. ~~**`class_teacher_assignments`**~~ — teacher sees only their own pairings, cross-district teacher sees none, and both forged-pairing writes (untaught period, foreign school) refused.
+4. ~~**The remaining eight artifact tables**~~ — `t_charts`, `shaping_sheets`, `shaping_chunk_outputs`, `paragraph_forms`, `essay_parts`, `commentary_items`, `text_annotations`, `step_progress`. Owner reads all eight, another student reads none at any depth, supervising teacher reads all eight, cross-district teacher and anon read none; cross-student edit refused at each depth class (via-body-paragraph, via-chunk, direct) and both WITH CHECK grafts refused.
 
-Still uncovered:
-4. Remaining artifact tables not directly probed: `t_charts`, `shaping_sheets`, `shaping_chunk_outputs`, `paragraph_forms`, `essay_parts`, `commentary_items`, `text_annotations`, `step_progress`. Lower risk — same two helpers as the covered chain, at depths already exercised — but "same mechanism" is an assumption, and this whole item exists because an untested assumption was wrong.
+**Item (4) was expected to be a formality and was not.** The read/write isolation held exactly as predicted — same two helpers, no surprises. But writing the tests surfaced a second-FK gap that none of the previously covered tables could have exposed, because every one of them has a single parent. See the new Open item below.
 
 **Confirmed while covering (3) — `class_teacher_assignments_read` is unscoped for admins.** The policy reads `teacher_id = auth.uid() OR auth_user_role() IN ('super_admin','district_admin','school_admin')`, with no scope predicate on the admin branch. Probed with a district_admin in the cross-tenant fixture district: they read the demo district's pairings. Contrast `class_student_enrollments_admin_manage`, which gates on `auth_user_is_admin_for_school`.
 
@@ -33,8 +33,26 @@ Severity is metadata disclosure, not privilege escalation — the scope is *whic
 
 **Test-writing note:** seed rows through a helper that throws on error. The first draft of the artifact tests ignored the upsert result, `chunks.ratio` (NOT NULL) was missing, and the whole chain silently never existed — at which point "another student reads nothing" passed for entirely the wrong reason. A negative RLS test over absent rows proves nothing. Assert the owner CAN read before asserting anyone else cannot.
 - **Identified:** 2026-08-13, from the 0056 post-mortem
-- **Priority:** was high; now **medium** — the three highest-risk tables are covered as of 2026-08-16, leaving only item (4), which shares helpers and depths already exercised
-- **Progress:** 2026-08-16 — items (1)–(3) done, RLS suite 108 → 134 tests
+- **Priority:** was high; **ready to close** — all four items covered as of 2026-08-16, 33/33 tables now have at least one test
+- **Progress:** 2026-08-16 — items (1)–(4) done, RLS suite 108 → 147 tests
+
+### Two artifact tables have a second FK their policy never checks
+Found 2026-08-16 while covering item (4) of the sweep above. Both policies gate on **one** parent and leave a second foreign key unconstrained:
+
+| table | gated by | ungated |
+|---|---|---|
+| `shaping_chunk_outputs` | `shaping_sheet_id` → `body_paragraphs` → writing | `chunk_id` |
+| `commentary_items` | `chunk_id` → `body_paragraphs` → writing | `parent_cd_id` |
+
+So a student can insert a row hanging off **their own** gated parent while pointing the ungated column at **another student's** row. Verified live: Bailey inserted a `shaping_chunk_outputs` row on their own shaping sheet referencing Alex's chunk, and a `commentary_items` row on their own chunk referencing Alex's concrete detail. Both accepted. Pinned as two DOCUMENTS tests in `rls.test.ts`.
+
+**Severity is referential pollution, not disclosure.** A third test pins the reason: PostgREST applies RLS to an embedded table independently of the joining row, so `select("…, concrete_details(id, text)")` across the forged FK returns `null` — Bailey holds a pointer to Alex's CD and cannot dereference it. Nothing in the app writes these columns cross-writing either. What it does allow is a student writing rows into another student's referential neighbourhood, which is worth closing before it becomes a read path: the moment any query walks *outward* from `chunks` or `concrete_details` to their children without re-checking the writing, this turns into a disclosure.
+
+Likely fix: add the second parent to each `WITH CHECK`, so `shaping_chunk_outputs` also requires `auth_user_can_write_writing` via `chunk_id`, and `commentary_items` via `parent_cd_id` (nullable, so `parent_cd_id IS NULL OR …`). Cheap and local. It is a policy change, so it needs sign-off per CLAUDE.md §15.4 — the DOCUMENTS tests will flip to negative assertions in the same commit.
+
+This is the shape the sweep was looking for and the reason item (4) was not the formality it looked like: every table covered before this one has a single parent, so no earlier test could have found it.
+- **Identified:** 2026-08-16, covering RLS sweep item (4)
+- **Priority:** medium — no disclosure today, and it needs an authenticated student; but it is a latent read path and the fix is small
 
 ### Apply the annotation self-heal to the flat/rich viewer too
 Fixed 2026-08-12: annotations saved before `d165dd2` (2026-07-23, "strip PDF margin furniture from the annotation substrate") kept offsets into the longer pre-strip `source_text`, so highlights landed ~150 characters downstream of the words the student selected. 5 of 36 rows were affected, all `source_render_mode = 'pdf'` on one file. Repaired in place, and `lib/annotation-range.ts` now re-anchors any stale annotation at render time.
