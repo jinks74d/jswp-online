@@ -193,6 +193,51 @@ export function SheetEditor({
           </div>
         ) : (
           <div className="space-y-4">
+            {/* The Best Test, spelled out. The hint above has told students to
+                "apply the Best Test" since this step was built without ever
+                saying what it is; the wording here is Dr. Louis's, supplied
+                2026-08-16. Sits above PRIORITY because it governs WHICH
+                details get selected — the ordering question comes after. */}
+            <section
+              aria-labelledby="best-test-heading"
+              className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+            >
+              <h4
+                id="best-test-heading"
+                className="text-sm font-semibold text-gray-900"
+              >
+                The “BEST” Test
+              </h4>
+              {/* list-decimal/list-disc rather than hand-typed "1." markers,
+                  so a wrapped line hangs under the text instead of sliding
+                  back under the number, and the sub-points indent from the
+                  parent's text edge. */}
+              <ol className="mt-2 ml-5 list-decimal space-y-2 text-sm text-gray-700 marker:font-medium">
+                <li className="pl-[10px]">
+                  Which of my selections BEST fit the writing prompt?
+                  <ul className="mt-1 ml-4 list-disc space-y-1 text-xs text-gray-600">
+                    <li className="pl-[10px]">
+                      Use the process of elimination to “remove” any that do not
+                      fit the prompt
+                    </li>
+                  </ul>
+                </li>
+                <li className="pl-[10px]">
+                  Which of my remaining selections BEST fit me?
+                  <ul className="mt-1 ml-4 list-disc space-y-1 text-xs text-gray-600">
+                    <li className="pl-[10px]">
+                      In other words, which ones can give commentary as to why
+                      they are important?
+                    </li>
+                  </ul>
+                </li>
+                <li className="pl-[10px]">
+                  If you like all of them, then ask, “Which of the remaining
+                  selections would BEST set me apart from my peers?”
+                </li>
+              </ol>
+            </section>
+
             {orderedSelected.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-base font-semibold uppercase tracking-wide text-red-700">

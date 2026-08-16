@@ -13,6 +13,7 @@
 
 import { SheetEditor } from "./sheet-editor";
 import { ReferencePanel, type ReferenceSource } from "../reference-panel";
+import { PopoutShell } from "../popout-shell";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useServerAction } from "@/hooks/use-server-action";
 import type { GatheringSheetData } from "@/lib/queries/candidate-cds";
@@ -93,56 +94,76 @@ export function GatherCdsClient({
   );
 
   return (
-    <div className="space-y-4">
-      {showReference && (
-        <details className="lg:hidden bg-white border border-gray-200 rounded-lg group">
-          <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-900">
-              Source text & annotations
-            </span>
-            <span className="text-xs text-gray-500 group-open:hidden">Show</span>
-            <span className="text-xs text-gray-500 hidden group-open:inline">
-              Hide
-            </span>
-          </summary>
-          <div className="px-4 pb-4 border-t border-gray-100 pt-3">
-            <ReferencePanel
-              writingId={writingId}
-              sources={sources}
-              annotations={annotations}
-            />
+    <PopoutShell label="Gather concrete details">
+      {(expanded) => (
+        <>
+          {showReference && (
+            <details className="lg:hidden bg-white border border-gray-200 rounded-lg group">
+              <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-900">
+                  Source text & annotations
+                </span>
+                <span className="text-xs text-gray-500 group-open:hidden">
+                  Show
+                </span>
+                <span className="text-xs text-gray-500 hidden group-open:inline">
+                  Hide
+                </span>
+              </summary>
+              <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+                <ReferencePanel
+                  writingId={writingId}
+                  sources={sources}
+                  annotations={annotations}
+                  showPopout={false}
+                />
+              </div>
+            </details>
+          )}
+
+          <div
+            className={`grid gap-6 ${
+              showReference
+                ? // Expanded, the source can afford a wider rail — the whole
+                  // point of popping out is that both halves get room.
+                  expanded
+                  ? "lg:grid-cols-[minmax(0,1fr)_32rem]"
+                  : "lg:grid-cols-[minmax(0,1fr)_22rem]"
+                : "grid-cols-1"
+            }`}
+          >
+            {formColumn}
+
+            {showReference && (
+              <aside
+                className={
+                  expanded
+                    ? // The shell's own header is the only thing above, so the
+                      // rail tucks under it rather than under the page nav.
+                      "hidden lg:block lg:sticky lg:top-12 lg:self-start max-h-[calc(100vh-8rem)] overflow-y-auto"
+                    : "hidden lg:block lg:sticky lg:top-20 lg:self-start max-h-[calc(100vh-6rem)] overflow-y-auto"
+                }
+              >
+                <ReferencePanel
+                  writingId={writingId}
+                  sources={sources}
+                  annotations={annotations}
+                  showPopout={false}
+                />
+              </aside>
+            )}
           </div>
-        </details>
+
+          <StepFooter
+            writingId={writingId}
+            stepKey={stepKey}
+            gate={gate}
+            onContinue={onContinue}
+            pending={pending}
+            error={error}
+          />
+        </>
       )}
-
-      <div
-        className={`grid gap-6 ${
-          showReference
-            ? "lg:grid-cols-[minmax(0,1fr)_22rem]"
-            : "grid-cols-1"
-        }`}
-      >
-        {formColumn}
-
-        {showReference && (
-          <aside className="hidden lg:block lg:sticky lg:top-20 lg:self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
-            <ReferencePanel
-              writingId={writingId}
-              sources={sources}
-              annotations={annotations}
-            />
-          </aside>
-        )}
-      </div>
-
-      <StepFooter
-        writingId={writingId}
-        stepKey={stepKey}
-        gate={gate}
-        onContinue={onContinue}
-        pending={pending}
-        error={error}
-      />
-    </div>
+    </PopoutShell>
   );
 }

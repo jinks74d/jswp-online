@@ -11,8 +11,8 @@
  * source viewer to that annotation.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { PopoutShell } from "./popout-shell";
 import { SourceTextViewer } from "./source-text-viewer";
 import { PdfSourceViewer } from "./pdf-source-viewer";
 import { OpenOriginalButton } from "./open-original-button";
@@ -41,96 +41,26 @@ interface Props {
   writingId: string;
   sources: readonly ReferenceSource[];
   annotations: readonly TextAnnotationRow[];
+  /**
+   * Off when a step already wraps its whole working area in a PopoutShell —
+   * gather-cds does. Two nested pop-out buttons, one expanding the source and
+   * one expanding everything including the source, is a coin toss for the
+   * student rather than a choice.
+   */
+  showPopout?: boolean;
 }
 
-export function ReferencePanel({ writingId, sources, annotations }: Props) {
+export function ReferencePanel({
+  writingId,
+  sources,
+  annotations,
+  showPopout = true,
+}: Props) {
   const [visibleKinds, setVisibleKinds] = useState<ReadonlySet<AnnotationKind>>(
     () => new Set(ANNOTATION_KIND_ORDER)
   );
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
 
-  /*
-   * Pop-out, mirroring Read & Annotate's reading view.
-   *
-   * The reference column is narrow by design — it sits beside the step's own
-   * work area — which is fine for glancing at a highlight and cramped for
-   * actually re-reading the source. Expanding makes it the whole screen
-   * without unmounting anything, so kind filters and scroll position survive
-   * the toggle.
-   *
-   * NOTE: this repeats the shell in annotate-text-client.tsx (focus handoff,
-   * scroll lock, Escape, Tab trap). Left duplicated rather than extracted
-   * because that file's Escape handling is entangled with its annotation form
-   * and selection popover, which have no equivalent here — see BACKLOG.
-   */
-  const [expanded, setExpanded] = useState(false);
-  const panelRef = useRef<HTMLElement>(null);
-  const collapseButtonRef = useRef<HTMLButtonElement>(null);
-  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
-
-  // Focus moves in on open and returns to the opener on close (WCAG 2.4.3).
-  useEffect(() => {
-    if (!expanded) return;
-    previouslyFocusedRef.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
-    collapseButtonRef.current?.focus();
-    return () => previouslyFocusedRef.current?.focus();
-  }, [expanded]);
-
-  // The page behind must not scroll while the overlay is up.
-  useEffect(() => {
-    if (!expanded) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [expanded]);
-
-  // Escape closes; Tab is trapped inside the overlay.
-  useEffect(() => {
-    if (!expanded) return;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        // The PDF viewer consumes Escape to leave keyboard-selection mode and
-        // calls preventDefault; let it win rather than closing out from under
-        // a student who was only trying to drop a selection.
-        if (event.defaultPrevented) return;
-        event.preventDefault();
-        setExpanded(false);
-        return;
-      }
-
-      if (event.key !== "Tab") return;
-      const panel = panelRef.current;
-      if (!panel) return;
-
-      const focusable = panel.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length === 0) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-
-      if (event.shiftKey) {
-        if (active === first || !panel.contains(active)) {
-          event.preventDefault();
-          last.focus();
-        }
-      } else if (active === last || !panel.contains(active)) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [expanded]);
 
   // Partition annotations by source. Legacy rows (source_id null) fall under
   // the first source so pre-migration writings still render.
@@ -163,47 +93,14 @@ export function ReferencePanel({ writingId, sources, annotations }: Props) {
 
   const multiple = sources.length > 1;
 
-  return (
-    <section
-      ref={panelRef}
-      className={
-        expanded
-          ? // overflow-auto, not overflow-y-auto: a wide table in a rich
-            // source still needs to be reachable sideways.
-            "fixed inset-0 z-40 space-y-4 overflow-auto bg-white p-4 sm:p-6"
-          : "space-y-4"
-      }
-      {...(expanded
-        ? { role: "dialog", "aria-modal": true, "aria-label": "Source reference" }
-        : {})}
-    >
-      <div
-        className={
-          expanded
-            ? "sticky top-0 z-10 -mx-4 flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 pb-3 sm:-mx-6 sm:px-6"
-            : "flex items-center justify-between gap-3"
-        }
-      >
-        <div className="text-xs uppercase tracking-wide text-gray-500">
-          Reference
-        </div>
-        <button
-          ref={collapseButtonRef}
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          aria-haspopup="dialog"
-          aria-expanded={expanded}
-          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-        >
-          {expanded ? (
-            <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" />
-          ) : (
-            <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
-          )}
-          {expanded ? "Exit full screen" : "Pop out"}
-        </button>
-      </div>
+  const heading = (
+    <div className="text-xs uppercase tracking-wide text-gray-500">
+      Reference
+    </div>
+  );
 
+  const body = (
+    <>
       {/* Shared kind filter, counts across all sources. */}
       {annotations.length > 0 && (
         <section className="bg-white border border-gray-200 rounded-lg p-2">
@@ -352,7 +249,24 @@ export function ReferencePanel({ writingId, sources, annotations }: Props) {
           </div>
         );
       })}
-    </section>
+    </>
+  );
+
+  // Without its own pop-out the panel is just its content — the step above is
+  // providing the shell, and wrapping again would nest a second dialog.
+  if (!showPopout) {
+    return (
+      <div className="space-y-4">
+        {heading}
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <PopoutShell label="Source reference" heading={heading}>
+      {() => body}
+    </PopoutShell>
   );
 }
 
