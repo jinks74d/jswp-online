@@ -8,18 +8,17 @@
  * Continue gate: each BP must have ≥1 of {narrative_key_word,
  * narrative_concrete_example} non-empty. These are the spine of
  * the moment; kind/subject/general_ideas are auxiliary and don't
- * gate. Tooltip names the offending BP.
+ * gate. Names the offending BP.
+ *
+ * Tabs, layout and footer come from StepShell.
  */
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { DiscoveryBpPane } from "./discovery-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useServerAction } from "@/hooks/use-server-action";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
-import { useWritingMode } from "../use-writing-mode";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
-import { SubmitStepButton } from "../submit-step-button";
+import { StepShell, type StepGate } from "../step-shell";
 
 interface Props {
   writingId: string;
@@ -27,12 +26,7 @@ interface Props {
   bps: readonly BodyParagraphData[];
 }
 
-interface GateResult {
-  canContinue: boolean;
-  blockerPosition: number | null;
-}
-
-function computeGate(bps: readonly BodyParagraphData[]): GateResult {
+function computeGate(bps: readonly BodyParagraphData[]): StepGate {
   for (const bp of bps) {
     const tc = bp.t_chart;
     const hasKeyWord = !!(tc?.narrative_key_word && tc.narrative_key_word.trim());
@@ -40,99 +34,40 @@ function computeGate(bps: readonly BodyParagraphData[]): GateResult {
       tc?.narrative_concrete_example && tc.narrative_concrete_example.trim()
     );
     if (!hasKeyWord && !hasExample) {
-      return { canContinue: false, blockerPosition: bp.position };
+      return {
+        canContinue: false,
+        message: `Body paragraph ${bp.position} needs a key word or concrete example.`,
+      };
     }
   }
-  return { canContinue: true, blockerPosition: null };
+  return {
+    canContinue: true,
+    message: "Each body paragraph has a key word or concrete example.",
+  };
 }
 
 export function DiscoveryClient({ writingId, stepKey, bps }: Props) {
-  const { isReadOnly } = useWritingMode();
-  const [activeIdx, setActiveIdx] = useState(0);
   const { pending, error, run } = useServerAction();
 
-  const gate = computeGate(bps);
-  const activeBp = bps[activeIdx] ?? bps[0];
-
-  const onContinue = () => {
-    run(() => completeStepAndAdvance(writingId, stepKey));
-  };
-
   return (
-    <div className="space-y-4">
-      {bps.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Body paragraphs"
-          className="flex gap-1 border-b border-gray-200 overflow-x-auto"
-        >
-          {bps.map((bp, i) => {
-            const active = i === activeIdx;
-            return (
-              <button
-                key={bp.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setActiveIdx(i)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${
-                  active
-                    ? "text-gray-900"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-                style={
-                  active
-                    ? { borderBottomColor: "var(--brand)" }
-                    : undefined
-                }
-              >
-                {narrativeBpLabel(
-                  bp.t_chart?.narrative_kind ?? null,
-                  bp.t_chart?.narrative_subject ?? null,
-                  bp.position,
-                  bps.length
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {activeBp ? (
-        <DiscoveryBpPane writingId={writingId} bp={activeBp} />
-      ) : (
-        <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-          No body paragraphs yet. Reload to bootstrap.
-        </div>
-      )}
-
-      {!isReadOnly && (
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-          <div className="text-xs text-gray-500">
-            {gate.canContinue
-              ? "Each body paragraph has a key word or concrete example."
-              : `Body paragraph ${gate.blockerPosition} needs a key word or concrete example.`}
-          </div>
-          <div className="flex items-center gap-3">
-            {error && (
-              <div className="text-sm text-red-700" role="alert">
-                {error}
-              </div>
-            )}
-            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
-            <button
-              type="button"
-              onClick={onContinue}
-              disabled={!gate.canContinue || pending}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "var(--brand)" }}
-            >
-              {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
-              {pending ? "Saving…" : "Continue"}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+    <StepShell
+      writingId={writingId}
+      stepKey={stepKey}
+      items={bps}
+      itemKey={(bp) => bp.id}
+      tabLabel={(bp) =>
+        narrativeBpLabel(
+          bp.t_chart?.narrative_kind ?? null,
+          bp.t_chart?.narrative_subject ?? null,
+          bp.position,
+          bps.length
+        )
+      }
+      renderPane={(bp) => <DiscoveryBpPane writingId={writingId} bp={bp} />}
+      gate={computeGate(bps)}
+      onContinue={() => run(() => completeStepAndAdvance(writingId, stepKey))}
+      pending={pending}
+      error={error}
+    />
   );
 }

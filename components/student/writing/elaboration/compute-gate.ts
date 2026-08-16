@@ -23,3 +23,16 @@ export function computeGate(bps: readonly CommentaryBpData[]): GateResult {
   }
   return { canContinue: true, blockerPosition: null };
 }
+
+/**
+ * The student-facing sentence for a gate result.
+ *
+ * Lives beside the rule rather than in StepShell: the shell takes an opaque
+ * string precisely so each step keeps its own wording. Mirrors
+ * t-chart/compute-gate.ts.
+ */
+export function gateMessage(gate: GateResult): string {
+  return gate.canContinue
+    ? "Each best word has at least two elaboration phrases."
+    : `Body paragraph ${gate.blockerPosition} needs two phrases for each best word.`;
+}

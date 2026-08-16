@@ -5,19 +5,19 @@
  * has_counterargument). Per-BP tabs with three textareas each.
  *
  * Continue gate: each BP must have ≥1 of {concession, counterargument,
- * refutation} non-empty (trimmed). Soft per-BP gate, named-BP tooltip.
+ * refutation} non-empty (trimmed). Soft per-BP gate, naming the offending BP.
+ *
+ * Tabs, layout and footer come from StepShell. What stays here is the part
+ * that is actually about counterargument: the gate rule and its wording.
  */
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import {
   CounterargumentBpPane,
   type CounterargumentBpData,
 } from "./counterargument-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useServerAction } from "@/hooks/use-server-action";
-import { useWritingMode } from "../use-writing-mode";
-import { SubmitStepButton } from "../submit-step-button";
+import { StepShell, type StepGate } from "../step-shell";
 
 interface Props {
   writingId: string;
@@ -25,14 +25,7 @@ interface Props {
   bps: readonly CounterargumentBpData[];
 }
 
-interface GateResult {
-  canContinue: boolean;
-  blockerPosition: number | null;
-}
-
-function computeGate(
-  bps: readonly CounterargumentBpData[]
-): GateResult {
+function computeGate(bps: readonly CounterargumentBpData[]): StepGate {
   for (const bp of bps) {
     const tc = bp.t_chart;
     const hasAny =
@@ -40,98 +33,36 @@ function computeGate(
       !!(tc?.counterargument?.trim()) ||
       !!(tc?.refutation?.trim());
     if (!hasAny) {
-      return { canContinue: false, blockerPosition: bp.position };
+      return {
+        canContinue: false,
+        message: `Body paragraph ${bp.position} needs a concession, counterargument, or refutation.`,
+      };
     }
   }
-  return { canContinue: true, blockerPosition: null };
+  return {
+    canContinue: true,
+    message: "Each body paragraph has at least one C/CA/R field filled.",
+  };
 }
 
-export function CounterargumentClient({
-  writingId,
-  stepKey,
-  bps,
-}: Props) {
-  const { isReadOnly } = useWritingMode();
-  const [activeIdx, setActiveIdx] = useState(0);
+export function CounterargumentClient({ writingId, stepKey, bps }: Props) {
   const { pending, error, run } = useServerAction();
 
-  const gate = computeGate(bps);
-  const activeBp = bps[activeIdx] ?? bps[0];
-
-  const onContinue = () => {
-    run(() => completeStepAndAdvance(writingId, stepKey));
-  };
-
   return (
-    <div className="space-y-4">
-      {bps.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Body paragraphs"
-          className="flex gap-1 border-b border-gray-200 overflow-x-auto"
-        >
-          {bps.map((bp, i) => {
-            const active = i === activeIdx;
-            return (
-              <button
-                key={bp.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setActiveIdx(i)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${
-                  active
-                    ? "text-gray-900"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-                style={
-                  active
-                    ? { borderBottomColor: "var(--brand)" }
-                    : undefined
-                }
-              >
-                Body {bp.position}
-              </button>
-            );
-          })}
-        </div>
+    <StepShell
+      writingId={writingId}
+      stepKey={stepKey}
+      items={bps}
+      itemKey={(bp) => bp.id}
+      tabLabel={(bp) => `Body ${bp.position}`}
+      renderPane={(bp) => (
+        <CounterargumentBpPane writingId={writingId} bp={bp} />
       )}
-
-      {activeBp ? (
-        <CounterargumentBpPane writingId={writingId} bp={activeBp} />
-      ) : (
-        <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-          No body paragraphs yet.
-        </div>
-      )}
-
-      {!isReadOnly && (
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-          <div className="text-xs text-gray-500">
-            {gate.canContinue
-              ? "Each body paragraph has at least one C/CA/R field filled."
-              : `Body paragraph ${gate.blockerPosition} needs a concession, counterargument, or refutation.`}
-          </div>
-          <div className="flex items-center gap-3">
-            {error && (
-              <div className="text-sm text-red-700" role="alert">
-                {error}
-              </div>
-            )}
-            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
-            <button
-              type="button"
-              onClick={onContinue}
-              disabled={!gate.canContinue || pending}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "var(--brand)" }}
-            >
-              {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
-              {pending ? "Saving…" : "Continue"}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      emptyMessage="No body paragraphs yet."
+      gate={computeGate(bps)}
+      onContinue={() => run(() => completeStepAndAdvance(writingId, stepKey))}
+      pending={pending}
+      error={error}
+    />
   );
 }

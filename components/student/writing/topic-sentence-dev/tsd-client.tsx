@@ -2,25 +2,23 @@
 
 /**
  * Topic-Sentence-Development orchestrator. Per-BP tabs + reference
- * panel + Continue gate. Mirrors gather-cds-client structure so
- * students learn one mental model across the brainstorm cluster.
+ * panel + Continue gate.
  *
  * Continue gate: each BP's sheet must have ≥1 selected candidate AND
  * that candidate must have a side tag. Rationale: the printed guide
  * uses the pro/con tally to choose direction; without a tag, there's
- * no signal to derive direction from. Tooltip names the offending BP.
+ * no signal to derive direction from. Names the offending BP.
+ *
+ * Tabs, layout and footer come from StepShell.
  */
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { TsdBpPane } from "./tsd-bp-pane";
 import { ReferencePanel, type ReferenceSource } from "../reference-panel";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useServerAction } from "@/hooks/use-server-action";
-import { useWritingMode } from "../use-writing-mode";
 import type { GatheringSheetData } from "@/lib/queries/candidate-cds";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
-import { SubmitStepButton } from "../submit-step-button";
+import { StepShell, type StepGate } from "../step-shell";
 
 interface Props {
   writingId: string;
@@ -30,12 +28,7 @@ interface Props {
   annotations: readonly TextAnnotationRow[];
 }
 
-interface GateResult {
-  canContinue: boolean;
-  blockerPosition: number | null;
-}
-
-function computeGate(sheets: readonly GatheringSheetData[]): GateResult {
+function computeGate(sheets: readonly GatheringSheetData[]): StepGate {
   for (const sheet of sheets) {
     const tagged = sheet.candidates.filter(
       (c) => c.is_selected && c.argumentation_side !== null
@@ -43,11 +36,14 @@ function computeGate(sheets: readonly GatheringSheetData[]): GateResult {
     if (tagged.length === 0) {
       return {
         canContinue: false,
-        blockerPosition: sheet.body_paragraph_position,
+        message: `Body paragraph ${sheet.body_paragraph_position} needs at least one tagged candidate (For / Against / Neutral).`,
       };
     }
   }
-  return { canContinue: true, blockerPosition: null };
+  return {
+    canContinue: true,
+    message: "Each body paragraph has at least one tagged candidate.",
+  };
 }
 
 export function TsdClient({
@@ -57,133 +53,32 @@ export function TsdClient({
   sources,
   annotations,
 }: Props) {
-  const { isReadOnly } = useWritingMode();
-  const [activeIdx, setActiveIdx] = useState(0);
   const { pending, error, run } = useServerAction();
 
-  const gate = computeGate(sheets);
-  const activeSheet = sheets[activeIdx] ?? sheets[0];
-  const showReference = sources.length > 0;
-
-  const onContinue = () => {
-    run(() => completeStepAndAdvance(writingId, stepKey));
-  };
-
-  const formColumn = (
-    <div className="space-y-4 min-w-0">
-      {sheets.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Body paragraphs"
-          className="flex gap-1 border-b border-gray-200 overflow-x-auto"
-        >
-          {sheets.map((sheet, i) => {
-            const active = i === activeIdx;
-            return (
-              <button
-                key={sheet.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setActiveIdx(i)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${
-                  active
-                    ? "text-gray-900"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-                style={
-                  active
-                    ? { borderBottomColor: "var(--brand)" }
-                    : undefined
-                }
-              >
-                Body {sheet.body_paragraph_position}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {activeSheet ? (
-        <TsdBpPane writingId={writingId} sheet={activeSheet} />
-      ) : (
-        <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-          No gathering sheets yet. Go back to gather-cds first.
-        </div>
-      )}
-    </div>
-  );
-
   return (
-    <div className="space-y-4">
-      {showReference && (
-        <details className="lg:hidden bg-white border border-gray-200 rounded-lg group">
-          <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-900">
-              Source text & annotations
-            </span>
-            <span className="text-xs text-gray-500 group-open:hidden">Show</span>
-            <span className="text-xs text-gray-500 hidden group-open:inline">
-              Hide
-            </span>
-          </summary>
-          <div className="px-4 pb-4 border-t border-gray-100 pt-3">
-            <ReferencePanel
-              writingId={writingId}
-              sources={sources}
-              annotations={annotations}
-            />
-          </div>
-        </details>
+    <StepShell
+      writingId={writingId}
+      stepKey={stepKey}
+      items={sheets}
+      itemKey={(sheet) => sheet.id}
+      tabLabel={(sheet) => `Body ${sheet.body_paragraph_position}`}
+      renderPane={(sheet) => (
+        <TsdBpPane writingId={writingId} sheet={sheet} />
       )}
-
-      <div
-        className={`grid gap-6 ${
-          showReference
-            ? "lg:grid-cols-[minmax(0,1fr)_22rem]"
-            : "grid-cols-1"
-        }`}
-      >
-        {formColumn}
-
-        {showReference && (
-          <aside className="hidden lg:block lg:sticky lg:top-20 lg:self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
-            <ReferencePanel
-              writingId={writingId}
-              sources={sources}
-              annotations={annotations}
-            />
-          </aside>
-        )}
-      </div>
-
-      {!isReadOnly && (
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-          <div className="text-xs text-gray-500">
-            {gate.canContinue
-              ? "Each body paragraph has at least one tagged candidate."
-              : `Body paragraph ${gate.blockerPosition} needs at least one tagged candidate (For / Against / Neutral).`}
-          </div>
-          <div className="flex items-center gap-3">
-            {error && (
-              <div className="text-sm text-red-700" role="alert">
-                {error}
-              </div>
-            )}
-            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
-            <button
-              type="button"
-              onClick={onContinue}
-              disabled={!gate.canContinue || pending}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "var(--brand)" }}
-            >
-              {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
-              {pending ? "Saving…" : "Continue"}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      emptyMessage="No gathering sheets yet. Go back to gather-cds first."
+      gate={computeGate(sheets)}
+      onContinue={() => run(() => completeStepAndAdvance(writingId, stepKey))}
+      pending={pending}
+      error={error}
+      reference={
+        sources.length > 0 ? (
+          <ReferencePanel
+            writingId={writingId}
+            sources={sources}
+            annotations={annotations}
+          />
+        ) : undefined
+      }
+    />
   );
 }

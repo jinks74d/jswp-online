@@ -4,7 +4,7 @@
  * Shaping orchestrator. Per-BP tabs; routes each BP to either
  * cd-cm-shaping-bp-pane or narrative-shaping-bp-pane based on mode.
  *
- * Continue gate (mode-aware):
+ * Continue gate (mode-aware, in lib/shaping-gate.ts):
  *   - All modes: each BP must have non-empty final_topic_sentence
  *     OR final_concluding_sentence (ideally both, gate on either to
  *     stay soft).
@@ -12,21 +12,20 @@
  *     cm_sentence. Empty arrays or all-empty-strings count as missing.
  *   - Narrative: TS/CS gate only; no chunk checks.
  *
- * Tooltip names the offending BP.
+ * The gate names the offending BP and, for a chunk failure, which chunk —
+ * that specificity is carried in its own `reason` and must survive into the
+ * sentence below. Tabs, layout and footer come from StepShell.
  */
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { CdCmShapingBpPane } from "./cd-cm-shaping-bp-pane";
 import { NarrativeShapingBpPane } from "./narrative-shaping-bp-pane";
 import { completeStepAndAdvance } from "@/lib/actions/student-writings";
 import { useServerAction } from "@/hooks/use-server-action";
 import { narrativeBpLabel } from "@/lib/narrative-bp-labels";
 import { computeGate } from "@/lib/shaping-gate";
-import { useWritingMode } from "../use-writing-mode";
 import type { ShapingBpData } from "@/lib/queries/shaping";
 import type { Database } from "@/lib/database.types";
-import { SubmitStepButton } from "../submit-step-button";
+import { StepShell } from "../step-shell";
 
 type Mode = Database["public"]["Enums"]["jswp_mode"];
 
@@ -45,102 +44,46 @@ export function ShapingClient({
   hasCounterargument,
   bps,
 }: Props) {
-  const { isReadOnly } = useWritingMode();
-  const [activeIdx, setActiveIdx] = useState(0);
   const { pending, error, run } = useServerAction();
-
   const gate = computeGate(mode, bps);
-  const activeBp = bps[activeIdx] ?? bps[0];
   const isNarrative = mode === "narrative";
 
-  const onContinue = () => {
-    run(() => completeStepAndAdvance(writingId, stepKey));
-  };
-
   return (
-    <div className="space-y-4">
-      {bps.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Body paragraphs"
-          className="flex gap-1 border-b border-gray-200 overflow-x-auto"
-        >
-          {bps.map((bp, i) => {
-            const active = i === activeIdx;
-            return (
-              <button
-                key={bp.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setActiveIdx(i)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${
-                  active
-                    ? "text-gray-900"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-                style={
-                  active
-                    ? { borderBottomColor: "var(--brand)" }
-                    : undefined
-                }
-              >
-                {narrativeBpLabel(
-                  bp.narrative_kind,
-                  bp.narrative_subject,
-                  bp.position,
-                  bps.length
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {activeBp ? (
+    <StepShell
+      writingId={writingId}
+      stepKey={stepKey}
+      items={bps}
+      itemKey={(bp) => bp.id}
+      tabLabel={(bp) =>
+        narrativeBpLabel(
+          bp.narrative_kind,
+          bp.narrative_subject,
+          bp.position,
+          bps.length
+        )
+      }
+      renderPane={(bp) =>
         isNarrative ? (
-          <NarrativeShapingBpPane writingId={writingId} bp={activeBp} />
+          <NarrativeShapingBpPane writingId={writingId} bp={bp} />
         ) : (
           <CdCmShapingBpPane
             writingId={writingId}
-            bp={activeBp}
+            bp={bp}
             mode={mode}
             hasCounterargument={hasCounterargument}
           />
         )
-      ) : (
-        <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-          No body paragraphs yet.
-        </div>
-      )}
-
-      {!isReadOnly && (
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-200">
-          <div className="text-xs text-gray-500">
-            {gate.canContinue
-              ? "Each body paragraph is shaped."
-              : `Body paragraph ${gate.blockerPosition} ${gate.reason}.`}
-          </div>
-          <div className="flex items-center gap-3">
-            {error && (
-              <div className="text-sm text-red-700" role="alert">
-                {error}
-              </div>
-            )}
-            <SubmitStepButton writingId={writingId} stepKey={stepKey} />
-            <button
-              type="button"
-              onClick={onContinue}
-              disabled={!gate.canContinue || pending}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "var(--brand)" }}
-            >
-              {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
-              {pending ? "Saving…" : "Continue"}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      }
+      emptyMessage="No body paragraphs yet."
+      gate={{
+        canContinue: gate.canContinue,
+        message: gate.canContinue
+          ? "Each body paragraph is shaped."
+          : `Body paragraph ${gate.blockerPosition} ${gate.reason}.`,
+      }}
+      onContinue={() => run(() => completeStepAndAdvance(writingId, stepKey))}
+      pending={pending}
+      error={error}
+    />
   );
 }
