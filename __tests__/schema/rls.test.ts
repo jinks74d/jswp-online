@@ -2145,3 +2145,413 @@ describe("audit_log", () => {
     expect(error).not.toBeNull();
   });
 });
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * The three tables the 2026-08-13 audit flagged as highest-risk and
+ * untested. See docs/BACKLOG.md, "Finish the RLS coverage sweep".
+ *
+ * Ordered by blast radius rather than the backlog's list order:
+ * class_teacher_assignments comes first because it feeds
+ * auth_user_teaches_class_period, which is auth_user_can_read_writing's
+ * teacher branch — so a bug there widens access to student work everywhere.
+ *
+ * Every block asserts the legitimate reader CAN see the row before asserting
+ * anyone else cannot. A negative RLS test over rows that do not exist passes
+ * for entirely the wrong reason, which is the trap the artifact-chain tests
+ * fell into first time round.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+describe("class_teacher_assignments — who teaches what", () => {
+  /**
+   * A district_admin belonging to the OTHER district.
+   *
+   * class_teacher_assignments_read reads:
+   *   teacher_id = auth.uid()
+   *   OR auth_user_role() IN ('super_admin','district_admin','school_admin')
+   *
+   * The admin branch carries no scope predicate, unlike its sibling
+   * class_student_enrollments_admin_manage which gates on
+   * auth_user_is_admin_for_school. This fixture exists to pin what that
+   * actually means in the live database rather than reasoning about it.
+   */
+  const ADMIN2 = "11111111-0000-0000-0000-000000000201";
+  const ADMIN2_EMAIL = "district-admin2-rls-test@demo.test";
+  let admin2Client: SupabaseClient;
+
+  beforeAll(async () => {
+    const { data: existing } = await svc.auth.admin.getUserById(ADMIN2);
+    if (!existing?.user) {
+      const { error } = await svc.auth.admin.createUser({
+        id: ADMIN2,
+        email: ADMIN2_EMAIL,
+        password: "rls-test-password-123",
+        email_confirm: true,
+      });
+      if (error) throw new Error(`create admin2 failed: ${error.message}`);
+    }
+
+    await svc
+      .from("user_profiles")
+      .upsert({
+        id: ADMIN2,
+        district_id: TEST.district2,
+        school_id: TEST.school2,
+        role: "district_admin",
+        first_name: "Other",
+        last_name: "DistrictAdmin",
+        email: ADMIN2_EMAIL,
+      })
+      .throwOnError();
+
+    admin2Client = await createUserClient(ADMIN2);
+  });
+
+  it("the demo teacher can see their own pairing (baseline: the row exists)", async () => {
+    const { data, error } = await teacherClient
+      .from("class_teacher_assignments")
+      .select("teacher_id, class_period_id")
+      .eq("teacher_id", IDS.teacher);
+
+    expect(error).toBeNull();
+    expect(data?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("a teacher in another district sees none of it", async () => {
+    const { data, error } = await teacher2Client
+      .from("class_teacher_assignments")
+      .select("teacher_id")
+      .eq("teacher_id", IDS.teacher);
+
+    // RLS filters rather than errors on SELECT.
+    expect(error).toBeNull();
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it("a teacher sees only their OWN pairings, not a colleague's", async () => {
+    const { data } = await teacherClient
+      .from("class_teacher_assignments")
+      .select("teacher_id");
+
+    const foreign = (data ?? []).filter(
+      (r) => (r as { teacher_id: string }).teacher_id !== IDS.teacher
+    );
+    expect(foreign).toHaveLength(0);
+  });
+
+  it("a super admin sees across districts", async () => {
+    const { data, error } = await superClient
+      .from("class_teacher_assignments")
+      .select("teacher_id")
+      .eq("teacher_id", IDS.teacher);
+
+    expect(error).toBeNull();
+    expect(data?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("anon sees nothing", async () => {
+    const { data } = await anonClient
+      .from("class_teacher_assignments")
+      .select("teacher_id");
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it("DOCUMENTS: a district_admin reads pairings outside their own district", async () => {
+    // Not an assertion that this is desirable — it pins current behaviour so
+    // the decision is explicit rather than accidental.
+    //
+    // The admin branch of class_teacher_assignments_read has no scope
+    // predicate, so any district_admin or school_admin reads every row in the
+    // table regardless of tenant. Scope is: which teacher teaches which class
+    // period, across all districts. It is metadata disclosure, NOT access to
+    // student work — auth_user_can_read_writing's teacher branch goes through
+    // auth_user_teaches_class_period, which tests teacher_id = auth.uid() and
+    // is unaffected by who can SELECT this table.
+    //
+    // Compare class_student_enrollments_admin_manage, which does gate on
+    // auth_user_is_admin_for_school. Tightening this one is a policy change
+    // and needs sign-off (CLAUDE.md section 15.4) — logged in docs/BACKLOG.md.
+    const { data, error } = await admin2Client
+      .from("class_teacher_assignments")
+      .select("teacher_id")
+      .eq("teacher_id", IDS.teacher);
+
+    expect(error).toBeNull();
+    expect(data?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("a cross-district admin still cannot WRITE a pairing here", async () => {
+    // The read hole above must not extend to writes: admin_manage IS scoped
+    // via auth_user_is_admin_for_school, and forging a row would grant a
+    // teacher access to another district's student work.
+    const { error } = await admin2Client
+      .from("class_teacher_assignments")
+      .insert({
+        teacher_id: TEST.teacher2,
+        class_period_id: IDS.classPeriod,
+      });
+
+    expect(error).not.toBeNull();
+  });
+
+  it("a teacher cannot pair themselves with a period they do not teach", async () => {
+    // admin_manage is the only write path and requires
+    // auth_user_is_admin_for_school. Forging a row here would grant the
+    // teacher auth_user_teaches_class_period for that period, and with it
+    // every student writing under it.
+    const { error } = await teacherClient
+      .from("class_teacher_assignments")
+      .insert({
+        teacher_id: IDS.teacher,
+        class_period_id: TEST.untaughtPeriod,
+      });
+
+    expect(error).not.toBeNull();
+  });
+
+  it("a teacher cannot pair themselves with a period in another school", async () => {
+    const { error } = await teacherClient
+      .from("class_teacher_assignments")
+      .insert({
+        teacher_id: IDS.teacher,
+        class_period_id: TEST.foreignPeriod,
+      });
+
+    expect(error).not.toBeNull();
+  });
+});
+
+describe("class_student_enrollments — roster privacy", () => {
+  it("a student can see their own enrolment (baseline: the row exists)", async () => {
+    const { data, error } = await alexClient
+      .from("class_student_enrollments")
+      .select("student_id, class_period_id")
+      .eq("student_id", IDS.alex);
+
+    expect(error).toBeNull();
+    expect(data?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("a student cannot see a classmate's enrolment", async () => {
+    // Alex and Bailey share a class period, so this is the sharpest form of
+    // the question: same room, still none of your business.
+    const { data } = await alexClient
+      .from("class_student_enrollments")
+      .select("student_id")
+      .eq("student_id", IDS.bailey);
+
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it("a student sees only their own rows, whatever they ask for", async () => {
+    const { data } = await alexClient
+      .from("class_student_enrollments")
+      .select("student_id");
+
+    const foreign = (data ?? []).filter(
+      (r) => (r as { student_id: string }).student_id !== IDS.alex
+    );
+    expect(foreign).toHaveLength(0);
+  });
+
+  it("the teacher of the period can see its roster", async () => {
+    const { data, error } = await teacherClient
+      .from("class_student_enrollments")
+      .select("student_id")
+      .eq("class_period_id", IDS.classPeriod);
+
+    expect(error).toBeNull();
+    expect(data?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("a teacher in another district sees no part of that roster", async () => {
+    const { data } = await teacher2Client
+      .from("class_student_enrollments")
+      .select("student_id")
+      .eq("class_period_id", IDS.classPeriod);
+
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it("a student cannot enrol themselves in a class", async () => {
+    // Self-enrolment would hand a student every released assignment in that
+    // period, and through auth_user_enrolled_in_class_period, its sources.
+    const { error } = await alexClient
+      .from("class_student_enrollments")
+      .insert({
+        student_id: IDS.alex,
+        class_period_id: TEST.untaughtPeriod,
+      });
+
+    expect(error).not.toBeNull();
+  });
+
+  it("a student cannot remove themselves from a class", async () => {
+    await alexClient
+      .from("class_student_enrollments")
+      .delete()
+      .eq("student_id", IDS.alex);
+
+    // Assert the row survived rather than guessing whether Postgres refuses
+    // the delete or RLS filters it to zero rows — either is acceptable, a
+    // missing enrolment is not.
+    const { data: still } = await svc
+      .from("class_student_enrollments")
+      .select("student_id")
+      .eq("student_id", IDS.alex);
+
+    expect(still?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("anon sees nothing", async () => {
+    const { data } = await anonClient
+      .from("class_student_enrollments")
+      .select("student_id");
+    expect(data ?? []).toHaveLength(0);
+  });
+});
+
+describe("assignment_sources — source text follows assignment visibility", () => {
+  /**
+   * Seeded here rather than assumed. The seed's expository assignment carries
+   * NO assignment_sources row, so the first draft of this block had every
+   * negative test passing over an empty table — "a student in another district
+   * cannot read them" is trivially true when there is nothing to read.
+   *
+   * The baseline test below is what caught it, which is the whole reason the
+   * backlog's method note insists on asserting the owner CAN read first.
+   */
+  const SOURCE = "11111111-0000-0000-0000-00000000b001";
+  /** Same, on the UNRELEASED assignment — see the unreleased test below. */
+  const UNRELEASED_SOURCE = "11111111-0000-0000-0000-00000000b002";
+
+  beforeAll(async () => {
+    const seed = async (id: string, assignmentId: string, title: string) => {
+      const { error } = await svc.from("assignment_sources").upsert({
+        id,
+        assignment_id: assignmentId,
+        // position 90 keeps clear of anything the app or a later seed adds;
+        // the table is UNIQUE (assignment_id, position).
+        position: 90,
+        kind: "primary",
+        source_text: `${title} source text`,
+        source_title: title,
+        source_render_mode: "plain",
+      });
+      if (error) {
+        throw new Error(`seed assignment_sources ${title} failed: ${error.message}`);
+      }
+    };
+
+    await seed(SOURCE, IDS.assignmentExpository, "RLS probe");
+    await seed(UNRELEASED_SOURCE, TEST.unreleased, "RLS unreleased probe");
+  });
+
+  afterAll(async () => {
+    await svc
+      .from("assignment_sources")
+      .delete()
+      .in("id", [SOURCE, UNRELEASED_SOURCE]);
+  });
+
+  it("the owning teacher can read their assignment's sources (baseline)", async () => {
+    const { data, error } = await teacherClient
+      .from("assignment_sources")
+      .select("id, assignment_id")
+      .eq("assignment_id", IDS.assignmentExpository);
+
+    expect(error).toBeNull();
+    expect(data?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("an enrolled student can read the sources of a released assignment", async () => {
+    // Without this the student reaches Read & Annotate and finds nothing to
+    // annotate, so it is as much a functional test as a security one.
+    const { data, error } = await alexClient
+      .from("assignment_sources")
+      .select("id")
+      .eq("assignment_id", IDS.assignmentExpository);
+
+    expect(error).toBeNull();
+    expect(data?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("a teacher in another district cannot read them", async () => {
+    const { data } = await teacher2Client
+      .from("assignment_sources")
+      .select("id")
+      .eq("assignment_id", IDS.assignmentExpository);
+
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it("the teacher CAN read sources of their unreleased assignment (baseline)", async () => {
+    // Pins that the row genuinely exists and is reachable, so the student
+    // test below is refused by the released_at clause rather than by there
+    // being nothing there.
+    const { data, error } = await teacherClient
+      .from("assignment_sources")
+      .select("id")
+      .eq("id", UNRELEASED_SOURCE);
+
+    expect(error).toBeNull();
+    expect(data ?? []).toHaveLength(1);
+  });
+
+  it("a student cannot read sources of an UNRELEASED assignment", async () => {
+    // Draft assignments leak their source text otherwise — a teacher building
+    // next week's prompt would be publishing it early.
+    const { data } = await alexClient
+      .from("assignment_sources")
+      .select("id")
+      .eq("id", UNRELEASED_SOURCE);
+
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it("a student cannot add a source to an assignment", async () => {
+    const { error } = await alexClient.from("assignment_sources").insert({
+      assignment_id: IDS.assignmentExpository,
+      position: 99,
+      kind: "primary",
+      source_text: "forged by a student",
+    });
+
+    expect(error).not.toBeNull();
+  });
+
+  it("a student cannot edit an existing source", async () => {
+    await alexClient
+      .from("assignment_sources")
+      .update({ source_title: "tampered" })
+      .eq("id", SOURCE);
+
+    const { data: after } = await svc
+      .from("assignment_sources")
+      .select("source_title")
+      .eq("id", SOURCE)
+      .single();
+
+    expect((after as { source_title: string | null }).source_title).toBe(
+      "RLS probe"
+    );
+  });
+
+  it("a teacher in another district cannot delete a source", async () => {
+    // The open storage-bucket item notes any teacher can delete any FILE
+    // under their school prefix; the ROW must at least hold across districts.
+    await teacher2Client.from("assignment_sources").delete().eq("id", SOURCE);
+
+    const { data: after } = await svc
+      .from("assignment_sources")
+      .select("id")
+      .eq("id", SOURCE)
+      .maybeSingle();
+
+    expect(after).not.toBeNull();
+  });
+
+  it("anon sees nothing", async () => {
+    const { data } = await anonClient.from("assignment_sources").select("id");
+    expect(data ?? []).toHaveLength(0);
+  });
+});

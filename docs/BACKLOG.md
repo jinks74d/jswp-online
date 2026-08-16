@@ -15,17 +15,26 @@ Prompted by `0056`: `teacher_feedback_student_resolve` reached production both *
 
 **33 tables carry RLS policies; 18 had no test at all.** Fourteen of the eighteen were the student-work artifact chain, which all lean on the same two helpers (`auth_user_can_read_writing` / `auth_user_can_write_writing`) reached from four different FK depths — so a join walking to the wrong writing would hand one student another's work, and a depth-2 mistake is invisible from depth 0. That cluster plus `audit_log` is now covered (10 tests, cross-student read/write/delete/insert at every depth).
 
-Still uncovered, in rough risk order:
-1. **`assignment_sources`** (4 policies, incl. a school-wide read) — pairs with the open storage-bucket item below, where any teacher can delete any file under their school prefix.
-2. **`class_student_enrollments`** (3) — student roster privacy across classes and teachers.
-3. **`class_teacher_assignments`** (2) — drives `auth_user_can_read_writing`'s teacher branch, so a bug here widens access to student work everywhere.
+**Covered 2026-08-16** (26 tests, RLS suite 108 → 134):
+1. ~~**`assignment_sources`**~~ — owner/enrolled-student read, cross-district read refused, unreleased hidden from students, student insert/update refused, cross-district delete refused.
+2. ~~**`class_student_enrollments`**~~ — student sees only their own row (probed with a *classmate in the same period*), teacher sees their period's roster, cross-district teacher sees none, self-enrol and self-unenrol both refused.
+3. ~~**`class_teacher_assignments`**~~ — teacher sees only their own pairings, cross-district teacher sees none, and both forged-pairing writes (untaught period, foreign school) refused.
+
+Still uncovered:
 4. Remaining artifact tables not directly probed: `t_charts`, `shaping_sheets`, `shaping_chunk_outputs`, `paragraph_forms`, `essay_parts`, `commentary_items`, `text_annotations`, `step_progress`. Lower risk — same two helpers as the covered chain, at depths already exercised — but "same mechanism" is an assumption, and this whole item exists because an untested assumption was wrong.
+
+**Confirmed while covering (3) — `class_teacher_assignments_read` is unscoped for admins.** The policy reads `teacher_id = auth.uid() OR auth_user_role() IN ('super_admin','district_admin','school_admin')`, with no scope predicate on the admin branch. Probed with a district_admin in the cross-tenant fixture district: they read the demo district's pairings. Contrast `class_student_enrollments_admin_manage`, which gates on `auth_user_is_admin_for_school`.
+
+Severity is metadata disclosure, not privilege escalation — the scope is *which teacher teaches which class period*, across all districts. It does **not** widen access to student work: `auth_user_can_read_writing`'s teacher branch runs through `auth_user_teaches_class_period`, which tests `teacher_id = auth.uid()` and is unaffected by who may SELECT this table. Writes stay correctly scoped (verified). Pinned as a DOCUMENTS test in `rls.test.ts` so the behaviour is explicit rather than accidental; tightening it is a policy change needing sign-off per CLAUDE.md §15.4.
+
+**The seed had no `assignment_sources` rows at all.** The first draft of that block passed every negative test over an empty table — "a teacher in another district cannot read them" is trivially true when there is nothing to read. The baseline-first rule below is what caught it; the tests now seed their own rows on both a released and an unreleased assignment.
 
 **Method note for whoever picks this up:** `__schema_inventory()` emits policy NAMES only, so the audit derived each table by matching the `<table>_<suffix>` convention against the table list. It cannot tell you a policy's *logic* is right, only that one with that name exists — see the `db:check` item below.
 
 **Test-writing note:** seed rows through a helper that throws on error. The first draft of the artifact tests ignored the upsert result, `chunks.ratio` (NOT NULL) was missing, and the whole chain silently never existed — at which point "another student reads nothing" passed for entirely the wrong reason. A negative RLS test over absent rows proves nothing. Assert the owner CAN read before asserting anyone else cannot.
 - **Identified:** 2026-08-13, from the 0056 post-mortem
-- **Priority:** high — this is the class of bug that is invisible until a student hits it
+- **Priority:** was high; now **medium** — the three highest-risk tables are covered as of 2026-08-16, leaving only item (4), which shares helpers and depths already exercised
+- **Progress:** 2026-08-16 — items (1)–(3) done, RLS suite 108 → 134 tests
 
 ### Apply the annotation self-heal to the flat/rich viewer too
 Fixed 2026-08-12: annotations saved before `d165dd2` (2026-07-23, "strip PDF margin furniture from the annotation substrate") kept offsets into the longer pre-strip `source_text`, so highlights landed ~150 characters downstream of the words the student selected. 5 of 36 rows were affected, all `source_render_mode = 'pdf'` on one file. Repaired in place, and `lib/annotation-range.ts` now re-anchors any stale annotation at render time.
