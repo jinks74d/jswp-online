@@ -10,6 +10,24 @@ Last reviewed: chunk P7-1. Expository guide-fidelity review 2026-05-27 added 5 O
 
 ## Open
 
+### `0047` was never applied — `district_logos_public_read` is still live
+Found 2026-08-16 by the new orphan check in `db:check`, immediately after the same class of miss put `0046` in production unapplied (see Closed). `0047`'s entire body is one `DROP POLICY district_logos_public_read ON storage.objects` — it creates nothing — so there was no declaration for the checker to miss and it reported clean for months.
+
+Currently harmless in practice: the `district-logos` bucket is **empty** (verified with the service role, 0 objects), so there is nothing to enumerate. It stops being harmless the moment a district uploads a logo, at which point any client with the anon key can `list()` the whole bucket rather than fetching one object by URL — which is exactly what `0047` was written to prevent.
+
+**Do not apply `0047` blind.** Its own header carries a warning: it must land with or after the route change that accompanies it, or logos break for every non-admin user. That route change (`app/api/districts/[districtId]/logo/route.ts` redirecting to `districts.logo_url` instead of `.download()`-ing through the RLS-respecting client) appears to be in the tree already — confirm before applying, then re-run `db:check` and watch the orphan line clear.
+- **Identified:** 2026-08-16, by the orphan check added the same day
+- **Priority:** medium — latent until the first logo upload, then it is a public bucket listing
+
+### `db:check` cannot see privileges at all
+There is no `grants` category and no inventory key to build one from, so any migration whose body is only `GRANT`/`REVOKE` passes unnoticed whether or not it was ever applied. `0046` was precisely that migration, and on 2026-08-16 it had never been applied while `db:check` reported no drift — `anon` could call `__schema_inventory()` and read every policy's `USING` clause (see Closed). `db:check` now prints a standing `! privileges (GRANT/REVOKE) are NOT checked` note so the gap is at least visible in the output.
+
+Fix: extend `__schema_inventory()` with a `grants` key — `proname`, `grantee`, `privilege_type` from `information_schema.routine_privileges` for `public` functions, and the same for table privileges — then have `db-check.ts` compare against the `GRANT`/`REVOKE` statements the migrations declare. The parsing is easy; the modelling is not, because a `REVOKE` is an assertion about an *absence* and the replay currently only tracks presence.
+
+Worth pairing with the related trap: Supabase ships `ALTER DEFAULT PRIVILEGES` granting `EXECUTE ON FUNCTIONS` in `public` to `anon`, `authenticated` and `service_role`, so **every** `SECURITY DEFINER` function created there is callable by API clients from birth, and `REVOKE … FROM PUBLIC` does not undo it. Two migrations in this repo (`0028`, `0057`) made that exact mistake. A checker that listed public-schema functions still granted to `anon` would catch the whole class.
+- **Identified:** 2026-08-16, from the `0046` exposure
+- **Priority:** high — it is the one category where "not checked" and "checked and fine" have looked identical, and the miss was a live disclosure
+
 ### Finish the RLS coverage sweep (18 of 33 tables had none)
 Prompted by `0056`: `teacher_feedback_student_resolve` reached production both **broken** (a self-referencing scalar subquery that raised `21000` for every student) and **insecure** (`step_key`, `grade_value` and `rubric_score` were never pinned, so a student could have rewritten their own grade) because nothing tested that table. An audit on 2026-08-13 asked how widespread that was.
 
@@ -36,8 +54,8 @@ Severity is metadata disclosure, not privilege escalation — the scope is *whic
 - **Priority:** was high; **ready to close** — all four items covered as of 2026-08-16, 33/33 tables now have at least one test
 - **Progress:** 2026-08-16 — items (1)–(4) done, RLS suite 108 → 147 tests
 
-### Two artifact tables have a second FK their policy never checks
-Found 2026-08-16 while covering item (4) of the sweep above. Both policies gate on **one** parent and leave a second foreign key unconstrained:
+### ~~Two artifact tables have a second FK their policy never checks~~ — FIXED by `0058`
+Found 2026-08-16 while covering item (4) of the sweep above; approved and fixed the same day by migration `0058`. Kept here rather than moved to Closed because the scope note at the end is a live limitation, not history. Both policies gated on **one** parent and left a second foreign key unconstrained:
 
 | table | gated by | ungated |
 |---|---|---|
@@ -48,11 +66,13 @@ So a student can insert a row hanging off **their own** gated parent while point
 
 **Severity is referential pollution, not disclosure.** A third test pins the reason: PostgREST applies RLS to an embedded table independently of the joining row, so `select("…, concrete_details(id, text)")` across the forged FK returns `null` — Bailey holds a pointer to Alex's CD and cannot dereference it. Nothing in the app writes these columns cross-writing either. What it does allow is a student writing rows into another student's referential neighbourhood, which is worth closing before it becomes a read path: the moment any query walks *outward* from `chunks` or `concrete_details` to their children without re-checking the writing, this turns into a disclosure.
 
-Likely fix: add the second parent to each `WITH CHECK`, so `shaping_chunk_outputs` also requires `auth_user_can_write_writing` via `chunk_id`, and `commentary_items` via `parent_cd_id` (nullable, so `parent_cd_id IS NULL OR …`). Cheap and local. It is a policy change, so it needs sign-off per CLAUDE.md §15.4 — the DOCUMENTS tests will flip to negative assertions in the same commit.
+`0058` adds the second parent to each `WITH CHECK`: `shaping_chunk_outputs` now also requires `auth_user_can_write_writing` via `chunk_id`, and `commentary_items` via `parent_cd_id` (nullable, so `parent_cd_id IS NULL OR …`). The DOCUMENTS tests flipped to negative assertions, plus one asserting the ordinary same-chunk `parent_cd_id` write still works — a WITH CHECK that over-reached there would have broken every commentary write in the app.
+
+**Two limits of the fix, both deliberate.** `WITH CHECK` only, so a row that *already* carries a cross-writing reference stays put — making `USING` stricter would leave such a row undeletable by its owner. A test seeds one through the service role and pins that it still discloses nothing. And the predicate is "the caller may write the second parent's writing", which closes the student-vs-student graft but **not** a teacher grafting across two of their own students, since `auth_user_can_write_writing` is true for both. Closing that needs a same-writing invariant in a trigger, since RLS is not an integrity mechanism and the service role bypasses it.
 
 This is the shape the sweep was looking for and the reason item (4) was not the formality it looked like: every table covered before this one has a single parent, so no earlier test could have found it.
 - **Identified:** 2026-08-16, covering RLS sweep item (4)
-- **Priority:** medium — no disclosure today, and it needs an authenticated student; but it is a latent read path and the fix is small
+- **Fixed:** migration `0058` (2026-08-16); residual = the two limits above
 
 ### Apply the annotation self-heal to the flat/rich viewer too
 Fixed 2026-08-12: annotations saved before `d165dd2` (2026-07-23, "strip PDF margin furniture from the annotation substrate") kept offsets into the longer pre-strip `source_text`, so highlights landed ~150 characters downstream of the words the student selected. 5 of 36 rows were affected, all `source_render_mode = 'pdf'` on one file. Repaired in place, and `lib/annotation-range.ts` now re-anchors any stale annotation at render time.
@@ -244,6 +264,19 @@ _(none currently)_
 ---
 
 ## Closed
+
+### `__schema_inventory()` was callable by `anon` in production
+Closed 2026-08-16 by migration `0059`. Found by a code review of `f94895f` that flagged the missing role-named REVOKE as a fresh-rebuild risk; probing the live database showed it was not a risk but a current state.
+
+The anon key — which ships in the browser bundle — could call `/rest/v1/rpc/__schema_inventory` and receive all 94 policies with full `qual` and `with_check`, 30 function names and 42 triggers. Verified with the key from `.env.local` (role claim `anon`, and genuinely anon: it read zero rows from `user_profiles`). `authenticated` had it too, confirmed as both a student and a teacher.
+
+`0046` exists to close exactly this and had **never been applied**. Nothing in `migrations/` drops the function and `CREATE OR REPLACE` preserves a function's ACL, so a revoke that had ever run would still be in force. `0059` re-applies it, naming the roles, and is idempotent.
+
+Three things worth carrying forward:
+- **`REVOKE … FROM PUBLIC` does not do what it reads like.** It removes only the implicit PUBLIC grant; Supabase's `ALTER DEFAULT PRIVILEGES` gives `anon`/`authenticated`/`service_role` their own explicit grants at CREATE time, which survive untouched. `0028` and `0057` both made this mistake.
+- **`0057` widened the payload before anyone checked who could read it.** Pre-`0057` an anon caller got policy names; post-`0057`, every policy's `USING` and `WITH CHECK`. The lesson is not "don't emit policy logic" — it is that adding a field to a `SECURITY DEFINER` function is a disclosure change, and the grant is part of the review.
+- **The checker reported "no drift" against a database missing a security migration.** Now tracked as its own Open item.
+- **Closed:** migration `0059` (2026-08-16)
 
 ### `db:check` compares policy NAMES only, and emits no triggers at all
 Both blind spots closed 2026-08-16 by migration `0057` + a rewrite of `scripts/db-check.ts`.

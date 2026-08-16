@@ -59,6 +59,8 @@ type LiveInventory = {
 type DeclaredPolicy = {
   name: string;
   file: string;
+  /** ALL | SELECT | INSERT | UPDATE | DELETE. Absent `FOR` means ALL. */
+  cmd: string;
   /** auth_user_* helpers named anywhere in its USING / WITH CHECK. */
   helpers: Set<string>;
 };
@@ -87,12 +89,26 @@ function matchAll(sql: string, re: RegExp): RegExpMatchArray[] {
  * blind spot it was reporting.
  */
 type Op = Expected & {
-  kind: "add" | "drop" | "dropType";
+  kind: "add" | "drop" | "dropType" | "dropTable";
   /** Byte offset in the file, so operations replay in STATEMENT order. */
   pos: number;
 };
 
-type ParsedMigration = { ops: Op[] };
+type ParsedMigration = {
+  ops: Op[];
+  /** "<table>.<trigger>" → the function the migration says it calls. */
+  triggerFns: Map<string, string>;
+};
+
+/**
+ * The function a CREATE TRIGGER hands off to, read from the tail of the same
+ * statement. Bounded at the first `;` or quote so it cannot wander into the
+ * next statement and attribute someone else's function to this trigger.
+ */
+function triggerFunctionAfter(text: string, from: number): string | undefined {
+  const tail = text.slice(from).split(/[;']/, 1)[0] ?? "";
+  return /EXECUTE\s+(?:FUNCTION|PROCEDURE)\s+(?:public\.)?(\w+)/i.exec(tail)?.[1];
+}
 
 /**
  * Extract every declared and retracted object from one migration file, in the
@@ -106,6 +122,7 @@ type ParsedMigration = { ops: Op[] };
  */
 function parseMigration(sql: string, file: string): ParsedMigration {
   const ops: Op[] = [];
+  const triggerFns = new Map<string, string>();
   const at = (m: RegExpMatchArray) => m.index ?? 0;
   const add = (category: Category, name: string, pos: number) =>
     ops.push({ kind: "add", category, name, file, pos });
@@ -215,10 +232,18 @@ function parseMigration(sql: string, file: string): ParsedMigration {
     sql,
     new RegExp(`CREATE TRIGGER\\s+(\\w+)[^;']*?${TRIGGER_TABLE.source}`, "gi")
   )) {
-    add("triggers", `${m[2]}.${m[1]}`, at(m));
+    const key = `${m[2]}.${m[1]}`;
+    add("triggers", key, at(m));
+    const fn = triggerFunctionAfter(sql, at(m) + m[0].length);
+    if (fn) triggerFns.set(key, fn);
   }
 
-  for (const block of matchAll(sql, /DO\s+\$\$([\s\S]*?)\$\$/g)) {
+  // `gi`, not `g`. This was the one pattern in the function missing the `i`
+  // flag, and the failure mode is silent: a migration written `do $$ … $$`
+  // contributes no trigger ops at all — not even the "*.name" fallback, which
+  // also lives inside this loop — so every attachment it makes goes unchecked
+  // with nothing in the output to say so.
+  for (const block of matchAll(sql, /DO\s+\$\$([\s\S]*?)\$\$/gi)) {
     const body = block[1];
 
     // `name TEXT[] := ARRAY['a', 'b', …]` from the DECLARE section.
@@ -242,7 +267,12 @@ function parseMigration(sql: string, file: string): ParsedMigration {
       if (!tables?.length) continue;
       for (const t of matchAll(loop[2], /CREATE TRIGGER\s+(\w+)/gi)) {
         resolved.add(t[1]);
-        for (const table of tables) add("triggers", `${table}.${t[1]}`, at(block));
+        const fn = triggerFunctionAfter(loop[2], (t.index ?? 0) + t[0].length);
+        for (const table of tables) {
+          const key = `${table}.${t[1]}`;
+          add("triggers", key, at(block));
+          if (fn) triggerFns.set(key, fn);
+        }
       }
     }
 
@@ -269,15 +299,22 @@ function parseMigration(sql: string, file: string): ParsedMigration {
   for (const m of matchAll(sql, /DROP POLICY (?:IF EXISTS )?(\w+)/gi)) {
     drop("policies", m[1], at(m));
   }
-  for (const m of matchAll(sql, /DROP TABLE (?:IF EXISTS )?(?:public\.)?(\w+)/gi)) {
-    drop("tables", m[1], at(m));
-  }
   for (const m of matchAll(sql, /DROP INDEX (?:IF EXISTS )?(?:public\.)?(\w+)/gi)) {
     drop("indexes", m[1], at(m));
   }
 
+  // DROP TABLE takes everything hanging off it with it. Retracting only the
+  // `tables|<name>` key would leave that table's ALTER-added columns, indexes,
+  // constraints, policies and triggers in the expected set forever — so the
+  // first migration that drops a table would put db:check back to exiting 1 on
+  // every run, which is the exact failure the retraction parsing above exists
+  // to prevent. Nothing drops a table today; this is here so that stays true.
+  for (const m of matchAll(sql, /DROP TABLE (?:IF EXISTS )?(?:public\.)?(\w+)/gi)) {
+    ops.push({ kind: "dropTable", category: "tables", name: m[1], file, pos: at(m) });
+  }
+
   ops.sort((a, b) => a.pos - b.pos);
-  return { ops };
+  return { ops, triggerFns };
 }
 
 /**
@@ -295,7 +332,17 @@ function parsePolicies(sql: string, file: string): DeclaredPolicy[] {
     const helpers = new Set(
       matchAll(m[2], /\b(auth_user_\w+)\s*\(/g).map((h) => h[1])
     );
-    out.push({ name: m[1], file, helpers });
+    // `cmd` is the one field Postgres does NOT rewrite, which makes it the
+    // cheapest and least noisy signal available — and the highest-stakes one:
+    // a policy declared FOR SELECT that exists live as FOR ALL is the exact
+    // shape of the 0056 escalation, and the helper sets would still match.
+    const forClause = /\bFOR\s+(ALL|SELECT|INSERT|UPDATE|DELETE)\b/i.exec(m[2]);
+    out.push({
+      name: m[1],
+      file,
+      cmd: (forClause?.[1] ?? "ALL").toUpperCase(),
+      helpers,
+    });
   }
   return out;
 }
@@ -384,27 +431,49 @@ async function main(): Promise<void> {
    */
   const state = new Map<string, Expected>();
   const declaredPolicies = new Map<string, DeclaredPolicy>();
+  const declaredTriggerFns = new Map<string, string>();
   for (const file of files) {
     const sql = stripComments(readFileSync(join(MIGRATIONS_DIR, file), "utf8"));
-    const { ops } = parseMigration(sql, file);
+    const { ops, triggerFns } = parseMigration(sql, file);
+    for (const [k, v] of triggerFns) declaredTriggerFns.set(k, v);
+
+    // Policy LOGIC declarations replay alongside the existence state, in the
+    // same order, so a DROP retracts both. Keeping them in a separate pass
+    // meant a policy dropped and never recreated (0047's
+    // district_logos_public_read) stayed in the comparison map — and if the
+    // live DB still carried it, the logic check found a match and said
+    // nothing, on a row the existence check cannot see either.
+    const policyDecls = new Map(
+      parsePolicies(sql, file).map((p) => [p.name, p])
+    );
 
     for (const op of ops) {
       const key = `${op.category}|${op.name}`;
       if (op.kind === "add") {
         state.set(key, { category: op.category, name: op.name, file: op.file });
+        if (op.category === "policies") {
+          const decl = policyDecls.get(op.name);
+          if (decl) declaredPolicies.set(op.name, decl);
+        }
       } else if (op.kind === "drop") {
         state.delete(key);
-      } else {
+        if (op.category === "policies") declaredPolicies.delete(op.name);
+      } else if (op.kind === "dropType") {
         // Enum type dropped wholesale — retract all of its values.
         for (const k of [...state.keys()]) {
           if (k.startsWith(`enums|${op.name}:`)) state.delete(k);
         }
+      } else {
+        // Table dropped — retract the table and everything keyed to it.
+        state.delete(key);
+        for (const [k, v] of [...state.entries()]) {
+          const owned =
+            (v.category === "columns" || v.category === "triggers") &&
+            v.name.startsWith(`${op.name}.`);
+          if (owned) state.delete(k);
+        }
       }
     }
-
-    // Later files win — CREATE POLICY after a DROP is the repo's redefinition
-    // idiom, so the last declaration is the current intent.
-    for (const p of parsePolicies(sql, file)) declaredPolicies.set(p.name, p);
   }
   const expected = [...state.values()];
 
@@ -463,15 +532,67 @@ async function main(): Promise<void> {
       const onlyDeclared = [...declared.helpers].filter(
         (h) => !liveHelpers.has(h)
       );
+      const cmdDrift =
+        (livePolicy.cmd ?? "").toUpperCase() !== declared.cmd
+          ? `cmd: live ${livePolicy.cmd}, migration ${declared.cmd}`
+          : "";
 
-      if (onlyLive.length === 0 && onlyDeclared.length === 0) continue;
+      if (onlyLive.length === 0 && onlyDeclared.length === 0 && !cmdDrift) {
+        continue;
+      }
       const parts: string[] = [];
+      if (cmdDrift) parts.push(cmdDrift);
       if (onlyLive.length) parts.push(`live-only: ${onlyLive.join(", ")}`);
       if (onlyDeclared.length)
         parts.push(`migration-only: ${onlyDeclared.join(", ")}`);
       policyWarnings.push(
         `  • ${livePolicy.table}.${livePolicy.name} — ${parts.join("; ")}  (${declared.file})`
       );
+    }
+  }
+
+  /*
+   * ORPHANS — live objects no migration declares.
+   *
+   * The existence check only runs one way: "is everything declared present?"
+   * That misses an entire class of drift, and it is not theoretical. 0047's
+   * whole body is `DROP POLICY district_logos_public_read` — it creates
+   * nothing — so the checker had no declaration to miss, reported a clean ✓,
+   * and the policy was still live on 2026-08-16, months after 0047 was
+   * written. Migrations that only REMOVE things were invisible.
+   *
+   * Warnings, not failures: Supabase creates policies of its own (storage,
+   * realtime), and a name here is a prompt to look, not a verdict.
+   */
+  const orphanPolicies = hasPolicyLogic
+    ? (live.policy_details ?? [])
+        .filter((p) => !declaredPolicies.has(p.name))
+        .map((p) => `  • ${p.table}.${p.name} (${p.cmd})`)
+    : [];
+
+  /*
+   * Trigger ATTACHMENT was the point of 0057, but a trigger can be attached
+   * and still be wrong. Repoint one of 0054's touch_writing triggers at
+   * trg_touch_writing_direct instead of trg_touch_writing_via_chunk and the
+   * attachment still exists, `triggers: 20/20` still prints, and
+   * last_student_edit_at silently stops updating for everything below a chunk.
+   * The intended function name sits in the same EXECUTE format() string the
+   * trigger name is parsed from, so both sides are already known.
+   */
+  const triggerWarnings: string[] = [];
+  if (hasTriggerSupport) {
+    const liveByName = new Map<string, string>();
+    for (const t of live.trigger_details ?? []) {
+      liveByName.set(`${t.table}.${t.name}`, t.function);
+    }
+    for (const [key, fn] of declaredTriggerFns) {
+      if (key.startsWith("*.")) continue; // Table unknown; nothing to key on.
+      const liveFn = liveByName.get(key);
+      if (liveFn && liveFn !== fn) {
+        triggerWarnings.push(
+          `  • ${key} — live calls ${liveFn}(), migration declares ${fn}()`
+        );
+      }
     }
   }
 
@@ -486,9 +607,36 @@ async function main(): Promise<void> {
       "  ! policy LOGIC not compared (names only) — apply migrations/0057_schema_inventory_triggers_policies.sql"
     );
   }
+  // Standing caveat, not a conditional one. There is no `grants` category and
+  // no inventory key to build one from, so a migration whose whole body is
+  // REVOKE/GRANT passes unnoticed whether or not it was ever applied. 0046 is
+  // exactly that migration, and on 2026-08-16 it had never been applied while
+  // this tool reported no drift — anon could call __schema_inventory() and
+  // read every policy's USING clause. See docs/BACKLOG.md.
+  notes.push(
+    "  ! privileges (GRANT/REVOKE) are NOT checked — see docs/BACKLOG.md"
+  );
   if (notes.length) {
     console.log();
     for (const n of notes) console.log(n);
+  }
+
+  if (orphanPolicies.length) {
+    console.log(
+      `\n! ${orphanPolicies.length} live polic(ies) that no migration declares:`
+    );
+    for (const o of orphanPolicies) console.log(o);
+    console.log(
+      "  Either a migration that drops them was never applied, or they were\n" +
+        "  created outside migrations/. Supabase's own policies also land here."
+    );
+  }
+
+  if (triggerWarnings.length) {
+    console.log(
+      `\n! ${triggerWarnings.length} trigger(s) call a different function live than the migration declares:`
+    );
+    for (const w of triggerWarnings) console.log(w);
   }
 
   if (policyWarnings.length) {
@@ -503,7 +651,15 @@ async function main(): Promise<void> {
   }
 
   if (missing.length === 0) {
-    console.log("\n✓ No drift — the live database matches every migration.");
+    // Scope the all-clear to what was actually checked. "No drift" printed
+    // directly beneath an orphan report is worse than no summary at all, and
+    // this tool's whole failure history is claims wider than its evidence.
+    const caveats = orphanPolicies.length + policyWarnings.length + triggerWarnings.length;
+    console.log(
+      caveats === 0
+        ? "\n✓ Every declared object exists live. Privileges not checked."
+        : `\n✓ Every declared object exists live, but ${caveats} item(s) above need a look.`
+    );
     process.exit(0);
   }
 
