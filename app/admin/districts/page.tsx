@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 
 import { requireRole } from "@/lib/auth";
 import { listDistrictsOverview } from "@/lib/queries/districts";
+import { StatTile } from "@/components/ui/stat-tile";
 import { DistrictsBrowser } from "./districts-browser";
 import { NewDistrictPanel } from "./new-district-panel";
 
@@ -45,27 +46,3 @@ export default async function DistrictsPage() {
   );
 }
 
-function StatTile({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: number;
-  accent?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
-        {label}
-      </dt>
-      <dd
-        className={`mt-1 text-3xl font-bold ${
-          accent ? "text-rose-600" : "text-gray-900"
-        }`}
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}

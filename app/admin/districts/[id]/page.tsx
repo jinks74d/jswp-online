@@ -17,6 +17,7 @@ import {
 import { listSchoolsForDistrict } from "@/lib/queries/schools";
 import { schoolLevelLabel } from "@/lib/school-levels";
 import { isValidHexColor } from "@/lib/district-branding.types";
+import { StatTile } from "@/components/ui/stat-tile";
 import { type DistrictInitial } from "../district-form";
 import { EditDistrictPanel } from "./edit-district-panel";
 import { SchoolActions } from "./school-actions";
@@ -127,10 +128,10 @@ export default async function DistrictDetailPage({
 
       {/* ── Stats row ───────────────────────────────────────────────── */}
       <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Schools" value={schools.length} />
-        <StatCard label="Active" value={activeSchools} accent />
-        <StatCard label="Contacts set" value={`${contactsSet}/2`} />
-        <StatCard label="Levels" value={levelsDisplay} />
+        <StatTile label="Schools" value={schools.length} />
+        <StatTile label="Active" value={activeSchools} accent />
+        <StatTile label="Contacts set" value={`${contactsSet}/2`} />
+        <StatTile label="Levels" value={levelsDisplay} />
       </dl>
 
       {/* ── Main + rail ─────────────────────────────────────────────── */}
@@ -272,30 +273,6 @@ function StatusPill({ active }: { active: boolean }) {
   );
 }
 
-function StatCard({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string | number;
-  accent?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
-        {label}
-      </dt>
-      <dd
-        className={`mt-1 truncate text-3xl font-bold ${
-          accent ? "text-rose-600" : "text-gray-900"
-        }`}
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}
 
 function Swatch({ label, color }: { label: string; color: string | null }) {
   return (

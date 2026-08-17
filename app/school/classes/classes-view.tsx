@@ -22,6 +22,7 @@ import type {
   SchoolClassStats,
   SchoolPeriodRow,
 } from "@/lib/queries/school-classes";
+import { StatCard } from "@/components/ui/stat-card";
 import { CreateClassModal } from "./create-class-modal";
 
 const dateFmt = new Intl.DateTimeFormat("en-US", { dateStyle: "short" });
@@ -92,9 +93,9 @@ export function ClassesView({
 
       {/* ── Stat cards ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Total Classes" value={stats.classes} icon={BookOpen} tint="bg-[var(--brand-soft)] text-[var(--brand)]" />
-        <StatCard label="Subjects" value={stats.subjects} icon={Layers} tint="bg-emerald-50 text-emerald-600" />
-        <StatCard label="Periods" value={stats.periods} icon={Clock} tint="bg-violet-50 text-violet-600" />
+        <StatCard size="md" label="Total Classes" value={stats.classes} icon={BookOpen} tint="bg-[var(--brand-soft)] text-[var(--brand)]" />
+        <StatCard size="md" label="Subjects" value={stats.subjects} icon={Layers} tint="bg-emerald-50 text-emerald-600" />
+        <StatCard size="md" label="Periods" value={stats.periods} icon={Clock} tint="bg-violet-50 text-violet-600" />
       </div>
 
       {/* ── Section header ──────────────────────────────────────────── */}
@@ -227,28 +228,3 @@ export function ClassesView({
   );
 }
 
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  tint,
-}: {
-  label: string;
-  value: number;
-  icon: typeof BookOpen;
-  tint: string;
-}) {
-  return (
-    <div className="flex items-center gap-3.5 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${tint}`}>
-        <Icon className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-          {label}
-        </p>
-        <p className="text-2xl font-bold leading-tight text-gray-900">{value}</p>
-      </div>
-    </div>
-  );
-}

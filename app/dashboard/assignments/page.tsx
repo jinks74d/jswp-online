@@ -12,6 +12,7 @@ import {
   isPublished,
   formatAssignmentClasses,
 } from "@/lib/queries/assignments";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DeleteAssignmentButton } from "./delete-assignment-button";
 import { PublishToggleButton } from "./publish-toggle-button";
 
@@ -73,7 +74,23 @@ export default async function AssignmentsPage() {
       </header>
 
       {assignments.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          icon={FileText}
+          title="No assignments yet"
+          action={
+            <Link
+              href="/dashboard/assignments/new"
+              className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              New assignment
+            </Link>
+          }
+        >
+          Create your first assignment to get started. The mode picker walks
+          you through Expository, Argumentation, Literary, or Narrative — each
+          with the right structural defaults from the JSWP guides.
+        </EmptyState>
       ) : (
         <>
           {/* Desktop table */}
@@ -232,31 +249,6 @@ export default async function AssignmentsPage() {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
-      <FileText
-        className="w-10 h-10 text-gray-400 mx-auto mb-4"
-        aria-hidden="true"
-      />
-      <h2 className="text-lg font-semibold text-gray-900">
-        No assignments yet
-      </h2>
-      <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
-        Create your first assignment to get started. The mode picker walks
-        you through Expository, Argumentation, Literary, or Narrative — each
-        with the right structural defaults from the JSWP guides.
-      </p>
-      <Link
-        href="/dashboard/assignments/new"
-        className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
-      >
-        <Plus className="w-4 h-4" aria-hidden="true" />
-        New assignment
-      </Link>
-    </div>
-  );
-}
 
 function StatusBadge({ published }: { published: boolean }) {
   return (

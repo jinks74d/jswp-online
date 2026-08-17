@@ -25,6 +25,7 @@ import {
   type SubmittedStepSummary,
 } from "@/lib/queries/teacher-writings";
 import { TeacherStatusBadge } from "@/components/dashboard/writing-review/teacher-status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   hasRevisedSinceReturned,
   byRevisedThenRecent,
@@ -108,7 +109,10 @@ export default async function AssignmentWritingsPage({
       </header>
 
       {writings.length === 0 ? (
-        <EmptyState />
+        <EmptyState icon={FileText} title="No submissions yet">
+          Your students haven&apos;t started this assignment, or their writings
+          haven&apos;t reached you yet. Check back later.
+        </EmptyState>
       ) : (
         <div className="space-y-8">
           {SECTION_ORDER.map((status) => {
@@ -251,20 +255,3 @@ function formatRelative(iso: string): string {
   });
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-10 text-center">
-      <FileText
-        className="w-10 h-10 text-gray-400 mx-auto mb-4"
-        aria-hidden="true"
-      />
-      <h2 className="text-lg font-semibold text-gray-900">
-        No submissions yet
-      </h2>
-      <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
-        Your students haven&apos;t started this assignment, or their writings
-        haven&apos;t reached you yet. Check back later.
-      </p>
-    </div>
-  );
-}

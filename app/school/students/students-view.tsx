@@ -16,8 +16,9 @@ import {
   Search,
   UserX,
   Users as UsersIcon,
-  type LucideIcon,
 } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
+import { OverviewStat } from "@/components/ui/overview-stat";
 import { AddStudentModal } from "./add-student-modal";
 
 export type StudentRow = {
@@ -201,57 +202,6 @@ export function StudentsView({
   );
 }
 
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  tint,
-}: {
-  label: string;
-  value: number;
-  icon: LucideIcon;
-  tint: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tint}`}>
-        <Icon className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <div className="min-w-0">
-        <p className="truncate text-xs font-semibold uppercase tracking-wide text-gray-500">
-          {label}
-        </p>
-        <p className="text-2xl font-bold leading-tight text-gray-900">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function OverviewStat({
-  label,
-  value,
-  icon: Icon,
-  tint,
-  accent,
-}: {
-  label: string;
-  value: string | number;
-  icon: LucideIcon;
-  tint: string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="px-6 py-6 text-center">
-      <span className={`mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl ${tint}`}>
-        <Icon className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <dd className={`text-2xl font-bold leading-none ${accent ? "text-[var(--brand)]" : "text-gray-900"}`}>
-        {value}
-      </dd>
-      <dt className="mt-1.5 text-sm text-gray-600">{label}</dt>
-    </div>
-  );
-}
 
 function EnrollmentPill({ enrolled }: { enrolled: boolean }) {
   return enrolled ? (

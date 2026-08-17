@@ -261,9 +261,17 @@ sidebars, so they live as siblings rather than nested. UI that more than one of
 them renders belongs in `components/`, never inside whichever route tree
 happened to build it first — see `components/school-structure/`.
 
-Known drift worth cleaning up when convenient: `lib/`'s root holds ~30 loose
-modules that would read better grouped, and four files under `components/ui/`
-plus `components/ErrorBoundary.tsx` are still PascalCase (see Naming below).
+`components/ui/` holds the cross-surface primitives — `StatCard`, `StatTile`,
+`OverviewStat`, `EmptyState`. Reach for one before writing a stat card or an
+empty panel; each replaced between two and seven local redefinitions that had
+drifted apart, and a new local copy starts that over. Not everything belongs
+here: `StatusPill` is deliberately still defined three times, because the three
+are visually different treatments that happen to share a name, and collapsing
+them would be a design decision rather than a refactor.
+
+Known drift worth cleaning up when convenient: `lib/`'s root holds ~40 loose
+modules that would read better grouped. (The PascalCase filenames this note
+used to list are gone — the tree is fully kebab-case.)
 
 ### Naming
 

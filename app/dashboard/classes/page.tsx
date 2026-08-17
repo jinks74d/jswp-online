@@ -8,6 +8,7 @@ import Link from "next/link";
 import { BookOpen, ChevronRight, Users } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { getTeacherClassPeriods } from "@/lib/queries/classes";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,11 @@ export default async function ClassesPage() {
       </header>
 
       {periods.length === 0 ? (
-        <EmptyState />
+        <EmptyState icon={BookOpen} title="No classes yet">
+          You aren&apos;t assigned to any class periods yet. Ask your district
+          administrator to add you to a class — your students and rosters will
+          appear here once that&apos;s done.
+        </EmptyState>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {periods.map((p) => (
@@ -69,19 +74,3 @@ export default async function ClassesPage() {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
-      <BookOpen
-        className="w-10 h-10 text-gray-400 mx-auto mb-4"
-        aria-hidden="true"
-      />
-      <h2 className="text-lg font-semibold text-gray-900">No classes yet</h2>
-      <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
-        You aren&apos;t assigned to any class periods yet. Ask your district
-        administrator to add you to a class — your students and rosters will
-        appear here once that&apos;s done.
-      </p>
-    </div>
-  );
-}

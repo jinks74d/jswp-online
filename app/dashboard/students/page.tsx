@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 import { requireUser } from "@/lib/auth";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   getStudentsForTeacher,
   type TeacherStudent,
@@ -31,7 +32,22 @@ export default async function StudentsPage() {
       </header>
 
       {students.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          icon={GraduationCap}
+          title="No students yet"
+          action={
+            <Link
+              href="/dashboard/classes"
+              className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 hover:text-blue-800"
+            >
+              View My Classes
+            </Link>
+          }
+        >
+          Once you&apos;re assigned to a class period and students are enrolled
+          in it, they&apos;ll show up here. Ask your district admin if you
+          believe this is an error.
+        </EmptyState>
       ) : (
         <>
           <div className="text-sm text-stone-600">
@@ -115,28 +131,6 @@ export default async function StudentsPage() {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-8 text-center">
-      <GraduationCap
-        className="w-10 h-10 text-gray-400 mx-auto mb-4"
-        aria-hidden="true"
-      />
-      <h2 className="text-lg font-semibold text-gray-900">No students yet</h2>
-      <p className="text-sm text-stone-600 mt-2 max-w-md mx-auto">
-        Once you&apos;re assigned to a class period and students are enrolled
-        in it, they&apos;ll show up here. Ask your district admin if you
-        believe this is an error.
-      </p>
-      <Link
-        href="/dashboard/classes"
-        className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 hover:text-blue-800"
-      >
-        View My Classes
-      </Link>
-    </div>
-  );
-}
 
 function displayName(s: TeacherStudent): string {
   return (

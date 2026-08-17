@@ -16,9 +16,9 @@ import {
   ShieldCheck,
   UserCog,
   Users as UsersIcon,
-  type LucideIcon,
 } from "lucide-react";
 import type { DistrictUserRow } from "@/lib/queries/district-users";
+import { StatCard } from "@/components/ui/stat-card";
 import { CreateUserModal, type SchoolOption } from "./create-user-modal";
 
 const NO_SCHOOL = "__none__";
@@ -248,30 +248,3 @@ export function UsersView({
 const selectClass =
   "rounded-lg border border-gray-400 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
 
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  tint,
-}: {
-  label: string;
-  value: number;
-  icon: LucideIcon;
-  tint: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <span
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tint}`}
-      >
-        <Icon className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <div className="min-w-0">
-        <p className="truncate text-xs font-semibold uppercase tracking-wide text-gray-500">
-          {label}
-        </p>
-        <p className="text-2xl font-bold leading-tight text-gray-900">{value}</p>
-      </div>
-    </div>
-  );
-}
