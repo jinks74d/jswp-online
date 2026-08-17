@@ -70,16 +70,16 @@ const eslintConfig = [
   },
 
   {
-    // Plain .js files here are legacy CommonJS node one-offs (scripts/,
-    // setup-analytics.js, check-db-tables.js). They are not TypeScript and
-    // `require()` is correct for them — judging them by the TS ruleset
-    // produced 127 of the 182 findings on first run, all noise. New code is
-    // TypeScript per CLAUDE.md §3, so this exemption should not grow.
-    files: ["**/*.js", "**/*.cjs"],
+    // The only remaining .js files are build configs, and they are CommonJS —
+    // next.config.js `require()`s the bundle analyzer. The legacy node
+    // one-offs this exemption used to cover (scripts/debug/,
+    // scripts/migrations/, setup-analytics.js, check-db-tables.js) are gone;
+    // they carried pre-0059 RLS policy definitions that could be run against
+    // a live database. New code is TypeScript per CLAUDE.md §3, so this
+    // exemption should not grow past config files.
+    files: ["*.config.js", "*.config.cjs"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-unused-expressions": "off",
     },
   },
 ];
