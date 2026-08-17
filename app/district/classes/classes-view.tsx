@@ -64,7 +64,7 @@ export function ClassesView({
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-[var(--brand-contrast)] transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Create Class
@@ -78,7 +78,7 @@ export function ClassesView({
           label="Total Classes"
           value={stats.classes}
           icon={BookOpen}
-          tint="bg-rose-50 text-rose-600"
+          tint="bg-[var(--brand-soft)] text-[var(--brand)]"
         />
         <StatCard
           size="md"
@@ -121,7 +121,7 @@ export function ClassesView({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search classes, subjects, or periods…"
               aria-label="Search classes"
-              className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+              className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
             />
           </div>
 
@@ -134,7 +134,7 @@ export function ClassesView({
                     href={detailHref(p)}
                     className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-50"
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]">
                       <BookOpen className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -182,7 +182,7 @@ export function ClassesView({
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white px-6 py-16 text-center shadow-sm">
-      <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+      <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
         <BookOpen className="h-7 w-7" aria-hidden="true" />
       </span>
       <h2 className="mt-4 text-lg font-bold text-gray-900">No classes yet</h2>
@@ -192,7 +192,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       <button
         type="button"
         onClick={onCreate}
-        className="mt-5 inline-flex items-center gap-2 rounded-lg bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+        className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-[var(--brand-contrast)] transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
       >
         <Plus className="h-4 w-4" aria-hidden="true" />
         Create First Class

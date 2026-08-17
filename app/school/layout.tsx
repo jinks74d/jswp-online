@@ -7,12 +7,13 @@
 import { requireRole } from "@/lib/auth";
 import { getSchool } from "@/lib/queries/schools";
 import { getDistrict } from "@/lib/queries/districts";
-import { brandStyle, SCHOOL_DEFAULT_BRAND } from "@/lib/brand-style";
+import { brandStyle, ADMIN_SHELL_DEFAULT_BRAND } from "@/lib/brand-style";
 import { SchoolSidebar } from "./school-sidebar";
 
 // The shared resolver now lives in lib/brand-style.ts, applied here and by the
-// teacher and student shells. SCHOOL_DEFAULT_BRAND keeps the rose look this
-// area has always had when neither the school nor its district sets a colour.
+// district, teacher and student shells. ADMIN_SHELL_DEFAULT_BRAND keeps the
+// rose look this area has always had when neither the school nor its district
+// sets a colour.
 
 export default async function SchoolLayout({
   children,
@@ -36,7 +37,7 @@ export default async function SchoolLayout({
       style={brandStyle(
         school?.primary_color,
         district?.primary_color,
-        SCHOOL_DEFAULT_BRAND
+        ADMIN_SHELL_DEFAULT_BRAND
       )}
     >
       <SchoolSidebar

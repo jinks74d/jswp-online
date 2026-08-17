@@ -58,7 +58,7 @@ export function SchoolTabs({
   return (
     <div>
       <div className="mb-3 flex items-center gap-2">
-        <span className="h-0.5 w-5 rounded-full bg-rose-500" aria-hidden="true" />
+        <span className="h-0.5 w-5 rounded-full bg-[var(--brand)]" aria-hidden="true" />
         <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
           {label}
         </h2>
@@ -87,7 +87,7 @@ export function SchoolTabs({
               onClick={() => setActive(i)}
               className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium whitespace-nowrap ${
                 selected
-                  ? "border-rose-500 text-gray-900"
+                  ? "border-[var(--brand)] text-gray-900"
                   : "border-transparent text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -96,7 +96,7 @@ export function SchoolTabs({
                 <span
                   className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold ${
                     selected
-                      ? "bg-rose-100 text-rose-700"
+                      ? "bg-[var(--brand-soft-strong)] text-[var(--brand)]"
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >

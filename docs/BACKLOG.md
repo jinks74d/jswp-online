@@ -202,6 +202,11 @@ Also carved out of the reconciliation. `/admin` dashboard + `/district/analytics
 - **Identified:** chunk P7-6; carved out 2026-07-02
 - **Priority:** deferred behind chunk 5.2 analytics
 
+### Super-admin school pages show the fallback brand, not the district's
+`components/school-structure/` moved onto `--brand` (refactor audit 2026-08-17), which fixed the real defect: a district admin browsing their own school structure used to get rose panels regardless of their district colour. The same components also render under `/admin/districts/[id]/schools/…`, where `app/admin/layout.tsx` deliberately sets no tenant brand — so a super admin drilling into district X's schools sees whatever `:root` resolves (their own subdomain's district, or the `#1e3a8a` fallback) rather than X's colour. Not wrong, but not ideal. Fix would be to apply `brandStyle(null, district.primary_color)` in the five `app/admin/districts/[id]/…` page wrappers, which already have the district id in params and would need one `getDistrict` call each. Deliberately out of scope for the branding sweep, which stayed on tenant-owned surfaces.
+- **Identified:** refactor audit 2026-08-17
+- **Priority:** polish; cosmetic only, no correctness impact
+
 ### Tailwind v4 migration (deliberately deferred)
 CLAUDE.md §3 claimed v4 as a locked decision; the tree was always v3. Resolved on 2026-08-17 by locking v3 and removing the dead `@tailwindcss/postcss@4` from `dependencies`, where it had been shipping to production wired to nothing. Reopen only when a v4-only feature is actually wanted — the `--brand` / `--jswp-*` CSS-variable system works identically under either. When that day comes, the two hazards are: (1) `tailwind.config.js` floors `xs`/`sm` to 16px as an app-wide a11y decision and **1,227 `text-xs`/`text-sm` sites across 180 files** depend on it, so the port to v4's CSS `@theme` must be verified visually — a bad port silently drops all of them to 12/14px and no test in either suite can see it; (2) 273 renamed utilities across 100 files (`shadow-sm`, `rounded-sm`, `outline-none`, `flex-shrink-*`) change meaning silently — `npx @tailwindcss/upgrade` handles most, but the diff needs review.
 - **Identified:** refactor audit 2026-08-17

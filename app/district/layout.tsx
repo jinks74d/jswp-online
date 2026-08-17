@@ -7,6 +7,7 @@
 
 import { requireRole } from "@/lib/auth";
 import { getDistrict } from "@/lib/queries/districts";
+import { brandStyle, ADMIN_SHELL_DEFAULT_BRAND } from "@/lib/brand-style";
 import { DistrictSidebar } from "./district-sidebar";
 
 export default async function DistrictLayout({
@@ -25,7 +26,18 @@ export default async function DistrictLayout({
     "District Admin";
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    // Without this the /district tree had no --brand in scope of its own: it
+    // fell back to whatever :root resolved from the subdomain, so a district
+    // admin reaching the app on the apex domain saw the generic navy rather
+    // than their own colour. Schools have always resolved theirs here.
+    <div
+      className="flex min-h-screen bg-gray-50"
+      style={brandStyle(
+        null,
+        district?.primary_color,
+        ADMIN_SHELL_DEFAULT_BRAND
+      )}
+    >
       <DistrictSidebar
         districtName={district?.name ?? "Your district"}
         userName={userName}

@@ -267,7 +267,7 @@ export function SchoolForm({
           <button
             type="button"
             onClick={addAdmin}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add another administrator
@@ -285,7 +285,7 @@ export function SchoolForm({
             className="peer sr-only"
           />
           <span
-            className="relative h-6 w-11 shrink-0 rounded-full bg-gray-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-rose-500"
+            className="relative h-6 w-11 shrink-0 rounded-full bg-gray-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--brand)]"
             aria-hidden="true"
           />
           <span className="font-medium text-gray-900">Active</span>
@@ -295,7 +295,7 @@ export function SchoolForm({
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex items-center gap-2 rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-md bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-contrast)] hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 disabled:opacity-50"
       >
         {pending && (
           <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
@@ -307,7 +307,7 @@ export function SchoolForm({
 }
 
 const inputClass =
-  "w-full rounded-md border border-gray-400 px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
+  "w-full rounded-md border border-gray-400 px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
 
 /**
  * One administrator's fields. Inputs use repeated (un-indexed) names so the
@@ -341,7 +341,7 @@ function AdminRow({
           <button
             type="button"
             onClick={onRemove}
-            className="inline-flex items-center gap-1 rounded p-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+            className="inline-flex items-center gap-1 rounded p-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
           >
             <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             Remove

@@ -22,7 +22,7 @@ export function ComingSoon({
       </header>
 
       <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand)]">
           <Icon className="h-6 w-6" aria-hidden="true" />
         </span>
         <p className="text-sm font-semibold text-gray-700">Coming soon</p>

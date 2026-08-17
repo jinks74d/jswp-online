@@ -22,8 +22,17 @@ import type React from "react";
 import { isValidHexColor } from "@/lib/district-branding.types";
 import { hexToRgb, getContrastColor } from "@/lib/district-branding.utils";
 
-/** Rose-600 — the historic /school accent for a school with no branding. */
-export const SCHOOL_DEFAULT_BRAND = "#e11d48";
+/**
+ * Rose-600 — the historic accent of the /school and /district admin shells,
+ * used when neither the school nor its district sets a colour. Passing it as
+ * the `fallback` is what lets those surfaces move onto --brand without
+ * changing how an unbranded tenant looks.
+ *
+ * Not the same thing as the /admin accent: that console is cross-district, so
+ * it keeps a fixed rose rather than resolving a tenant's colour. The full
+ * which-surfaces-brand table is in CLAUDE.md §14.10.
+ */
+export const ADMIN_SHELL_DEFAULT_BRAND = "#e11d48";
 
 function valid(c: string | null | undefined): string | null {
   return c && isValidHexColor(c) ? c : null;

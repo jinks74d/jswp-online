@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { brandStyle, SCHOOL_DEFAULT_BRAND } from "@/lib/brand-style";
+import { brandStyle, ADMIN_SHELL_DEFAULT_BRAND } from "@/lib/brand-style";
 
 const SCHOOL = "#7c3aed"; // violet
 const DISTRICT = "#1e3a8a"; // deep blue
@@ -37,11 +37,11 @@ describe("brandStyle — precedence", () => {
   });
 
   it("uses the caller's fallback only when neither resolves", () => {
-    expect(v(brandStyle(null, null, SCHOOL_DEFAULT_BRAND), "--brand")).toBe(
-      SCHOOL_DEFAULT_BRAND
+    expect(v(brandStyle(null, null, ADMIN_SHELL_DEFAULT_BRAND), "--brand")).toBe(
+      ADMIN_SHELL_DEFAULT_BRAND
     );
     // …and never in preference to a real colour.
-    expect(v(brandStyle(null, DISTRICT, SCHOOL_DEFAULT_BRAND), "--brand")).toBe(
+    expect(v(brandStyle(null, DISTRICT, ADMIN_SHELL_DEFAULT_BRAND), "--brand")).toBe(
       DISTRICT
     );
   });

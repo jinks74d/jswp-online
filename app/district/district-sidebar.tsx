@@ -66,7 +66,7 @@ export function DistrictSidebar({
       {/* Brand */}
       <div className="border-b border-gray-100 px-5 py-4">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-600 to-rose-800 text-white">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--brand)] text-[var(--brand-contrast)]">
             <BookOpen className="h-[18px] w-[18px]" aria-hidden="true" />
           </span>
           <span className="leading-tight">
@@ -108,9 +108,9 @@ export function DistrictSidebar({
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${
                     active
-                      ? "bg-rose-50 text-rose-700"
+                      ? "bg-[var(--brand-soft)] text-[var(--brand)]"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   }`}
                 >
@@ -127,7 +127,7 @@ export function DistrictSidebar({
         </p>
         <Link
           href="/district/schools"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
         >
           <Plus className="h-[18px] w-[18px]" aria-hidden="true" />
           Add School
@@ -147,7 +147,7 @@ export function DistrictSidebar({
             <span className="block text-xs text-gray-500">District Admin</span>
           </span>
         </div>
-        <LogoutButton className="mt-3.5 inline-flex items-center gap-2 text-sm font-semibold text-rose-600 hover:text-rose-700 disabled:opacity-50">
+        <LogoutButton className="mt-3.5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand)] hover:opacity-80 disabled:opacity-50">
           Sign Out
         </LogoutButton>
       </div>

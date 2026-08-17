@@ -74,7 +74,7 @@ export function SchoolsDashboard({
           type="button"
           onClick={() => setAdding((v) => !v)}
           aria-expanded={adding}
-          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-[var(--brand-contrast)] transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
         >
           {adding ? (
             <X className="h-4 w-4" aria-hidden="true" />
@@ -105,7 +105,7 @@ export function SchoolsDashboard({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search schools…"
             aria-label="Search schools"
-            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
           />
         </div>
         <span className="whitespace-nowrap text-sm text-gray-500">
@@ -123,7 +123,7 @@ export function SchoolsDashboard({
               className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-start gap-3.5 p-5 pb-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]">
                   <SchoolIcon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -144,7 +144,7 @@ export function SchoolsDashboard({
               <div className="flex flex-1 flex-col gap-2.5 px-5 pb-4 text-sm text-gray-600">
                 <div className="flex items-start gap-2.5">
                   <MapPin
-                    className="mt-0.5 h-4 w-4 shrink-0 text-rose-500"
+                    className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand)]"
                     aria-hidden="true"
                   />
                   <span className={s.address ? "" : "text-gray-500"}>
@@ -153,7 +153,7 @@ export function SchoolsDashboard({
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Users
-                    className="h-4 w-4 shrink-0 text-rose-500"
+                    className="h-4 w-4 shrink-0 text-[var(--brand)]"
                     aria-hidden="true"
                   />
                   <span>
@@ -165,13 +165,13 @@ export function SchoolsDashboard({
               <div className="flex gap-2.5 border-t border-gray-100 p-4">
                 <Link
                   href={detailHref(s.id)}
-                  className="flex flex-1 items-center justify-center rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                  className="flex flex-1 items-center justify-center rounded-lg bg-[var(--brand-soft)] px-3 py-2 text-sm font-semibold text-[var(--brand)] transition-colors hover:bg-[var(--brand-soft-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
                 >
                   View Details
                 </Link>
                 <Link
                   href={`${detailHref(s.id)}#manage`}
-                  className="flex flex-1 items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                  className="flex flex-1 items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
                 >
                   Manage Users
                 </Link>
@@ -217,7 +217,7 @@ function SummaryStat({
     <div className="px-6 py-6 text-center">
       <dd
         className={`text-4xl font-bold leading-none ${
-          accent ? "text-rose-600" : "text-gray-900"
+          accent ? "text-[var(--brand)]" : "text-gray-900"
         }`}
       >
         {value}

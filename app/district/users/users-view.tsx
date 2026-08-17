@@ -36,8 +36,8 @@ const ROLE_META: Record<string, RoleMeta> = {
   },
   school_admin: {
     label: "School Admin",
-    badge: "bg-rose-50 text-rose-700",
-    avatar: "bg-rose-100 text-rose-700",
+    badge: "bg-[var(--brand-soft)] text-[var(--brand)]",
+    avatar: "bg-[var(--brand-soft-strong)] text-[var(--brand)]",
   },
   teacher: {
     label: "Teacher",
@@ -112,7 +112,7 @@ export function UsersView({
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-[var(--brand-contrast)] transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Create User
@@ -121,7 +121,7 @@ export function UsersView({
 
       {/* ── Stat cards ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total Users" value={counts.total} icon={UsersIcon} tint="bg-rose-50 text-rose-600" />
+        <StatCard label="Total Users" value={counts.total} icon={UsersIcon} tint="bg-[var(--brand-soft)] text-[var(--brand)]" />
         <StatCard label="District Admins" value={counts.districtAdmins} icon={ShieldCheck} tint="bg-violet-50 text-violet-600" />
         <StatCard label="School Admins" value={counts.schoolAdmins} icon={UserCog} tint="bg-sky-50 text-sky-600" />
         <StatCard label="Teachers" value={counts.teachers} icon={GraduationCap} tint="bg-emerald-50 text-emerald-600" />
@@ -140,7 +140,7 @@ export function UsersView({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or email…"
             aria-label="Search users"
-            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
           />
         </div>
         <select
@@ -246,5 +246,5 @@ export function UsersView({
 }
 
 const selectClass =
-  "rounded-lg border border-gray-400 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500";
+  "rounded-lg border border-gray-400 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
 

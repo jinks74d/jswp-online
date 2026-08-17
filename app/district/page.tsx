@@ -58,7 +58,7 @@ export default async function DistrictDashboardPage() {
       { label: "Schools", value: stats.schools, icon: SchoolIcon, tint: "bg-sky-50 text-sky-600" },
       { label: "Administrators", value: stats.administrators, icon: UserCog, tint: "bg-violet-50 text-violet-600" },
       { label: "Teachers", value: stats.teachers, icon: GraduationCap, tint: "bg-emerald-50 text-emerald-600" },
-      { label: "Students", value: stats.students, icon: Users, tint: "bg-rose-50 text-rose-600" },
+      { label: "Students", value: stats.students, icon: Users, tint: "bg-[var(--brand-soft)] text-[var(--brand)]" },
     ];
 
   return (
@@ -102,7 +102,7 @@ export default async function DistrictDashboardPage() {
             <ul className="divide-y divide-gray-100">
               {schools.map((s) => (
                 <li key={s.id} className="flex items-start gap-3 px-5 py-3.5">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]">
                     <SchoolIcon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -204,7 +204,7 @@ function Panel({
         <h2 className="text-sm font-bold text-gray-900">{title}</h2>
         <Link
           href={viewAllHref}
-          className="text-sm font-semibold text-rose-600 hover:text-rose-700"
+          className="text-sm font-semibold text-[var(--brand)] hover:opacity-80"
         >
           View all
         </Link>
@@ -234,9 +234,9 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="flex items-start gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+      className="flex items-start gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]">
         <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
       </span>
       <span>
@@ -253,7 +253,7 @@ const ROLE_BADGE: Record<string, string> = {
   student: "bg-sky-50 text-sky-700",
   teacher: "bg-emerald-50 text-emerald-700",
   school_admin: "bg-violet-50 text-violet-700",
-  district_admin: "bg-rose-50 text-rose-700",
+  district_admin: "bg-[var(--brand-soft)] text-[var(--brand)]",
 };
 
 const ROLE_LABEL: Record<string, string> = {

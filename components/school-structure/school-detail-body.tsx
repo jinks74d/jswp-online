@@ -60,7 +60,7 @@ export async function SchoolDetailBody({
     <div className="max-w-5xl space-y-8">
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1 text-sm font-medium text-rose-600 hover:text-rose-700"
+        className="inline-flex items-center gap-1 text-sm font-medium text-[var(--brand)] hover:opacity-80"
       >
         <ChevronLeft className="h-4 w-4" />
         Back to {backLabel ?? district?.name ?? "district"}
@@ -267,7 +267,7 @@ export async function SchoolDetailBody({
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="mb-3 flex items-center gap-2">
-      <span className="h-0.5 w-5 rounded-full bg-rose-500" aria-hidden="true" />
+      <span className="h-0.5 w-5 rounded-full bg-[var(--brand)]" aria-hidden="true" />
       <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
         {children}
       </h2>

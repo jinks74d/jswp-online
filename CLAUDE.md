@@ -732,6 +732,20 @@ The legacy app sprinkled `#FF0000` etc. throughout components.
 
 **Use CSS custom properties from `lib/district-branding.utils.ts` and the `JSWP_COLORS` map in `lib/jswp-modes.ts`. District color overrides go through CSS variables set on `<html>`.**
 
+**Which surfaces brand, and which don't.** Not every accent is a bug — the
+distinction is whether the surface belongs to one tenant:
+
+| Surface | Accent | Why |
+|---|---|---|
+| `app/student`, `app/dashboard`, `app/school`, `app/district`, `components/school-structure` | `var(--brand)` | Inside one district/school. Each shell resolves it via `brandStyle()`; an unbranded tenant falls back to `ADMIN_SHELL_DEFAULT_BRAND`, the historic rose. |
+| `app/admin` | fixed `rose-*` | The super-admin console is **cross-district** — `/admin/districts` lists every tenant, so resolving one tenant's colour there would be meaningless. Its rose is deliberate platform chrome, not drift. |
+| `components/student/writing/topic-sentence-dev` | fixed `rose-*` | Pedagogical, not decorative: rose marks the *con* side of pro/con tagging and is deliberately **not** JSWP red, which means Concrete Detail. See the note at the top of `tsd-bp-pane.tsx`. |
+
+So: a `rose-*` under `app/admin/` or in the pro/con tagger is correct and should
+be left alone. Anywhere else it is drift — reach for `--brand`, `--brand-soft`,
+`--brand-soft-strong`, and `--brand-contrast` (never `text-white` on a brand
+background; a light brand colour needs the computed contrast colour).
+
 ---
 
 ## 15. When you (Claude Code) should stop and ask
