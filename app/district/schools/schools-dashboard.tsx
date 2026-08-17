@@ -105,7 +105,7 @@ export function SchoolsDashboard({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search schools…"
             aria-label="Search schools"
-            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+            className="w-full rounded-lg border border-gray-500 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
           />
         </div>
         <span className="whitespace-nowrap text-sm text-gray-500">

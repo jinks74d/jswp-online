@@ -51,7 +51,7 @@ export function AnnotationSidebar({
                 type="checkbox"
                 checked={checked}
                 onChange={() => onToggleKind(k)}
-                className="rounded border-gray-300"
+                className="rounded border-gray-500"
               />
               <span
                 className={`inline-block w-2.5 h-2.5 rounded-full ${cfg.dotBg}`}

@@ -104,7 +104,7 @@ export function FeedbackItem({ feedback, mode, currentUserId }: Props) {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             rows={3}
-            className="w-full rounded-md border border-gray-400 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full rounded-md border border-gray-500 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           <div className="flex items-center justify-end gap-2">
             <button

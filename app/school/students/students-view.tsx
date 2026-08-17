@@ -118,7 +118,7 @@ export function StudentsView({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search students by name, email, or ID…"
             aria-label="Search students"
-            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+            className="w-full rounded-lg border border-gray-500 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
           />
         </div>
         <span className="whitespace-nowrap text-sm text-gray-500">

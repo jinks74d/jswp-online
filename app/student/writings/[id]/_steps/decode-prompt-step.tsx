@@ -202,7 +202,7 @@ export function DecodePromptStep({
             onChange={update("background_text")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
             placeholder="Copy and paste the background sentence(s) here."
           />
         </Field>
@@ -218,7 +218,7 @@ export function DecodePromptStep({
             onChange={update("trigger_text")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
             placeholder="Copy and paste the trigger sentence here."
           />
         </Field>
@@ -235,7 +235,7 @@ export function DecodePromptStep({
             onChange={update("task")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
             placeholder="Re-state the task verbatim."
           />
         </Field>
@@ -249,7 +249,7 @@ export function DecodePromptStep({
             onChange={update("form")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
           >
             <option value="">— Select —</option>
             {Object.entries(FORM_LABELS).map(([v, label]) => (
@@ -267,7 +267,7 @@ export function DecodePromptStep({
             onChange={update("ratio_identified")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
           >
             <option value="">— Select —</option>
             {(Object.keys(RATIO_LABELS) as ChunkRatio[]).map((v) => (
@@ -289,7 +289,7 @@ export function DecodePromptStep({
             onChange={update("focus_terms")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="steamboat, theme, photosynthesis"
           />
         </Field>
@@ -307,7 +307,7 @@ export function DecodePromptStep({
             onChange={update("key_verbs")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="discuss, analyze"
           />
         </Field>
@@ -323,7 +323,7 @@ export function DecodePromptStep({
             onChange={update("notes")}
             onBlur={handleBlur}
             disabled={isReadOnly}
-            className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
           />
         </Field>
       </div>

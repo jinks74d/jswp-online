@@ -374,7 +374,7 @@ function FullTextEditor({
           disabled={isReadOnly}
           rows={18}
           placeholder="Your assembled essay will appear here…"
-          className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
         />
         <span
           className="absolute right-2 top-2 text-xs text-gray-500 pointer-events-none"
@@ -453,7 +453,7 @@ function LiteraryFinalChecks({
                 checked={checks.includes(c.key)}
                 onChange={() => toggle(c.key)}
                 disabled={isReadOnly || pending}
-                className="mt-0.5 h-4 w-4 rounded border-gray-400"
+                className="mt-0.5 h-4 w-4 rounded border-gray-500"
                 style={{ accentColor: "var(--brand)" }}
               />
               <span>{c.label}</span>

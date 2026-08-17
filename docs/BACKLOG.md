@@ -202,6 +202,11 @@ Also carved out of the reconciliation. `/admin` dashboard + `/district/analytics
 - **Identified:** chunk P7-6; carved out 2026-07-02
 - **Priority:** deferred behind chunk 5.2 analytics
 
+### Decide whether bordered buttons also need 1.4.11 contrast
+The refactor audit (2026-08-17) moved all 62 form-field borders to `border-gray-500` (4.83:1), the only Tailwind grey that clears SC 1.4.11's 3:1. Left alone: **36 `<button>` and 14 `<Link>` borders** still on `gray-300`/`gray-400` (1.47:1 / 2.54:1). The reasoning was that 1.4.11 covers the boundary needed to *identify* a control, and a button with a visible text label is identifiable without its border — a defensible reading, but not the only one. If the VPAT is ever audited externally, expect this to be questioned; the conservative fix is a further sweep of those 50 to `gray-500`, at the cost of noticeably heavier secondary-button chrome against the brand-filled primaries. Also unresolved: `rubric-scoring-panel.tsx:139`, a radio-card whose resting border is `gray-200` (1.24:1) with selection shown by `border-green-600` — selection state reads fine, the unselected affordance does not.
+- **Identified:** refactor audit 2026-08-17
+- **Priority:** decide before the next VPAT refresh
+
 ### Super-admin school pages show the fallback brand, not the district's
 `components/school-structure/` moved onto `--brand` (refactor audit 2026-08-17), which fixed the real defect: a district admin browsing their own school structure used to get rose panels regardless of their district colour. The same components also render under `/admin/districts/[id]/schools/…`, where `app/admin/layout.tsx` deliberately sets no tenant brand — so a super admin drilling into district X's schools sees whatever `:root` resolves (their own subdomain's district, or the `#1e3a8a` fallback) rather than X's colour. Not wrong, but not ideal. Fix would be to apply `brandStyle(null, district.primary_color)` in the five `app/admin/districts/[id]/…` page wrappers, which already have the district id in params and would need one `getDistrict` call each. Deliberately out of scope for the branding sweep, which stayed on tenant-owned surfaces.
 - **Identified:** refactor audit 2026-08-17

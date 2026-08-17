@@ -391,7 +391,7 @@ function RevisionMovesChecklist({
                 checked={moves.includes(m.key)}
                 onChange={() => toggle(m.key)}
                 disabled={isReadOnly || pending}
-                className="mt-0.5 h-4 w-4 rounded border-gray-400"
+                className="mt-0.5 h-4 w-4 rounded border-gray-500"
                 style={{ accentColor: "var(--brand)" }}
               />
               <span>{m.label}</span>

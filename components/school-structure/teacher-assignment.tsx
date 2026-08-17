@@ -86,7 +86,7 @@ export function TeacherAssignment({
             required
             defaultValue=""
             aria-label="Teacher to assign"
-            className="flex-1 px-3 py-2 border border-gray-400 rounded-md text-sm text-gray-900"
+            className="flex-1 px-3 py-2 border border-gray-500 rounded-md text-sm text-gray-900"
           >
             <option value="" disabled>
               Choose a teacher…

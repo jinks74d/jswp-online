@@ -172,7 +172,7 @@ export function AnnotationForm({ payload, onClose }: Props) {
               value={kind}
               onChange={(e) => setKind(e.target.value as AnnotationKind)}
               disabled={busy || isReadOnly}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
+              className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
             >
               {ANNOTATION_KIND_ORDER.map((k) => {
                 const cfg = ANNOTATION_KINDS[k];
@@ -199,7 +199,7 @@ export function AnnotationForm({ payload, onClose }: Props) {
               disabled={busy || isReadOnly}
               required
               aria-describedby="annotation-commentary-help"
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-50"
+              className="mt-1 w-full rounded-md border border-gray-500 px-3 py-2 text-sm disabled:bg-gray-50"
             />
           </label>
 

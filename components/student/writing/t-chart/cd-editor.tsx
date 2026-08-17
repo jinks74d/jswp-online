@@ -99,7 +99,7 @@ export function CdEditor({
           checked={isQuotation}
           onChange={toggleQuotation}
           disabled={disabled || pending}
-          className="h-3.5 w-3.5 rounded border-gray-400"
+          className="h-3.5 w-3.5 rounded border-gray-500"
           style={{ accentColor: "var(--jswp-color-cd)" }}
         />
         Mark as quotation

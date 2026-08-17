@@ -140,7 +140,7 @@ export function UsersView({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or email…"
             aria-label="Search users"
-            className="w-full rounded-lg border border-gray-400 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+            className="w-full rounded-lg border border-gray-500 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
           />
         </div>
         <select
@@ -246,5 +246,5 @@ export function UsersView({
 }
 
 const selectClass =
-  "rounded-lg border border-gray-400 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
+  "rounded-lg border border-gray-500 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
 

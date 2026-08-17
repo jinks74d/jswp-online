@@ -142,7 +142,7 @@ export function CandidateRow({
           checked={candidate.is_selected}
           disabled={togglePending || isReadOnly}
           onChange={onToggleSelected}
-          className="rounded border-gray-300 disabled:opacity-50"
+          className="rounded border-gray-500 disabled:opacity-50"
           aria-label={
             candidate.is_selected
               ? "Deselect this candidate"

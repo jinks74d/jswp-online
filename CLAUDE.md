@@ -525,6 +525,23 @@ WCAG 2.1 AA is the floor, not the ceiling. The JSWP color code is non-negotiable
 
 When a district admin sets a custom primary color, validate the contrast ratio against white (`#FFFFFF`) text — should meet at least 4.5:1. Use the `getContrastRatio` helper in `lib/district-branding.utils.ts`. Warn, don't block, but warn loudly.
 
+**Form-field borders are `border-gray-500`, not 300 or 400.** SC 1.4.11
+(Non-text Contrast) wants 3:1 for the boundary of a control, and against white
+the Tailwind greys measure — via this repo's own `getContrastRatio` —
+`gray-300` **1.47:1**, `gray-400` **2.54:1**, `gray-500` **4.83:1**. Only
+`gray-500` clears it. `gray-400` looks like a fix and is not one; an earlier
+a11y pass standardised on it, and every field carrying it still failed.
+
+This applies to the boundary that *identifies* a control — `input`, `select`,
+`textarea`, checkboxes — where the border is the only affordance. It does not
+apply to a bordered button or link, which its own visible label identifies, nor
+to decorative rules (dashed empty-state panels, blockquote bars, dividers);
+those stay on `gray-200`/`gray-300` by choice.
+
+Lighthouse will not catch a regression here — it scores text contrast, not
+1.4.11 — so a 100/100 route can still be full of 1.47:1 fields. Check it by
+eye, or with `getContrastRatio`.
+
 Keyboard navigation must work everywhere. Drag-drop on the Gathering CDs sheet has up/down keyboard fallback. Step engine "Save and Next" is reachable via Tab.
 
 ---

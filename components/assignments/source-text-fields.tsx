@@ -236,7 +236,7 @@ export function SourceTextFields({
                   patch(it.uid, { kind: e.target.value as SourceKind })
                 }
                 disabled={locked}
-                className="rounded-md border border-gray-400 px-2 py-1 text-xs text-gray-900 disabled:bg-gray-50"
+                className="rounded-md border border-gray-500 px-2 py-1 text-xs text-gray-900 disabled:bg-gray-50"
               >
                 <option value="primary">Primary</option>
                 <option value="secondary">Secondary</option>
@@ -454,7 +454,7 @@ export function SourceTextFields({
 }
 
 const inputClass =
-  "w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-700";
+  "w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-700";
 
 /**
  * Thumbnail of an uploaded image source, so the teacher can confirm they

@@ -121,7 +121,7 @@ export function ClassesView({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search classes, subjects, or periods…"
               aria-label="Search classes"
-              className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+              className="w-full rounded-lg border border-gray-500 bg-white py-3 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
             />
           </div>
 

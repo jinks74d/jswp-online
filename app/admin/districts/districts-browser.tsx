@@ -77,7 +77,7 @@ export function DistrictsBrowser({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or subdomain"
             aria-label="Search districts by name or subdomain"
-            className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+            className="w-full rounded-md border border-gray-500 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
           />
         </div>
 
@@ -92,7 +92,7 @@ export function DistrictsBrowser({
             id="district-sort"
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="rounded-md border border-gray-300 bg-white py-2 pl-3 pr-8 text-sm text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+            className="rounded-md border border-gray-500 bg-white py-2 pl-3 pr-8 text-sm text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>

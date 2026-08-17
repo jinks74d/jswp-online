@@ -153,7 +153,7 @@ function Composer({ writingId }: { writingId: string }) {
         placeholder="Write feedback for this student…"
         aria-label="Write feedback for this student"
         aria-describedby="feedback-composer-hint"
-        className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
       <div className="flex items-center justify-between gap-3">
         <p id="feedback-composer-hint" className="text-base text-gray-600">

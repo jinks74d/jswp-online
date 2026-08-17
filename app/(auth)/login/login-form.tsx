@@ -44,7 +44,7 @@ export function LoginForm() {
           type="email"
           required
           autoComplete="email"
-          className="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+          className="w-full px-3 py-2 border border-gray-500 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
           placeholder="Enter your email"
         />
       </div>
@@ -63,7 +63,7 @@ export function LoginForm() {
             type={showPassword ? "text" : "password"}
             required
             autoComplete="current-password"
-            className="w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-500 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10 text-gray-900"
             placeholder="Enter your password"
           />
           <button

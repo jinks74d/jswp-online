@@ -94,7 +94,7 @@ export function AddSuperAdminForm() {
             aria-describedby={
               state.fieldErrors?.first_name ? "err-first_name" : undefined
             }
-            className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
+            className="w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900"
           />
           {state.fieldErrors?.first_name && (
             <p id="err-first_name" className="mt-1 text-sm text-red-600">
@@ -119,7 +119,7 @@ export function AddSuperAdminForm() {
             aria-describedby={
               state.fieldErrors?.last_name ? "err-last_name" : undefined
             }
-            className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
+            className="w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900"
           />
           {state.fieldErrors?.last_name && (
             <p id="err-last_name" className="mt-1 text-sm text-red-600">
@@ -144,7 +144,7 @@ export function AddSuperAdminForm() {
           autoComplete="off"
           aria-invalid={!!state.fieldErrors?.email}
           aria-describedby={state.fieldErrors?.email ? "err-email" : undefined}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+          className="w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900"
         />
         {state.fieldErrors?.email && (
           <p id="err-email" className="mt-1 text-sm text-red-600">
@@ -177,7 +177,7 @@ export function AddSuperAdminForm() {
                   ? "hint-password err-password"
                   : "hint-password"
               }
-              className="w-full px-3 py-2 pr-10 border border-gray-400 rounded-md text-gray-900 font-mono"
+              className="w-full px-3 py-2 pr-10 border border-gray-500 rounded-md text-gray-900 font-mono"
             />
             <button
               type="button"

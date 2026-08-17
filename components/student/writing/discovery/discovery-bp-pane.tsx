@@ -144,7 +144,7 @@ function KindSelect({
           const v = (value || null) as NarrativeKind | null;
           await onSave(v);
         }}
-        className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
+        className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
       >
         <option value="">— Select —</option>
         <option value="personal">Personal</option>
@@ -174,7 +174,7 @@ function SubjectSelect({
           const v = (value || null) as NarrativeSubject | null;
           await onSave(v);
         }}
-        className="w-full rounded-md border border-gray-400 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
+        className="w-full rounded-md border border-gray-500 px-3 py-2 text-sm bg-white disabled:bg-gray-50"
       >
         <option value="">— Select —</option>
         <option value="event">Event</option>

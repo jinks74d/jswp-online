@@ -191,7 +191,7 @@ function PendingDecision({
               aria-describedby={
                 approveState.fieldErrors?.role ? "err-approve_role" : undefined
               }
-              className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
+              className="w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900"
             >
               <option value="teacher">Teacher</option>
               <option value="school_admin">School administrator</option>
@@ -223,7 +223,7 @@ function PendingDecision({
                   ? "err-approve_district_id"
                   : undefined
               }
-              className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
+              className="w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900"
             >
               <option value="">— Pick a district —</option>
               {districts.map((d) => (
@@ -264,7 +264,7 @@ function PendingDecision({
                   ? "err-approve_school_id"
                   : undefined
               }
-              className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
+              className="w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900"
             >
               <option value="">
                 {role === "district_admin" ? "— None —" : "— Pick a school —"}
@@ -297,7 +297,7 @@ function PendingDecision({
               name="decision_notes"
               rows={2}
               maxLength={1000}
-              className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
+              className="w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900"
             />
           </div>
 
@@ -347,7 +347,7 @@ function PendingDecision({
                   ? "err-denial_reason"
                   : undefined
               }
-              className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
+              className="w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900"
             />
             {denyState.fieldErrors?.denial_reason && (
               <p id="err-denial_reason" className="mt-1 text-sm text-red-600">
@@ -368,7 +368,7 @@ function PendingDecision({
               name="decision_notes"
               rows={2}
               maxLength={1000}
-              className="w-full px-3 py-2 border border-gray-400 rounded-md text-gray-900"
+              className="w-full px-3 py-2 border border-gray-500 rounded-md text-gray-900"
             />
           </div>
 

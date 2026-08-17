@@ -213,4 +213,4 @@ function Credentials({
 }
 
 const inputClass =
-  "w-full rounded-md border border-gray-400 px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
+  "w-full rounded-md border border-gray-500 px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]";
