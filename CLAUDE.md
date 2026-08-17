@@ -97,7 +97,7 @@ Do not propose changes to these without explicit approval from the user:
 |---|---|---|
 | Framework | Next.js 15.5 (App Router) | Already in use; locked. |
 | Language | TypeScript 5.6, strict mode | All new code. No JavaScript files. |
-| UI | React 18 + Tailwind CSS v4 | Existing app mid-transition v3→v4; rebuild standardizes on v4. |
+| UI | React 18 + Tailwind CSS **v3** | Locked on v3 (decision 2026-08-17). See note below. |
 | Data | Supabase (`@supabase/ssr` + `@supabase/supabase-js`) | No ORM. RLS-first. |
 | Drag/drop | `@dnd-kit/*` | For CD reordering on the Gathering sheet. |
 | Color picker | `react-colorful` | District branding. |
@@ -109,6 +109,27 @@ Do not propose changes to these without explicit approval from the user:
 | Hosting | Vercel | Preview deploys per PR. |
 | Email | Resend | Decision in Phase 2. |
 | Error tracking | Sentry | Phase 7. |
+
+**On Tailwind v3 vs v4.** This table used to say v4. It was aspirational — the
+migration never happened, and the tree has always been v3: `tailwindcss@3.4.17`,
+a v3 `tailwind.config.js`, and `@tailwind base/components/utilities` at the top
+of `app/globals.css`. A dead `@tailwindcss/postcss@4` sat in `dependencies`
+(shipping to production, wired to nothing) until it was removed on 2026-08-17.
+
+v3 is now the locked choice, for two reasons. Nothing here needs v4 — the
+`--brand` and `--jswp-*` CSS-variable system that carries district branding and
+the color code is plain CSS and works identically under either. And the
+migration is disproportionately risky: `tailwind.config.js` floors the `xs` and
+`sm` font sizes to 16px as an app-wide accessibility decision, and **1,227
+`text-xs`/`text-sm` sites across 180 files** depend on it. Porting that to v4's
+CSS `@theme` incorrectly drops every one of them to 12/14px — a WCAG regression
+that neither the unit suite (`components/` is thinly covered) nor the E2E smoke
+suite (which asserts only "renders, no error") can see. A further 273 renamed
+utilities across 100 files (`shadow-sm`, `rounded-sm`, `outline-none`,
+`flex-shrink-*`) change meaning silently.
+
+Revisit only when a v4-only feature is actually wanted. Tracked in
+`docs/BACKLOG.md`.
 
 **Do not add new dependencies casually.** If you need a library not listed, propose it in a comment first and wait for approval. The legacy app accumulated dependencies that turned out to be unused.
 

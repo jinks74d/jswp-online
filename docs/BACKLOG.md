@@ -202,6 +202,11 @@ Also carved out of the reconciliation. `/admin` dashboard + `/district/analytics
 - **Identified:** chunk P7-6; carved out 2026-07-02
 - **Priority:** deferred behind chunk 5.2 analytics
 
+### Tailwind v4 migration (deliberately deferred)
+CLAUDE.md §3 claimed v4 as a locked decision; the tree was always v3. Resolved on 2026-08-17 by locking v3 and removing the dead `@tailwindcss/postcss@4` from `dependencies`, where it had been shipping to production wired to nothing. Reopen only when a v4-only feature is actually wanted — the `--brand` / `--jswp-*` CSS-variable system works identically under either. When that day comes, the two hazards are: (1) `tailwind.config.js` floors `xs`/`sm` to 16px as an app-wide a11y decision and **1,227 `text-xs`/`text-sm` sites across 180 files** depend on it, so the port to v4's CSS `@theme` must be verified visually — a bad port silently drops all of them to 12/14px and no test in either suite can see it; (2) 273 renamed utilities across 100 files (`shadow-sm`, `rounded-sm`, `outline-none`, `flex-shrink-*`) change meaning silently — `npx @tailwindcss/upgrade` handles most, but the diff needs review.
+- **Identified:** refactor audit 2026-08-17
+- **Priority:** deferred indefinitely; no v4-only feature is wanted yet
+
 ### Consolidate live-count textarea pattern
 Extend `AutoSaveInput` with an optional `onChange` callback prop, OR extract a shared `<LiveCountTextarea>` helper. Currently chunk 4.6b's CD/CM and Narrative paragraph-form panes inline ~40 lines of AutoSaveInput-shaped code each to support live word-count display (which needs `onChange` access). Chunk 4.6c's final-draft surface will likely want the same. Consolidating reduces duplication.
 - **Identified:** chunk 4.6b
