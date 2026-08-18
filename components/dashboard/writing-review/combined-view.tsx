@@ -68,6 +68,8 @@ interface Props {
       id: string;
       kind: "primary" | "secondary";
       source_text: string | null;
+      /** Sanitized rich HTML; source_text is its substrate, so offsets match. */
+      source_html: string | null;
       source_title: string | null;
       source_author: string | null;
       source_file_path: string | null;
@@ -181,9 +183,9 @@ function renderStep({
     pedagogyHint: step.pedagogyHint ?? null,
   };
 
-  // Read-only reference sources for downstream review panels. Teacher review
-  // renders each source's flat substrate (sourceHtml null); annotations still
-  // group per source via source_id.
+  // Read-only reference sources for downstream review panels. Passed through
+  // verbatim so the teacher reads the source in the same form the student did
+  // — see the note on reviewSources below for why this is offset-safe.
   const refSources = assignment.sources.map((sc) => ({
     sourceId: sc.id,
     kind: sc.kind,
@@ -192,11 +194,8 @@ function renderStep({
     sourceAuthor: sc.source_author,
     sourceFilePath: sc.source_file_path,
     sourceFileName: sc.source_file_name,
-    sourceHtml: null,
-    // Deliberately flattened for pdf/rich (above), but an image source has no
-    // flat substrate at all — pass 'image' through or the panel renders blank.
-    sourceRenderMode:
-      sc.source_render_mode === "image" ? ("image" as const) : null,
+    sourceHtml: sc.source_html,
+    sourceRenderMode: sc.source_render_mode,
   }));
 
   if (step.groupOrigin === "decode_prompt") {
@@ -222,9 +221,19 @@ function renderStep({
   }
 
   if (step.groupOrigin === "annotate_text") {
-    // Teacher review renders each source's flat substrate for now (renderMode
-    // null → SourceTextViewer); PDF/rich-faithful review is Chunk 3 (spec §11),
-    // out of scope here. Annotations still group per source via source_id.
+    // Sources pass through unflattened, so the teacher reviews the formatted
+    // document — headings, paragraphs, lists, the PDF itself — rather than the
+    // plain substrate. This used to null sourceHtml/sourceRenderMode, deferring
+    // faithful rendering to "Chunk 3 (spec §11)"; the deferral cost more than it
+    // saved, since a teacher judging annotations against a wall of unformatted
+    // text cannot see what the student was actually looking at.
+    //
+    // Offset-safe by construction, not by luck: source_text is DERIVED from
+    // source_html via sourceHtmlToSubstrate at save time
+    // (lib/assignments/sources.ts:116), and buildRichTree walks text nodes in
+    // that same document order, so concatenated run text equals source_text.
+    // text_annotations.range_start/end therefore address the identical string
+    // in both representations.
     const reviewSources = assignment.sources.map((s) => ({
       sourceId: s.id,
       kind: s.kind,
@@ -233,11 +242,8 @@ function renderStep({
       sourceAuthor: s.source_author,
       sourceFilePath: s.source_file_path,
       sourceFileName: s.source_file_name,
-      sourceHtml: null,
-      // See refSources: 'image' must survive the flattening or there is
-      // nothing left to show.
-      sourceRenderMode:
-        s.source_render_mode === "image" ? ("image" as const) : null,
+      sourceHtml: s.source_html,
+      sourceRenderMode: s.source_render_mode,
     }));
     return (
       <AnnotateTextStep

@@ -70,6 +70,14 @@ export interface WritingForTeacherReview {
       position: number;
       kind: "primary" | "secondary";
       source_text: string | null;
+      /**
+       * Sanitized rich HTML, when the teacher uploaded/pasted formatted source.
+       * Needed so the review surface renders the same formatted document the
+       * student annotated. Safe to overlay annotations on: source_text is
+       * derived from this via sourceHtmlToSubstrate (lib/assignments/sources.ts),
+       * so range offsets line up against either representation.
+       */
+      source_html: string | null;
       source_title: string | null;
       source_author: string | null;
       source_file_path: string | null;
@@ -207,8 +215,8 @@ export async function getWritingForTeacherReview(
         rubric_file_path, rubric_file_name, rubric_file_mime,
         assignment_sources (
           id, position, kind,
-          source_text, source_title, source_author, source_file_path,
-          source_file_name, source_render_mode
+          source_text, source_html, source_title, source_author,
+          source_file_path, source_file_name, source_render_mode
         )
       )
       `
