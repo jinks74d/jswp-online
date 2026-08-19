@@ -131,6 +131,12 @@ export async function signInAction(
     districtFromSubdomain &&
     // Super admins are districtless and sign in on the apex domain — skip.
     profile.district_id &&
+    // District analysts (0061) hold grants across several districts, so their
+    // profile.district_id is only a home address, not the scope they work in.
+    // Bouncing them to it would strand them on one district's subdomain with
+    // a switcher offering three they could no longer reach. They belong on the
+    // apex domain, same as super admins.
+    profile.role !== "district_analyst" &&
     districtFromSubdomain !== profile.district_id
   ) {
     const admin = createAdminClient();

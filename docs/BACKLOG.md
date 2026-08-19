@@ -261,6 +261,26 @@ Chunk 4.5f-4 built mode-aware expository thesis frames + intro openers + a "Flip
 - **Identified:** chunk 4.5f-4 (split out of the two closed essay-frame review items)
 - **Priority:** **pedagogy-gated** — confirm before merge to master (Phase 7)
 
+### Admin UI for cross-district analytics grants (0061)
+`lib/actions/district-grants.ts` ships `grantDistrictAccess` / `revokeDistrictAccess` / `listGrantsForUser`, all super-admin gated and audit-logged, but nothing calls them — grants are provisioned by SQL today. Needs a panel under `/admin/users/[id]` listing the districts a `district_analyst` holds and letting a super admin add/remove them. Note `district_access_grants` has no write policy by design, so the UI must go through these server actions (admin client), not a direct client-side insert.
+- **Identified:** migration 0061
+- **Priority:** low — one analyst provisioned by hand is fine; this matters at the third or fourth.
+
+### Reuse the analytics panels for `/district/analytics` and `/school/analytics`
+Both are still `ComingSoon` stubs while `/analytics` renders the full metric set. The panels in `components/analytics/metric-panels.tsx` are already presentational and take a `DistrictAnalytics`, so a district admin's single-district view is mostly wiring — `auth_user_can_view_district()` already returns TRUE for them, so `get_district_analytics()` works unchanged with no policy edit. The school case needs a school-scoped RPC (or a `p_school_id` filter on the existing one), which does not exist yet.
+- **Identified:** migration 0061
+- **Priority:** medium — the stubs are visible to real district admins today.
+
+### Pedagogical thresholds for the analytics metrics
+`components/analytics/metric-panels.tsx` deliberately renders every rate bare — no banding, no red/green, no "needs attention". What counts as a healthy completion, skip, or revision rate is pedagogical judgment and needs Dr. Louis (CLAUDE.md §15.2). Once she sets the lines, banding is a presentational change only; the query layer already returns numerator and denominator separately.
+- **Identified:** migration 0061
+- **Priority:** **pedagogy-gated**
+
+### `step_progress.time_spent_seconds` and `shaping_sheets.rules_applied[]` are never written
+Both columns exist in `0001` and in `database.types.ts`, and no code anywhere writes either. `rules_applied` is intentionally held back (`lib/actions/shaping.ts:29`, pending the grammar-rules content item); `time_spent_seconds` looks like an oversight. Surfaced while choosing 0061's metrics — each would have produced a permanently-zero chart that reads as a data bug rather than an unwired feature. Either wire them or drop them from the schema.
+- **Identified:** migration 0061
+- **Priority:** low, but decide before anything else builds a metric on them.
+
 ---
 
 ## Deferred chunk work

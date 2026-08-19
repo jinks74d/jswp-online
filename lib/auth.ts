@@ -146,6 +146,11 @@ export function getRedirectPath(userRole: JswpRole): string {
   switch (userRole) {
     case "district_admin":
       return "/district";
+    case "district_analyst":
+      // Not /district — that tree's layout gates on district_admin and is
+      // scoped to one district. The analyst is cross-district and read-only,
+      // which is a different mental model and so a sibling route (0061).
+      return "/analytics";
     case "school_admin":
       return "/school";
     case "super_admin":

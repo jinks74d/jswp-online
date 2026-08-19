@@ -300,6 +300,17 @@ export interface Database {
         Update: UpdateOf<AuditLog>;
         Relationships: [];
       };
+      district_access_grants: {
+        Row: DistrictAccessGrants;
+        // No Update: the row has no mutable field. A changed grant is a
+        // delete plus an insert, and both are service-role only (0061 §5).
+        Insert: InsertOf<
+          DistrictAccessGrants,
+          "user_id" | "district_id" | "granted_by"
+        >;
+        Update: UpdateOf<DistrictAccessGrants>;
+        Relationships: [];
+      };
       signup_requests: {
         Row: SignupRequests;
         Insert: InsertOf<
@@ -331,6 +342,68 @@ export interface Database {
           p_update: Json;
         };
         Returns: undefined;
+      };
+      /**
+       * 0061 — aggregate-only district analytics. SECURITY DEFINER, gated on
+       * auth_user_can_view_district(). Raises 42501 when unauthorized rather
+       * than returning an empty row.
+       *
+       * Returns numerators and denominators, never rates — the UI divides via
+       * rate() in lib/queries/district-analytics.ts. Extend this, the RETURNS
+       * TABLE in the migration, and DistrictAnalytics together; the three are
+       * one contract.
+       */
+      get_district_analytics: {
+        Args: {
+          p_district_id: string;
+          p_since?: string;
+          p_until?: string;
+        };
+        Returns: {
+          district_id: string;
+          district_name: string;
+          window_since: string;
+          window_until: string;
+          schools: number;
+          teachers: number;
+          students: number;
+          teachers_active: number;
+          students_active: number;
+          writings_started: number;
+          writings_completed: number;
+          assignments_total: number;
+          assignments_expository: number;
+          assignments_argumentation: number;
+          assignments_literary: number;
+          assignments_narrative: number;
+          writings_graded: number;
+          median_days_to_feedback: number | null;
+          writings_submitted: number;
+          writings_revised: number;
+        }[];
+      };
+      /**
+       * 0061 — per-step completion counts for a district cohort. Returned
+       * UNORDERED by design: step ordering lives only in lib/jswp-modes.ts
+       * (CLAUDE.md §7), so stall step and skip rate are derived in TypeScript.
+       */
+      get_district_step_funnel: {
+        Args: {
+          p_district_id: string;
+          p_since?: string;
+          p_until?: string;
+        };
+        Returns: {
+          mode: Database["public"]["Enums"]["jswp_mode"];
+          step_key: string;
+          writings_reached: number;
+          mode_writings_total: number;
+        }[];
+      };
+      /** 0061 — READ-ONLY scope check. Never use in a WITH CHECK clause. */
+      auth_user_can_view_district: {
+        Args: { d_id: string };
+        Returns: boolean;
       };
       auth_user_role: {
         Args: Record<string, never>;
@@ -374,6 +447,10 @@ export interface Database {
       jswp_role:
         | "super_admin"
         | "district_admin"
+        // 0061 — read-only, multi-district analytics viewer. Deliberately a
+        // distinct value so every existing `=== "district_admin"` check keeps
+        // excluding it; access is opted in one surface at a time.
+        | "district_analyst"
         | "school_admin"
         | "teacher"
         | "student";
@@ -845,6 +922,14 @@ export type AuditLog = {
   metadata: Json | null;
   district_id: string | null;
   school_id: string | null;
+  created_at: string;
+};
+
+/** 0061 — additive read-only district scope. See migration header. */
+export type DistrictAccessGrants = {
+  user_id: string;
+  district_id: string;
+  granted_by: string;
   created_at: string;
 };
 
