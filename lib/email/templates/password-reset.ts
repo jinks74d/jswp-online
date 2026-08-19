@@ -21,6 +21,16 @@ export type PasswordResetProps = {
   primaryColor: string;
   /** Supabase recovery action link. */
   resetUrl: string;
+  /**
+   * Who started this. "self" is the forgot-password form; "admin" is a
+   * super/district/school admin sending a reset on the user's behalf.
+   *
+   * It changes two sentences, and the change matters: "we received a request"
+   * is alarming and wrong when the recipient made no request, and the
+   * "ignore this if you didn't ask" line actively invites a user to discard a
+   * reset their own administrator just sent them.
+   */
+  initiatedBy?: "self" | "admin";
 };
 
 export function renderPasswordReset({
@@ -28,20 +38,31 @@ export function renderPasswordReset({
   districtName,
   primaryColor,
   resetUrl,
+  initiatedBy = "self",
 }: PasswordResetProps): { subject: string; html: string; text: string } {
-  const subject = `Reset your ${districtName} password`;
+  const byAdmin = initiatedBy === "admin";
+  const subject = byAdmin
+    ? `Set a new password for your ${districtName} account`
+    : `Reset your ${districtName} password`;
   const greeting = firstName ? `Hi ${firstName},` : "Hi,";
+
+  const leadIn = byAdmin
+    ? `An administrator has sent you a link to set a new password for your ${districtName} account on JSWP Online.`
+    : `We received a request to reset the password for your ${districtName} account on JSWP Online.`;
+  const footnote = byAdmin
+    ? `If you weren't expecting this, check with your administrator before using the link.`
+    : `If you didn't ask for this, you can ignore this email — your password will stay as it is.`;
 
   const text = [
     greeting,
     ``,
-    `We received a request to reset the password for your ${districtName} account on JSWP Online.`,
+    leadIn,
     `Use the link below to choose a new one:`,
     resetUrl,
     ``,
     `This link expires in one hour and can only be used once.`,
     ``,
-    `If you didn't ask for this, you can ignore this email — your password will stay as it is.`,
+    footnote,
     ``,
     `Thanks,`,
     `JSWP Online`,
@@ -70,9 +91,7 @@ export function renderPasswordReset({
             </tr>
             <tr>
               <td style="font-size:14px;color:#374151;line-height:1.6;padding-bottom:24px;">
-                We received a request to reset the password for your
-                <strong>${escapeHtml(districtName)}</strong> account. Choose a
-                new password below.
+                ${escapeHtml(leadIn)}
               </td>
             </tr>
             <tr>
@@ -91,9 +110,8 @@ export function renderPasswordReset({
             </tr>
             <tr>
               <td style="font-size:12px;color:#9ca3af;line-height:1.6;padding-top:24px;">
-                This link expires in one hour and can only be used once. If you
-                didn't ask for a reset, you can ignore this email — your
-                password will stay as it is.
+                This link expires in one hour and can only be used once.
+                ${escapeHtml(footnote)}
               </td>
             </tr>
           </table>

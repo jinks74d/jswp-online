@@ -3,8 +3,9 @@
 /**
  * Cross-district Users view (super-admin). Stat cards (total / districts /
  * admins / teachers), name/email search with role + district filters, and a
- * table of every user across every district. Read-only — provisioning happens
- * via /admin/districts and /admin/signups, so there is no "Create User" here.
+ * table of every user across every district. Provisioning still happens via
+ * /admin/districts and /admin/signups, so there is no "Create User" here; the
+ * one action offered per row is sending a password reset.
  * Data is fetched server-side; this owns search/filter state.
  */
 
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 import type { AllUserRow } from "@/lib/queries/all-users";
 import { StatCard } from "@/components/ui/stat-card";
+import { SendResetButton } from "@/components/admin/send-reset-button";
 
 const NO_DISTRICT = "__none__";
 
@@ -187,6 +189,9 @@ export function AllUsersView({
               <th scope="col" className="px-5 py-3 font-medium">District</th>
               <th scope="col" className="px-5 py-3 font-medium">School</th>
               <th scope="col" className="px-5 py-3 font-medium">Created</th>
+              <th scope="col" className="px-5 py-3 font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -235,12 +240,17 @@ export function AllUsersView({
                   <td className="px-5 py-3 text-gray-500">
                     {fmtDate(u.createdAt)}
                   </td>
+                  <td className="px-5 py-3">
+                    {u.email && (
+                      <SendResetButton userId={u.id} userLabel={userName(u)} />
+                    )}
+                  </td>
                 </tr>
               );
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-gray-500">
+                <td colSpan={6} className="px-5 py-12 text-center text-gray-500">
                   No users match your filters.
                 </td>
               </tr>

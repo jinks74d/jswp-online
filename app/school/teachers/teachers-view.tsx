@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { OverviewStat } from "@/components/ui/overview-stat";
+import { SendResetButton } from "@/components/admin/send-reset-button";
 import { AddTeacherModal } from "./add-teacher-modal";
 
 export type TeacherRow = {
@@ -127,6 +128,9 @@ export function TeachersView({
               <th scope="col" className="px-5 py-3 font-medium">School Assignment</th>
               <th scope="col" className="px-5 py-3 font-medium">Joined</th>
               <th scope="col" className="px-5 py-3 font-medium">Status</th>
+              <th scope="col" className="px-5 py-3 font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -158,11 +162,16 @@ export function TeachersView({
                 <td className="px-5 py-3">
                   <StatusPill active={t.active} />
                 </td>
+                <td className="px-5 py-3">
+                  {t.email && (
+                    <SendResetButton userId={t.id} userLabel={teacherName(t)} />
+                  )}
+                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-5 py-12 text-center text-gray-500">
+                <td colSpan={5} className="px-5 py-12 text-center text-gray-500">
                   {total === 0
                     ? "No teachers yet. Use “Add Teacher” to add the first one."
                     : "No teachers match your search."}

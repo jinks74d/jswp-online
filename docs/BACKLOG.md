@@ -281,6 +281,11 @@ Both columns exist in `0001` and in `database.types.ts`, and no code anywhere wr
 - **Identified:** migration 0061
 - **Priority:** low, but decide before anything else builds a metric on them.
 
+### Should teachers be able to send password resets to their own students?
+`lib/reset-scope.ts` deliberately answers no. Admin-initiated resets are scoped to super / district / school admins; a teacher gets `false` even for a student in their own class period. This is the highest-volume real need in a K-12 product — a student locked out mid-lesson, standing in front of the one adult in the room — so the current answer is almost certainly too strict. It was left out because it is a policy decision about minors' accounts (the reset email goes to the student's own address) rather than a technical one. If the answer is yes, the change is one `case "teacher"` branch checking `auth_user_teaches_class_period`-equivalent containment, plus tests; the scoping helper and the 16 tests around it are already in place.
+- **Identified:** admin password reset
+- **Priority:** **policy-gated** — Raymond's call, then a small change.
+
 ---
 
 ## Deferred chunk work

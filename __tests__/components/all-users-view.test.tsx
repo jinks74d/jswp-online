@@ -2,11 +2,19 @@
  * Filter + count logic for the super-admin cross-district Users view.
  * Locks the search / role-filter / district-filter behavior and the stat-card
  * counts, since those are the only real logic in an otherwise presentational
- * read-only table.
+ * table. The per-row "Send reset" action is mocked out — its own logic lives
+ * in lib/reset-scope.ts and is tested there.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
+
+// The row's SendResetButton imports the server action, which reaches
+// lib/auth.ts and React's cache() — unavailable in jsdom. Same shape as the
+// action mocks in review-actions.test.tsx.
+vi.mock("@/lib/actions/password-reset", () => ({
+  sendPasswordResetToUser: vi.fn(),
+}));
 import { AllUsersView } from "@/app/admin/users/all-users-view";
 import type { AllUserRow } from "@/lib/queries/all-users";
 

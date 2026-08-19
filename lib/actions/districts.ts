@@ -27,12 +27,12 @@
 
 import "server-only";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSiteUrl } from "@/lib/site-url";
 import { writeAuditLog } from "@/lib/audit-log";
 import { createScopedUser } from "@/lib/scoped-users";
 import { sendEmail } from "@/lib/email/client";
@@ -146,15 +146,6 @@ function isUniqueViolation(message: string | undefined): boolean {
   return /duplicate|unique|already exists/i.test(message ?? "");
 }
 
-async function getSiteUrl(): Promise<string> {
-  const h = await headers();
-  const host = h.get("host") ?? "localhost:3000";
-  const protocol =
-    host.startsWith("localhost") || host.startsWith("127.0.0.1")
-      ? "http"
-      : "https";
-  return `${protocol}://${host}`;
-}
 
 export async function createDistrict(
   _prev: DistrictFormState,

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import type { DistrictUserRow } from "@/lib/queries/district-users";
 import { StatCard } from "@/components/ui/stat-card";
+import { SendResetButton } from "@/components/admin/send-reset-button";
 import { CreateUserModal, type SchoolOption } from "./create-user-modal";
 
 const NO_SCHOOL = "__none__";
@@ -184,6 +185,9 @@ export function UsersView({
               <th scope="col" className="px-5 py-3 font-medium">Role</th>
               <th scope="col" className="px-5 py-3 font-medium">School</th>
               <th scope="col" className="px-5 py-3 font-medium">Created</th>
+              <th scope="col" className="px-5 py-3 font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -224,12 +228,17 @@ export function UsersView({
                   <td className="px-5 py-3 text-gray-500">
                     {fmtDate(u.createdAt)}
                   </td>
+                  <td className="px-5 py-3">
+                    {u.email && (
+                      <SendResetButton userId={u.id} userLabel={userName(u)} />
+                    )}
+                  </td>
                 </tr>
               );
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-5 py-12 text-center text-gray-500">
+                <td colSpan={5} className="px-5 py-12 text-center text-gray-500">
                   No users match your filters.
                 </td>
               </tr>
