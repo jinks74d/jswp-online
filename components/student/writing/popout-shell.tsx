@@ -129,13 +129,16 @@ export function PopoutShell({ label, heading, children, className }: Props) {
         }
       >
         {heading ?? <span />}
+        {/* Brand-filled, not white-on-white: the toggle sits on the card it
+            expands, so a neutral chip disappeared into the surface. --brand-
+            contrast, never text-white — a light district colour needs dark ink. */}
         <button
           ref={collapseButtonRef}
           type="button"
           onClick={() => setExpanded((v) => !v)}
           aria-haspopup="dialog"
           aria-expanded={expanded}
-          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          className="inline-flex items-center gap-1.5 rounded-md bg-[var(--brand)] px-2.5 py-1 text-xs font-medium text-[var(--brand-contrast)] shadow-sm transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2"
         >
           {expanded ? (
             <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" />
