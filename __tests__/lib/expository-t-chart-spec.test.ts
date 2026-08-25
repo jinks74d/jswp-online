@@ -47,8 +47,14 @@ describe("getExpositoryTChartSpec — 2+:1", () => {
   });
 
   it("names the first TS the throwaway draft and tags the CS", () => {
-    expect(spec.tsLabel).toBe("Throwaway Topic Sentence (TS):");
+    expect(spec.tsLabel).toBe("“Throwaway” Topic Sentence (TS):");
     expect(spec.csLabel).toBe("Concluding Sentence (CS):");
+  });
+
+  it("tells the student the first TS is a draft", () => {
+    expect(spec.tsHint).toBe(
+      "Write a first draft topic sentence for this body paragraph."
+    );
   });
 
   it("keeps ellipses out of the labels", () => {
@@ -101,5 +107,10 @@ describe("getExpositoryTChartSpec — 3+:0", () => {
   it("uses full-word TOPIC SENTENCE / CONCLUDING SENTENCE labels", () => {
     expect(spec.tsLabel).toBe("Topic Sentence:");
     expect(spec.csLabel).toBe("Concluding Sentence:");
+  });
+
+  // No Revised TS row at 3+:0, so nothing here is a first draft.
+  it("offers no first-draft hint", () => {
+    expect(spec.tsHint).toBeNull();
   });
 });

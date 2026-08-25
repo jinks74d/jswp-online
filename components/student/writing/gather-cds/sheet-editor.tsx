@@ -149,7 +149,7 @@ export function SheetEditor({
     <div className="space-y-4">
       <div>
         <div className="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
-          My throwaway topic sentence
+          MY “THROWAWAY” TOPIC SENTENCE
         </div>
         <p className="text-xs text-gray-500 mb-2">
           Optional — but worth noting if the prompt has multiple parts.

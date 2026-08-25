@@ -125,6 +125,7 @@ export function ExpositoryTChart({
             badge={spec.badges.ts}
             orderTotal={orderTotal}
             role="ts"
+            hint={spec.tsHint ?? undefined}
             initialValue={tc.working_topic_sentence ?? ""}
             placeholder="Write the topic sentence for this paragraph…"
             disabled={isReadOnly}
@@ -279,7 +280,7 @@ function SentenceRow({
   badge?: number;
   orderTotal: number;
   role: SentenceRole;
-  /** Pick-n-Stitch instruction shown under the label, where the guide has one. */
+  /** Instruction shown under the label, where the guide has one. */
   hint?: string;
   /**
    * Commentary still available to stitch from. Passed only to the three

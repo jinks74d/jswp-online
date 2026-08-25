@@ -49,6 +49,12 @@ export interface ExpositoryTChartSpec {
   readonly showCmSentence: boolean;
   /** Full-word labels at 3+:0; the 2+:1 TS is the "throwaway" first draft. */
   readonly tsLabel: string;
+  /**
+   * Instruction under the TS label. Null at 3+:0: with no Revised TS row
+   * there is nothing to revise into, so calling that one a first draft
+   * would promise a second the summary layout never offers.
+   */
+  readonly tsHint: string | null;
   readonly csLabel: string;
 }
 
@@ -60,6 +66,7 @@ const SUMMARY_SPEC: ExpositoryTChartSpec = {
   showCmColumn: false,
   showCmSentence: false,
   tsLabel: "Topic Sentence:",
+  tsHint: null,
   csLabel: "Concluding Sentence:",
 };
 
@@ -70,7 +77,8 @@ const STANDARD_SPEC: ExpositoryTChartSpec = {
   showRevisedTs: true,
   showCmColumn: true,
   showCmSentence: true,
-  tsLabel: "Throwaway Topic Sentence (TS):",
+  tsLabel: "“Throwaway” Topic Sentence (TS):",
+  tsHint: "Write a first draft topic sentence for this body paragraph.",
   csLabel: "Concluding Sentence (CS):",
 };
 
