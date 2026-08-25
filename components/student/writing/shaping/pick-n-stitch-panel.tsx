@@ -85,12 +85,12 @@ export function PickNStitchPanel({
     <section className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
       <header>
         <div className="text-xs font-semibold uppercase tracking-wide text-gray-700">
-          Pick-n-stitch
+          “Pick-n-Stitch”
         </div>
         <p className="text-xs text-gray-500 leading-snug">
           Everything from your CM clouds — what you wrote in the circle and
-          around it. Mark where you used each one. When you use it, you lose
-          it.
+          around it. Revise your final draft with any of these remaining words
+          and phrases. Remember, “When you use it, you lose it!”
         </p>
         <p className="mt-1 text-xs font-medium text-emerald-700" role="status">
           {remaining} left to use
