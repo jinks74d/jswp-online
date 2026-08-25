@@ -442,7 +442,7 @@ function ChunkSection({
       />
       <SentenceList
         role="cd"
-        label="CD sentences"
+        label="CD sentence(s)"
         helpText="Final concrete-detail sentences for this chunk."
         sentences={chunk.output.cd_sentences}
         onSave={async (next) => {
@@ -452,7 +452,7 @@ function ChunkSection({
       {!isSummaryRatio && (
         <SentenceList
           role="cm"
-          label="CM sentences"
+          label="CM sentence(s)"
           helpText="Final commentary sentences. Mark which CMs you stitched in via the side panel."
           sentences={chunk.output.cm_sentences}
           onSave={async (next) => {

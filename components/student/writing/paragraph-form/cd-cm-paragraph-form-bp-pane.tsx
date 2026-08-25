@@ -475,14 +475,14 @@ function ChunkSection({
         <>
           {cds.length > 0 && (
             <SentenceList
-              label="CD sentences"
+              label="CD sentence(s)"
               accentClass="text-[color:var(--jswp-color-cd)]"
               sentences={cds}
             />
           )}
           {cms.length > 0 && (
             <SentenceList
-              label="CM sentences"
+              label="CM sentence(s)"
               accentClass="text-[color:var(--jswp-color-cm)]"
               sentences={cms}
             />

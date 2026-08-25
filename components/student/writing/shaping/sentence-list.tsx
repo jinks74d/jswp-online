@@ -35,6 +35,20 @@ export const ROLE_TEXT_CLASS: Record<ShapeRole, string> = {
   cs: "text-[color:var(--jswp-color-cs)]",
 };
 
+/**
+ * Spoken name for one slot. Derived from the role, not from `label`: the
+ * visible label is worksheet shorthand — "CD sentence(s)" — and reading it
+ * aloud gives "C D sentence open-paren s close-paren sentence 1". The role
+ * already knows the full word, and each entry here IS one sentence, so the
+ * count belongs on the noun rather than after a plural.
+ */
+const ROLE_SPOKEN: Record<ShapeRole, string> = {
+  ts: "Topic sentence",
+  cd: "Concrete detail sentence",
+  cm: "Commentary sentence",
+  cs: "Concluding sentence",
+};
+
 export function SentenceList({
   role,
   label,
@@ -119,7 +133,7 @@ export function SentenceList({
               initialValue={s}
               disabled={isReadOnly}
               className={textClass}
-              ariaLabel={`${label} sentence ${i + 1}`}
+              ariaLabel={`${ROLE_SPOKEN[role]} ${i + 1}`}
               onSave={async (value) => {
                 await persist(updateAt(i, value));
               }}
