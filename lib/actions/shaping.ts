@@ -34,6 +34,10 @@
 import { revalidatePath } from "next/cache";
 import { requireRole, requireUser } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
+import {
+  carryForwardCmSentence,
+  needsCmSeed,
+} from "@/lib/shaping-carry-forward";
 
 const CD_CM_MODES = new Set(["expository", "argumentation", "literary"]);
 
@@ -69,7 +73,9 @@ export async function bootstrapShapingSheets(writingId: string): Promise<void> {
 
   const { data: bps, error: bpErr } = await supabase
     .from("body_paragraphs")
-    .select("id, chunks ( id )")
+    // The T-Chart's commentary sentence rides along so the chunk outputs can
+    // open holding it rather than empty — see lib/shaping-carry-forward.
+    .select("id, t_chart:t_charts ( commentary_sentence ), chunks ( id, position )")
     .eq("student_writing_id", writingId);
   if (bpErr) {
     throw new Error(`bootstrapShapingSheets BPs fetch: ${bpErr.message}`);
@@ -77,7 +83,10 @@ export async function bootstrapShapingSheets(writingId: string): Promise<void> {
 
   const rows = (bps ?? []) as unknown as Array<{
     id: string;
-    chunks: Array<{ id: string }>;
+    // 1:1 with the BP, but PostgREST types an embedded one-to-one as either a
+    // row or an array depending on how it resolves the relationship.
+    t_chart: { commentary_sentence: string | null } | null;
+    chunks: Array<{ id: string; position: number }>;
   }>;
   if (rows.length === 0) return;
 
@@ -111,6 +120,10 @@ export async function bootstrapShapingSheets(writingId: string): Promise<void> {
   if (!CD_CM_MODES.has(mode)) return;
 
   const sheetByBp = new Map(sheets.map((s) => [s.body_paragraph_id, s.id]));
+  // What each chunk's outputs should open holding: the paragraph's commentary
+  // sentence, in its first chunk. cd_sentences stay empty — the CD is one
+  // woven sentence the student writes here, not a list to inherit.
+  const cmSeedByChunk = new Map<string, string[]>();
   const outputRows: Array<{
     shaping_sheet_id: string;
     chunk_id: string;
@@ -120,12 +133,19 @@ export async function bootstrapShapingSheets(writingId: string): Promise<void> {
   for (const bp of rows) {
     const sheetId = sheetByBp.get(bp.id);
     if (!sheetId) continue;
+    const tChart = Array.isArray(bp.t_chart) ? bp.t_chart[0] : bp.t_chart;
+    for (const [chunkId, seed] of carryForwardCmSentence(
+      bp.chunks ?? [],
+      tChart?.commentary_sentence
+    )) {
+      cmSeedByChunk.set(chunkId, seed);
+    }
     for (const chunk of bp.chunks ?? []) {
       outputRows.push({
         shaping_sheet_id: sheetId,
         chunk_id: chunk.id,
         cd_sentences: [],
-        cm_sentences: [],
+        cm_sentences: cmSeedByChunk.get(chunk.id) ?? [],
       });
     }
   }
@@ -140,6 +160,58 @@ export async function bootstrapShapingSheets(writingId: string): Promise<void> {
     });
   if (oErr) {
     throw new Error(`bootstrapShapingSheets outputs: ${oErr.message}`);
+  }
+
+  await seedExistingCmSentences(
+    supabase,
+    [...sheetByBp.values()],
+    cmSeedByChunk
+  );
+}
+
+/**
+ * Carry commentary into chunk outputs that already exist and are still empty.
+ *
+ * The upsert above only seeds rows it INSERTS — ignoreDuplicates leaves an
+ * existing row alone, which is what keeps bootstrap idempotent and is why it
+ * cannot be the whole story: every writing that reached the Shaping Sheet
+ * before this existed already has its rows, seeded with []. Without this pass
+ * the rule would apply only to writings created from now on, and the ones that
+ * actually lost their commentary would stay broken.
+ *
+ * Writes only where there is something to write: a row holding text is left
+ * alone, and so is one whose chunk has no commentary yet. Once seeded a row is
+ * no longer empty, so this settles to zero writes.
+ */
+async function seedExistingCmSentences(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  sheetIds: readonly string[],
+  cmSeedByChunk: ReadonlyMap<string, string[]>
+): Promise<void> {
+  if (sheetIds.length === 0) return;
+
+  const { data: existing, error } = await supabase
+    .from("shaping_chunk_outputs")
+    .select("id, chunk_id, cm_sentences")
+    .in("shaping_sheet_id", [...sheetIds]);
+  if (error) {
+    throw new Error(`bootstrapShapingSheets seed fetch: ${error.message}`);
+  }
+
+  const pending = (existing ?? []).flatMap((row) => {
+    if (!needsCmSeed(row.cm_sentences)) return [];
+    const seed = cmSeedByChunk.get(row.chunk_id) ?? [];
+    return seed.length > 0 ? [{ id: row.id, seed }] : [];
+  });
+
+  for (const { id, seed } of pending) {
+    const { error: uErr } = await supabase
+      .from("shaping_chunk_outputs")
+      .update({ cm_sentences: seed })
+      .eq("id", id);
+    if (uErr) {
+      throw new Error(`bootstrapShapingSheets seed write: ${uErr.message}`);
+    }
   }
 }
 
