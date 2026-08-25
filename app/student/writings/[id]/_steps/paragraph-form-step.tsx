@@ -13,6 +13,7 @@ import {
   syncParagraphForms,
 } from "@/lib/actions/paragraph-form";
 import { getParagraphFormData } from "@/lib/queries/paragraph-form";
+import { applySyncedFinalText } from "@/lib/paragraph-form-sync";
 import { ParagraphFormClient } from "@/components/student/writing/paragraph-form/paragraph-form-client";
 import type { Database } from "@/lib/database.types";
 
@@ -40,9 +41,15 @@ export async function ParagraphFormStep({
   await bootstrapParagraphForms(writingId);
   // Keep final_text in sync with the composed paragraph for any row the
   // student hasn't hand-edited (fixes the stale-seed "first and last CD"
-  // bug). Runs before the read below so the render shows fresh text.
-  await syncParagraphForms(writingId);
-  const bps = await getParagraphFormData(writingId);
+  // bug).
+  //
+  // The read below CANNOT observe those writes on its own: syncParagraphForms
+  // reads through this same query, so this is the second identical GET of the
+  // render and Next.js memoizes it to the pre-write response. Overlaying what
+  // the sync composed is what makes the first visit show a filled fine-tune
+  // box instead of an empty one. See lib/paragraph-form-sync.
+  const synced = await syncParagraphForms(writingId);
+  const bps = applySyncedFinalText(await getParagraphFormData(writingId), synced);
 
   return (
     <div className="space-y-5">

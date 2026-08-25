@@ -133,25 +133,36 @@ export async function resyncFinalTextToCompose(
  * tracks those edits — unless they hand-edited (final_text_customized), in
  * which case their wording is left alone. CD/CM modes only; narrative
  * composes its paragraph differently and is left untouched.
+ *
+ * Returns paragraph_form id → the text it composed, for the caller to overlay
+ * on its own read. That is not a convenience: this function reads through
+ * getParagraphFormData, so the step's read afterwards is the second identical
+ * GET of the render and Next.js serves it the pre-write response. Returning
+ * the composition is what lets the render that FIRST fills final_text actually
+ * show it. See lib/paragraph-form-sync.
  */
-export async function syncParagraphForms(writingId: string): Promise<void> {
+export async function syncParagraphForms(
+  writingId: string
+): Promise<ReadonlyMap<string, string>> {
   const profile = await requireUser();
-  if (profile.role !== "student") return;
+  if (profile.role !== "student") return new Map();
   const supabase = await createServerClient();
+  // Absence means "the stored value is already right" — see applySyncedFinalText.
+  const synced = new Map<string, string>();
 
   const { data: writing } = await supabase
     .from("student_writings")
     .select("status, assignment:assignment_id ( mode, has_counterargument )")
     .eq("id", writingId)
     .maybeSingle();
-  if (!writing) return;
+  if (!writing) return synced;
   const w = writing as unknown as {
     status: "draft" | "in_progress" | "submitted" | "returned" | "graded";
     assignment: { mode: string; has_counterargument: boolean };
   };
   // Submitted/graded are frozen; RLS would reject the write anyway.
-  if (w.status === "submitted" || w.status === "graded") return;
-  if (!CD_CM_MODES.has(w.assignment.mode)) return;
+  if (w.status === "submitted" || w.status === "graded") return synced;
+  if (!CD_CM_MODES.has(w.assignment.mode)) return synced;
   const hasCounterargument = w.assignment.has_counterargument;
 
   const bps = await getParagraphFormData(writingId);
@@ -180,6 +191,8 @@ export async function syncParagraphForms(writingId: string): Promise<void> {
         "",
     });
 
+    synced.set(pf.id, composed);
+
     if (composed !== pf.final_text) {
       const { error } = await supabase
         .from("paragraph_forms")
@@ -190,6 +203,8 @@ export async function syncParagraphForms(writingId: string): Promise<void> {
       }
     }
   }
-  // No revalidatePath: runs during the step's RSC render; the step's
-  // getParagraphFormData call reads the just-written values.
+  // No revalidatePath: this runs during the step's RSC render. The caller does
+  // not re-read to observe the writes — it overlays the returned map, because
+  // a re-read in this pass is memoized to the snapshot taken above.
+  return synced;
 }
