@@ -45,13 +45,21 @@ import {
   WORKSHEET_INK,
   chunkCountWord,
 } from "./worksheet-style";
-import { updateTChart, addChunk, removeChunk } from "@/lib/actions/t-charts";
+import {
+  updateTChart,
+  addChunk,
+  removeChunk,
+  setCommentaryItemUse,
+  setCommentaryWebWordUse,
+} from "@/lib/actions/t-charts";
 import { useWritingMode } from "../use-writing-mode";
 import { getExpositoryTChartSpec } from "@/lib/expository-t-chart-spec";
 import {
   collectStitchPool,
-  unusedEntries,
+  entriesForTarget,
+  STITCH_TARGETS,
   type StitchEntry,
+  type StitchTarget,
 } from "@/lib/pick-n-stitch";
 import type { BodyParagraphData } from "@/lib/queries/t-charts";
 import type { TextAnnotationRow } from "@/lib/queries/text-annotations";
@@ -89,10 +97,28 @@ export function ExpositoryTChart({
   // Total for the badges' "Work order: n of N" screenreader phrasing —
   // 6 regions at 2+:1 / 1:1, 3 at 3+:0.
   const orderTotal = Object.keys(spec.badges).length;
-  // "When you use it, you lose it" — what the three Pick-n-Stitch rows still
-  // have left to draw on. Recomputed from props on every render, so marking a
-  // phrase spent in a cloud updates these lists immediately.
-  const stitchable = unusedEntries(collectStitchPool(bp.chunks));
+  // "When you use it, you lose it" — the commentary the three Pick-n-Stitch
+  // rows draw on. Recomputed from props on every render, so a spend marked in
+  // a cloud (or in another row's chips) shows up here immediately.
+  const pool = collectStitchPool(bp.chunks);
+
+  /**
+   * Chips for one Pick-n-Stitch row. Toggling one writes the same two
+   * columns the clouds' StitchControl writes — the chip is a second door
+   * onto one piece of state, not a parallel one — routed by storage shape:
+   * the oval is the commentary_items row, a ray is a web_words slot.
+   */
+  const stitchRow = (target: StitchTarget) => ({
+    target,
+    entries: entriesForTarget(pool, target),
+    onToggle: async (entry: StitchEntry, use: StitchTarget | null) => {
+      if (entry.slot === null) {
+        await setCommentaryItemUse(writingId, entry.cmId, use);
+      } else {
+        await setCommentaryWebWordUse(writingId, entry.cmId, entry.slot, use);
+      }
+    },
+  });
 
   return (
     <div className="bg-[#e9eaed] px-2 py-6 sm:px-6">
@@ -142,7 +168,7 @@ export function ExpositoryTChart({
               orderTotal={orderTotal}
               role="ts"
               hint="“Pick-n-Stitch” unused commentary words and phrases to revise your topic sentence."
-              stillUnused={stitchable}
+              stitch={stitchRow("ts")}
               initialValue={tc.revised_topic_sentence ?? ""}
               placeholder="Revise your topic sentence using unused CM words…"
               disabled={isReadOnly}
@@ -192,7 +218,7 @@ export function ExpositoryTChart({
               orderTotal={orderTotal}
               role="cm"
               hint="“Pick-n-Stitch” unused commentary words and phrases to write your commentary sentence."
-              stillUnused={stitchable}
+              stitch={stitchRow("cm")}
               initialValue={tc.commentary_sentence ?? ""}
               placeholder="Write your commentary sentence…"
               disabled={isReadOnly}
@@ -214,7 +240,7 @@ export function ExpositoryTChart({
                 ? "“Pick-n-Stitch” unused commentary words and phrases to write your concluding sentence."
                 : undefined
             }
-            stillUnused={spec.showCmSentence ? stitchable : undefined}
+            stitch={spec.showCmSentence ? stitchRow("cs") : undefined}
             initialValue={tc.concluding_sentence ?? ""}
             placeholder="Write the concluding sentence"
             disabled={isReadOnly}
@@ -269,7 +295,7 @@ function SentenceRow({
   orderTotal,
   role,
   hint,
-  stillUnused,
+  stitch,
   initialValue,
   placeholder,
   disabled,
@@ -283,10 +309,10 @@ function SentenceRow({
   /** Instruction shown under the label, where the guide has one. */
   hint?: string;
   /**
-   * Commentary still available to stitch from. Passed only to the three
-   * Pick-n-Stitch rows; undefined elsewhere (and at 3+:0, which has no CMs).
+   * Pick-n-Stitch chips. Passed only to the three rows that spend
+   * commentary; undefined elsewhere (and at 3+:0, which has no CMs).
    */
-  stillUnused?: readonly StitchEntry[];
+  stitch?: StitchRow;
   initialValue: string;
   placeholder: string;
   disabled: boolean;
@@ -311,7 +337,7 @@ function SentenceRow({
       {hint && (
         <p className="mb-1.5 text-[13px] leading-snug text-gray-600">{hint}</p>
       )}
-      {stillUnused && <StillUnused entries={stillUnused} />}
+      {stitch && <StillUnused row={stitch} />}
       <AutoSaveInput
         bare
         multiline
@@ -328,13 +354,32 @@ function SentenceRow({
 }
 
 /* ─── Still-unused commentary ─────────────────────────────────────────
-   The other half of "when you use it, you lose it": having struck spent
-   phrases out in the clouds, each Pick-n-Stitch row shows what is left,
-   so the student doesn't scroll back up to find out. Read-only chips —
-   the spending happens in the cloud, where the phrase lives. */
+   The other half of "when you use it, you lose it": each Pick-n-Stitch row
+   (④ TS, ⑤ CM, ⑥ CS) lists what it may still draw on, so the student does
+   not scroll back up to find out.
 
-function StillUnused({ entries }: { entries: readonly StitchEntry[] }) {
-  if (entries.length === 0) {
+   The chips spend, too. Clicking one strikes it through and marks it used
+   in THIS row; clicking again releases it. That writes the same two
+   columns the clouds' StitchControl writes, so a phrase struck here is
+   struck in its cloud on the next render — one piece of state, two doors
+   onto it. Spending from the chip is the gesture the student reaches for
+   first: it is where they are reading when they decide.
+
+   Chips a row spent stay listed, struck through, because they are the
+   undo. Phrases the OTHER two rows spent are gone from here — that is the
+   rule, seen from this row. */
+
+interface StitchRow {
+  readonly target: StitchTarget;
+  readonly entries: readonly StitchEntry[];
+  readonly onToggle: (
+    entry: StitchEntry,
+    use: StitchTarget | null
+  ) => Promise<void>;
+}
+
+function StillUnused({ row }: { row: StitchRow }) {
+  if (row.entries.length === 0) {
     return (
       <p className="mb-1.5 text-[12px] italic leading-snug text-amber-700">
         Every commentary word and phrase has been used. Add more to a cloud
@@ -348,15 +393,73 @@ function StillUnused({ entries }: { entries: readonly StitchEntry[] }) {
       <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-800">
         Still unused:
       </span>
-      {entries.map((entry) => (
-        <span
+      {row.entries.map((entry) => (
+        <StitchChip
           key={`${entry.cmId}:${entry.slot ?? "oval"}`}
-          className="rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[12px] leading-tight text-[color:var(--jswp-color-cm)]"
-        >
-          {entry.text}
-        </span>
+          entry={entry}
+          row={row}
+        />
       ))}
     </div>
+  );
+}
+
+/**
+ * One spendable word or phrase.
+ *
+ * Read-only (teacher review) renders a plain span: the strike-through is
+ * still worth showing, but it is not an offer to change anything.
+ *
+ * Spent state carries three signals, never colour alone (CLAUDE.md §9):
+ * strike-through, the fade, and aria-pressed on a real button. The
+ * accessible name spells out the whole sentence — "resolute, used in the
+ * Revised Topic Sentence" — because a struck chip on its own says nothing
+ * to a screenreader about WHERE it went.
+ */
+function StitchChip({ entry, row }: { entry: StitchEntry; row: StitchRow }) {
+  const { isReadOnly } = useWritingMode();
+  const [pending, start] = useTransition();
+  const spent = entry.usedIn === row.target;
+  const target = STITCH_TARGETS.find((t) => t.key === row.target);
+  const where = target?.long ?? row.target;
+
+  const base =
+    "rounded border px-1.5 py-0.5 text-[12px] leading-tight text-[color:var(--jswp-color-cm)]";
+  const tone = spent
+    ? "border-emerald-200 bg-emerald-50/50 line-through opacity-60"
+    : "border-emerald-300 bg-emerald-50";
+
+  if (isReadOnly) {
+    return (
+      <span
+        className={`${base} ${tone}`}
+        title={spent ? `Used in the ${where}` : undefined}
+      >
+        {entry.text}
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      aria-pressed={spent}
+      aria-label={
+        spent
+          ? `${entry.text} — used in the ${where}. Release it.`
+          : `${entry.text} — mark as used in the ${where}.`
+      }
+      title={spent ? `Used in the ${where}` : `Use in the ${where}`}
+      disabled={pending}
+      onClick={() =>
+        start(async () => {
+          await row.onToggle(entry, spent ? null : row.target);
+        })
+      }
+      className={`${base} ${tone} transition-colors hover:border-emerald-600 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-1 disabled:opacity-40`}
+    >
+      {entry.text}
+    </button>
   );
 }
 

@@ -136,6 +136,23 @@ export function unusedEntries(pool: readonly StitchEntry[]): StitchEntry[] {
 }
 
 /**
+ * What one Pick-n-Stitch row (④ TS, ⑤ CM, ⑥ CS) should list: everything
+ * still unspent, plus whatever that row itself spent.
+ *
+ * The row's own spends stay on the list — struck through — because the
+ * chips are the undo. Drop them and a misclick could only be reversed by
+ * hunting down the phrase's cloud. Spends belonging to the *other* two
+ * rows are gone from here, which is "when you use it, you lose it" seen
+ * from this row: released elsewhere, they reappear on their own.
+ */
+export function entriesForTarget(
+  pool: readonly StitchEntry[],
+  target: StitchTarget
+): StitchEntry[] {
+  return pool.filter((e) => e.usedIn === null || e.usedIn === target);
+}
+
+/**
  * Writes `use` into slot `slot` of a whole-array copy, padding with empty
  * strings so the result stays index-aligned with web_words. The action
  * writes the entire array on every change (mirroring updateCommentaryWebWords)

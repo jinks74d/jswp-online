@@ -13,6 +13,7 @@ import {
   collectStitchPool,
   collectCmEntries,
   unusedEntries,
+  entriesForTarget,
   ovalUse,
   rayUse,
   withRayUse,
@@ -147,6 +148,45 @@ describe("unusedEntries", () => {
 
   it("returns everything when nothing has been spent", () => {
     expect(unusedEntries(collectStitchPool([chunk([cm()])]))).toHaveLength(3);
+  });
+});
+
+describe("entriesForTarget", () => {
+  // Oval spent on the CM sentence, ray 0 spent on the revised TS, ray 1 free.
+  const pool = collectStitchPool([
+    chunk([cm({ used_in_cm_sentence: true, web_word_uses: ["ts", "", "", ""] })]),
+  ]);
+
+  it("lists what is free plus what this row itself spent", () => {
+    expect(entriesForTarget(pool, "ts").map((e) => e.text)).toEqual([
+      "resolute and steadfast",
+      "unconditional love",
+    ]);
+  });
+
+  it("hides what another row spent", () => {
+    // The oval went to the CM sentence, so the TS row must not offer it.
+    expect(entriesForTarget(pool, "ts").map((e) => e.text)).not.toContain(
+      "devoted mother"
+    );
+  });
+
+  it("keeps this row's own spend so the chip can undo it", () => {
+    const own = entriesForTarget(pool, "cm").find(
+      (e) => e.text === "devoted mother"
+    );
+    expect(own?.usedIn).toBe("cm");
+  });
+
+  it("offers a row with no spends everything unused", () => {
+    expect(entriesForTarget(pool, "cs").map((e) => e.text)).toEqual([
+      "unconditional love",
+    ]);
+  });
+
+  it("matches unusedEntries when nothing has been spent", () => {
+    const clean = collectStitchPool([chunk([cm()])]);
+    expect(entriesForTarget(clean, "ts")).toEqual(unusedEntries(clean));
   });
 });
 
